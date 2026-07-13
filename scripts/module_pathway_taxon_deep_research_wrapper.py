@@ -169,6 +169,16 @@ def resolve_bucket(
     if match:
         bucket_id = match.get("bucket_id", "")
         resolved_pathway_id = bucket_id.split(":", 1)[1] if ":" in bucket_id else bucket_id
+        membership_count = ""
+        if project_dir:
+            member_ids = {
+                row.get("uniprot_accession") or row.get("ordered_locus") or row.get("suggested_review_name", "")
+                for row in read_tsv(project_dir / "data" / "psepk_pathway_membership.tsv")
+                if row.get("pathway_id") == resolved_pathway_id
+            }
+            member_ids.discard("")
+            if member_ids:
+                membership_count = f"; {len(member_ids)} total pathway members"
         return {
             "bucket_id": bucket_id,
             "pathway_id": resolved_pathway_id,
@@ -176,7 +186,7 @@ def resolve_bucket(
             "pathway_source": match.get("bucket_source", "") or match.get("bucket_type", ""),
             "pathway_context": (
                 f"Resolved local bucket {bucket_id} with {match.get('gene_count', 'unknown')} "
-                f"primary genes; module area: {match.get('module_area', 'unspecified')}."
+                f"primary genes{membership_count}; module area: {match.get('module_area', 'unspecified')}."
             ),
         }
 
@@ -223,9 +233,6 @@ def candidate_rows(
 
     bucket_id = bucket.get("bucket_id", "")
     pathway_id = bucket.get("pathway_id", "")
-    if bucket_id and not bucket_id.startswith("kegg:"):
-        return [row for row in partition_rows if row.get("primary_bucket_id") == bucket_id]
-
     membership_rows = read_tsv(project_dir / "data" / "psepk_pathway_membership.tsv")
     if pathway_id and membership_rows:
         index = index_partition_rows(partition_rows)

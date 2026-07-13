@@ -81,3 +81,9 @@ eggNOG COG0617; Pfam PF01743 (PolyA_pol) + PF12627 (PolyA_pol_RNAbd); PANTHER PT
   nucleotidyltransferase MF are more specific).
 - GO:0016779 nucleotidyltransferase activity (MF) — MARK_AS_OVER_ANNOTATED (broad parent of
   the specific CCA tRNA nucleotidyltransferase activity).
+
+## 2026-07-10 first-pass translation/RNA-processing tRNA-modification split
+
+- Batch: `projects/P_PUTIDA/batches/module_translation_rna_processing_trna_modification_processing.tsv`.
+- Asta retrieval report: `file:PSEPK/cca/cca-deep-research-asta.md`. The report is retained as provenance; annotation decisions are supported primarily by local UniProt and GOA rows.
+- Main conclusion: template-independent tRNA CCA and CCACCA nucleotidyltransferase.

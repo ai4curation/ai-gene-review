@@ -84,7 +84,10 @@ def review_status(row: dict[str, str]) -> dict[str, str]:
     asta_candidates = [gene_dir / f"{gene}-deep-research-asta.md"]
     if review_stem != gene:
         asta_candidates.append(gene_dir / f"{review_stem}-deep-research-asta.md")
-    asta = next((candidate for candidate in asta_candidates if candidate.exists()), asta_candidates[0])
+    asta = next(
+        (candidate for candidate in asta_candidates if candidate.exists()),
+        asta_candidates[0],
+    )
     curation = "MISSING"
     if review.exists():
         curation = "CURATED"
@@ -92,7 +95,12 @@ def review_status(row: dict[str, str]) -> dict[str, str]:
             data = yaml.safe_load(review.read_text(encoding="utf-8")) or {}
             annotations = data.get("existing_annotations") or []
             if not annotations:
-                curation = "NO_ANNOTATIONS"
+                description = str(data.get("description") or "")
+                curation = (
+                    "CURATED"
+                    if description and not description.startswith("TODO:")
+                    else "NO_ANNOTATIONS"
+                )
             for annotation in annotations:
                 action = (annotation.get("review") or {}).get("action", "")
                 if not action or action == "PENDING":
@@ -114,6 +122,7 @@ def pathway_members(
     project_dir: Path, pathway: str
 ) -> tuple[str, str, list[dict[str, str]]]:
     pathway_id = pathway.replace("kegg:", "").replace("unipathway:", "")
+    primary_bucket_ids = {f"kegg:{pathway_id}", f"unipathway:{pathway_id}", pathway_id}
     partition = read_tsv(project_dir / "data" / "psepk_pathway_partition.tsv")
     membership = read_tsv(project_dir / "data" / "psepk_pathway_membership.tsv")
     by_key: dict[tuple[str, str], dict[str, str]] = {}
@@ -149,13 +158,60 @@ def pathway_members(
                 "membership_pathway_id": pathway_id,
                 "membership_pathway_name": pathway_name,
                 "is_primary_for_pathway": "true"
-                if row.get("primary_bucket_id")
-                in {pathway_id, f"kegg:{pathway_id}", f"unipathway:{pathway_id}"}
+                if row.get("primary_bucket_id") in primary_bucket_ids
                 else "false",
                 **review_status(row),
             }
         )
     return pathway_id, pathway_name, sorted(rows, key=locus_key)
+
+
+def add_extra_genes(
+    project_dir: Path,
+    *,
+    rows: list[dict[str, str]],
+    extra_genes: list[str],
+    pathway_id: str,
+    pathway_name: str,
+) -> list[dict[str, str]]:
+    if not extra_genes:
+        return rows
+
+    partition = read_tsv(project_dir / "data" / "psepk_pathway_partition.tsv")
+    by_key: dict[str, dict[str, str]] = {}
+    for row in partition:
+        for key_name in ("suggested_review_name", "ordered_locus", "uniprot_accession"):
+            value = row.get(key_name, "")
+            if value:
+                by_key[value] = row
+
+    seen = {
+        row.get("uniprot_accession")
+        or row.get("ordered_locus")
+        or row.get("suggested_review_name", "")
+        for row in rows
+    }
+    combined = list(rows)
+    for spec in extra_genes:
+        gene, source = (spec.split("=", 1) + ["MANUAL"])[:2] if "=" in spec else (spec, "MANUAL")
+        row = by_key.get(gene)
+        if not row:
+            raise SystemExit(f"Extra gene not found in partition: {gene}")
+        key = row.get("uniprot_accession") or row.get("ordered_locus") or row.get("suggested_review_name", "")
+        if key in seen:
+            continue
+        seen.add(key)
+        combined.append(
+            {
+                **row,
+                "membership_source": source,
+                "membership_pathway_id": pathway_id,
+                "membership_pathway_name": pathway_name,
+                "is_primary_for_pathway": "false",
+                **review_status(row),
+            }
+        )
+    return sorted(combined, key=locus_key)
 
 
 def write_markdown(
@@ -238,8 +294,14 @@ def write_markdown(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract a PSEPK pathway batch.")
-    parser.add_argument("pathway", help="KEGG pathway ID such as ppu00400")
+    parser.add_argument("pathway", help="KEGG or UniPathway ID such as ppu00400 or UPA00392")
     parser.add_argument("--module", default="", help="Species-neutral module seed")
+    parser.add_argument(
+        "--extra-gene",
+        action="append",
+        default=[],
+        help="Additional partition gene to include, optionally as GENE=SOURCE.",
+    )
     parser.add_argument("--project-dir", type=Path, default=DEFAULT_PROJECT_DIR)
     parser.add_argument("--output-prefix", type=Path)
     parser.add_argument(
@@ -247,9 +309,23 @@ def main() -> None:
         action="store_true",
         help="Mark validation complete in the generated markdown checklist.",
     )
+    parser.add_argument(
+        "--primary-only",
+        action="store_true",
+        help="Include only genes whose primary partition bucket is this pathway.",
+    )
     args = parser.parse_args()
 
     pathway_id, pathway_name, rows = pathway_members(args.project_dir, args.pathway)
+    if args.primary_only:
+        rows = [row for row in rows if row.get("is_primary_for_pathway") == "true"]
+    rows = add_extra_genes(
+        args.project_dir,
+        rows=rows,
+        extra_genes=args.extra_gene,
+        pathway_id=pathway_id,
+        pathway_name=pathway_name,
+    )
     prefix = args.output_prefix or (
         args.project_dir
         / "batches"

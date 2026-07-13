@@ -24,8 +24,8 @@ autolink_gene_symbols: false
 - [x] Run Asta deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Open one PR for this module/pathway: [PR #1893](https://github.com/ai4curation/ai-gene-review/pull/1893).
+- [x] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
@@ -72,7 +72,7 @@ autolink_gene_symbols: false
 
 ## Notes
 
-Generated UTC: 2026-07-06T12:45:16.735745+00:00
+Generated UTC: 2026-07-06T20:55:43.251935+00:00
 
 ## Curation Notes
 

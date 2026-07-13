@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2599 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2599</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JQ0" target="_blank" class="term-link">
+                        Q88JQ0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2599";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JQ0" data-a="DESCRIPTION: PP_2599 encodes a membrane-associated chemotaxis s..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2599 encodes a membrane-associated chemotaxis sensory-transducer-family protein with GAF, HAMP, HD/PDEase, and HD-GYP domains in Pseudomonas putida KT2440. The domain architecture supports a sensory cyclic-guanylate phosphodiesterase candidate in the c-di-GMP turnover boundary rather than a plain MCP receptor, but this first pass does not establish the upstream signal or physiological output.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JQ0" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Signal transduction is supported by the GAF/HAMP sensory architecture, but the more specific first-pass interpretation is cyclic-nucleotide turnover.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_2599 carries sensory GAF/HAMP features plus HD/PDEase and HD-GYP catalytic-domain evidence, indicating a membrane sensory phosphodiesterase candidate rather than a generic signaling protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0007165	signal transduction</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR003660; HAMP_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR003018; GAF.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008081" target="_blank" class="term-link">
+                                    GO:0008081
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoric diester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JQ0" data-a="GO:0008081" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phosphoric diester hydrolase activity is directionally right but too broad for the HD-GYP/cyclic-di-GMP phosphodiesterase evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro assigns PP_2599 to a cyclic-di-GMP/3&#39;3&#39;-cGAMP phosphodiesterase family and identifies HD/PDEase plus HD-GYP domains, so cyclic-guanylate-specific phosphodiesterase activity is the more informative first-pass molecular-function term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071111" target="_blank" class="term-link">
+                                    cyclic-guanylate-specific phosphodiesterase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008081	phosphoric diester hydrolase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR052020; Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR003607; HD/PDEase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR037522; HD_GYP_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Key Domains:** Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE. (IPR052020)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JQ0" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is supported for this sensory phosphodiesterase candidate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GOA carries InterPro-supported membrane localization, and UniProt predicts a transmembrane helix in PP_2599.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   TRANSMEM        182..200</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Membrane-associated sensory cyclic-guanylate phosphodiesterase candidate with GAF, HAMP, HD/PDEase, and HD-GYP domains.</h3>
+                <span class="vote-buttons" data-g="Q88JQ0" data-a="FUNCTION: Membrane-associated sensory cyclic-guanylate phosp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071111" target="_blank" class="term-link">
+                            cyclic-guanylate-specific phosphodiesterase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR052020; Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR003607; HD/PDEase_dom.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR037522; HD_GYP_dom.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2599/PP_2599-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">Key Domains:** Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE. (IPR052020)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2599/PP_2599-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO/GOA annotation table for PP_2599 in Pseudomonas putida KT2440</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2599/PP_2599-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record Q88JQ0 for PP_2599 in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt product naming places PP_2599 in the chemotaxis sensory transducer family.</div>
+
+                        <div class="finding-text">"DE   SubName: Full=Chemotaxis sensory transducer family protein"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Conserved domain annotation supports a sensory cyclic-nucleotide phosphodiesterase candidate.</div>
+
+                        <div class="finding-text">"DR   InterPro; IPR052020; Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2599/PP_2599-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for PP_2599 in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Asta retrieval recapitulates the chemotaxis sensory-transducer family name and HD/GAF/HAMP domain architecture.</div>
+
+                        <div class="finding-text">"gene_symbol: PP_2599"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What signal regulates PP_2599, and does the protein measurably alter KT2440 c-di-GMP pools?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JQ0" data-a="Q: What signal regulates PP_2599, and does the protei..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay PP_2599-dependent cyclic-guanylate phosphodiesterase activity in vitro and compare cellular c-di-GMP levels, motility, and biofilm phenotypes in wild type, deletion, and catalytic-site mutant strains.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: c-di-GMP phosphodiesterase and phenotype assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JQ0" data-a="EXPERIMENT: Assay PP_2599-dependent cyclic-guanylate phosphodi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2599-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JQ0" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-09T21:53:30.634384</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-construction-of-an-ortholog-database-using-the-semantic-web-technology-for-integrative-analysis-of-genomic-data">[1] Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data</h3>
+<ul>
+<li>Authors: H. Chiba, Hiroyo Nishide, I. Uchiyama</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>DOI: 10.1371/journal.pone.0122802</li>
+<li>PMID: 25875762</li>
+<li>PMCID: 4395280</li>
+<li>Citations: 14</li>
+<li>Summary: The ortholog database using the Semantic Web technology can contribute to biological knowledge discovery through integrative data analysis and examples demonstrate that the ortholog information described in RDF can be used to link various biological data such as taxonomy information and Gene Ontology.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.799)<br />
+    &gt; A typical use of an ortholog database is transferring functional annotations from known genes in model organisms to genes of unknown function in other organisms, on the basis of the conjecture that orthologs are usually functionally conserved. To demonstrate such an application in our database, we showed a query to retrieve ortholog information of a specified protein.<br />
+    &gt; Here, we specified a UniProt ID to obtain ortholog information. For describing functional categories of genes, we used Gene Ontology (GO) [24]. The UniProt GO Annotation (UniProt-GOA) database [25] (http://www.ebi.ac.uk/GOA) provides GO term assignment to proteins with evidence codes (http://www.geneontology.org/GO.evidence.shtml). We created an ontology for GO annotation (GOA-O, Table 1, http://purl.jp/bio/11/goa) and described UniProt-GOA data in RDF using it (Table 2). If some model organisms have experimentally verified GO annotations, we can transfer such a validated annotation to orthologs of other organisms.</li>
+</ul>
+<h3 id="2-network-pharmacology-based-strategic-prediction-and-target-identification-of-apocarotenoids-and-carotenoids-from-standardized-kashmir-saffron-crocus-sativus-l-extract-against-polycystic-ovary-syndrome">[2] Network pharmacology-based strategic prediction and target identification of apocarotenoids and carotenoids from standardized Kashmir saffron (Crocus sativus L.) extract against polycystic ovary syndrome</h3>
+<ul>
+<li>Authors: Anshul Tiwari, Siddharth J Modi, A. Girme, L. Hingorani</li>
+<li>Year: 2023</li>
+<li>Venue: Medicine</li>
+<li>URL: https://www.semanticscholar.org/paper/3e3253804574634d1968a0fd5b65dd1674bff6c6</li>
+<li>DOI: 10.1097/MD.0000000000034514</li>
+<li>PMID: 37565925</li>
+<li>PMCID: 10419424</li>
+<li>Citations: 2</li>
+<li>Summary: A network pharmacology-based method to determine the potential therapeutic pathways of phytoconstituents of UHPLC-PDA standardized stigma-based Crocus sativus extract for the management of PCOS revealed that the apocarotenoids and carotenoidal could act on various targets to regulate multiple pathways related to PCOS.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.753)<br />
+    &gt; The target protein name of the active ingredient was converted to the standard target gene name using the UniProt Knowledge Base (UniProtKB). UniProt KB is the central hub for the collection of functional information on proteins, with accurate, consistent, and rich annotation. The target protein names were uploaded into UniProtKB, with the organism restricted to "Homo sapiens," eventually gaining the official symbol. The potential targets obtained from the UniproKB are depicted in Figures 3 and 4.</li>
+</ul>
+<h3 id="3-lmpd-lipid-maps-proteome-database">[3] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.749)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+</ul>
+<h3 id="4-cronos-the-cross-reference-navigation-server">[4] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.746)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="5-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[5] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.742)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="6-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[6] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="7-the-surface-proteome-of-bovine-unsexed-and-sexed-spermatozoa">[7] The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa</h3>
+<ul>
+<li>Authors: P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Animals : an Open Access Journal from MDPI</li>
+<li>URL: https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>DOI: 10.3390/ani15040484</li>
+<li>PMID: 40002966</li>
+<li>PMCID: 11852025</li>
+<li>Citations: 2</li>
+<li>Summary: Differences in surface proteins between X- and Y-chromosome-bearing bovine spermatozoa are explored to identify potential targets for sperm sexing by LC-MS/MS analysis, with 5 transmembrane proteins showing promise as markers for X-sperm.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; The protein sequences were functionally annotated by combining information retrieved from the UniProt database ( [25], accessed on 9 June 2022) and one-to-one fast orthology assignments using the eggNOG-mapper v.2.1.7 tool ( [26], accessed on 9 June 2022), as described in [27]. Briefly, the gene name, protein name, length, Gene Ontology (GO) IDs, and chromosome associated with each protein entry were obtained from UniProt using the retrieve/ID mapping tool. Additionally, gene names, descriptions, and experimentally validated GO IDs were obtained from eggNOG, with consideration given to a taxonomic scope auto-adjusted per query, a minimum hit bit-score of 60, and thresholds of 80% for identity, minimum query coverage, and minimum subject coverage.<br />
+    &gt; Out of the 130 detected proteins, 71 (54.6%) had information manually verified by UniProt curators (Supplementary Spreadsheet S1.5). Utilizing the eggNOG-mapper v2.1.7 tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a descrip-tion, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.<br />
+    &gt; tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a description, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.</li>
+</ul>
+<h3 id="8-the-y-ome-defines-the-35-of-escherichia-coli-genes-that-lack-experimental-evidence-of-function">[8] The y-ome defines the 35% of Escherichia coli genes that lack experimental evidence of function</h3>
+<ul>
+<li>Authors: S. Ghatak, Zachary A. King, Anand V. Sastry, B. Palsson</li>
+<li>Year: 2019</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/c0336e0a70554304893a9e2d010ee30bd6872b10</li>
+<li>DOI: 10.1093/nar/gkz030</li>
+<li>PMID: 30698741</li>
+<li>PMCID: 6412132</li>
+<li>Citations: 133</li>
+<li>Influential citations: 4</li>
+<li>Summary: The misconception that a gene in E. coli whose primary name starts with ‘y’ is unannotated is resolved, and the value of the y-ome is discussed for systematic improvement ofE.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.719)<br />
+    &gt; There are several knowledge bases that represent the collected knowledge of the E. coli K-12 MG1655 genome: EcoCyc (11), EcoGene (12), UniProt (13) and RefSeq (14). Other useful knowledge bases cater to specific classes of gene products, such as the RegulonDB, which contains manually curated functional information about transcription factors in E. coli (15). Our initial review of these knowledge bases yielded conflicting information on gene function and level of annotation for many E. coli genes. Any attempt to systematically assess the function of unannotated genes must therefore draw from multiple knowledge bases and resolve these conflicts.<br />
+    &gt; Many research groups have categorized E. coli genes and proteins by annotation quality as a part of their studies. In 2009, Hu et (16). First, they identified all unannotated proteins in the K-12 W3110 and MG1655 genomes. In order for a protein-encoding gene to be considered functionally uncharacterized in their analysis, it had to meet the following criteria: (i) The gene name begins with 'y', (ii) the gene does not have a known pathway within EcoCyc and (iii) the gene does not have a functional description in Gen-ProtEC (17) (any gene with a description containing the words 'predicted', 'hypothetical', or 'conserved'). Based on these criteria, it was determined that 1431 of 4225 protein coding sequences were not functionally annotated. In 2015, Kim et al. published a database called EcoliNet that curated and predicted cofunctional gene networks for every protein coding gene in the E. coli genome (18). This study also quantified the number of uncharacterized protein coding genes in E. coli. To assess functional annotation, they used the presence of experimentally supported 'biological process' annotations in the Gene Ontology database (19). They concluded that ∼2000 protein coding genes in E. coli were not functionally annotated. The most comprehensive effort to assess the level of annotation in bacterial genomes has been Computational Bridges to Experiments (COM-BREX) (20,21).</li>
+</ul>
+<h3 id="9-functional-annotation-of-parasitic-worm-genomes-by-assigning-protein-names-and-go-terms">[9] Functional annotation of parasitic worm genomes, by assigning protein names and GO terms</h3>
+<ul>
+<li>Authors: Avril Coghlan, M. Berriman</li>
+<li>Year: 2018</li>
+<li>Venue: Unknown venue</li>
+<li>URL: https://www.semanticscholar.org/paper/583c74a2e225dbff5fca04d36298e5b690491e82</li>
+<li>DOI: 10.1038/protex.2018.055</li>
+<li>Citations: 1</li>
+<li>Summary: A computational pipeline for assigning protein names and GO terms to predicted proteins in parasitic worm (nematode and platyhelminth) genomes, which transfers names and Go terms from orthologues in other species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.718)<br />
+    &gt; Given a set of predicted protein-coding genes for a newly sequenced genome, functional annotation involves assigning putative functions to the predicted genes. Two ways in which this can be done are assigning protein names and Gene Ontology (GO;Gene Ontology Consortium, 2010) terms to the predicted proteins. Here we describe a computational pipeline for assigning protein names and GO terms to predicted proteins in parasitic worm (nematode and platyhelminth) genomes, which transfers names and GO terms from orthologues in other species.<br />
+    &gt; When assigning protein names, UniProt protein naming rules (www.uniprot.org/docs/nameprot) are followed where possible. This recommends that a good and stable name for a protein is "as neutral as possible"; that a protein name "should be, as far as possible, unique and attributed to all orthologs"; and a protein name "should not contain a specific characteristic of the protein, and in particular it should not reflect the function or role of the protein, nor its subcellular location, its domain structure, its tissue specificity, its molecular weight or its species of origin".<br />
+    &gt; In our protocol, a protein name is assigned to each predicted protein based on curated names in UniProt (Bairoch &amp; Apweiler, 2000) for human, zebrafish, Drosophila melanogaster, Caenorhabditis elegans, and Schistosoma mansoni orthologues identified from a database of gene families (e.g. built using Ensembl Compara; Vilella et al. 2009), or (if no information is found from orthologues) based on InterPro (Hunter et al. 2012) domains. Figure 1 shows an example of using our protein naming pipeline for four Strongyloides ratti genes that belong to the tubulin polyglutamylase family (underlined in pink), where four different protein names were assigned to them (in pink), based on names of their C. elegans or human orthologues.<br />
+    &gt; Since each of the S. ratti genes belonged to a different subfamily of the tubulin polyglutamylase family, they were assigned different names.</li>
+</ul>
+<h3 id="10-phosphositeplus-a-comprehensive-resource-for-investigating-the-structure-and-function-of-experimentally-determined-post-translational-modifications-in-man-and-mouse">[10] PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse</h3>
+<ul>
+<li>Authors: P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al.</li>
+<li>Year: 2011</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>DOI: 10.1093/nar/gkr1122</li>
+<li>PMID: 22135298</li>
+<li>PMCID: 3245126</li>
+<li>Citations: 1606</li>
+<li>Influential citations: 155</li>
+<li>Summary: PhosphoSitePlus (http://www.phosphosite.org) is an open, comprehensive, manually curated and interactive resource for studying experimentally observed post-translational modifications, primarily of human and mouse proteins. It encompasses 1 30 000 non-redundant modification sites, primarily phosphorylation, ubiquitinylation and acetylation. The interface is designed for clarity and ease of navigation. From the home page, users can launch simple or complex searches and browse high-throughput d...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.715)<br />
+    &gt; Accession numbers from UniPROT KB, NCBI and Ensembl (24)(25)(26), as well as gene symbols from HGNC (27), are curated for all proteins when possible. Basic protein descriptions include information parsed from UniPROT KB (24), and may include additional information from the literature. Descriptions are updated in bulk occasionally. Gene Ontology (28) annotations are parsed from NCBI (25). Editors assign protein types.</li>
+</ul>
+<h3 id="11-shield-an-integrative-gene-expression-database-for-inner-ear-research">[11] SHIELD: an integrative gene expression database for inner ear research</h3>
+<ul>
+<li>Authors: Jun Shen, D. Scheffer, Kelvin Y. Kwan, D. Corey</li>
+<li>Year: 2015</li>
+<li>Venue: Database: The Journal of Biological Databases and Curation</li>
+<li>URL: https://www.semanticscholar.org/paper/fc7704155cefd9f1c767dc2a03a5025c77d19437</li>
+<li>DOI: 10.1093/database/bav071</li>
+<li>PMID: 26209310</li>
+<li>PMCID: 4513695</li>
+<li>Citations: 130</li>
+<li>Influential citations: 9</li>
+<li>Summary: The Shared Harvard Inner Ear Laboratory Database (SHIELD), an integrated resource that seeks to compile, organize and analyse the genomic, transcriptomic and proteomic knowledge of the inner ear, is developed.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.713)<br />
+    &gt; Many public databases of gene information are available (11)(12)(13)(14)(15)(16). However, different public databases often use different sets of unique identifiers (IDs) to describe the same genes or homologous genes in different species. One challenge of comparing large-scale biological datasets is the unification of gene names; otherwise, researchers spend a lot of effort in converting gene IDs when searching different databases. Another is the likelihood of missing some databases due to unfamiliarity; this is particularly true for clinicians and researchers who are specialized in inner ear research but are not necessarily familiar with genomics and bioinformatics. One goal of the SHIELD is to integrate relevant gene annotation information from various public databases in one centralized location.<br />
+    &gt; For the SHIELD, annotations were derived from public databases and literature. Currently implemented annotations include official gene symbols, description of the gene name and synonyms, human and mouse chromosome cytogenetic banding, RefSeq RNA and protein (for protein coding genes) accession numbers, National Center for Biotechnology Information (NCBI) Entrez gene ID, genomic coordinates in both mouse reference genome assemblies mm9 and mm10, Ensembl, the Vertebrate Genome Annotation Database (VEGA) Mouse Genome Informatics, UniProt, Online Mendalian Inheritance in Man and gene ontology.<br />
+    &gt; For each protein coding genes, we display all UniProt protein isoforms for that gene, the length in amino acid residues and the predicted number of transmembrane domains (TMs). We predicted TMs by running TMHMM2.0 run on all UniProt protein isoforms of each gene (17). The number of TMs is of special interest for research in sensory function, because many key proteins involved in signaling-such as the mechanotransduction ion channels-are integral membrane proteins. This information would help identify candidate genes for the components of the mechanotransduction apparatus of the inner ear.<br />
+    &gt; We also performed manual curation of inner ear disorders including syndromic and non-syndromic hearing loss according to the Hereditary Hearing Loss Homepage (http://hereditaryhearingloss.org) and primary literature.</li>
+</ul>
+<h3 id="12-revisiting-the-plasmodium-falciparum-druggable-genome-using-predicted-structures-and-data-mining">[12] Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining</h3>
+<ul>
+<li>Authors: Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Research Square</li>
+<li>URL: https://www.semanticscholar.org/paper/795b2985fdc3cf1cfbd5fda1b3c0502eb4dfe866</li>
+<li>DOI: 10.21203/rs.3.rs-5412515/v1</li>
+<li>PMID: 39649165</li>
+<li>PMCID: 11623766</li>
+<li>Citations: 3</li>
+<li>Summary: This study systematically assessed the Plasmodium falciparum genome for proteins amenable to target-based drug discovery, identifying 867 candidate targets with evidence of small molecule binding and blood stage essentiality and implements a generalizable framework for systematically evaluating and prioritizing novel pathogenic disease targets.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.708)<br />
+    &gt; List of genes and genomic features (GFF) for Plasmodium falciparum 3D7 genome (PlasmoDB release 66) was downloaded and protein coding genes were extracted along with their gene annotations and genomic location. Additional genomic annotations were obtained by querying PlasmoDB to extract UniProt and Entrez ID(s), ortholog group (OrthoMCL), protein features (CDS and protein length, molecular weight, isoelectric point), domain annotations (InterPro, PFam, Superfamily), number of transmembrane (TM) domains, and enzyme commission (EC) numbers. Gene function (Gene Ontology; components, functions and processes) was extracted by either PlasmoDB or by querying the InterPro ID under InterPro2GO mapping tool from EMBL-EBI services. Gene essentiality data was obtained for P.<br />
+    &gt; falciparum 29 and P. berghei 30,31 parasites that were mapped to their falciparum ortholog using OrthoMCL orthology group IDs. Protein Data Bank (PDB) IDs of crystal structures were obtained by searching either gene symbols, UniProt IDs associated with each gene, or by typing "Plasmodium" in the PDB website search box. A report with gene identi er, organism, accession number, method for structure determination and publication information was extracted for the search hits.<br />
+    &gt; Mapping genes to associated literature publications A download from the NCBI FTP site was performed for gene2pubmed.gz (version 2024-02-21) containing taxonomy ID, gene ID (Entrez) and PubMed ID. Gene IDs were mapped to the P. falciparum 3D7 annotation set, and PMIDs matching the criteria were extracted. To include literature references associated with gene symbols, we queried each gene symbol in PubMed using the Eutils 81 efetch function from NCBI; additional information for each publication was obtained pragmatically using the same tool, retrieving title, authors and DOI (digital object identi er).</li>
+</ul>
+<h3 id="13-integrated-genomic-and-transcriptomic-insights-into-methanol-tolerance-mechanisms-in-methylobacterium-extorquens-am1-identifying-key-targets-for-strain-engineering">[13] Integrated genomic and transcriptomic Insights into methanol tolerance mechanisms in Methylobacterium extorquens AM1, identifying key targets for strain engineering</h3>
+<ul>
+<li>Authors: G. Lee, Khoi Pham, Ina Bang, Seyoung Ko, Donghyuk Kim</li>
+<li>Year: 2025</li>
+<li>Venue: Journal of Biological Engineering</li>
+<li>URL: https://www.semanticscholar.org/paper/6aa688271f173ba9e4347c044e998375ecb5ce81</li>
+<li>DOI: 10.1186/s13036-025-00557-1</li>
+<li>PMID: 41361449</li>
+<li>PMCID: 12797532</li>
+<li>Summary: This study highlights how coordinated genetic and transcriptional adaptations contribute to methanol tolerance in the AM1-derived evolved strains, providing systems-level insights.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.703)<br />
+    &gt; Gene Ontology (GO) enrichment analysis was performed to classify DEGs into functional categories [60]. The GO term database for M. extorquens AM1 ("272,630.protein.enrichment.terms.v12.0.txt") was obtained from the STRING database and filtered to include only terms associated with Biological Process (BP), Cellular Component (CC), and Molecular Function (MF) [61]. The locus tags in this database were originally annotated using GenBank. These annotations were converted to RefSeq annotations, and genes lacking corresponding RefSeq annotations were excluded from the analysis.<br />
+    &gt; Enrichment analysis was conducted separately for the upregulated and downregulated genes using the 'enricher' function from the 'clusterProfiler' package in R [62]. GO terms with a q-value &lt; 0.1 were considered significantly enriched. The enrichment results were summarized by calculating the gene ratio, defined as the number of DEGs associated with a GO term divided by the total number of input genes, enabling the identification of specific functional categories influenced by gene expression changes while ensuring robustness against multiple hypothesis testing.<br />
+    &gt; For differentially expressed genes (DEGs), annotation was standardized by referencing gene name (if available), locus tag, and annotated function. For DEGs lacking official gene names in both GenBank and RefSeq, putative names or functional descriptions were manually assigned based on homology, including 100% sequence identity using BLASTP searches against the NCBI nonredundant protein database [63] and structure-informed annotations using AlphaFold3 and Foldseek [47,48]. For instance, MEXAM1_RS04005, originally annotated only as a formyltransferase family protein, showed 100% identity with sequences MCP1543177.1, MCP1561485.1, and MCP1589478.1, and was thus designated as fmt.</li>
+</ul>
+<h3 id="14-genetools-application-for-functional-annotation-and-statistical-hypothesis-testing">[14] GeneTools – application for functional annotation and statistical hypothesis testing</h3>
+<ul>
+<li>Authors: V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al.</li>
+<li>Year: 2006</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>DOI: 10.1186/1471-2105-7-470</li>
+<li>PMID: 17062145</li>
+<li>PMCID: 1630634</li>
+<li>Citations: 107</li>
+<li>Influential citations: 11</li>
+<li>Summary: GeneTools is the first "all in one" annotation tool, providing users with a rapid extraction of highly relevant gene annotation data for e.g. thousands of genes or clones at once.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.702)<br />
+    &gt; The database enables searching by gene symbols/names, GenBank accession numbers, UniGene cluster IDs, Swiss-Prot entry names and several unique clone IDs (IMAGE clone IDs, University of Iowa clone IDs, Operon oligo IDs, TAIR IDs and a subset of selected Affymetrix and Agilent IDs).<br />
+    &gt; The names and symbols of genes/proteins may be highly ambiguous [20]. We therefore recommend using primary gene IDs, like GeneBank accession numbers or specific probe IDs when querying the database. However, if gene names or symbols are used, caution is advised because only official names/symbols associated with UniProt knowledgebase will be recognized. The underlying database is updated on a weekly basis with annotation information from several external databases including UniGene, Swiss-Prot, Entrez Gene and GO. User data are submitted to the database as text files of gene reporters and analysis of the annotation data can be performed through three user interfaces: the NMC Annotation Tool, the GO Annotator Tool and eGOn. Analysis results and annotation data can be exported in various formats.</li>
+</ul>
+<h3 id="15-revisiting-the-plasmodium-falciparum-druggable-genome-using-predicted-structures-and-data-mining">[15] Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining</h3>
+<ul>
+<li>Authors: Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al.</li>
+<li>Year: 2025</li>
+<li>Venue: npj Drug Discovery</li>
+<li>URL: https://www.semanticscholar.org/paper/000083b7bd96cff5b3d1891b00ad332eed7d9add</li>
+<li>DOI: 10.1038/s44386-025-00006-5</li>
+<li>PMID: 40066064</li>
+<li>PMCID: 11892419</li>
+<li>Citations: 4</li>
+<li>Summary: This study systematically assessed the Plasmodium falciparum genome and identified 867 candidate protein targets with evidence of small-molecule binding and blood-stage essentiality, providing a genome-wide data resource for P. falciparum and implements a generalizable framework for systematically evaluating and prioritizing novel pathogenic disease targets.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.696)<br />
+    &gt; List of genes and genomic features (GFF) for Plasmodium falciparum 3D7 genome (PlasmoDB release 66) was downloaded and protein-coding genes were extracted along with their gene annotations and genomic location. Additional genomic annotations were obtained by querying PlasmoDB to extract UniProt and Entrez ID(s), ortholog group (OrthoMCL), protein features (CDS and protein length, molecular weight, isoelectric point), domain annotations (InterPro, Pfam, and Superfamily), number of transmembrane (TM) domains, and enzyme commission (EC) numbers. Gene function (Gene Ontology components, functions, and processes) was extracted either from PlasmoDB or by querying the InterPro ID with the InterPro2GO mapping tool from EMBL-EBI. Gene essentiality data was obtained for P. falciparum 20 and P. berghei 21,22 parasites mapped to their falciparum orthologs using OrthoMCL orthology group IDs. Protein Data Bank (PDB) IDs of crystal structures were obtained by searching either gene symbols, UniProt IDs associated with each gene, or the term "Plasmodium". A report with gene identifier, organism, accession number, method for structure determination and publication information was extracted for the search hits.<br />
+    &gt; Mapping genes to associated literature publications A download from the NCBI FTP site was performed for gene2pubmed.gz (version 2024-02-21) containing taxonomy ID, gene ID (Entrez) and PubMed ID information. Gene IDs were mapped to the P. falciparum 3D7 annotation set, and corresponding PMIDs were extracted. To include literature references associated with gene symbols, we queried each symbol in PubMed using the Eutils 77 efetch function from NCBI; additional information for each publication was obtained pragmatically using the same tool, namely title, authors and digital object identifier (DOI). Literature references from gene nomenclature extraction were manually reviewed and filtered for unrelated records (e.g., same name but different meaning across organisms/diseases).</li>
+</ul>
+<h3 id="16-multiple-model-species-selection-for-transcriptomics-analysis-of-non-model-organisms">[16] Multiple model species selection for transcriptomics analysis of non-model organisms</h3>
+<ul>
+<li>Authors: Tun-Wen Pai, Kuan Li, Cing-Han Yang, Chin‐Hwa Hu, Han-Jia Lin et al.</li>
+<li>Year: 2018</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/110be4fb3dd4a35e32df8f6ec7f467b8860f84c5</li>
+<li>DOI: 10.1186/s12859-018-2278-z</li>
+<li>PMID: 30367568</li>
+<li>PMCID: 6101069</li>
+<li>Citations: 11</li>
+<li>Summary: This work proposed a novel approach for finding the most effective reference model species through taxonomic associations and ultra-conserved orthologous (UCO) gene comparisons among species and showed that the proposed system indeed provides superior performance by selecting appropriate multiple species for transcriptomic analysis compared to traditional approaches.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.695)<br />
+    &gt; For effective and efficient gene functional analysis in this study, a total of 291 eukaryotic reference model species were verified and selected from the Kyoto Encyclopedia of Genes and Genomes (KEGG) [14], Universal Protein Resource (UniProt) [15], and NCBI RefSeq [16] databases simultaneously. These 291 selected species possess comprehensive gene annotations for functional enrichment analysis. The NCBI RefSeq database contains non-redundant, well-annotated, and curated information for genomic DNA, RNA, and protein sequences, and genomes in RefSeq are copies of selected assembled genomes available in GenBank. This annotated information from RefSeq can be accessed through the BLAST, Entrez, and NCBI FTP sites. In order to utilize functional information from the biological pathway and GO annotations, initial integration with both the KEGG and UniProt databases was performed in advance. We collected all annotated genes and corresponding pathway information for differential expression analysis, in particular for the 291 selected model species. In other words, we collected corresponding GO annotations from UniProt and functional molecular interaction relationships from KEGG. The UniProt database is a freely accessible website that provides comprehensive protein sequences and corresponding high-quality, curated functional annotations. Therefore, we retrieved gene information including the protein ID, gene ID, and corresponding GO annotations for the 291 selected model species from UniProt in advance. The downloaded information from these two databases was integrated by mapping the information to protein IDs and gene IDs indexed by the RefSeq database. We also downloaded the NCBI Taxonomy database, which contains almost all species appearing in the NCBI database and the detailed corresponding positions of these species within the phylogenetic tree. Lineage information for all organisms in this database allows users to select appropriate reference species from among the 291 reference model species. The NCBI Taxonomy database is the standard nomenclature and classification repository for the INSDC, comprising the GenBank, ENA (EMBL), and DDBJ databases [17]. It includes the names and taxonomic lineages of species based on either nucleotide or protein sequences collected in the INSDC databases.</li>
+</ul>
+<h3 id="17-identifying-orthologs-with-oma-a-primer">[17] Identifying orthologs with OMA: A primer</h3>
+<ul>
+<li>Authors: Monique Zahn-Zabal, C. Dessimoz, Natasha M. Glover</li>
+<li>Year: 2020</li>
+<li>Venue: F1000Research</li>
+<li>URL: https://www.semanticscholar.org/paper/3b77eadcdd6979352c81d0876b0ed3a3ef4215d6</li>
+<li>DOI: 10.12688/f1000research.21508.1</li>
+<li>PMID: 32089838</li>
+<li>PMCID: 7014581</li>
+<li>Citations: 41</li>
+<li>Summary: This Primer is organized in two parts and provides all the necessary background information to understand the concepts of orthology, how to infer them and the different subtypes of Orthology in OMA, as well as what types of analyses they should be used for.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.695)<br />
+    &gt; Get more information about your gene. After searching for your gene, you will be taken to the gene's page, which provides some external information. You can also find this by clicking on the Information tab. The information for our example gene, which corresponds to the human protein S100 calcium binding protein P, is shown in Figure 5. The information page includes the OMA ID, description, organism, locus, other IDs and cross-reference, domain architectures, and Gene Ontology annotations.</li>
+</ul>
+<h3 id="18-network-pharmacology-based-strategy-to-investigate-the-pharmacological-mechanisms-of-ginkgo-biloba-extract-for-aging">[18] Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging</h3>
+<ul>
+<li>Authors: Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Evidence-based Complementary and Alternative Medicine : eCAM</li>
+<li>URL: https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>DOI: 10.1155/2020/8508491</li>
+<li>PMID: 32802136</li>
+<li>PMCID: 7403930</li>
+<li>Citations: 8</li>
+<li>Summary: The study found that flavonoids (quercetin, luteolin, and kaempferol) and beta-sitosterol and the top eight candidate targets, namely, PTGS2, PPARG, DPP4, GSK3B, CCNA2, AR, MAPK14, and ESR1, were selected as the main therapeutic targets of EGb.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.693)<br />
+    &gt; e validated target proteins of the active components were obtained from the TCMSP database. e target protein name of the active ingredient was converted to the standard target gene name through the UniProt Knowledge Base (UniProtKB, http://www. uniprot.org/). e UniProtKB is the central hub for the collection of functional information on proteins, with accurate, consistent, and rich annotation. e target protein names were inputted into UniProtKB, with the organism restricted to "Homo sapiens," eventually gaining the official symbol.</li>
+</ul>
+<h3 id="19-proteome-wide-subcellular-topologies-of-e-coli-polypeptides-database-stepdb">[19] Proteome-wide Subcellular Topologies of E. coli Polypeptides Database (STEPdb)*</h3>
+<ul>
+<li>Authors: Georgia Orfanoudaki, A. Economou</li>
+<li>Year: 2014</li>
+<li>Venue: Molecular &amp; Cellular Proteomics</li>
+<li>URL: https://www.semanticscholar.org/paper/8e452aca415b30d995ba9f977086924c8fed8f19</li>
+<li>DOI: 10.1074/mcp.O114.041137</li>
+<li>PMID: 25210196</li>
+<li>Citations: 72</li>
+<li>Influential citations: 3</li>
+<li>Summary: The STEP database (STEPdb) is a comprehensive characterization of subcellular localization and topology of the complete proteome of Escherichia coli and is the first database that contains an extensive set of peripheral IM proteins (PIM proteins) and includes their graphical visualization into complexes, cellular functions, and interactions.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.690)<br />
+    &gt; The E. coli K-12 Reference Proteome and Data Sources-Two databases Uniprot (29) and EcoLOCATION (32) and the proposed IM proteome (33) were the main initial starting points for the complete subcellular categorization of K-12 described here. The E. coli K-12/ MG1655 strain is one of the microbial proteomes whose comprehensive annotation is of the highest priority in Uniprot (29). This is the "reference proteome" for E. coli, contains 4303 proteins, and has been annotated here. Our annotation has been formulated in such a way that it can be easily incorporated in Uniprot.<br />
+    &gt; EchoLOCATION has an easily accessible table that maps gene names to subcellular locations. However, mapping the gene names given by EchoLOCATION to the respective protein identifiers in Uniprot was not straightforward. Unfortunately, gene names cannot serve as unique identifiers of a protein sequence. In more than 100 cases the gene name of a predicted protein in EchoLOCATION when searched against Uniprot gave as a result more than one K-12 protein hits. That is because there are proteins that have common synonymous gene names with the primary gene name of others.<br />
+    &gt; To retrieve updated Uniprot accession identifiers and to map Uniprot accessions identifiers to EchoLOCATION identifiers (termed: EchoBASE IDs) we used the "ID mapping" function of Uniprot. In cases where the only provided identifiers were the gene names, we used mySQL queries to compare with the primary and alternative gene names in Uniprot. In cases where multiple matches existed for the same gene name, we manually resolved the differences based on other information (e.g. protein description, mass etc.).<br />
+    &gt; The annotation of pseudogenes, mobile elements, transposons, and insertion elements relied on EcoGene (34), Uniprot (29), and Ochman et al. (35). The list of E. coli K-12 complexes was retrieved from EcoCyc (31) and literature searches.</li>
+</ul>
+<h3 id="20-cellphonedb-inferring-cellcell-communication-from-combined-expression-of-multi-subunit-ligandreceptor-complexes">[20] CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes</h3>
+<ul>
+<li>Authors: M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo</li>
+<li>Year: 2020</li>
+<li>Venue: Nature Protocols</li>
+<li>URL: https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>DOI: 10.1038/s41596-020-0292-x</li>
+<li>PMID: 32103204</li>
+<li>Citations: 2776</li>
+<li>Influential citations: 299</li>
+<li>Summary: The structure and content of CellPhoneDB is outlined, procedures for inferring cell–cell communication networks from single-cell RNA sequencing data are provided and a practical step-by-step guide to help implement the protocol is presented.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.688)<br />
+    &gt; CellPhoneDB stores ligand-receptor interactions, as well as other properties of the interacting partners, including their subunit architecture and gene and protein identifiers. To create the content of the database, four main .csv data files are required: gene_input.csv, protein_input.csv, complex_input.csv and interaction_input.csv (Fig. 4).<br />
+    &gt; gene_input Mandatory fields are 'gene_name', 'uniprot', 'hgnc_symbol' and 'ensembl'. This file is critical for establishing the link between the scRNA-seq data and the interaction pairs stored at the protein level. It includes the following gene and protein identifiers: (i) gene name ('gene_name'), (ii) UniProt identifier ('uniprot'), (iii) HUGO Nomenclature Committee (HGNC) symbol ('hgnc_symbol') and (iv) gene Ensembl identifier (ENSG) ('ensembl'). To create this file, lists of linked proteins and gene identifiers are downloaded from UniProt and merged using gene names. Several rules need to be considered when merging the files • UniProt annotation prevails over the gene Ensembl annotation when the same gene Ensembl identifier points toward different UniProt identifiers. • UniProt and Ensembl lists are also merged by their UniProt identifier, but this information is used only when the UniProt or Ensembl identifier is missing in the original list merged by gene name. • If the same gene name points toward different HGNC symbols, only the HGNC symbol matching the gene name annotation is considered. • Only one HLA isoform is considered in our interaction analysis, and it is stored in a manually HLA-curated list of genes, named HLA_curated.<br />
+    &gt; protein_input Mandatory fields are 'uniprot' and 'protein_name'.</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>H. Chiba, Hiroyo Nishide, I. Uchiyama (2015). Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data. PLoS ONE. https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>Anshul Tiwari, Siddharth J Modi, A. Girme, L. Hingorani (2023). Network pharmacology-based strategic prediction and target identification of apocarotenoids and carotenoids from standardized Kashmir saffron (Crocus sativus L.) extract against polycystic ovary syndrome. Medicine. https://www.semanticscholar.org/paper/3e3253804574634d1968a0fd5b65dd1674bff6c6</li>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al. (2025). The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa. Animals : an Open Access Journal from MDPI. https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>S. Ghatak, Zachary A. King, Anand V. Sastry, B. Palsson (2019). The y-ome defines the 35% of Escherichia coli genes that lack experimental evidence of function. Nucleic Acids Research. https://www.semanticscholar.org/paper/c0336e0a70554304893a9e2d010ee30bd6872b10</li>
+<li>Avril Coghlan, M. Berriman (2018). Functional annotation of parasitic worm genomes, by assigning protein names and GO terms. https://www.semanticscholar.org/paper/583c74a2e225dbff5fca04d36298e5b690491e82</li>
+<li>P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al. (2011). PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse. Nucleic Acids Research. https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>Jun Shen, D. Scheffer, Kelvin Y. Kwan, D. Corey (2015). SHIELD: an integrative gene expression database for inner ear research. Database: The Journal of Biological Databases and Curation. https://www.semanticscholar.org/paper/fc7704155cefd9f1c767dc2a03a5025c77d19437</li>
+<li>Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al. (2024). Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining. Research Square. https://www.semanticscholar.org/paper/795b2985fdc3cf1cfbd5fda1b3c0502eb4dfe866</li>
+<li>G. Lee, Khoi Pham, Ina Bang, Seyoung Ko, Donghyuk Kim (2025). Integrated genomic and transcriptomic Insights into methanol tolerance mechanisms in Methylobacterium extorquens AM1, identifying key targets for strain engineering. Journal of Biological Engineering. https://www.semanticscholar.org/paper/6aa688271f173ba9e4347c044e998375ecb5ce81</li>
+<li>V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al. (2006). GeneTools – application for functional annotation and statistical hypothesis testing. BMC Bioinformatics. https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al. (2025). Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining. npj Drug Discovery. https://www.semanticscholar.org/paper/000083b7bd96cff5b3d1891b00ad332eed7d9add</li>
+<li>Tun-Wen Pai, Kuan Li, Cing-Han Yang, Chin‐Hwa Hu, Han-Jia Lin et al. (2018). Multiple model species selection for transcriptomics analysis of non-model organisms. BMC Bioinformatics. https://www.semanticscholar.org/paper/110be4fb3dd4a35e32df8f6ec7f467b8860f84c5</li>
+<li>Monique Zahn-Zabal, C. Dessimoz, Natasha M. Glover (2020). Identifying orthologs with OMA: A primer. F1000Research. https://www.semanticscholar.org/paper/3b77eadcdd6979352c81d0876b0ed3a3ef4215d6</li>
+<li>Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al. (2020). Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging. Evidence-based Complementary and Alternative Medicine : eCAM. https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>Georgia Orfanoudaki, A. Economou (2014). Proteome-wide Subcellular Topologies of E. coli Polypeptides Database (STEPdb)*. Molecular &amp; Cellular Proteomics. https://www.semanticscholar.org/paper/8e452aca415b30d995ba9f977086924c8fed8f19</li>
+<li>M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo (2020). CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes. Nature Protocols. https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JQ0
+gene_symbol: PP_2599
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PP_2599 encodes a membrane-associated chemotaxis sensory-transducer-family protein with
+  GAF, HAMP, HD/PDEase, and HD-GYP domains in Pseudomonas putida KT2440. The domain architecture
+  supports a sensory cyclic-guanylate phosphodiesterase candidate in the c-di-GMP turnover boundary
+  rather than a plain MCP receptor, but this first pass does not establish the upstream signal or
+  physiological output.
+existing_annotations:
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Signal transduction is supported by the GAF/HAMP sensory architecture, but the more
+      specific first-pass interpretation is cyclic-nucleotide turnover.
+    action: KEEP_AS_NON_CORE
+    reason: PP_2599 carries sensory GAF/HAMP features plus HD/PDEase and HD-GYP catalytic-domain
+      evidence, indicating a membrane sensory phosphodiesterase candidate rather than a generic
+      signaling protein.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2599/PP_2599-goa.tsv
+      supporting_text: &#34;GO:0007165\tsignal transduction&#34;
+    - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+      supporting_text: DR   InterPro; IPR003660; HAMP_dom.
+    - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+      supporting_text: DR   InterPro; IPR003018; GAF.
+- term:
+    id: GO:0008081
+    label: phosphoric diester hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Phosphoric diester hydrolase activity is directionally right but too broad for the
+      HD-GYP/cyclic-di-GMP phosphodiesterase evidence.
+    action: MODIFY
+    reason: InterPro assigns PP_2599 to a cyclic-di-GMP/3&#39;3&#39;-cGAMP phosphodiesterase family and
+      identifies HD/PDEase plus HD-GYP domains, so cyclic-guanylate-specific phosphodiesterase
+      activity is the more informative first-pass molecular-function term.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2599/PP_2599-goa.tsv
+      supporting_text: &#34;GO:0008081\tphosphoric diester hydrolase activity&#34;
+    - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR052020; Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE.&#34;
+    - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+      supporting_text: DR   InterPro; IPR003607; HD/PDEase_dom.
+    - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+      supporting_text: DR   InterPro; IPR037522; HD_GYP_dom.
+    - reference_id: file:PSEPK/PP_2599/PP_2599-deep-research-asta.md
+      supporting_text: &#34;Key Domains:** Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE. (IPR052020)&#34;
+    proposed_replacement_terms:
+    - id: GO:0071111
+      label: cyclic-guanylate-specific phosphodiesterase activity
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Membrane localization is supported for this sensory phosphodiesterase candidate.
+    action: ACCEPT
+    reason: GOA carries InterPro-supported membrane localization, and UniProt predicts a
+      transmembrane helix in PP_2599.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2599/PP_2599-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+    - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+      supporting_text: FT   TRANSMEM        182..200
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:PSEPK/PP_2599/PP_2599-goa.tsv
+  title: QuickGO/GOA annotation table for PP_2599 in Pseudomonas putida KT2440
+  findings: []
+- id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+  title: UniProt record Q88JQ0 for PP_2599 in Pseudomonas putida KT2440
+  findings:
+  - statement: UniProt product naming places PP_2599 in the chemotaxis sensory transducer family.
+    supporting_text: &#39;DE   SubName: Full=Chemotaxis sensory transducer family protein&#39;
+  - statement: Conserved domain annotation supports a sensory cyclic-nucleotide phosphodiesterase candidate.
+    supporting_text: &#34;DR   InterPro; IPR052020; Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE.&#34;
+- id: file:PSEPK/PP_2599/PP_2599-deep-research-asta.md
+  title: Asta retrieval report for PP_2599 in Pseudomonas putida KT2440
+  findings:
+  - statement: Asta retrieval recapitulates the chemotaxis sensory-transducer family name and HD/GAF/HAMP domain architecture.
+    supporting_text: &#39;gene_symbol: PP_2599&#39;
+core_functions:
+- description: Membrane-associated sensory cyclic-guanylate phosphodiesterase candidate with GAF, HAMP,
+    HD/PDEase, and HD-GYP domains.
+  molecular_function:
+    id: GO:0071111
+    label: cyclic-guanylate-specific phosphodiesterase activity
+  locations:
+  - id: GO:0016020
+    label: membrane
+  supported_by:
+  - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+    supporting_text: &#34;DR   InterPro; IPR052020; Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE.&#34;
+  - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+    supporting_text: DR   InterPro; IPR003607; HD/PDEase_dom.
+  - reference_id: file:PSEPK/PP_2599/PP_2599-uniprot.txt
+    supporting_text: DR   InterPro; IPR037522; HD_GYP_dom.
+  - reference_id: file:PSEPK/PP_2599/PP_2599-deep-research-asta.md
+    supporting_text: &#34;Key Domains:** Cyclic_di-GMP/3&#39;3&#39;-cGAMP_PDE. (IPR052020)&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: What signal regulates PP_2599, and does the protein measurably alter KT2440 c-di-GMP pools?
+suggested_experiments:
+- description: Assay PP_2599-dependent cyclic-guanylate phosphodiesterase activity in vitro and compare
+    cellular c-di-GMP levels, motility, and biofilm phenotypes in wild type, deletion, and catalytic-site
+    mutant strains.
+  experiment_type: c-di-GMP phosphodiesterase and phenotype assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

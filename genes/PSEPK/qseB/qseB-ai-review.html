@@ -1,0 +1,3148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>qseB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>qseB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F73" target="_blank" class="term-link">
+                        Q88F73
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "qseB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F73" data-a="DESCRIPTION: qseB encodes a QseB-like two-component DNA-binding..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>qseB encodes a QseB-like two-component DNA-binding transcriptional activator in Pseudomonas putida KT2440. It has a response-regulator receiver domain and an OmpR/PhoB-type DNA-binding domain, supporting phosphorelay-dependent transcriptional regulation rather than direct quorum-signal synthesis or reception.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                                    GO:0000156
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay response regulator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0000156" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phosphorelay response-regulator activity is appropriate for the CheY-like receiver domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is a two-component response regulator with receiver-domain and OmpR/PhoB-family DNA-binding evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0000156	phosphorelay response regulator activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phosphorelay signal transduction is the correct process context for this response regulator.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The receiver domain supports His-Asp phosphorelay signaling; the upstream signal and partner specificity remain unresolved in this first pass.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0000160	phosphorelay signal transduction system</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0000976" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cis-regulatory region binding is consistent with the DNA-binding response-regulator architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The OmpR/PhoB-type DNA-binding domain supports cis-regulatory DNA binding by this response regulator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0000976	transcription cis-regulatory region binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic DNA binding is true but less informative than the cis-regulatory DNA-binding terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is a DNA-binding response regulator, but GO:0000976 or GO:0000987 captures the regulatory binding role more precisely.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003677	DNA binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm localization is appropriate for this soluble response regulator.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt subcellular-location mapping places the response regulator in the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol localization is compatible with the soluble response-regulator role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosol is compatible with the response-regulator role, but the UniProt cytoplasm annotation is used as the core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005829	cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of DNA-templated transcription is appropriate for an OmpR/PhoB-family DNA-binding response regulator.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response-regulator receiver domain and regulatory DNA-binding domain support phosphorelay-dependent transcriptional regulation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006355	regulation of DNA-templated transcription</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032993" target="_blank" class="term-link">
+                                    GO:0032993
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F73" data-a="GO:0032993" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein-DNA complex membership is plausible but should not be treated as the stable core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DNA-bound response regulators form protein-DNA complexes transiently during transcriptional regulation; molecular activity and process terms better capture the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0032993	protein-DNA complex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/qseB/qseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Response regulator receiver activity in a two-component phosphorelay.</h3>
+                <span class="vote-buttons" data-g="Q88F73" data-a="FUNCTION: Response regulator receiver activity in a two-comp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                            phosphorelay response regulator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/qseB/qseB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/qseB/qseB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DNA-binding transcriptional regulation by an OmpR/PhoB-family response regulator.</h3>
+                <span class="vote-buttons" data-g="Q88F73" data-a="FUNCTION: DNA-binding transcriptional regulation by an OmpR/..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                            transcription cis-regulatory region binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/qseB/qseB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/qseB/qseB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using UniRule and SAAS rules</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/qseB/qseB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO/GOA annotation table for qseB in Pseudomonas putida KT2440</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/qseB/qseB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record Q88F73 for qseB in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt product naming supports the first-pass two-component-system assignment.</div>
+
+                        <div class="finding-text">"DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Conserved domain annotation supports the phosphorelay role.</div>
+
+                        <div class="finding-text">"DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The OmpR/PhoB DNA-binding domain supports transcription-regulator context.</div>
+
+                        <div class="finding-text">"DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/qseB/qseB-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for qseB in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Asta retrieval was checked for this first pass and recapitulates the UniProt/domain assignment.</div>
+
+                        <div class="finding-text">"protein_description: &#39;SubName: Full=Two component system DNA-binding transcriptional"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What signal and target regulon define the qseB two-component branch in KT2440, and is it linked to quorum-adjacent behavior or another stress/transport pathway?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F73" data-a="Q: What signal and target regulon define the qseB two..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct qseB deletion and complemented strains, profile transcriptional changes under candidate stress and community-growth conditions, and test phosphotransfer or DNA binding to candidate promoters.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: regulon profiling and two-component signaling assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F73" data-a="EXPERIMENT: Construct qseB deletion and complemented strains, ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(qseB-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F73" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-09T10:17:09.589556</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[1] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.815)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="2-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[2] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.799)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="3-network-pharmacology-based-strategy-to-investigate-the-pharmacological-mechanisms-of-ginkgo-biloba-extract-for-aging">[3] Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging</h3>
+<ul>
+<li>Authors: Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Evidence-based Complementary and Alternative Medicine : eCAM</li>
+<li>URL: https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>DOI: 10.1155/2020/8508491</li>
+<li>PMID: 32802136</li>
+<li>PMCID: 7403930</li>
+<li>Citations: 8</li>
+<li>Summary: The study found that flavonoids (quercetin, luteolin, and kaempferol) and beta-sitosterol and the top eight candidate targets, namely, PTGS2, PPARG, DPP4, GSK3B, CCNA2, AR, MAPK14, and ESR1, were selected as the main therapeutic targets of EGb.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.764)<br />
+    &gt; e validated target proteins of the active components were obtained from the TCMSP database. e target protein name of the active ingredient was converted to the standard target gene name through the UniProt Knowledge Base (UniProtKB, http://www. uniprot.org/). e UniProtKB is the central hub for the collection of functional information on proteins, with accurate, consistent, and rich annotation. e target protein names were inputted into UniProtKB, with the organism restricted to "Homo sapiens," eventually gaining the official symbol.</li>
+</ul>
+<h3 id="4-spore-germination-of-the-obligate-biotroph-spongospora-subterranea-transcriptome-analysis-reveals-germination-associated-genes">[4] Spore Germination of the Obligate Biotroph Spongospora subterranea: Transcriptome Analysis Reveals Germination Associated Genes</h3>
+<ul>
+<li>Authors: Sadegh Balotf, R. Tegg, D. Nichols, C. Wilson</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/d6fe7c793bbd642b3cf0b2c098589c5c5b8f7eef</li>
+<li>DOI: 10.3389/fmicb.2021.691877</li>
+<li>PMID: 34234764</li>
+<li>PMCID: 8256667</li>
+<li>Citations: 10</li>
+<li>Summary: The datasets generated in this study provide a basic knowledge of the physiological processes associated with spore germination and will facilitate functional predictions of novel genes in S. subterranea and other plasmodiophorids.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.756)<br />
+    &gt; Of 679 differentially expressed transcripts, 570 transcripts were annotated in protein databases. Gene ontology (GO) enrichment analysis of differentially expressed genes (DEGs) was conducted to identify the functional categories of the annotated genes. These DEGs were assigned to GO-terms for biological processes and molecular functions (David annotation). The significantly (Pvalue &lt;0.05) enriched biological processes (top 25 only) and molecular functions are presented in Figure 3. The complete list of GO categories of DEGs is listed in Supplementary Table 3.<br />
+    &gt; The major functional categories of biological processes were as follows: cellular metabolic process, organic substance metabolic process and metabolic process (n = 38 each); primary metabolic process (n = 36); macromolecule metabolic process (n = 32); cellular macromolecule metabolic process (n = 30); protein metabolic process (n = 24); response to stimulus (n = 23) and cellular protein metabolic process (n = 21) (Figure 3A). Among the various categories, binding (n = 35), protein binding and transferase activity (n = 16 each) were dominantly represented within the molecular function category. Other significantly represented categories include kinase activity (n = 8) and macromolecular complex binding (n = 4) (Figure 3B).<br />
+    &gt; The functional annotation of DEGs was also retrieved from UniProt (Figure 4). Transport (n = 34), transcription regulation (n = 27), Ubl conjugation pathway (n = 18), DNA repair (n = 11) and mRNA processing (n = 11) were the most represented functions in the DEGs.<br />
+    &gt; After obtaining the functional annotation of the identified transcripts from the gene and protein databases, we generated a list of selected DEGs with the possible role in the germination of resting spores in S. subterranea (Table 2). Among the upregulated group, the majority of genes were related to the initiation and regulation of transcription such as heat shock protein, transcription initiation factor and proteasome. The DNA repair genes such as DNA repair factor IIH helicase (Table 2 and Supplementary Table 2) were also found in the upregulated transcript.</li>
+</ul>
+<h3 id="5-kinasefusiondb-an-integrative-knowledge-of-kinase-fusion-proteins-in-multi-scales">[5] KinaseFusionDB: an integrative knowledge of kinase fusion proteins in multi-scales</h3>
+<ul>
+<li>Authors: H. Kumar, Zikang Chen, Abayomi Adegunlehin, Loren Trowbridge, Leonardo Aguilar et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Briefings in Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/d212d0a2c8e4a7cedcd2c1e4fa11ed6de23345f7</li>
+<li>DOI: 10.1093/bib/bbaf259</li>
+<li>PMID: 40471992</li>
+<li>PMCID: 12140011</li>
+<li>Summary: A novel in silico pipeline for predicting 3D structures of kinase fusion proteins and performing structure-based virtual screening, which revealed that most predicted structures showed high pLDDT scores (pLDDT &gt;70) within conserved kinase domains.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.749)<br />
+    &gt; To assign the functional or gene categories, we integrated cancer genes, tumor suppressors, epigenetic regulators, DNA damage repair genes, human essential genes, kinases, and transcription factors. In each gene group, we checked the retention and ORFs of the main protein functional features. There are 13 features belonging to the 'region' category, including 'calcium binding', Figure 1. Overview of KinaseFusionDB and its role in understanding kinase fusion proteins. (a) I. The top section identifies therapeutic targets for oncogenic activation of kinases, including wild-type kinases activated by overexpression or genomic amplification, mutated kinases with gain-offunction mutations, and kinase fusion proteins resulting from chromosomal rearrangements. II. The middle section highlights the functionalities of KinaseFusionDB, such as providing functional annotations, mRNA/protein expression data, drug binding information, and relevant literature reviews. III. The third section addresses the current limitations in targeting kinase fusion proteins, particularly the lack of comprehensive 3D structures for these proteins. It emphasizes the partial knowledge of kinase fusion protein structures and the need for further drug screening. IV. The bottom section discusses how computational approaches, such as predicted 3D structures (e.g. from AlphaFold2), can fill these gaps, supporting drug screening and filtering based on consistent binding among multiple fusion protein isoforms. (b) Kinase domain-retained human kinase fusion proteins.<br />
+    &gt; 'coiled coil', 'compositional bias', 'DNA binding', 'domain', 'intramembrane', 'motif', 'nucleotide binding', 'region', 'repeat', 'topological domain', 'transmembrane', and 'zinc finger'. To perform the protein functional feature retention search, we first downloaded the GFF (General Feature Format) format protein information of 10 651 UniProt [26] accessions from UniProt for 10 619 genes involved in 15 030 fusion genes [27]. UniProt provides the loci information of 39 protein features, including 6 molecule processing features, 13 region features, 4 site features, 6 amino acid modification features, 2 natural variation features, 5 experimental info features, and 3 secondary structure features.</li>
+</ul>
+<h3 id="6-next-generation-sequencing-and-transcriptome-analysis-predicts-biosynthetic-pathway-of-sennosides-from-senna-cassia-angustifolia-vahl-a-non-model-plant-with-potent-laxative-properties">[6] Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties</h3>
+<ul>
+<li>Authors: Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al.</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e</li>
+<li>DOI: 10.1371/journal.pone.0129422</li>
+<li>PMID: 26098898</li>
+<li>PMCID: 4476680</li>
+<li>Citations: 81</li>
+<li>Influential citations: 3</li>
+<li>Summary: A set of putative genes involved in various secondary metabolite pathways, especially those related to the synthesis of sennosides are identified which will serve as an important platform for public information about gene expression, genomics, and functional genomics in senna.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.743)<br />
+    &gt; Further the assembled transcript contigs were validated using CLC Genomics workbench (CLC Bio, Boston, MA 02108 USA) by mapping high quality reads back to the assembled transcript contigs. ORF-Predictor [57], an online tool, was used on default parameters to identify the coding DNA sequences (CDS) from assembled transcript contigs. GC counts of transcripts was determined using a custom-made perl script.<br />
+    &gt; Functional annotations. The functional annotation was performed by aligning coding DNA sequence (CDS) to NCBI 'green plant database (txid 33090)' database using basic local alignment search tool (BLASTX) [58] with an E-value threshold of 1e -06 and GO assignments were used to classify the functions of the predicted CDS. The GO mapping also provided ontology of defined terms representing gene product properties which were grouped into three main domains: biological process (BP), molecular function (MF) and cellular component (CC). GO mapping was carried out in order to retrieve GO terms for all the BLASTX functionally annotated CDS. The GO mapping used defined criteria to retrieve GO terms for annotated CDS which included use of BLASTX result accession IDs to retrieve gene names or symbols, UniProt IDs and direct search in the dbxref table of GO database. Identified gene names or symbols were then searched in the species specific entries of the gene-product tables of GO database. UniProt IDs made use of protein information resource (PIR) which includes protein sequence database (PSD), UniProt, SwissProt, TrEMBL, RefSeq, GenPept, and PDB databases. Gene Ontology analysis helps in specifying all the annotated nodes comprising of GO functional groups. CDS were compared against the COG (Clusters of Orthologous Groups) database for the analysis of phylogenetically widespread domain families. CDS were compared against Pfam database for higher-level groupings of related protein families, known as clans and the identification of domains that occurs within proteins. BLASTX was used against uniprot-swissprot database with cut-off e-value 1e-6 to annotate predicted CDS against protein.</li>
+</ul>
+<h3 id="7-construction-of-an-ortholog-database-using-the-semantic-web-technology-for-integrative-analysis-of-genomic-data">[7] Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data</h3>
+<ul>
+<li>Authors: H. Chiba, Hiroyo Nishide, I. Uchiyama</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>DOI: 10.1371/journal.pone.0122802</li>
+<li>PMID: 25875762</li>
+<li>PMCID: 4395280</li>
+<li>Citations: 14</li>
+<li>Summary: The ortholog database using the Semantic Web technology can contribute to biological knowledge discovery through integrative data analysis and examples demonstrate that the ortholog information described in RDF can be used to link various biological data such as taxonomy information and Gene Ontology.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.741)<br />
+    &gt; A typical use of an ortholog database is transferring functional annotations from known genes in model organisms to genes of unknown function in other organisms, on the basis of the conjecture that orthologs are usually functionally conserved. To demonstrate such an application in our database, we showed a query to retrieve ortholog information of a specified protein.<br />
+    &gt; Here, we specified a UniProt ID to obtain ortholog information. For describing functional categories of genes, we used Gene Ontology (GO) [24]. The UniProt GO Annotation (UniProt-GOA) database [25] (http://www.ebi.ac.uk/GOA) provides GO term assignment to proteins with evidence codes (http://www.geneontology.org/GO.evidence.shtml). We created an ontology for GO annotation (GOA-O, Table 1, http://purl.jp/bio/11/goa) and described UniProt-GOA data in RDF using it (Table 2). If some model organisms have experimentally verified GO annotations, we can transfer such a validated annotation to orthologs of other organisms.</li>
+</ul>
+<h3 id="8-ten-steps-to-get-started-in-genome-assembly-and-annotation">[8] Ten steps to get started in Genome Assembly and Annotation</h3>
+<ul>
+<li>Authors: Victoria Dominguez Del Angel, Erik Hjerde, L. Sterck, S. Capella-Gutiérrez, C. Notredame et al.</li>
+<li>Year: 2018</li>
+<li>Venue: F1000Research</li>
+<li>URL: https://www.semanticscholar.org/paper/1b1090dcbd0f6a609f0448957b7e464997879ea8</li>
+<li>DOI: 10.12688/f1000research.13598.1</li>
+<li>PMID: 29568489</li>
+<li>PMCID: 5850084</li>
+<li>Citations: 109</li>
+<li>Influential citations: 1</li>
+<li>Summary: Ten steps to facilitate researchers getting started in genome assembly and genome annotation are presented and the importance of data management is stressed, and advice on where to submit data and how to make results Findable, Accessible, Interoperable, and Reusable (FAIR).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.736)<br />
+    &gt; The ultimate goal of the functional annotation process (Figure 4) is to assign biologically relevant information to predicted polypeptides, and to the features they derive from (e.g. gene, mRNA). This process is especially relevant nowadays in the context of the NGS era due to the capacity of sequencing, assembling, and annotating full genomes in short periods of time, e.g. less than a month. Functional elements could range from putative name and/or symbols for protein-coding genes, e.g. ADH to its putative biological function, e.g. alcohol dehydrogenase, associated gene ontology terms, e.g. GO:0004022, functional sites, e.g. METAL 47 47 Zinc 1, and domains, e.g. IPR002328, among other features. The function of predicted proteins can be computationally inferred based on the similarity between the sequence of interest and other sequences in different public repositories, e.g. BLASTP against Uniprot. Caution should be taken when assigning results merely based on sequence similarity as two evolutionary independent sequences which share some common domains could be considered homologs 62 . Thus, whenever possible, it is better to use orthologous sequences for annotation purposes rather than simply similar sequences 63 . With the growing number of sequences in those public repositories, it is possible to perform various searches and combine obtained results into a consensus annotation. The accurate assignment of the functional elements is a complex process, and the best annotation will involve manual curation.<br />
+    &gt; There are two main outcomes of the functional annotation process. The first is the assignment of functional elements to genes. Downstream analysis of these elements allow further understanding of specific genome properties, e.g. metabolic pathways, and similarities compared with closely related species. The second result of the functional annotation is the additional quality check for the predicted gene set. It is possible to identify problematic and/or suspicious genes by the presence of specific domains, suspicious orthology assignment and/or absence of other functional elements, e.g. functional completeness. These Page 13 of 19</li>
+</ul>
+<h3 id="9-the-usda-ars-ag100pest-initiative-high-quality-genome-assemblies-for-agricultural-pest-arthropod-research">[9] The USDA-ARS Ag100Pest Initiative: High-Quality Genome Assemblies for Agricultural Pest Arthropod Research</h3>
+<ul>
+<li>Authors: Anna K. Childers, S. Geib, S. Sim, Monica F. Poelchau, B. Coates et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Insects</li>
+<li>URL: https://www.semanticscholar.org/paper/a33d31da6f5aee18501cfc2332ff50d5b7f23508</li>
+<li>DOI: 10.3390/insects12070626</li>
+<li>PMID: 34357286</li>
+<li>PMCID: 8307976</li>
+<li>Citations: 41</li>
+<li>Influential citations: 2</li>
+<li>Summary: It is shown that the Ag100Pest Initiative will greatly expand the diversity of publicly available arthropod genome assemblies and demonstrate the high quality of preliminary contig assemblies, which should help other researchers attain similarly high-quality assemblies.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.734)<br />
+    &gt; Structural annotation refers to the prediction of gene structures on a genome assembly, including the positions of transcripts, exons, introns, coding sequences, and other features [49]. Functional annotation provides information about the gene's biological role(s), for example, gene ontologies [50], pathways, functional domains, and names. Model organism databases can manually assign biological function to genes by accumulating evidence from the scientific literature and structuring it in human and machine-readable formats. In contrast, for non-model organisms such as those in the Ag100Pest Initiative, most, if not all, functional annotation is performed computationally, as (1) gene function in very few genes have been established experimentally for these non-model species, and (2) the capacity for literature-based curation of gene function does not yet exist for these species.<br />
+    &gt; Most of the genome assemblies generated by the Ag100Pest project are being annotated using the NCBI eukaryotic annotation pipeline [51]. This pipeline relies on Gnomon [52] for gene prediction and uses genome assembly, RNA sequencing (RNA-Seq) alignments, transcripts, and protein alignments as inputs. The resulting gene predictions are given an accession number and made publicly available. Gene names are assigned based on homology to proteins in SwissProt [53,54]. The NCBI eukaryotic annotation pipeline requires both the genome assembly and associated RNA-Seq evidence to be publicly available in the NCBI's GenBank and Sequence Read Archive, respectively (SRA; see [55]). In the event that an Ag100Pest species lacks sufficient RNA-Seq evidence in SRA, additional data will be generated, as appropriate, and submitted to aid with NCBI gene structure prediction and annotation.<br />
+    &gt; NCBI does not currently generate additional functional annotations. Proteins deposited in GenBank or generated by RefSeq should eventually be functionally annotated by UniProt [53].</li>
+</ul>
+<h3 id="10-lmpd-lipid-maps-proteome-database">[10] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.727)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+</ul>
+<h3 id="11-cronos-the-cross-reference-navigation-server">[11] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.722)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="12-molecular-mechanisms-underlying-response-to-influenza-in-grey-seals-halichoerus-grypus-a-potential-wild-reservoir">[12] Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir</h3>
+<ul>
+<li>Authors: Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Molecular ecology</li>
+<li>URL: https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>DOI: 10.1111/mec.70012</li>
+<li>PMID: 40613337</li>
+<li>PMCID: 12288799</li>
+<li>Citations: 3</li>
+<li>Summary: It is hypothesized that the combination of down‐ and up‐regulated immune gene expression may prevent overstimulation of the immune response, acting as an adaptation in grey seals to resist IAV‐associated mortality.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.718)<br />
+    &gt; Top hits were required to have a percent query coverage (QC) ≥ 80 to be used for annotating transcripts. A subsequent blastx search against the Swiss-Prot database (downloaded from NCBI 07/02/2021) for transcripts without a sufficient hit was conducted using the parameters max_target_seqs 2, max_hsps 1, e-value 0.001 and qcov_hsp_perc 80. Genes without a published gene symbol (named 'LOC' + Gene ID in NCBI's database) were assigned a UniProt gene symbol based on the protein annotation listed in the RefSeq entries, when possible. Ultimately, a list of transcript identifiers and gene symbols were compiled into a transcript-to-gene map for subsequent analyses.<br />
+    &gt; To further facilitate analyses of gene functions, additional steps were taken to identify the putative function of genes annotated with a symbol that began with 'LOC'. First 'LOC' genes with a protein-coding gene description in NCBI's database were manually assigned the appropriate gene symbol. Transcript sequences of remaining 'LOC' genes were queried through a blastn search against NCBI's nucleotide database (parameters: max target seq = 2, max hsps = 1, evalue = 0.01, perc identity = 90). Results from the blastn search were filtered to exclude hits with query coverage &lt; 90 and hits that included vague terms (e.g., 'uncharacterized', 'genome assembly' and 'chromosome'). Gene symbols were extracted from the first hit for each transcript and assigned as the identity of that gene for genes with only a single transcript with hits or with consistent hits across transcripts. For genes with multiple transcripts that matched different gene symbols, the annotation was manually determined based on the number of transcripts for each gene symbol hit and query coverage/% identity values. For any 'LOC' genes that were identified as a gene already present in the dataset, gene counts were concatenated for further analysis.</li>
+</ul>
+<h3 id="13-identifying-and-characterizing-candidate-genes-contributing-to-a-grain-yield-qtl-in-wheat">[13] Identifying and Characterizing Candidate Genes Contributing to a Grain Yield QTL in Wheat</h3>
+<ul>
+<li>Authors: Md Atik Us Saieed, Yun Zhao, Shahidul Islam, Wujun Ma</li>
+<li>Year: 2023</li>
+<li>Venue: Plants</li>
+<li>URL: https://www.semanticscholar.org/paper/23ba1a928368e73b6098d6d22de6f341b5cb965c</li>
+<li>DOI: 10.3390/plants13010026</li>
+<li>PMID: 38202333</li>
+<li>PMCID: 10780351</li>
+<li>Citations: 3</li>
+<li>Summary: The current study focuses on identifying the candidate genes of a grain yield QTL from a double haploid population, Westonia × Kauz. The QTL region spans 20 Mbp on the IWGSC whole-genome sequence flank with 90K SNP markers. The IWGSC gene annotation revealed 16 high-confidence genes and 41 low-confidence genes. Bioinformatic approaches, including functional gene annotation, ontology investigation, pathway exploration, and gene network study using publicly available gene expression data, enabl...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.715)<br />
+    &gt; Functional annotation of the genes was obtained from the EnsamblPlant database (Biomart), and annotation descriptions of the genes were matched against IWGSC Refseq annotation v 1.1. Nucleotide and corresponding protein sequences were extracted from EnsamblPlant. The predicted protein functions were checked in several online databases like Uniprot (https://www.uniprot.org) (accessed on 8 August 2020), Pfam (https://pfam. xfam.org) (accessed on 8 August 2020), and EnsamblPlant (Table 1). The annotation description of HC and LC genes and other information are presented in File S1. Available information from functional annotation indicates some proteins were parts of cellular components such as the plasma membrane, an integral part of the membrane, and intracellular anatomical structure. Molecular functions indicated HC genes were involved in ATP binding, GTP binding, GTPase activity, heme binding, protein binding, and oxidoreductase activity. The biological processes of the HC genes indicated their involvement in DNA replication, protein transport, photomorphogenesis, oxidoreductase activity, cell-cell signaling, chloroplast organization, and transcription regulation. The annotation description of most low-confidence genes is arabinogalactan peptide 14, which is involved in diverse developmental roles such as differentiation, cellcell recognition, embryogenesis, and programmed cell death in Arabidopsis, but is absent in wheat. No other information is available for these genes. Therefore, based on the gene functional analysis results, the downstream analysis was focused on only the highconfidence genes.</li>
+</ul>
+<h3 id="14-hymenoptera-genome-database-integrating-genome-annotations-in-hymenopteramine">[14] Hymenoptera Genome Database: integrating genome annotations in HymenopteraMine</h3>
+<ul>
+<li>Authors: C. Elsik, A. Tayal, Colin M. Diesh, Deepak R. Unni, Marianne L. Emery et al.</li>
+<li>Year: 2015</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/f3050b6d6a0a45db7ad78d972e5c014195a3abf0</li>
+<li>DOI: 10.1093/nar/gkv1208</li>
+<li>PMID: 26578564</li>
+<li>PMCID: 4702858</li>
+<li>Citations: 112</li>
+<li>Influential citations: 6</li>
+<li>Summary: An update of the HGD, a model organism database for insect species of the order Hymenoptera (ants, bees and wasps), which maintains genomic data for 9 bee species, 10 ant species and 1 wasp, including the versions of genome and annotation data sets published by the genome sequencing consortiums and those provided by NCBI.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.714)<br />
+    &gt; HymenopteraMine provides a report for each entity in the database. Each report is divided into sections including 'Summary', 'Gene', 'Gene Expression', 'Protein', 'Function', 'Homology', 'Others' or a subset of those categories, depending on the identifier searched. For example, searching a protein identifier would provide sections relevant to proteins. Each section of the report provides information in the form of a table that can be customized and downloaded in various formats. The Summary section of a Gene Report provides gene identifiers, symbols, description, organism, chromosome, strand and other identifiers such as aliases (identifiers from previous OGS versions) and database cross references. The Transcripts section provides information about the gene model (transcripts, exons, coding sequences) and gives a visual representation of the gene model highlighting the structure of the gene. Users can download FASTA-formatted sequences for each type of feature provided in the gene model section. Links are provided to JBrowse and to NCBI gene pages, when applicable. Transcript identifiers are linked to Transcript Reports, which include a Gene Expression section that provides raw read counts, normalized read counts, FPKM and RPKM values for RNAseq data with SRA metadata. The Protein section of the Gene Report includes protein name, accession and length. The protein name/accession numbers are linked to Protein Reports, with more information including protein family, GO annotations, InterPro domains, related publications, protein features, and curated notes from UniProt describing tissue specificity, function and developmental stages. The Function section provides GO annotation with evidence codes from the Biological Process, Molecular Function and Cellular Component ontologies. Clicking on the symbols to the right of each GO term leads to the directed acyclic graph showing all parents and children of the term, developed using the BioJS DAG Viewer (50). Clicking on a GO term provides a report for that term, a list of genes annotated with that term and tables showing relationships to other GO terms. The Homologue sec-tion lists homologues in other hymenopteran species and Drosophila melanogaster. The 'Other' section provides publications and a list of overlapping features.</li>
+</ul>
+<h3 id="15-integrative-analysis-of-next-generation-sequencing-for-small-non-coding-rnas-and-transcriptional-regulation-in-myelodysplastic-syndromes">[15] Integrative analysis of next generation sequencing for small non-coding RNAs and transcriptional regulation in Myelodysplastic Syndromes</h3>
+<ul>
+<li>Authors: D. Beck, S. Ayers, J. Wen, Miriam Brandl, T. Pham et al.</li>
+<li>Year: 2011</li>
+<li>Venue: BMC Medical Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/de13a83fb5d84d8eb997c4dec2d73ed4be2efbd8</li>
+<li>DOI: 10.1186/1755-8794-4-19</li>
+<li>PMID: 21342535</li>
+<li>PMCID: 3060843</li>
+<li>Citations: 44</li>
+<li>Influential citations: 3</li>
+<li>Summary: Novel findings are provided that build a basis of further investigations of diagnostic biomarkers, targeted therapies and studies on MDS pathogenesis, and confirmed important regulatory roles for MDS linked miRNAs and TFs.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; The flat files FACTOR and GENE of the commercially available database TRANSFAC v2008_2 [26] were downloaded and parsed into a MySQL database. The FAC-TOR and GENE flat files contain information on transcription factor proteins and genes regulated by transcription factors, respectively. A total of 2362 regulating factors for the human species (Homo Sapiens) were extracted and 70 entries, that did not describe proteins, but other regulatory factors were omitted. A large fraction (about 77 percent) of the remaining 2292 transcription factor proteins were mapped to Uniprot [27], either by external database ID's, or exact matches between protein names. With these accessions the protein coding gene IDs, as well as other information was downloaded automatically via a MATLAB based data retrieval algorithm implemented for this study. The transcript and probeset annotation files for the Affymetrix GeneChip Human Exon 1.0 ST Array were downloaded from the manufacture's website http://www. affymetrix.com and parsed into MySQL tables. Transcript IDs for 98 percent of the human transcription factor coding genes were extracted based on direct matches between gene names.<br />
+    &gt; Genes that can potentially be up regulated when the transcription factor protein binds to a specific site in its promoter region are called transcription factor target genes. We extracted all target genes for human transcription factor proteins by joining a number of database tables. This revealed 3296 gene targets for the 2292 transcription factor proteins. We used direct matches between the target gene names, as well as additional entries, to identify corresponding transcripts on the Affymetrix GeneChip. This resulted in matches for 83 percent of the target genes.</li>
+</ul>
+<h3 id="16-revisiting-the-plasmodium-falciparum-druggable-genome-using-predicted-structures-and-data-mining">[16] Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining</h3>
+<ul>
+<li>Authors: Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Research Square</li>
+<li>URL: https://www.semanticscholar.org/paper/795b2985fdc3cf1cfbd5fda1b3c0502eb4dfe866</li>
+<li>DOI: 10.21203/rs.3.rs-5412515/v1</li>
+<li>PMID: 39649165</li>
+<li>PMCID: 11623766</li>
+<li>Citations: 3</li>
+<li>Summary: This study systematically assessed the Plasmodium falciparum genome for proteins amenable to target-based drug discovery, identifying 867 candidate targets with evidence of small molecule binding and blood stage essentiality and implements a generalizable framework for systematically evaluating and prioritizing novel pathogenic disease targets.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; List of genes and genomic features (GFF) for Plasmodium falciparum 3D7 genome (PlasmoDB release 66) was downloaded and protein coding genes were extracted along with their gene annotations and genomic location. Additional genomic annotations were obtained by querying PlasmoDB to extract UniProt and Entrez ID(s), ortholog group (OrthoMCL), protein features (CDS and protein length, molecular weight, isoelectric point), domain annotations (InterPro, PFam, Superfamily), number of transmembrane (TM) domains, and enzyme commission (EC) numbers. Gene function (Gene Ontology; components, functions and processes) was extracted by either PlasmoDB or by querying the InterPro ID under InterPro2GO mapping tool from EMBL-EBI services. Gene essentiality data was obtained for P.<br />
+    &gt; falciparum 29 and P. berghei 30,31 parasites that were mapped to their falciparum ortholog using OrthoMCL orthology group IDs. Protein Data Bank (PDB) IDs of crystal structures were obtained by searching either gene symbols, UniProt IDs associated with each gene, or by typing "Plasmodium" in the PDB website search box. A report with gene identi er, organism, accession number, method for structure determination and publication information was extracted for the search hits.<br />
+    &gt; Mapping genes to associated literature publications A download from the NCBI FTP site was performed for gene2pubmed.gz (version 2024-02-21) containing taxonomy ID, gene ID (Entrez) and PubMed ID. Gene IDs were mapped to the P. falciparum 3D7 annotation set, and PMIDs matching the criteria were extracted. To include literature references associated with gene symbols, we queried each gene symbol in PubMed using the Eutils 81 efetch function from NCBI; additional information for each publication was obtained pragmatically using the same tool, retrieving title, authors and DOI (digital object identi er).</li>
+</ul>
+<h3 id="17-protein-coding-genes-in-humans-and-model-mammals-mouse-rat-and-pig-gene-identifiers-and-disambiguation-of-gene-nomenclature-retrieved-from-the-ensembl-genome-browser">[17] Protein-coding genes in humans and model mammals (mouse, rat and pig): gene identifiers and disambiguation of gene nomenclature retrieved from the Ensembl genome browser</h3>
+<ul>
+<li>Authors: Grzegorz R. Juszczak, C. Pareek, U. Czarnik, M. Pierzchała</li>
+<li>Year: 2025</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/d9089dfc889d790deb49cbc5b4617bda55bcc4da</li>
+<li>DOI: 10.1186/s12864-025-12329-8</li>
+<li>PMID: 41408139</li>
+<li>PMCID: 12822150</li>
+<li>Citations: 2</li>
+<li>Summary: An R script is developed that performs a gene symbol update to current official versions combined with identification of ambiguous symbols and retrieval of other IDs from the Ensembl database and provides a single list of updated symbols with annotation about their ambiguity.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.706)<br />
+    &gt; In the mouse, rat and human genomes, there are approximately twice as many synonyms (aliases) as official symbols. This large number of obsolete gene symbols leads to the problem with unequivocal identification of genes in the literature data because some synonyms can be attributed to more than one current official symbol of protein-coding genes. The ambiguity of symbols may lead to misidentification of 10% of rodent genes and even 18% of human protein-coding genes. Such misidentifications are most likely in case of literature data retrieved from older studies using past versions of gene nomenclature with a large number of obsolete symbols. A simple solution for this problem is usage of stable gene IDs (Table 2) for the unequivocal identification of genes, provided that the genomic information associated with these IDs is retrieved directly from proprietary databases containing the most accurate data. The usage of stable identifiers is important not only for accurate interpretation of literature data but also for currently published datasets because neither the annotation of genomes nor the understanding of gene function are complete.<br />
+    &gt; This incompleteness means that official gene symbols will change over time. Data based only on gene symbols should be used cautiously to avoid misidentification of genes. A solution for this problem is our R script that updates gene symbols and provides annotation about their unique or ambiguous character.</li>
+</ul>
+<h3 id="18-rm2target-v20-an-updated-database-for-the-target-genes-of-writers-erasers-and-readers-of-rna-modifications">[18] RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications</h3>
+<ul>
+<li>Authors: Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70</li>
+<li>DOI: 10.1093/nar/gkaf1206</li>
+<li>PMID: 41206768</li>
+<li>PMCID: 12807602</li>
+<li>Citations: 3</li>
+<li>Summary: The new RM2Target v2.0 will serve as a foundational resource for exploring RNA epitranscriptomic regulation, enabling investigations into cross-talk among modifications, underlying molecular mechanisms, and disease connections, thereby facilitating both basic research and translational applications in RNA epigenetics.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.703)<br />
+    &gt; To obtain basic information on WERs and their target genes, such as official gene symbols, gene IDs, gene types, and genomic locations, gene annotations were downloaded from the GENCODE project [ 44 ] for human and mouse, and from NCBI [ 45 ] and Ensembl [ 46 ] for the other species. Genomic locations were extracted from the corresponding GTF annotation files. Gene symbols were primarily standardized based on the NCBI Gene database [ 45 ] for mRNAs and lncRNAs, GtR-NAdb [ 47 ] for tRNAs, miRbase [ 48 ] for microRNAs, and cir-cBase [ 49 ] for circRNAs. Deprecated or substituted versions of genes were filtered out. The LiftOver [ 50 ] program was employed to convert and unify genomic coordinates across different genome assembly versions.<br />
+    &gt; The functional descriptions of WERs were compiled based on the UniProt database [ 51 ] and further supplemented with evidence from relevant publications, with particular emphasis on their functions as RNA modification regulatory proteins.</li>
+</ul>
+<h3 id="19-msaligmapa-tool-for-mapping-active-site-amino-acids-in-pdb-structures-onto-known-and-novel-unannotated-homologous-sequences-with-similar-function">[19] MSALigMap—A Tool for Mapping Active-Site Amino Acids in PDB Structures onto Known and Novel Unannotated Homologous Sequences with Similar Function</h3>
+<ul>
+<li>Authors: S. Hassan, Sameena Haleemath Sameer, M. Töpel, H. Aronsson</li>
+<li>Year: 2022</li>
+<li>Venue: Life</li>
+<li>URL: https://www.semanticscholar.org/paper/461f60d555bd6dc660bcae87c69afb1aa2a95fbb</li>
+<li>DOI: 10.3390/life12122082</li>
+<li>PMID: 36556447</li>
+<li>PMCID: 9784966</li>
+<li>Citations: 1</li>
+<li>Summary: Using MSALigMap, users can compare multiple protein sequences, such as those from different organisms or clinical strains, with sequences of proteins with crystal structures in PDB that are bound with the ligand/drug and DNA of interest.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.698)<br />
+    &gt; Recently, genome and mRNA sequencing revealed the possibility to identify a large number of genes and transcripts [1,2]. As sequencing data have become more accessible, the primary interest has shifted from sequencing to the annotation of variations to explain protein characteristics. Many of these genes or protein sequences are homologous to annotated sequences in other genomes, and many are identified as novel genes with unknown function. Genes with unknown functions still play important roles in determining cell phenotypes [3]. While a large number of genomes are sequenced at an ever-increasing pace, predicting the function of the genes encoded in these genomes has emerged as a new area of research. Annotating the function of protein sequences remains one of the most important issues in understanding the molecular mechanisms of life [4] and has great implications in biology and pharmaceutical research [5,6]. The computational methods often used for predicting protein function are structure-and sequence-based methods [7], and multiple sequence alignment is one of the key steps in many bioinformatics analyses. Hence, protein binding characterization and quantitative comparison have long been of interest to the scientific community [8], and sequence alignment is an important component of such analyses.<br />
+    &gt; Transcription factors are important for genetic regulation in all organisms and recognize sequence-specific regions in DNA called transcription factor binding sites (TFBSs). Through this type of interaction, transcription factors regulate (induce or repress) the Life 2022, 12, 2082 2 of 12 expression of their target genes [9]. Annotating TFBSs is an important step in genome annotation. Many structure-and sequence-based methods have been developed for predicting TFBSs [10,11]. The recent increase in the number of experimentally resolved structures of protein-DNA complexes in the PDB database can help to annotate the DNA binding sites of novel transcription factor proteins identified in whole-genome sequencing projects that are homologous to these structural complexes.<br />
+    &gt; Identifying binding sites is essential to achieving an understanding of catalytic reactions and to the classification of enzyme proteins involved in various biological processes.</li>
+</ul>
+<h3 id="20-revisiting-the-plasmodium-falciparum-druggable-genome-using-predicted-structures-and-data-mining">[20] Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining</h3>
+<ul>
+<li>Authors: Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al.</li>
+<li>Year: 2025</li>
+<li>Venue: npj Drug Discovery</li>
+<li>URL: https://www.semanticscholar.org/paper/000083b7bd96cff5b3d1891b00ad332eed7d9add</li>
+<li>DOI: 10.1038/s44386-025-00006-5</li>
+<li>PMID: 40066064</li>
+<li>PMCID: 11892419</li>
+<li>Citations: 4</li>
+<li>Summary: This study systematically assessed the Plasmodium falciparum genome and identified 867 candidate protein targets with evidence of small-molecule binding and blood-stage essentiality, providing a genome-wide data resource for P. falciparum and implements a generalizable framework for systematically evaluating and prioritizing novel pathogenic disease targets.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.697)<br />
+    &gt; List of genes and genomic features (GFF) for Plasmodium falciparum 3D7 genome (PlasmoDB release 66) was downloaded and protein-coding genes were extracted along with their gene annotations and genomic location. Additional genomic annotations were obtained by querying PlasmoDB to extract UniProt and Entrez ID(s), ortholog group (OrthoMCL), protein features (CDS and protein length, molecular weight, isoelectric point), domain annotations (InterPro, Pfam, and Superfamily), number of transmembrane (TM) domains, and enzyme commission (EC) numbers. Gene function (Gene Ontology components, functions, and processes) was extracted either from PlasmoDB or by querying the InterPro ID with the InterPro2GO mapping tool from EMBL-EBI. Gene essentiality data was obtained for P. falciparum 20 and P. berghei 21,22 parasites mapped to their falciparum orthologs using OrthoMCL orthology group IDs. Protein Data Bank (PDB) IDs of crystal structures were obtained by searching either gene symbols, UniProt IDs associated with each gene, or the term "Plasmodium". A report with gene identifier, organism, accession number, method for structure determination and publication information was extracted for the search hits.<br />
+    &gt; Mapping genes to associated literature publications A download from the NCBI FTP site was performed for gene2pubmed.gz (version 2024-02-21) containing taxonomy ID, gene ID (Entrez) and PubMed ID information. Gene IDs were mapped to the P. falciparum 3D7 annotation set, and corresponding PMIDs were extracted. To include literature references associated with gene symbols, we queried each symbol in PubMed using the Eutils 77 efetch function from NCBI; additional information for each publication was obtained pragmatically using the same tool, namely title, authors and digital object identifier (DOI). Literature references from gene nomenclature extraction were manually reviewed and filtered for unrelated records (e.g., same name but different meaning across organisms/diseases).</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al. (2020). Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging. Evidence-based Complementary and Alternative Medicine : eCAM. https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>Sadegh Balotf, R. Tegg, D. Nichols, C. Wilson (2021). Spore Germination of the Obligate Biotroph Spongospora subterranea: Transcriptome Analysis Reveals Germination Associated Genes. Frontiers in Microbiology. https://www.semanticscholar.org/paper/d6fe7c793bbd642b3cf0b2c098589c5c5b8f7eef</li>
+<li>H. Kumar, Zikang Chen, Abayomi Adegunlehin, Loren Trowbridge, Leonardo Aguilar et al. (2025). KinaseFusionDB: an integrative knowledge of kinase fusion proteins in multi-scales. Briefings in Bioinformatics. https://www.semanticscholar.org/paper/d212d0a2c8e4a7cedcd2c1e4fa11ed6de23345f7</li>
+<li>Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al. (2015). Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties. PLoS ONE. https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e</li>
+<li>H. Chiba, Hiroyo Nishide, I. Uchiyama (2015). Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data. PLoS ONE. https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>Victoria Dominguez Del Angel, Erik Hjerde, L. Sterck, S. Capella-Gutiérrez, C. Notredame et al. (2018). Ten steps to get started in Genome Assembly and Annotation. F1000Research. https://www.semanticscholar.org/paper/1b1090dcbd0f6a609f0448957b7e464997879ea8</li>
+<li>Anna K. Childers, S. Geib, S. Sim, Monica F. Poelchau, B. Coates et al. (2021). The USDA-ARS Ag100Pest Initiative: High-Quality Genome Assemblies for Agricultural Pest Arthropod Research. Insects. https://www.semanticscholar.org/paper/a33d31da6f5aee18501cfc2332ff50d5b7f23508</li>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al. (2025). Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir. Molecular ecology. https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>Md Atik Us Saieed, Yun Zhao, Shahidul Islam, Wujun Ma (2023). Identifying and Characterizing Candidate Genes Contributing to a Grain Yield QTL in Wheat. Plants. https://www.semanticscholar.org/paper/23ba1a928368e73b6098d6d22de6f341b5cb965c</li>
+<li>C. Elsik, A. Tayal, Colin M. Diesh, Deepak R. Unni, Marianne L. Emery et al. (2015). Hymenoptera Genome Database: integrating genome annotations in HymenopteraMine. Nucleic Acids Research. https://www.semanticscholar.org/paper/f3050b6d6a0a45db7ad78d972e5c014195a3abf0</li>
+<li>D. Beck, S. Ayers, J. Wen, Miriam Brandl, T. Pham et al. (2011). Integrative analysis of next generation sequencing for small non-coding RNAs and transcriptional regulation in Myelodysplastic Syndromes. BMC Medical Genomics. https://www.semanticscholar.org/paper/de13a83fb5d84d8eb997c4dec2d73ed4be2efbd8</li>
+<li>Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al. (2024). Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining. Research Square. https://www.semanticscholar.org/paper/795b2985fdc3cf1cfbd5fda1b3c0502eb4dfe866</li>
+<li>Grzegorz R. Juszczak, C. Pareek, U. Czarnik, M. Pierzchała (2025). Protein-coding genes in humans and model mammals (mouse, rat and pig): gene identifiers and disambiguation of gene nomenclature retrieved from the Ensembl genome browser. BMC Genomics. https://www.semanticscholar.org/paper/d9089dfc889d790deb49cbc5b4617bda55bcc4da</li>
+<li>Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al. (2025). RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications. Nucleic Acids Research. https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70</li>
+<li>S. Hassan, Sameena Haleemath Sameer, M. Töpel, H. Aronsson (2022). MSALigMap—A Tool for Mapping Active-Site Amino Acids in PDB Structures onto Known and Novel Unannotated Homologous Sequences with Similar Function. Life. https://www.semanticscholar.org/paper/461f60d555bd6dc660bcae87c69afb1aa2a95fbb</li>
+<li>Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al. (2025). Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining. npj Drug Discovery. https://www.semanticscholar.org/paper/000083b7bd96cff5b3d1891b00ad332eed7d9add</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F73
+gene_symbol: qseB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: qseB encodes a QseB-like two-component DNA-binding transcriptional activator in Pseudomonas
+  putida KT2440. It has a response-regulator receiver domain and an OmpR/PhoB-type DNA-binding domain,
+  supporting phosphorelay-dependent transcriptional regulation rather than direct quorum-signal synthesis
+  or reception.
+existing_annotations:
+- term:
+    id: GO:0000156
+    label: phosphorelay response regulator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Phosphorelay response-regulator activity is appropriate for the CheY-like receiver domain.
+    action: ACCEPT
+    reason: The protein is a two-component response regulator with receiver-domain and OmpR/PhoB-family
+      DNA-binding evidence.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0000156\tphosphorelay response regulator activity&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator
+        QseB&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+    - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Phosphorelay signal transduction is the correct process context for this response regulator.
+    action: ACCEPT
+    reason: The receiver domain supports His-Asp phosphorelay signaling; the upstream signal and partner
+      specificity remain unresolved in this first pass.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0000160\tphosphorelay signal transduction system&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator
+        QseB&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+    - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Cis-regulatory region binding is consistent with the DNA-binding response-regulator architecture.
+    action: ACCEPT
+    reason: The OmpR/PhoB-type DNA-binding domain supports cis-regulatory DNA binding by this response
+      regulator.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0000976\ttranscription cis-regulatory region binding&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator
+        QseB&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+    - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Generic DNA binding is true but less informative than the cis-regulatory DNA-binding terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The protein is a DNA-binding response regulator, but GO:0000976 or GO:0000987 captures the
+      regulatory binding role more precisely.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0003677\tDNA binding&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator
+        QseB&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+    - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Cytoplasm localization is appropriate for this soluble response regulator.
+    action: ACCEPT
+    reason: UniProt subcellular-location mapping places the response regulator in the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol localization is compatible with the soluble response-regulator role.
+    action: KEEP_AS_NON_CORE
+    reason: Cytosol is compatible with the response-regulator role, but the UniProt cytoplasm annotation
+      is used as the core location.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0005829\tcytosol&#34;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Regulation of DNA-templated transcription is appropriate for an OmpR/PhoB-family DNA-binding
+      response regulator.
+    action: ACCEPT
+    reason: The response-regulator receiver domain and regulatory DNA-binding domain support phosphorelay-dependent
+      transcriptional regulation.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0006355\tregulation of DNA-templated transcription&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator
+        QseB&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+    - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+- term:
+    id: GO:0032993
+    label: protein-DNA complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: Protein-DNA complex membership is plausible but should not be treated as the stable core
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: DNA-bound response regulators form protein-DNA complexes transiently during transcriptional
+      regulation; molecular activity and process terms better capture the core function.
+    supported_by:
+    - reference_id: file:PSEPK/qseB/qseB-goa.tsv
+      supporting_text: &#34;GO:0032993\tprotein-DNA complex&#34;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator
+        QseB&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+    - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+    - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+      supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000104
+  title: Automatic assignment of GO terms using UniRule and SAAS rules
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:PSEPK/qseB/qseB-goa.tsv
+  title: QuickGO/GOA annotation table for qseB in Pseudomonas putida KT2440
+  findings: []
+- id: file:PSEPK/qseB/qseB-uniprot.txt
+  title: UniProt record Q88F73 for qseB in Pseudomonas putida KT2440
+  findings:
+  - statement: UniProt product naming supports the first-pass two-component-system assignment.
+    supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB&#39;
+  - statement: Conserved domain annotation supports the phosphorelay role.
+    supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+  - statement: The OmpR/PhoB DNA-binding domain supports transcription-regulator context.
+    supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+- id: file:PSEPK/qseB/qseB-deep-research-asta.md
+  title: Asta retrieval report for qseB in Pseudomonas putida KT2440
+  findings:
+  - statement: Asta retrieval was checked for this first pass and recapitulates the UniProt/domain assignment.
+    supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+core_functions:
+- description: Response regulator receiver activity in a two-component phosphorelay.
+  molecular_function:
+    id: GO:0000156
+    label: phosphorelay response regulator activity
+  directly_involved_in:
+  - id: GO:0000160
+    label: phosphorelay signal transduction system
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+    supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB&#39;
+  - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+    supporting_text: DR   InterPro; IPR001789; Sig_transdc_resp-reg_receiver.
+  - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+    supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+- description: DNA-binding transcriptional regulation by an OmpR/PhoB-family response regulator.
+  molecular_function:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  directly_involved_in:
+  - id: GO:0006355
+    label: regulation of DNA-templated transcription
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+    supporting_text: &#39;DE   SubName: Full=Two component system DNA-binding transcriptional activator QseB&#39;
+  - reference_id: file:PSEPK/qseB/qseB-uniprot.txt
+    supporting_text: DR   InterPro; IPR001867; OmpR/PhoB-type_DNA-bd.
+  - reference_id: file:PSEPK/qseB/qseB-deep-research-asta.md
+    supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=Two component system DNA-binding transcriptional&#39;
+proposed_new_terms: []
+suggested_questions:
+- question: What signal and target regulon define the qseB two-component branch in KT2440, and is it linked
+    to quorum-adjacent behavior or another stress/transport pathway?
+suggested_experiments:
+- description: Construct qseB deletion and complemented strains, profile transcriptional changes under
+    candidate stress and community-growth conditions, and test phosphotransfer or DNA binding to candidate
+    promoters.
+  experiment_type: regulon profiling and two-component signaling assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

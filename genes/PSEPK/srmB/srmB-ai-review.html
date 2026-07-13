@@ -1,0 +1,3105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>srmB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>srmB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88ED3" target="_blank" class="term-link">
+                        Q88ED3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "srmB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88ED3" data-a="DESCRIPTION: srmB encodes a DEAD-box ATP-dependent RNA helicase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>srmB encodes a DEAD-box ATP-dependent RNA helicase related to SrmB/RhlE-like bacterial RNA helicases. It is best retained as a cytosolic RNA helicase candidate associated with ribosomal RNA/ribosome-biogenesis context, while generic nucleotide-binding and hydrolase annotations are less informative.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ED3" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleotide binding is expected for a DEAD-box ATPase but not informative as a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RNA helicase activity is the more specific molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88ED3	srmB	enables	GO:0000166	nucleotide binding	molecular_function	ECO:0000256	IEA	GO_REF:0000104	UniRule:UR000400010	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ED3" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleic acid binding is broad substrate context for SrmB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The DEAD-box helicase domains and GOA row support RNA helicase activity more specifically.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88ED3	srmB	enables	GO:0003676	nucleic acid binding	molecular_function	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR011545	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003724" target="_blank" class="term-link">
+                                    GO:0003724
+                                </a>
+                            </span>
+                            <span class="term-label">RNA helicase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ED3" data-a="GO:0003724" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA helicase activity is the core SrmB molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The record has DEAD/DEAH helicase domains and is named an ATP-dependent DEAD-box RNA helicase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88ED3	srmB	enables	GO:0003724	RNA helicase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	ARBA:ARBA00028402|InterPro:IPR014014|InterPro:IPR044742|PANTHER:PTN002773577	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ED3" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is valid cofactor/substrate context for a DEAD-box RNA helicase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding supports helicase activity but is less informative than the RNA helicase term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88ED3	srmB	enables	GO:0005524	ATP binding	molecular_function	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR011545|InterPro:IPR044742|UniRule:UR000400010	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ED3" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is appropriate location context for this soluble bacterial RNA helicase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The TreeGrafter GOA row supports cytosol localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88ED3	srmB	located_in	GO:0005829	cytosol	cellular_component	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN002773577	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ED3" data-a="GO:0016787" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic hydrolase activity should be narrowed to RNA helicase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DEAD-box helicases are ATP-dependent RNA remodeling enzymes; the generic hydrolase label hides the RNA-helicase function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003724" target="_blank" class="term-link">
+                                    RNA helicase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88ED3	srmB	enables	GO:0016787	hydrolase activity	molecular_function	ECO:0000256	IEA	GO_REF:0000104	UniRule:UR000400010	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/srmB/srmB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DEAD-box ATP-dependent RNA helicase candidate associated with large-subunit/rRNA maturation context.</h3>
+                <span class="vote-buttons" data-g="Q88ED3" data-a="FUNCTION: DEAD-box ATP-dependent RNA helicase candidate asso..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003724" target="_blank" class="term-link">
+                            RNA helicase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88ED3	srmB	enables	GO:0003724	RNA helicase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	ARBA:ARBA00028402|InterPro:IPR014014|InterPro:IPR044742|PANTHER:PTN002773577	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis {ECO:0000313|EMBL:AAN70106.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   Pfam; PF00270; DEAD; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/srmB/srmB-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88ED3	srmB	located_in	GO:0005829	cytosol	cellular_component	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN002773577	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis	20260706</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/srmB/srmB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">srmB UniProt flat-file record</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/srmB/srmB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">srmB GOA/QuickGO annotation rows</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/srmB/srmB-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">srmB Asta gene-level retrieval report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Asta retrieval was generated for this first-pass review and retained as lightweight identity context.</div>
+
+                        <div class="finding-text">"uniprot_accession: Q88ED3"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the direct RNA substrates and stress-condition phenotypes for srmB in P. putida KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88ED3" data-a="Q: What are the direct RNA substrates and stress-cond..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type and srmB perturbation strains by RNA end-mapping or RNA-seq under exponential, stationary-phase, and stress conditions to identify direct processing defects.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: RNA end-mapping and stress RNA-seq assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88ED3" data-a="EXPERIMENT: Compare wild-type and srmB perturbation strains by..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(srmB-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ED3" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-10T11:21:08.348211</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 19</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-plasmodium-falciparum-ddx31-is-dna-helicase-localized-in-nucleolus">[1] Plasmodium falciparum DDX31 is DNA helicase localized in nucleolus</h3>
+<ul>
+<li>Authors: Rahena Yasmin, M. Chauhan, S. Sourabh, R. Tuteja</li>
+<li>Year: 2019</li>
+<li>Venue: Heliyon</li>
+<li>URL: https://www.semanticscholar.org/paper/693e52918e8f0574cbe3e5386ab130ace5cd107f</li>
+<li>DOI: 10.1016/j.heliyon.2019.e02905</li>
+<li>PMID: 31872112</li>
+<li>PMCID: 6911875</li>
+<li>Citations: 2</li>
+<li>Summary: Malaria is a major infectious disease and is responsible for millions of infections every year. As drug resistance strains of Plasmodium species are emerging, there is an urgent need to understand the parasite biology and identify new drug targets. Helicases are very important enzymes that participate in various nucleic acid metabolic processes. Previously we have reported several putative DEAD box helicases in the genome of Plasmodium falciparum 3D7 strain. In this study, we present biochemi...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.725)<br />
+    &gt; The DEAD-box proteins belong to SF2 helicases and are involved in various aspects of RNA metabolism, including nuclear transcription, ribosomal biogenesis and nucleocytoplasmic transport in human and yeast (Bates et al., 2005;Cordin et al., 2006;Daugeron and Linder, 1998). Due to the presence of amino acid sequence DEAD (Aspartic Acid-Glutamic Acid--Alanine-Aspartic Acid) in conserved motif II; these proteins are designated as DEAD box proteins. The Has1 proteins are important members of DEAD-box family (Rocak et al., 2005). In yeast Has1 proteins are characterized as the ATP-dependent RNA helicases involved in the biogenesis of 40S and 60S ribosome subunits (Dembowski et al., 2013;Rocak et al., 2005). The genome wide analysis revealed that four members of Has1 family are present in P. falciparum (Tuteja, 2010). Previously we have biochemically characterized PfH69 (Plasmodium falciparum helicase 69 kDa; PF3D7_0630900, homologue of Has1p from P. falciparum) and reported the essentiality of N-terminal region for its enzymatic activities (Prakash and Tuteja, 2010).<br />
+    &gt; PF3D7_0721300 is a homologue of Dbp7p (DEAD box protein 7p) in yeast and DDX31 in humans (Tuteja, 2010). In this study we report the biochemical characterization of DDX31 from P. falciparum 3D7 strain. The PfDDX31 gene is 2700 base pairs long and encodes a protein of ~100 kDa. The core region of PfDDX31 designated as PfDDX31C is from 170 to 789 amino acids (620 amino acids) and contains all the characteristic motifs. PfDDX31C has both ssDNA and RNA dependent ATPase activity. PfDDX31C also exhibits the DNA helicase activity but no RNA helicase activity was detectable in PfDDX31C.</li>
+</ul>
+<h3 id="2-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[2] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.718)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+<li>Snippet 2 (score: 0.668)<br />
+    &gt; (I think match should be teal and mismatch -red?)<br />
+    &gt; The legend was previously mismatched with the labels. This has been corrected in the new uploaded figure . 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section?<br />
+    &gt; The reviewer's presumption is correct; we had stated the date of data retrieval in the caption of Table 1, but we agree it should instead be stated centrally in the Methods. We have now added it to the Methods section as well, for clarity (Lines 696-700) 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copypasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...")<br />
+    &gt; We thank the reviewer for catching this accidental insertion. We have now removed the spurious fragment.<br />
+    &gt; 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; We have removed this speculation in the revised submission.<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or under-annotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets.</li>
+</ul>
+<h3 id="3-a-manual-curation-strategy-to-improve-genome-annotation-application-to-a-set-of-haloarchael-genomes">[3] A Manual Curation Strategy to Improve Genome Annotation: Application to a Set of Haloarchael Genomes</h3>
+<ul>
+<li>Authors: F. Pfeiffer, D. Oesterhelt</li>
+<li>Year: 2015</li>
+<li>Venue: Life</li>
+<li>URL: https://www.semanticscholar.org/paper/f5983d01e0ac838554f7f5c29481d70a9d728c30</li>
+<li>DOI: 10.3390/life5021427</li>
+<li>PMID: 26042526</li>
+<li>PMCID: 4500146</li>
+<li>Citations: 38</li>
+<li>Influential citations: 1</li>
+<li>Summary: A manual curation effort is described that attempts to produce high-quality genome annotations for a set of haloarchaeal genomes (Halobacterium salinarum and Hbt. hubeiense, Haloferax volcanii and Hfx. mediterranei).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.707)<br />
+    &gt; Labelling of such a gene as "inactivated" seems biologically correct. This is translated to the CDS qualifier /pseudo in EMBL and securely ensures that the protein translation is not present in UniProt (e.g., searching for OE_1059R results in no hit). When, however, an invalid partial translation product is produced but not tagged as disrupted (as is the case for VNG0034H), then this is considered by EMBL as a "regular" gene (CDS). Such a gene fragment is included as a regular protein in UniProt (VNG0034H is Q9HSX6). Upon superficial analysis, this may be taken as evidence for an "improved" (because less incomplete) genome annotation in strain NRC-1 compared to strain R1. In addition, according to EMBL requirements, the "CDS" coordinates of OE_1059R must be given as 29913-31570, thus covering and including the integrated transposon ISH1 (with its transposase gene). Only a "tolerated" misc_feature annotation allows representation of this disrupted gene in a biologically meaningful way, representing the reconstructed ancestral gene.</li>
+</ul>
+<h3 id="4-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[4] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.700)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="5-the-usda-ars-ag100pest-initiative-high-quality-genome-assemblies-for-agricultural-pest-arthropod-research">[5] The USDA-ARS Ag100Pest Initiative: High-Quality Genome Assemblies for Agricultural Pest Arthropod Research</h3>
+<ul>
+<li>Authors: Anna K. Childers, S. Geib, S. Sim, Monica F. Poelchau, B. Coates et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Insects</li>
+<li>URL: https://www.semanticscholar.org/paper/a33d31da6f5aee18501cfc2332ff50d5b7f23508</li>
+<li>DOI: 10.3390/insects12070626</li>
+<li>PMID: 34357286</li>
+<li>PMCID: 8307976</li>
+<li>Citations: 41</li>
+<li>Influential citations: 2</li>
+<li>Summary: It is shown that the Ag100Pest Initiative will greatly expand the diversity of publicly available arthropod genome assemblies and demonstrate the high quality of preliminary contig assemblies, which should help other researchers attain similarly high-quality assemblies.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.695)<br />
+    &gt; Structural annotation refers to the prediction of gene structures on a genome assembly, including the positions of transcripts, exons, introns, coding sequences, and other features [49]. Functional annotation provides information about the gene's biological role(s), for example, gene ontologies [50], pathways, functional domains, and names. Model organism databases can manually assign biological function to genes by accumulating evidence from the scientific literature and structuring it in human and machine-readable formats. In contrast, for non-model organisms such as those in the Ag100Pest Initiative, most, if not all, functional annotation is performed computationally, as (1) gene function in very few genes have been established experimentally for these non-model species, and (2) the capacity for literature-based curation of gene function does not yet exist for these species.<br />
+    &gt; Most of the genome assemblies generated by the Ag100Pest project are being annotated using the NCBI eukaryotic annotation pipeline [51]. This pipeline relies on Gnomon [52] for gene prediction and uses genome assembly, RNA sequencing (RNA-Seq) alignments, transcripts, and protein alignments as inputs. The resulting gene predictions are given an accession number and made publicly available. Gene names are assigned based on homology to proteins in SwissProt [53,54]. The NCBI eukaryotic annotation pipeline requires both the genome assembly and associated RNA-Seq evidence to be publicly available in the NCBI's GenBank and Sequence Read Archive, respectively (SRA; see [55]). In the event that an Ag100Pest species lacks sufficient RNA-Seq evidence in SRA, additional data will be generated, as appropriate, and submitted to aid with NCBI gene structure prediction and annotation.<br />
+    &gt; NCBI does not currently generate additional functional annotations. Proteins deposited in GenBank or generated by RefSeq should eventually be functionally annotated by UniProt [53].</li>
+</ul>
+<h3 id="6-computational-discovery-of-transcriptional-regulatory-modules-in-fungal-ribosome-biogenesis-genes-reveals-novel-sequence-and-function-patterns">[6] Computational Discovery of Transcriptional Regulatory Modules in Fungal Ribosome Biogenesis Genes Reveals Novel Sequence and Function Patterns</h3>
+<ul>
+<li>Authors: V. Martyanov, R. H. Gross</li>
+<li>Year: 2013</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/986fb7b3472c53c1891d806144874429471d3d13</li>
+<li>DOI: 10.1371/journal.pone.0059851</li>
+<li>PMID: 23555806</li>
+<li>PMCID: 3612091</li>
+<li>Summary: Several likely new candidates for a role in ribosome biogenesis in S. cerevisiae are identified based on the combined evidence of RBA module presence in the upstream regions, functional annotation information and microarray expression profiles.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.691)<br />
+    &gt; For S. cerevisiae, we used the extra gene feature of SCOPE and identified 12 previously unreported genes containing RBA modules (8 with RRPE-PAC and 4 with PAC-RRPE). By utilizing functional annotation and microarray expression data (see Materials and Methods), we were able to find evidence from at least one other source for 8 genes and from two sources for 4 genes. Based on these analyses, we can hypothesize about several new candidates for a role in ribosome biogenesis in S. cerevisiae.<br />
+    &gt; The 4 candidate genes that are most likely involved in RBA (supported as such by SCOPE motif and module data, SGD functional description information and SPELL expression data) are as follows. YDR465C is an arginine methyltransferase that methylates ribosomal protein RPL12. YGR272C is an essential protein required for maturation of 18S rRNA. YPR010C is the second largest subunit of RNA polymerase I. YNL061W is a probable RNA methyltransferase essential for large ribosomal subunit biogenesis. Table 5 describes which genes are supported by which analyses and Table S4 contains more information about all 12 predicted genes.</li>
+</ul>
+<h3 id="7-different-metabolic-pathways-are-involved-in-response-of-saccharomyces-cerevisiae-to-l-a-and-m-viruses">[7] Different Metabolic Pathways Are Involved in Response of Saccharomyces cerevisiae to L-A and M Viruses</h3>
+<ul>
+<li>Authors: Juliana Lukša, B. Ravoitytė, A. Konovalovas, L. Aitmanaitė, A. Butenko et al.</li>
+<li>Year: 2017</li>
+<li>Venue: Toxins</li>
+<li>URL: https://www.semanticscholar.org/paper/347e98c21490a16073f34d46ef429d508b7f6822</li>
+<li>DOI: 10.3390/toxins9080233</li>
+<li>PMID: 28757599</li>
+<li>PMCID: 5577567</li>
+<li>Citations: 23</li>
+<li>Summary: It is reported that most of the transcriptional responses induced by viral dsRNAs are moderate and insight into the virus–host and virus–virus interplays is provided.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.684)<br />
+    &gt; The physical and/or functional interaction of gene products identified in RNA-Seq. analysis was addressed next. For this, a STRING database of known and predicted protein interactions was used to analyze gene products involved in processes altered by elimination of M-2 (Figure 4) and both L-A-lus and M-2 viral dsRNAs (Figure 5).<br />
+    &gt; Products of genes with altered expression level in M-2-free cells and related to ribosome biogenesis, oxidation-reduction and lipid metabolism were shown to be highly interconnected (Figure 4). Interconnections formed highly-reliable hub between members of ribosome biogenesis group. Most of the genes encoding these proteins are essential. They are related to ribosomal RNA processing (Rrp1, -5, -12, and -14); ATP-dependent RNA helicases of the DEAD-box protein family (Dbp2, -8, and -10); components of the Rix1 complex and pre-replicative complexes Ipi1 and Ipi3; components of RNA polymerases (Rpb8, and Rpc10 and -19); many nucleolar proteins (e.g., Nop1, -4, -7, -8, and -10); and others. In terms of fold change, NSR1, RRS1 and ALB1 were the most (almost three-fold) upregulated genes in this group. Among the closely interconnected gene products involved in ribosome biogenesis, we noted those that are also required for maintenance of M-1 dsRNA (Mak5, Mak11, Mak16) [38][39][40] and involved in susceptibility to K1 (Kre33) [21] or both K1 and K2 killer toxins (Fyv7) [23].<br />
+    &gt; The products of downregulated genes in M437 [L+M−] cells showed interconnections of high confidence level between members related to cellular energetic processes (Figure 4B).</li>
+</ul>
+<h3 id="8-cellphonedb-inferring-cellcell-communication-from-combined-expression-of-multi-subunit-ligandreceptor-complexes">[8] CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes</h3>
+<ul>
+<li>Authors: M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo</li>
+<li>Year: 2020</li>
+<li>Venue: Nature Protocols</li>
+<li>URL: https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>DOI: 10.1038/s41596-020-0292-x</li>
+<li>PMID: 32103204</li>
+<li>Citations: 2775</li>
+<li>Influential citations: 299</li>
+<li>Summary: The structure and content of CellPhoneDB is outlined, procedures for inferring cell–cell communication networks from single-cell RNA sequencing data are provided and a practical step-by-step guide to help implement the protocol is presented.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.683)<br />
+    &gt; CellPhoneDB stores ligand-receptor interactions, as well as other properties of the interacting partners, including their subunit architecture and gene and protein identifiers. To create the content of the database, four main .csv data files are required: gene_input.csv, protein_input.csv, complex_input.csv and interaction_input.csv (Fig. 4).<br />
+    &gt; gene_input Mandatory fields are 'gene_name', 'uniprot', 'hgnc_symbol' and 'ensembl'. This file is critical for establishing the link between the scRNA-seq data and the interaction pairs stored at the protein level. It includes the following gene and protein identifiers: (i) gene name ('gene_name'), (ii) UniProt identifier ('uniprot'), (iii) HUGO Nomenclature Committee (HGNC) symbol ('hgnc_symbol') and (iv) gene Ensembl identifier (ENSG) ('ensembl'). To create this file, lists of linked proteins and gene identifiers are downloaded from UniProt and merged using gene names. Several rules need to be considered when merging the files • UniProt annotation prevails over the gene Ensembl annotation when the same gene Ensembl identifier points toward different UniProt identifiers. • UniProt and Ensembl lists are also merged by their UniProt identifier, but this information is used only when the UniProt or Ensembl identifier is missing in the original list merged by gene name. • If the same gene name points toward different HGNC symbols, only the HGNC symbol matching the gene name annotation is considered. • Only one HLA isoform is considered in our interaction analysis, and it is stored in a manually HLA-curated list of genes, named HLA_curated.<br />
+    &gt; protein_input Mandatory fields are 'uniprot' and 'protein_name'.</li>
+</ul>
+<h3 id="9-rm2target-v20-an-updated-database-for-the-target-genes-of-writers-erasers-and-readers-of-rna-modifications">[9] RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications</h3>
+<ul>
+<li>Authors: Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70</li>
+<li>DOI: 10.1093/nar/gkaf1206</li>
+<li>PMID: 41206768</li>
+<li>PMCID: 12807602</li>
+<li>Citations: 3</li>
+<li>Summary: The new RM2Target v2.0 will serve as a foundational resource for exploring RNA epitranscriptomic regulation, enabling investigations into cross-talk among modifications, underlying molecular mechanisms, and disease connections, thereby facilitating both basic research and translational applications in RNA epigenetics.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.683)<br />
+    &gt; To obtain basic information on WERs and their target genes, such as official gene symbols, gene IDs, gene types, and genomic locations, gene annotations were downloaded from the GENCODE project [ 44 ] for human and mouse, and from NCBI [ 45 ] and Ensembl [ 46 ] for the other species. Genomic locations were extracted from the corresponding GTF annotation files. Gene symbols were primarily standardized based on the NCBI Gene database [ 45 ] for mRNAs and lncRNAs, GtR-NAdb [ 47 ] for tRNAs, miRbase [ 48 ] for microRNAs, and cir-cBase [ 49 ] for circRNAs. Deprecated or substituted versions of genes were filtered out. The LiftOver [ 50 ] program was employed to convert and unify genomic coordinates across different genome assembly versions.<br />
+    &gt; The functional descriptions of WERs were compiled based on the UniProt database [ 51 ] and further supplemented with evidence from relevant publications, with particular emphasis on their functions as RNA modification regulatory proteins.</li>
+</ul>
+<h3 id="10-permanent-draft-genome-of-thermithiobaclillus-tepidarius-dsm-3134t-a-moderately-thermophilic-obligately-chemolithoautotrophic-member-of-the-acidithiobacillia">[10] Permanent draft genome of Thermithiobaclillus tepidarius DSM 3134T, a moderately thermophilic, obligately chemolithoautotrophic member of the Acidithiobacillia</h3>
+<ul>
+<li>Authors: R. Boden, L. Hutt, Marcel Huntemann, Alicia Clum, Manoj Pillay et al.</li>
+<li>Year: 2016</li>
+<li>Venue: Standards in Genomic Sciences</li>
+<li>URL: https://www.semanticscholar.org/paper/f2117c6922312a227e69b8448f807915356842c9</li>
+<li>DOI: 10.1186/s40793-016-0188-0</li>
+<li>PMID: 27708749</li>
+<li>PMCID: 5037610</li>
+<li>Citations: 20</li>
+<li>Influential citations: 1</li>
+<li>Summary: It is speculated that DUF302 and sox genes may have a role in periplasmic trithionate oxidation, as the Kelly-Friedrich pathway of thiosulfate oxidation is not used in Thermithiobacillus spp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.677)<br />
+    &gt; Genes were identified using Prodigal [18] as part of the DOE-JGI genome annotation pipeline [19]. The predicted CDSs were translated and used to search the National Center for Biotechnology Information non-redundant database, UniProt, TIGR-Fam, Pfam, KEGG, COG, and InterPro database. These data sources were combined to assert a product description for each predicted protein. tRNAScanSE was used to find tRNA genes and rRNA genes were found using searches against models of the ribosomal RNA genes built from SIVLA [20,21].<br />
+    &gt; Additional gene prediction analysis and functional annotation was performed within the IMG-ER platform [22,23]. For each gene discussed in this publication, the annotation was manually checked against the Gen-Bank® databased manual searches using the BLASTn and BLASTp algorithms -both of the gene from T. tepidarius and using the equivalent gene from members of the Acidithiobacillia or Escherichia coli.</li>
+</ul>
+<h3 id="11-silencing-of-rna-helicase-iigu-inhibits-mammalian-ribosomal-rna-production">[11] Silencing of RNA Helicase II/Guα Inhibits Mammalian Ribosomal RNA Production*</h3>
+<ul>
+<li>Authors: D. Henning, Rolando B. So, Runyan Jin, L. Lau, B. Valdez</li>
+<li>Year: 2003</li>
+<li>Venue: Journal of Biological Chemistry</li>
+<li>URL: https://www.semanticscholar.org/paper/9be7b042a6a61f36ad5a60279b1f88ffbbe044c2</li>
+<li>DOI: 10.1074/jbc.M310846200</li>
+<li>Citations: 68</li>
+<li>Influential citations: 1</li>
+<li>Summary: Short interfering RNA was used to search for functions for RH-II/Guα and its paralogue RH- II/Guβ in rRNA production and found the opposite effects of the two paralogues suggest antagonistic functions.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.677)<br />
+    &gt; The use of short interfering RNA (siRNA) 1 has revolutionized the way in which the functions and interactions of multiple genes and their encoded proteins are deciphered. Short doublestranded RNA mediates the recognition and degradation of its homologous RNA, leading to the down-regulation of expression of the target gene; the mechanism involves a multiprotein complex (1)(2)(3). The application of siRNA facilitates the study of complex cellular processes including the biogenesis of ribosomal RNA (rRNA).<br />
+    &gt; Synthesis and processing of pre-rRNA, maturation of the final products, and formation of ribosomes occur in the nucleolus. The identification of ϳ350 nucleolar proteins (4,5) and the use of siRNA to silence each encoding gene provide the genetic and biochemical screenings that are necessary to elucidate the mechanism of rRNA production in mammalian cells, a process that is more defined in yeast (6 -8). A number of nucleolar proteins have been functionally associated with mammalian rRNA production mostly based on in vitro experiments and indirect in vivo observations (9 -13). More direct lines of evidence are limited to Bop1 (14), p19 arf (15), and the DKC1 gene product dyskerin (16,17). Although our laboratory recently showed that antisense-mediated down-regulation of RNA helicase II/Gu␣ in Xenopus laevis oocytes resulted in inhibition of production of 18 S rRNA and degradation of 28 S rRNA (18), we have not reported that this enzyme has a similar function in mammalian cells.<br />
+    &gt; RNA helicase II/Gu␣ (RH-II/Gu␣ or DDX21) is a DEAD box nucleolar protein that we previously cloned and characterized (19,20). The cDNA-derived amino acid sequence shows RNA helicase motifs at the middle region, which is responsible for its 5Ј to 3Ј RNA unwinding activity, and a functionally distinct domain at its C terminus that is able to introduce secondary structure to single-stranded RNA (21).</li>
+</ul>
+<h3 id="12-basidioascus-undulatus-genome-origins-and-sexuality">[12] Basidioascus undulatus: genome, origins, and sexuality</h3>
+<ul>
+<li>Authors: Hai D. T. Nguyen, D. Chabot, Y. Hirooka, R. Roberson, K. Seifert</li>
+<li>Year: 2015</li>
+<li>Venue: IMA Fungus</li>
+<li>URL: https://www.semanticscholar.org/paper/a5deb29da5109780b4d55dfa35ea0d9fe13216d5</li>
+<li>DOI: 10.5598/imafungus.2015.06.01.14</li>
+<li>PMID: 26203425</li>
+<li>PMCID: 4500085</li>
+<li>Citations: 12</li>
+<li>Influential citations: 1</li>
+<li>Summary: Nuclear staining and confocal microscopy showed meiosis occurring in basidia and genome analysis confirmed the existence of genes involved in meiosis and mating, leading to a move out of the Wallemiomycetes and into the new class Geminibasidiales cl. nov.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.675)<br />
+    &gt; run on the scaffolds to detect the percentage of conserved eukaryotic genes (CEGs).<br />
+    &gt; Genome annotation was performed following established guidelines (Haas et al. 2011 (Slater &amp; Birney 2005). Predicted gene models exhibiting strong evidence by exon alignment were exported as protein sequences and coding nucleotide sequences (CDS). Predicted gene models lacking evidence from exon alignment were discarded in downstream analyses. To determine function, the protein sequences were used as input for InterProScan 5RC6 (Jones et al. 2014) (parameters: -dp -f -t p -iprlookup -pa -goterms) and were also compared to the manually curated protein data set from UniProt/Swiss-Prot by blastp v. 2.2.28+. The results in XML format from blastp v. 2.2.28+ and InterProScan were loaded into Blast2GO v. 2.7.1 (Conesa et al. 2005) and merged to create an annotation table (available from the first author on request). The gene models with BLAST hits having e-value of less than 1.0E -100 and mean similarity hit of ≥ 70% were assumed to be orthologs and they were given names following recommended conventions (http:// www.uniprot.org/docs/proknameprot). Ribosomal RNA's were predicted by RNAmmer v. 1.2 (Lagesen et al. 2007). Data files are publicly available at NCBI (Genome Accession No. JTLS00000000 version JTLS01000000; BioProject Accession No. PRJNA247992) and JGI MycoCosm portal (Grigoriev et al. 2014).</li>
+</ul>
+<h3 id="13-molecular-mechanisms-underlying-response-to-influenza-in-grey-seals-halichoerus-grypus-a-potential-wild-reservoir">[13] Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir</h3>
+<ul>
+<li>Authors: Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Molecular ecology</li>
+<li>URL: https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>DOI: 10.1111/mec.70012</li>
+<li>PMID: 40613337</li>
+<li>PMCID: 12288799</li>
+<li>Citations: 3</li>
+<li>Summary: It is hypothesized that the combination of down‐ and up‐regulated immune gene expression may prevent overstimulation of the immune response, acting as an adaptation in grey seals to resist IAV‐associated mortality.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.674)<br />
+    &gt; Top hits were required to have a percent query coverage (QC) ≥ 80 to be used for annotating transcripts. A subsequent blastx search against the Swiss-Prot database (downloaded from NCBI 07/02/2021) for transcripts without a sufficient hit was conducted using the parameters max_target_seqs 2, max_hsps 1, e-value 0.001 and qcov_hsp_perc 80. Genes without a published gene symbol (named 'LOC' + Gene ID in NCBI's database) were assigned a UniProt gene symbol based on the protein annotation listed in the RefSeq entries, when possible. Ultimately, a list of transcript identifiers and gene symbols were compiled into a transcript-to-gene map for subsequent analyses.<br />
+    &gt; To further facilitate analyses of gene functions, additional steps were taken to identify the putative function of genes annotated with a symbol that began with 'LOC'. First 'LOC' genes with a protein-coding gene description in NCBI's database were manually assigned the appropriate gene symbol. Transcript sequences of remaining 'LOC' genes were queried through a blastn search against NCBI's nucleotide database (parameters: max target seq = 2, max hsps = 1, evalue = 0.01, perc identity = 90). Results from the blastn search were filtered to exclude hits with query coverage &lt; 90 and hits that included vague terms (e.g., 'uncharacterized', 'genome assembly' and 'chromosome'). Gene symbols were extracted from the first hit for each transcript and assigned as the identity of that gene for genes with only a single transcript with hits or with consistent hits across transcripts. For genes with multiple transcripts that matched different gene symbols, the annotation was manually determined based on the number of transcripts for each gene symbol hit and query coverage/% identity values. For any 'LOC' genes that were identified as a gene already present in the dataset, gene counts were concatenated for further analysis.</li>
+</ul>
+<h3 id="14-viralmultinet-a-structure-aware-multimodal-framework-for-viral-protein-function-prediction-in-wastewater-surveillance">[14] ViralMultiNet: A structure-aware multimodal framework for viral protein function prediction in wastewater surveillance</h3>
+<ul>
+<li>Authors: FuGuo Liu, T. Lai, Wenxia Xu, Guodong Li</li>
+<li>Year: 2026</li>
+<li>Venue: PLOS One</li>
+<li>URL: https://www.semanticscholar.org/paper/7d7965ec223f5715675839cb57efdc776d25e216</li>
+<li>DOI: 10.1371/journal.pone.0349393</li>
+<li>PMID: 42234710</li>
+<li>PMCID: 13232823</li>
+<li>Citations: 1</li>
+<li>Summary: ViralMultiNet is a structure-aware multimodal framework that integrates multi-scale k-mer encodings with functional semantic embeddings derived from UniProt annotations that offers a scalable, interpretable solution for viral protein function prediction.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.674)<br />
+    &gt; To reduce redundancy while preserving sequence diversity, the 235,441 validated ORFs were subjected to two-stage clustering using VSEARCH v2.21.1: first at 90% sequence identity, then refined at 95% identity. Cluster representatives were aligned against UniProt/Swiss-Prot (release 2024_01) using DIAMOND v2.0.15 in sensitive mode (--sensitive). The initial alignment yielded 62,689 ORFs with putative UniProt matches. For each match, protein names, functional descriptions, and Gene Ontology (GO) terms were extracted for downstream label assignment.<br />
+    &gt; 2.1.4. Functional labeling. Functional labels (Enzymatic, Structural, Transport, Other) were assigned to the 62,689 UniProt-mapped ORFs using hierarchical keyword matching against a curated dictionary of 847 functional terms derived from UniProt protein descriptions and Gene Ontology annotations. The classification hierarchy prioritized primary molecular functions:<br />
+    &gt; • Enzymatic: Proteins with catalytic activity (GO:0003824), including polymerases, proteases, methyltransferases, and helicases<br />
+    &gt; • Structural: Proteins involved in virion assembly and structural maintenance (GO:0019012), including spike, envelope, membrane, and nucleocapsid proteins<br />
+    &gt; • Transport: Proteins mediating membrane transport and ion channels (GO:0006810, GO:0015267)<br />
+    &gt; • Other: All remaining ORFs, including regulatory proteins, accessory factors, and hypothetical proteins ORFs with ambiguous or conflicting annotations (e.g., proteins with both enzymatic and structural roles) were manually reviewed by two independent annotators, achieving 94.2% inter-annotator agreement (Cohen's κ = 0.92). After removing ambiguous cases, this resulted in 53,575 unique labeled ORF sequences with unambiguous functional assignments.The 'Other' category encompasses a functionally heterogeneous set of accessory proteins with distinct biological roles, as summarized in Table 1 Variants were filtered to retain only those with ≥2% sequence divergence from their corresponding base ORF to ensure meaningful diversity while maintaining functional annotation consistency.</li>
+</ul>
+<h3 id="15-comprehensive-bioinformatics-analysis-of-the-biodiversity-of-lsm-proteins-in-the-archaea-domain">[15] Comprehensive Bioinformatics Analysis of the Biodiversity of Lsm Proteins in the Archaea Domain</h3>
+<ul>
+<li>Authors: Gloria Payá, V. Bautista, M. Camacho, J. Esclapez, M. Bonete</li>
+<li>Year: 2023</li>
+<li>Venue: Microorganisms</li>
+<li>URL: https://www.semanticscholar.org/paper/62674578b27cda57cafc83c112afaa020f5ab651</li>
+<li>DOI: 10.3390/microorganisms11051196</li>
+<li>PMID: 37317170</li>
+<li>PMCID: 10221803</li>
+<li>Citations: 7</li>
+<li>Summary: It is proposed that most archaeal Lsm proteins are related to the RNA metabolism, and the larger L sm proteins could perform different functions and/or act through other mechanisms of action.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.673)<br />
+    &gt; The STRING 11.0 bioinformatics tool [25] predicts gene-gene or protein-protein associations derived from experimental and bibliographic information, i.e., the interactome. For this purpose, all Lsm proteins in Table S1 were searched, of which 74 were deposited in this database. Figure 7 shows 11 genes that appear in the vast majority of the species analyzed: rpl7ae and rpl37e, which encode 50S ribosomal proteins; fusA, which encodes elongation factor 2; flpA, which encodes fibrillin-like pre-rRNA processing protein; purF, which encodes amidophosphoribosyltransferase; rrp4 and rrp41, which encode RNA-binding proteins of the exosome complex; hel308, which encodes a helicase; and rpoD, rpoH, and rpoN, which encode different RNA polymerase subunits (Figure 7A). All these genes encode proteins closely related to the RNA metabolism.<br />
+    &gt; The ribosomal protein L7Ae is a multifunctional RNA-binding protein that recognizes the K-turn motif of the ribosome and the H/ACA and C/D boxes of sRNAs, generating conformational changes in sRNAs [60]. As mentioned above, the ribosomal protein L37e is found adjacent to the lsm gene in many archaea species. Its primary function is stabilizing interactions between the domains to maintain the structural integrity of the 50S subunit through interactions with RNA [54]. The fusA gene encodes translational elongation factor 2, which has homologs in all three domains of life, EF-G in bacteria, eEF-2 in eukaryotes, and aEF-2 in archaea; it is composed of five domains, a GTPase domain, and domains II to V; and mediates the hydrolysis of a GTP molecule during translocation [61,62].</li>
+</ul>
+<h3 id="16-sexual-and-apogamous-species-of-woodferns-show-different-protein-and-phytohormone-profiles">[16] Sexual and Apogamous Species of Woodferns Show Different Protein and Phytohormone Profiles</h3>
+<ul>
+<li>Authors: H. Fernández, Jonas Grossmann, V. Gagliardini, I. Feito, Alejandro Rivera et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Plant Science</li>
+<li>URL: https://www.semanticscholar.org/paper/31e7e9e486fe7ed4411184372cd9324d4fc2c25c</li>
+<li>DOI: 10.3389/fpls.2021.718932</li>
+<li>PMID: 34868105</li>
+<li>PMCID: 8633544</li>
+<li>Citations: 9</li>
+<li>Summary: The results point to the existence of large metabolic differences between apogamous and sexual gametophytes, and invite to consider the ferngametophyte as a good experimental system to deepen the understanding of plant reproduction.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.669)<br />
+    &gt; Besides, it promotes, in a dose-and auxindependent manner, organ growth by stimulating both cell proliferation and expansion, via the regulation of RBR1 levels (Horváth et al., 2006). The list also included an emb3010 or 40S ribosomal protein S6-2, which may play an important role in controlling cell growth and proliferation through the selective translation of particular classes of mRNAs (Zhou et al., 2015).<br />
+    &gt; Ribosome assembly and function are correlated with the activity of RNA binding proteins, often associated to ribonucleoprotein complexes of RNA as well as helicases (Schmidt, 2020). The former includes proteins like the phosphoprotein AtLa1, required for normal ribosome biogenesis and embryogenesis (Fleurdépine et al., 2007), and the latter, a 50S ribosomal protein L13 or embryo defective 1473, involved in translation and biological processes such as embryo development ending in seed dormancy or stress tolerance (Moin et al., 2016).<br />
+    &gt; RNA helicases are considered of crucial importance for gene regulation of developmental processes, exerting an epigenetic control. In the apogamous species, two helicases, to unwind nucleic acids, were reported: the emb1138, member of the DEAD-box ATP-dependent RNA helicase 3, and At3G62310, a probable pre-mRNA-splicing factor ATP-dependent RNA helicase DEAH2, which might be involved in pre-mRNA splicing. The DEAD-box helicases are involved in various aspects of RNA metabolism, including nuclear transcription, pre-mRNA splicing, ribosome biogenesis, nucleocytoplasmic transport, translation, RNA decay and organellar gene expression. Different studies provided evidence of RNA helicases to be likely involved in regulating apomictic development (Schmidt, 2020). In A. thaliana, mutants for the RNA helicase MNEME form unreduced gametophytes, resembling apospory (Schmidt et al., 2011).</li>
+</ul>
+<h3 id="17-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[17] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.668)<br />
+    &gt; (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b). Under normal-growth conditions, the most enriched cluster (enrichment score 11.4) comprised genes related to ribonucleoproteins, ribosomes, ribosomal proteins, and translation. The second-most enriched cluster (enrichment score 3.8) comprised genes belonging to protein biosynthesis and tRNA metabolism, including aminoacyl-tRNA synthetases. A third cluster (enrichment score 2.2) comprised genes related to nucleotide-binding proteins. Among the genes with peaks under cold-shock conditions, the same three annotation clusters were identified, with enrichment scores 6.5, 4.1, and 2.5, respectively.<br />
+    &gt; We also analyzed the genes identified under both normal-growth and cold-shock conditions, only under normal-growth conditions, or only under cold-shock conditions. (Supplemental Table 4c-e). The same three annotation clusters (ribosome and translation, tRNA metabolism, and nucleotide binding, enrichment scores 6.4, 3.8, and 2.7, respectively) were reported for genes that contained peaks under both normal-growth and cold-shock conditions. Genes with peaks only under normal-growth conditions were enriched for genes related to ribosomes and translation, genes with peaks only under cold-shock conditions showed no specific enrichment. Genes that neither contained a peak under normal-growth nor under coldshock conditions also showed no significant enrichment of a particular family of proteins (Supplemental Table 4f).<br />
+    &gt; As an example for genes related to annotation cluster 1, 18 out of the 22 genes (82%) for proteins of the 30S ribosomal subunit were identified under normal-growth conditions, 12 (55%) after cold shock (11 common genes, three without peaks). For the proteins of the 50S ribosomal subunit, the picture was similar: Out of 34 genes, 31 (91%) were identified under normal-growth, 22 (65%) under coldshock conditions (20 common genes, one without peaks).</li>
+</ul>
+<h3 id="18-target-gene-selection-for-sprayable-dsrnabased-biopesticide-against-tetranychus-urticae-koch-acari-tetranychidae">[18] Target gene selection for sprayable dsRNA‐based biopesticide against Tetranychus urticae Koch (Acari: Tetranychidae)</h3>
+<ul>
+<li>Authors: Yifei Wang, Yuanpeng Duan, Meibin Liu, Meifeng Ren, Yue Gao et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Pest Management Science</li>
+<li>URL: https://www.semanticscholar.org/paper/199a962288bfd1b7f69c1136588cbac9e8f2c6dc</li>
+<li>DOI: 10.1002/ps.8675</li>
+<li>PMID: 39887845</li>
+<li>PMCID: 12074632</li>
+<li>Citations: 8</li>
+<li>Summary: A project to develop double‐stranded RNA (dsRNA)‐based biopesticides against T. urticae, aiming for a species‐specific and sustainable pest management alternative, is initiated.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.667)<br />
+    &gt; In this study, we assessed the toxicity of genes in the DEAD box gene family, proteasome subunits, and signal recognition particle. The DEAD box gene family is the largest subfamily of ATPase activity-dependent RNA helicase, 47 encoding RNA helicases genes that are highly conserved and widely expressed across prokaryotes and eukaryotes. They play essential roles in various aspects of RNA metabolism, including unwinding RNA and remodeling RNA-protein interactions through their ATP-dependent RNA helicase activity. 48 ATPHel-31B and Belle are members of the DEAD box ATP-dependent RNA helicase genes, which are known to modulate numerous biological processes, such as innate immunity and participation in the RNAi pathway. 29 Various approaches have shown that silencing DEAD box ATP-dependent RNA helicase genes can significantly compromise fitness and cause phenotypical changes in several arthropods, including migratory locust Locusta migratoria, 48 common fruit fly Drosophila melanogaster, 49 and A. viennensis. 39 In this study, knockdown of ATPHel-31B and Belle resulted in 60.9% and 37.9% mortality, respectively, with a &gt;50% decrease in relative gene expression levels. No phenotypic changes were observed. Previous research been demonstrated that Belle is essential for both male and female fertility. 50,51 dsTuBelle treatment in T. urticae caused a numerical decrease in female fecundity. However, there were no significant differences compared with the controls, likely because of an insufficient concentration of the treatment. Eukaryotic initiation factor 4A-I (eIF-4A-1) belongs to the DEAD box superfamily 2 (SF2) and is critical for protein translation in eukaryotes. 28 It facilitates ribosome loading onto messenger RNA and is essential for cell growth and development. 52 eIF4A is regulated by the DREF pathway, which is involved in controlling protein synthesis in Drosophila. 53 Injecting dsTuelF4A in L. migratoria nymphs caused 100% mortality before molting, with appendages darkening and withering. 48</li>
+</ul>
+<h3 id="19-role-of-dead-box-rna-helicases-in-low-temperature-adapted-growth-of-antarctic-pseudomonas-syringae-lz4w">[19] Role of DEAD-box RNA helicases in low-temperature adapted growth of Antarctic Pseudomonas syringae Lz4W</h3>
+<ul>
+<li>Authors: Ashaq Hussain, M. K. Ray</li>
+<li>Year: 2023</li>
+<li>Venue: Microbiology Spectrum</li>
+<li>URL: https://www.semanticscholar.org/paper/3760a722f12fd4b62ed86cf4925ef91174806c4e</li>
+<li>DOI: 10.1128/spectrum.04335-22</li>
+<li>PMID: 38014988</li>
+<li>PMCID: 10783127</li>
+<li>Citations: 5</li>
+<li>Summary: The role of DEAD-box RNA helicases in low-temperature adapted growth of P. syringae is investigated, as this group of enzymes play an essential role in modulation of RNA secondary structures, and the requisite role of dbpA and the indispensable requirement of csdA for low- temperature adapted growth are a novel finding.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.666)<br />
+    &gt; R NA helicases regulate cellular processes by modulating different aspects of RNA biology, from its synthesis to degradation, structural maturation (RNA processing) to the stability, and for interaction with metabolites to cellular proteins (RNA protein complexes) for sensing and responding to the cellular milieu (1,2). The DEAD-box RNA helicases constitute a specific group of RNA helicases that derives its name from the highly conserved amino acid sequence in one of the motifs that reads as DEAD in single-letter amino acid code (3). The DEAD-box proteins belong to the SF2 superfamily of RNA helicases which bind to ATP and RNA by two RecA-like domains located on 350to 400-residues-long "helicase core" and perform ATP (ATPase)dependent functions (4,5). These functions include canonical RNA duplex unwinding, RNA strand annealing, RNA folding (RNA chaperone), strand exchange, and protein displacement activity (1,6,7). The conserved helicase core of the RNA helicases is generally flanked by variable regions which are important for determining the specificity of the enzyme (2). The cellular ability to perform these functions at low temperature is critical for cold-adapted organisms, as RNA secondary structures are stabilized at lower temperatures (8).<br />
+    &gt; In bacteria, only a small number of genes (four to six) code for DEAD-box proteins (9). Gram-negative bacterium, such as Escherichia coli, contains five genes for different DEAD-box RNA helicases, while the Gram-positive bacterium, such as Bacillus subtilis, contains four DEAD-box RNA helicase genes in the genome (7,10,11). These helicases are involved in ribosome biogenesis, mRNA processing, and translation. Many of these proteins are non-essential in the organisms at optimum temperature of growth but are variably important for growth at low temperature. In E. coli, none of the five DEADbox proteins (RhlE, SrmB, CsdA, DbpA, and RhlB) are essential for growth at 37°C (12). However, SrmB and CsdA are critical at low temperature (15°C-20°C).</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Rahena Yasmin, M. Chauhan, S. Sourabh, R. Tuteja (2019). Plasmodium falciparum DDX31 is DNA helicase localized in nucleolus. Heliyon. https://www.semanticscholar.org/paper/693e52918e8f0574cbe3e5386ab130ace5cd107f</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>F. Pfeiffer, D. Oesterhelt (2015). A Manual Curation Strategy to Improve Genome Annotation: Application to a Set of Haloarchael Genomes. Life. https://www.semanticscholar.org/paper/f5983d01e0ac838554f7f5c29481d70a9d728c30</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Anna K. Childers, S. Geib, S. Sim, Monica F. Poelchau, B. Coates et al. (2021). The USDA-ARS Ag100Pest Initiative: High-Quality Genome Assemblies for Agricultural Pest Arthropod Research. Insects. https://www.semanticscholar.org/paper/a33d31da6f5aee18501cfc2332ff50d5b7f23508</li>
+<li>V. Martyanov, R. H. Gross (2013). Computational Discovery of Transcriptional Regulatory Modules in Fungal Ribosome Biogenesis Genes Reveals Novel Sequence and Function Patterns. PLoS ONE. https://www.semanticscholar.org/paper/986fb7b3472c53c1891d806144874429471d3d13</li>
+<li>Juliana Lukša, B. Ravoitytė, A. Konovalovas, L. Aitmanaitė, A. Butenko et al. (2017). Different Metabolic Pathways Are Involved in Response of Saccharomyces cerevisiae to L-A and M Viruses. Toxins. https://www.semanticscholar.org/paper/347e98c21490a16073f34d46ef429d508b7f6822</li>
+<li>M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo (2020). CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes. Nature Protocols. https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al. (2025). RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications. Nucleic Acids Research. https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70</li>
+<li>R. Boden, L. Hutt, Marcel Huntemann, Alicia Clum, Manoj Pillay et al. (2016). Permanent draft genome of Thermithiobaclillus tepidarius DSM 3134T, a moderately thermophilic, obligately chemolithoautotrophic member of the Acidithiobacillia. Standards in Genomic Sciences. https://www.semanticscholar.org/paper/f2117c6922312a227e69b8448f807915356842c9</li>
+<li>D. Henning, Rolando B. So, Runyan Jin, L. Lau, B. Valdez (2003). Silencing of RNA Helicase II/Guα Inhibits Mammalian Ribosomal RNA Production*. Journal of Biological Chemistry. https://www.semanticscholar.org/paper/9be7b042a6a61f36ad5a60279b1f88ffbbe044c2</li>
+<li>Hai D. T. Nguyen, D. Chabot, Y. Hirooka, R. Roberson, K. Seifert (2015). Basidioascus undulatus: genome, origins, and sexuality. IMA Fungus. https://www.semanticscholar.org/paper/a5deb29da5109780b4d55dfa35ea0d9fe13216d5</li>
+<li>Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al. (2025). Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir. Molecular ecology. https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>FuGuo Liu, T. Lai, Wenxia Xu, Guodong Li (2026). ViralMultiNet: A structure-aware multimodal framework for viral protein function prediction in wastewater surveillance. PLOS One. https://www.semanticscholar.org/paper/7d7965ec223f5715675839cb57efdc776d25e216</li>
+<li>Gloria Payá, V. Bautista, M. Camacho, J. Esclapez, M. Bonete (2023). Comprehensive Bioinformatics Analysis of the Biodiversity of Lsm Proteins in the Archaea Domain. Microorganisms. https://www.semanticscholar.org/paper/62674578b27cda57cafc83c112afaa020f5ab651</li>
+<li>H. Fernández, Jonas Grossmann, V. Gagliardini, I. Feito, Alejandro Rivera et al. (2021). Sexual and Apogamous Species of Woodferns Show Different Protein and Phytohormone Profiles. Frontiers in Plant Science. https://www.semanticscholar.org/paper/31e7e9e486fe7ed4411184372cd9324d4fc2c25c</li>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>Yifei Wang, Yuanpeng Duan, Meibin Liu, Meifeng Ren, Yue Gao et al. (2025). Target gene selection for sprayable dsRNA‐based biopesticide against Tetranychus urticae Koch (Acari: Tetranychidae). Pest Management Science. https://www.semanticscholar.org/paper/199a962288bfd1b7f69c1136588cbac9e8f2c6dc</li>
+<li>Ashaq Hussain, M. K. Ray (2023). Role of DEAD-box RNA helicases in low-temperature adapted growth of Antarctic Pseudomonas syringae Lz4W. Microbiology Spectrum. https://www.semanticscholar.org/paper/3760a722f12fd4b62ed86cf4925ef91174806c4e</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(srmB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ED3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="srmb-rnaserna-decay-boundary-first-pass-notes">srmB RNase/RNA-decay boundary first-pass notes</h1>
+<ul>
+<li>First-pass curation date: 2026-07-10.</li>
+<li>Batch: <code>projects/P_PUTIDA/batches/module_translation_rna_processing_ribonuclease_rna_decay_processing_helicases.tsv</code>.</li>
+<li>Asta retrieval report: <code>file:PSEPK/srmB/srmB-deep-research-asta.md</code>. The report is retained as provenance; annotation decisions are supported by local UniProt and GOA rows.</li>
+<li>Main conclusion: DEAD-box ATP-dependent RNA helicase candidate associated with large-subunit/rRNA maturation context.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88ED3
+gene_symbol: srmB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: srmB encodes a DEAD-box ATP-dependent RNA helicase related to SrmB/RhlE-like bacterial RNA helicases. It is best
+  retained as a cytosolic RNA helicase candidate associated with ribosomal RNA/ribosome-biogenesis context, while generic
+  nucleotide-binding and hydrolase annotations are less informative.
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Nucleotide binding is expected for a DEAD-box ATPase but not informative as a core function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: RNA helicase activity is the more specific molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tenables\tGO:0000166\tnucleotide binding\tmolecular_function\tECO:0000256\t\
+        IEA\tGO_REF:0000104\tUniRule:UR000400010\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB\
+        \ 11950 / KT2440)\tUniProt\tATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis\t20260706&#34;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+        {ECO:0000313|EMBL:AAN70106.1};&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   Pfam; PF00270; DEAD; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Nucleic acid binding is broad substrate context for SrmB.
+    action: KEEP_AS_NON_CORE
+    reason: The DEAD-box helicase domains and GOA row support RNA helicase activity more specifically.
+    supported_by:
+    - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tenables\tGO:0003676\tnucleic acid binding\tmolecular_function\tECO:0000256\t\
+        IEA\tGO_REF:0000002\tInterPro:IPR011545\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB\
+        \ 11950 / KT2440)\tInterPro\tATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis\t20260706&#34;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+        {ECO:0000313|EMBL:AAN70106.1};&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   Pfam; PF00270; DEAD; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+- term:
+    id: GO:0003724
+    label: RNA helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RNA helicase activity is the core SrmB molecular function.
+    action: ACCEPT
+    reason: The record has DEAD/DEAH helicase domains and is named an ATP-dependent DEAD-box RNA helicase.
+    supported_by:
+    - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tenables\tGO:0003724\tRNA helicase activity\tmolecular_function\tECO:0000501\t\
+        IEA\tGO_REF:0000120\tARBA:ARBA00028402|InterPro:IPR014014|InterPro:IPR044742|PANTHER:PTN002773577\t160488\tPseudomonas\
+        \ putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tATP-dependent DEAD-box RNA helicase\
+        \ require for 50S ribosomal subunit biogenesis\t20260706&#34;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+        {ECO:0000313|EMBL:AAN70106.1};&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   Pfam; PF00270; DEAD; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ATP binding is valid cofactor/substrate context for a DEAD-box RNA helicase.
+    action: KEEP_AS_NON_CORE
+    reason: ATP binding supports helicase activity but is less informative than the RNA helicase term.
+    supported_by:
+    - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tenables\tGO:0005524\tATP binding\tmolecular_function\tECO:0000501\tIEA\t\
+        GO_REF:0000120\tInterPro:IPR011545|InterPro:IPR044742|UniRule:UR000400010\t160488\tPseudomonas putida (strain ATCC\
+        \ 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tATP-dependent DEAD-box RNA helicase require for 50S\
+        \ ribosomal subunit biogenesis\t20260706&#34;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+        {ECO:0000313|EMBL:AAN70106.1};&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   Pfam; PF00270; DEAD; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol is appropriate location context for this soluble bacterial RNA helicase.
+    action: ACCEPT
+    reason: The TreeGrafter GOA row supports cytosol localization.
+    supported_by:
+    - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tlocated_in\tGO:0005829\tcytosol\tcellular_component\tECO:0007826\tIEA\tGO_REF:0000118\t\
+        PANTHER:PTN002773577\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\t\
+        TreeGrafter\tATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis\t20260706&#34;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+        {ECO:0000313|EMBL:AAN70106.1};&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   Pfam; PF00270; DEAD; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Generic hydrolase activity should be narrowed to RNA helicase activity.
+    action: MODIFY
+    reason: DEAD-box helicases are ATP-dependent RNA remodeling enzymes; the generic hydrolase label hides the RNA-helicase
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tenables\tGO:0016787\thydrolase activity\tmolecular_function\tECO:0000256\t\
+        IEA\tGO_REF:0000104\tUniRule:UR000400010\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB\
+        \ 11950 / KT2440)\tUniProt\tATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis\t20260706&#34;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+        {ECO:0000313|EMBL:AAN70106.1};&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   Pfam; PF00270; DEAD; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+    - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+      supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+    proposed_replacement_terms:
+    - id: GO:0003724
+      label: RNA helicase activity
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based
+    on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/srmB/srmB-uniprot.txt
+  title: srmB UniProt flat-file record
+  findings: []
+- id: file:PSEPK/srmB/srmB-goa.tsv
+  title: srmB GOA/QuickGO annotation rows
+  findings: []
+- id: file:PSEPK/srmB/srmB-deep-research-asta.md
+  title: srmB Asta gene-level retrieval report
+  findings:
+  - statement: Asta retrieval was generated for this first-pass review and retained as lightweight identity context.
+    supporting_text: &#39;uniprot_accession: Q88ED3&#39;
+core_functions:
+- description: DEAD-box ATP-dependent RNA helicase candidate associated with large-subunit/rRNA maturation context.
+  molecular_function:
+    id: GO:0003724
+    label: RNA helicase activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tenables\tGO:0003724\tRNA helicase activity\tmolecular_function\tECO:0000501\t\
+      IEA\tGO_REF:0000120\tARBA:ARBA00028402|InterPro:IPR014014|InterPro:IPR044742|PANTHER:PTN002773577\t160488\tPseudomonas\
+      \ putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tATP-dependent DEAD-box RNA helicase\
+      \ require for 50S ribosomal subunit biogenesis\t20260706&#34;
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: &#39;DE   SubName: Full=ATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis
+      {ECO:0000313|EMBL:AAN70106.1};&#39;
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the DEAD box helicase family.&#39;
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: DR   InterPro; IPR011545; DEAD/DEAH_box_helicase_dom.
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: DR   Pfam; PF00270; DEAD; 1.
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: DR   PANTHER; PTHR47959; ATP-DEPENDENT RNA HELICASE RHLE-RELATED; 1.
+  - reference_id: file:PSEPK/srmB/srmB-uniprot.txt
+    supporting_text: KW   ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|RuleBase:RU000492};
+  - reference_id: file:PSEPK/srmB/srmB-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88ED3\tsrmB\tlocated_in\tGO:0005829\tcytosol\tcellular_component\tECO:0007826\tIEA\tGO_REF:0000118\t\
+      PANTHER:PTN002773577\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\t\
+      TreeGrafter\tATP-dependent DEAD-box RNA helicase require for 50S ribosomal subunit biogenesis\t20260706&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: What are the direct RNA substrates and stress-condition phenotypes for srmB in P. putida KT2440?
+suggested_experiments:
+- description: Compare wild-type and srmB perturbation strains by RNA end-mapping or RNA-seq under exponential, stationary-phase,
+    and stress conditions to identify direct processing defects.
+  experiment_type: RNA end-mapping and stress RNA-seq assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

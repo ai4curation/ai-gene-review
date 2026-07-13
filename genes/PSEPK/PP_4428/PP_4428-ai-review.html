@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_4428 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_4428</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EM6" target="_blank" class="term-link">
+                        Q88EM6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_4428";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EM6" data-a="DESCRIPTION: PP_4428 encodes Amino acid ABC transporter, peripl..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_4428 encodes Amino acid ABC transporter, periplasmic amino acid-binding protein, an EhuB-like periplasmic ectoine/osmoprotectant-binding component of a predicted ABC importer.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033294" target="_blank" class="term-link">
+                                    GO:0033294
+                                </a>
+                            </span>
+                            <span class="term-label">ectoine binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EM6" data-a="GO:0033294" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ectoine binding/transport context is appropriate for the EhuB-family periplasmic binding protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EhuB family evidence supports ectoine/osmoprotectant-binding component context for this substrate-binding protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001638; Solute-binding_3/MltF_N.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014337; Ectoine_EhuB.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051470" target="_blank" class="term-link">
+                                    GO:0051470
+                                </a>
+                            </span>
+                            <span class="term-label">ectoine transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EM6" data-a="GO:0051470" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ectoine binding/transport context is appropriate for the EhuB-family periplasmic binding protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EhuB family evidence supports ectoine/osmoprotectant-binding component context for this substrate-binding protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001638; Solute-binding_3/MltF_N.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014337; Ectoine_EhuB.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030313" target="_blank" class="term-link">
+                                    GO:0030313
+                                </a>
+                            </span>
+                            <span class="term-label">cell envelope</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EM6" data-a="GO:0030313" data-r="file:PSEPK/PP_4428/PP_4428-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Adds cell envelope as a conservative first-pass term absent from fetched GOA rows.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The product, family, and domain metadata support this ABC importer component assignment in the first-pass review.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001638; Solute-binding_3/MltF_N.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014337; Ectoine_EhuB.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EhuB-family ectoine/osmoprotectant-binding component of an ABC importer.</h3>
+                <span class="vote-buttons" data-g="Q88EM6" data-a="FUNCTION: EhuB-family ectoine/osmoprotectant-binding compone..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033294" target="_blank" class="term-link">
+                            ectoine binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051470" target="_blank" class="term-link">
+                                ectoine transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030313" target="_blank" class="term-link">
+                                cell envelope
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR001638; Solute-binding_3/MltF_N.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR014337; Ectoine_EhuB.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4428/PP_4428-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4428 (Q88EM6)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   InterPro; IPR001638; Solute-binding_3/MltF_N."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   InterPro; IPR014337; Ectoine_EhuB."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for PP_4428 (Q88EM6)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which substrate and partner ATPase/permease/binding-protein components define this ABC importer system in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88EM6" data-a="Q: Which substrate and partner ATPase/permease/bindin..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test uptake of candidate amino acids or osmoprotectants in wild-type, deletion, and complemented strains, ideally with operon-level mutants that separate binding-protein, permease, and ATPase contributions.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: ABC importer genetics and uptake assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88EM6" data-a="EXPERIMENT: Test uptake of candidate amino acids or osmoprotec..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4428-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EM6" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-10T22:42:13.252620</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-trade-offs-trade-ups-and-high-mutational-parallelism-underlie-microbial-adaptation-during-extreme-cycles-of-feast-and-famine">[1] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine</h3>
+<ul>
+<li>Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Current biology : CB</li>
+<li>URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>DOI: 10.1016/j.cub.2024.02.040</li>
+<li>PMID: 38460514</li>
+<li>PMCID: 11066936</li>
+<li>Citations: 18</li>
+<li>Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.778)<br />
+    &gt; Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).</li>
+</ul>
+<h3 id="2-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[2] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.772)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="3-cj1199-affect-the-development-of-erythromycin-resistance-in-campylobacter-jejuni-through-regulation-of-leucine-biosynthesis">[3] Cj1199 Affect the Development of Erythromycin Resistance in Campylobacter jejuni through Regulation of Leucine Biosynthesis</h3>
+<ul>
+<li>Authors: H. Hao, Fei Li, Jing Han, S. Foley, Menghong Dai et al.</li>
+<li>Year: 2017</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/9152e27a908296795b4779c02d4aa02ffae2f388</li>
+<li>DOI: 10.3389/fmicb.2017.00016</li>
+<li>PMID: 28144238</li>
+<li>PMCID: 5239772</li>
+<li>Citations: 11</li>
+<li>Summary: The Cj1199 gene may directly regulate the leucine biosynthesis and transport and indirectly affect the development of erythromycin resistance in C. jejuni.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.764)<br />
+    &gt; The 20 genes down-regulated in Cj1199 are shown in Table 2.<br />
+    &gt; Five genes (leuA, leuB, leuC, leuD, and trpE) were involved in amino acid biosynthesis. The leuABCD genes participated in leucine biosynthesis pathway. Five genes (Cj0919c, Cj0920c, peb1A, pebC, and ceuC) encoded transporters or binding proteins. The permease protein (Cj0919c-Cj0920c), substratebinding protein (Peb1A), and ATP-binding protein (PebC) worked cooperatively in an ABC-type amino acid transport system. The ceuC encoded enterochelin uptake permease which was also transporters or binding protein. The Cj0246c was involved in signal transduction. Six genes (Cj0560, Cj1356c, Cj0423, Cj0424, Cj0425, and Cj0200c) encoded putative integral membrane or periplasmic proteins. Another three (Cj1025c, Cj1722c, and Cj1388) were hypothetical genes. Only Cj1241 gene encoding a putative major facilitator superfamily (MFS) transport protein was up-regulated in Cj1199. Using qRT-PCR to verify the microarray results, Cj1241 gene was confirmed to be up-regulated, while other four respective genes (Cj0920c, Cj1388, Cj0560, and Cj1717c) were confirmed to be down-regulated (Figure 1).</li>
+</ul>
+<h3 id="4-fusionpdb-a-knowledgebase-of-human-fusion-proteins">[4] FusionPDB: a knowledgebase of human fusion proteins</h3>
+<ul>
+<li>Authors: H. Kumar, Lin-ya Tang, Chengyuan Yang, P. Kim</li>
+<li>Year: 2023</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/6abc299ca227f23e802b197c4d7fdfcaca024697</li>
+<li>DOI: 10.1093/nar/gkad920</li>
+<li>PMID: 37870473</li>
+<li>PMCID: 10767906</li>
+<li>Citations: 13</li>
+<li>Influential citations: 1</li>
+<li>Summary: FusionPDB is the only resource providing whole 3D structures of fusion proteins and comprehensive knowledge of human fusion proteins and it will be regularly updated until it covers all human fusion proteins in the future.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.762)<br />
+    &gt; To assign functional or gene categories, we integrated cancer genes, tumor suppressors, epigenetic regulators, DNA damage repair genes, human essential genes, kinases and transcription factors. In each gene group, we checked the retention and ORFs of the main protein functional features. There are 13 features belonging to the 'region' category, including 'calcium binding', 'coiled coil', 'compositional bias', 'DNA binding', 'domain', 'intramembrane', 'motif', 'nucleotide binding', 'region', 'repeat', 'topological domain', 'transmembrane' and 'zinc finger'. To perform the protein functional feature retention search, we first downloaded the GFF (General Feature Format) format protein information of 10 651 UniProt accessions from UniProt for 10 619 genes involved in 15 030 fusion genes ( 10 ). UniProt provides the loci information of 39 protein features, including six molecule processing features, 13 region features, four site features, six amino acid modification features, two natural variation features, five experimental info features and three secondary structure features. Since such feature loci information is based on amino acid sequences, the genomic breakpoint information was converted into the amino acid level while considering all UniProt protein accessions, ENST isoforms and multiple breakpoints for each partner. To map each feature to the human genome sequence, we used the GENCODE (v19) gene model of human reference genome ( 11 ). For the 5 -partner gene, we considered the protein feature to be retained in the fusion gene if the breakpoints occurred on the 3 -end of the protein feature. On the contrary, if a protein domain was not entirely included in the fusion amino acid sequence, we reported such fusion genes as having not retained that protein feature. Similarly, for the 3partner gene, we considered the fusion gene to have retained the protein feature if the breakpoints occurred on the 5 -end of the protein feature region.</li>
+</ul>
+<h3 id="5-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[5] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.757)<br />
+    &gt; However, the peaks were in different positions within the gene in the four individual experiments performed (Fig. 6), and no specific binding site within the mRNA could be identified from the data.<br />
+    &gt; Among the genes identified were numerous genes related to protein biosynthesis (tRNAs, tRNA-aminoacyl synthetases, tRNA-modifying enzymes, ribosomal proteins). As an example, genes for ribosomal proteins were highly represented with 18 out of the 22 genes (82%) for small ribosomal proteins, (12 after cold shock, 55%), and 31 out of 34 genes (91%) for large ribosomal subunit proteins (22 after cold shock, 65%). Other protein families represented were chaperones (e.g., dnaK, dnaJ, grpE, but not dafA, groES, groEL, clpB), cold-shock and general stress proteins (TT_RS08235, _09210; hsp22, hsp30; uspA), topoisomerase genes (gyrA, gyrB, topA), genes for transporters and their subunits (often both the gene for the substrate-bind-ing protein and for the permease, for example, branchedchain amino acid ABC transporter, TT_RS01115 and _01120), and genes related to sugar-and cell wall metabolism and cell division, as well as CRISPR-related genes. In many cases, genes for all subunits of protein complexes (e.g., genes for cytochrome c oxidase subunits I and II; clpA, clpX coding for the ClpAX protease) were present.<br />
+    &gt; A systematic gene ontology analysis using the DAVID server 6.7 (https://david-d.ncifcrf.gov/home.jsp) (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b).</li>
+</ul>
+<h3 id="6-genomic-and-proteomic-characterization-of-the-deltamethrin-degrading-bacterium-paracoccus-sp-p-2">[6] Genomic and Proteomic Characterization of the Deltamethrin-Degrading Bacterium Paracoccus sp. P-2</h3>
+<ul>
+<li>Authors: Qing Li, Yawei Zhang, Xianfeng Ren, Qingguo Meng, Baocheng Xu et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Microorganisms</li>
+<li>URL: https://www.semanticscholar.org/paper/74c0d94a67b8f801f8322fe976457dfd4c3fd76c</li>
+<li>DOI: 10.3390/microorganisms13112481</li>
+<li>PMID: 41304166</li>
+<li>PMCID: 12654547</li>
+<li>Summary: This study elucidates the impact of deltamethrin on bacterial metabolism and its degradation mechanism by Paracoccus sp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.749)<br />
+    &gt; To obtain comprehensive gene function information, we performed gene function annotation using eight major databases, including UniProt [23], KEGG [24] and KEGG Pathway, GO [25], Pfam [26], COG [27], TIGERfams [28], RefSeq, and NR. The predicted gene sequences were aligned against functional databases such as COG, KEGG, UniProt, and RefSeq using BLAST+ (Version: 2.11.0+), resulting in the gene function annotation outcomes. The statistical results of the annotations are shown in Table S2. Among the top 20 domains annotated based on Pfam, we observed that genes belonging to "ABC transporters" were the most abundant (Figure 2A). As we know, ABC transporters comprise a large superfamily of proteins that facilitate the translocation of a diverse array of substrates, including ions and macromolecules, across cellular membranes through ATP binding and hydrolysis. Furthermore, these transporters are also critically involved in the cellular uptake and efflux of numerous organic pollutants [29,30]. These results suggest that the abundance of ABC transporter genes provides Paracoccus sp. P-2 with a significant capacity for deltamethrin transport. As shown in Figure 2B, the genes annotated by KEGG are divided into 5 major categories and 23 minor subcategories. Among them, the subcategory with the largest number of genes is metabolic pathways, which include amino acid metabolism, carbohydrate metabolism, energy metabolism, metabolism of cofactors and vitamins, among others. The abundance of genes related to metabolic pathways provides the fundamental basis for the survival and deltamethrin degradation capability of Paracoccus sp. P-2. It is worth noting that a substantial number (254) of membrane transporter genes have been annotated in the genome of Paracoccus sp. P-2. Pollutants are often adsorbed onto the microbial membrane surface and subsequently internalized into the cells-a process in which membrane transporter proteins play a crucial role [31]. This abundance of transporter genes highlights the strain's strong capacity for pollutant transport.</li>
+</ul>
+<h3 id="7-adaptation-ecology-and-evolution-of-the-halophilic-stromatolite-archaeon-halococcus-hamelinensis-inferred-through-genome-analyses">[7] Adaptation, Ecology, and Evolution of the Halophilic Stromatolite Archaeon Halococcus hamelinensis Inferred through Genome Analyses</h3>
+<ul>
+<li>Authors: Reema K. Gudhka, B. Neilan, B. Burns</li>
+<li>Year: 2015</li>
+<li>Venue: Archaea</li>
+<li>URL: https://www.semanticscholar.org/paper/d650f910b391d57d43d94e5305e4902735d9f51f</li>
+<li>DOI: 10.1155/2015/241608</li>
+<li>PMID: 25709556</li>
+<li>PMCID: 4325475</li>
+<li>Citations: 29</li>
+<li>Summary: Characteristics reflecting its survival in its extreme environment were revealed, including putative genes/pathways involved in osmoprotection, oxidative stress response, and UV damage repair, and genome analyses indicated the presence of putative transposases as well as positive matches of genes of H. hamelinensis against various genomes of Bacteria, Archaea, and viruses, suggesting the potential for horizontal gene transfer.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.742)<br />
+    &gt; H. hamelinensis whole cells indicated that the organism utilizes glucose, sucrose, xylose, maltose, trehalose, and glycerol as both single and complex carbon sources, in addition to  (gene ID: 2502301667) and NAD + synthetase (Gene ID: 2502298992, 2502299198, 2502299746). In addition to these enzymes, H. hamelinensis also possesses genes encoding three ABC transport proteins involving glutamine, namely, glutamine ABC transporter, periplasmic glutamine-binding protein (gene ID 2502298730), ABC-type glutamine/glutamate/polar amino acids transport system, permease protein (gene ID: 2502298731), and ABC-type glutamine/glutamate polar amino acids transport system, ATP-binding protein (gene ID: 2502298732).</li>
+</ul>
+<h3 id="8-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[8] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.739)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="9-quantification-of-cytosol-and-membrane-proteins-in-rumen-epithelium-of-sheep-with-low-or-high-ch4-emission-phenotype">[9] Quantification of cytosol and membrane proteins in rumen epithelium of sheep with low or high CH4 emission phenotype</h3>
+<ul>
+<li>Authors: J. Bond, A. Donaldson, S. Woodgate, K. Kamath, M. McKay et al.</li>
+<li>Year: 2022</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/b1e6e0b34671baf1eb1ec74743f7301a52572b0b</li>
+<li>DOI: 10.1371/journal.pone.0273184</li>
+<li>PMID: 36256644</li>
+<li>PMCID: 9578583</li>
+<li>Citations: 4</li>
+<li>Influential citations: 1</li>
+<li>Summary: Background Ruminant livestock are a major contributor to Australian agricultural sector carbon emissions. Variation in methane (CH4) produced from enteric microbial fermentation of feed in the reticulo-rumen of sheep differs with different digestive functions. Method We isolated rumen epithelium enzymatically to extract membrane and cytosol proteins from sheep with high (H) and low (L) CH4 emission. Protein abundance was quantified using SWATH-mass spectrometry. Results The research found dif...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.725)<br />
+    &gt; Protein identifications with 2 peptides and a confident protein score (P &lt;0.05) from the HpH fractionation and IDA-MS were used to assign subcellular localization. Using the top score given by WoLF PSORT [10] (www.genscript.com/wolf-psort.html) proteins were categorized into 8 locations. Membrane proteins were predicted using transmembrane helical Markov model (TMHMM) [11] (www.cbs.dtu.dk/services/TMHMM/). Proteins in the solute carrier protein (SLC) and ATP-binding cassette (ABC) transporter families were identified according to gene and protein name. We also used website gene names (www.genenames.org/data) to characterise the subcellular location of the transporter and the type of substrate they transport.<br />
+    &gt; For proteins annotated as 'uncharacterised' in figures and tables in the manuscript a BLAST protein homology search was carried out using the Ensembl or uniport accession code in uniprotKB (www.uniprot.org). The accession code page contains the sequence and a link to BLAST. BLASTp results against uniprotkb_Swissprot reference proteomes and an identity sequence match of &gt;95.5% to human, bovine (cattle) or caprine (goat) proteome annotation was accepted as the protein name.</li>
+</ul>
+<h3 id="10-syn-wiki-functional-annotation-of-the-first-artificial-organism-mycoplasma-mycoides-jcvisyn3a">[10] Syn Wiki: Functional annotation of the first artificial organism Mycoplasma mycoides JCVI‐syn3A</h3>
+<ul>
+<li>Authors: Tiago Pedreira, Christoph Elfmann, Neil Singh, J. Stülke</li>
+<li>Year: 2021</li>
+<li>Venue: Protein Science : A Publication of the Protein Society</li>
+<li>URL: https://www.semanticscholar.org/paper/d9974c7fedefa8ec51f166d8546c8b0e819a7e14</li>
+<li>DOI: 10.1002/pro.4179</li>
+<li>PMID: 34515387</li>
+<li>PMCID: 8740822</li>
+<li>Citations: 11</li>
+<li>Summary: To gain a better understanding of the functions of the genes and proteins of the artificial bacteria, protein–protein interactions that may provide clues for the protein functions are included in an interactive manner.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.723)<br />
+    &gt; Poorly characterized enzymes F I G U R E 4 Distribution of essentiality among all genes in SynWiki. While essential genes cannot be removed from the genome without loss of viability, the removal of quasi-essential genes results in an observable growth disadvantage 6 genes and 3 pseudogenes), making a total of 492 genes, resulting in better growth and improved stability.<br />
+    &gt; In addition to the annotation in the original publications we also went through the literature, checked known functions of homologs, and searched for the availability of protein structures of the JCVI-syn3A proteins or their homologs from other organisms. All these results from manual data curation were added to the pages. Moreover, the curation of the pages is an ongoing process that will lead to ever-improved annotation and data presentation.<br />
+    &gt; The success of a biological database strongly depends on the quality of annotation, and for those cases where there is poor or no annotation, we wanted to take a step forward and give our own contribution. With this in mind, and starting from the original annotation, we have also assigned each gene to one or more functional category. We took inspiration from GO term tree 14 and created a tree-like structure containing all functional categories. Currently, there are four major functional branches, "Cellular processes," "Group of genes," "Information processing" and "Metabolism," which then branch out into more specific categories (see here for an overview: http://synwiki.uni-goettingen.de/v1/category, and Table 1). For example, in "Cellular processes" it first branches out into "Cellular envelope and cell division," "Homeostasis," and "Transporters." Then, "Homeostasis" branches out into "Metal ion homeostasis" and "Coping with stress"; "Transporters" branch out into "ABC transporters," "ECF transporters," "Phosphotransferase system" and "Symporter." The "Group of genes" parent F I G U R E 5 Representation of protein homology analysis for PtsH. Results displayed in a table format for each organism used in this analysis with respective best potential homolog with UniProt link.</li>
+</ul>
+<h3 id="11-exploration-of-the-potential-of-the-atp-binding-cassette-abc-transporter-antigen-as-a-vaccine-candidate-against">[11] Exploration of the Potential of the ATP-Binding Cassette (ABC) Transporter Antigen as a Vaccine Candidate Against</h3>
+<ul>
+<li>Authors: Salma Abdallah, Mervat A. Kassem, Nelly M. Mohamed, M. Bahey-El-Din</li>
+<li>Year: 2023</li>
+<li>Venue: Journal of Advanced Pharmacy Research</li>
+<li>URL: https://www.semanticscholar.org/paper/58d3fd58dae0a8e2caf8473c4f60be5dcea04c57</li>
+<li>DOI: 10.21608/aprh.2023.177396.1202</li>
+<li>Citations: 1</li>
+<li>Summary: The diversity of the virulence factors exhibited by A. baumannii including several iron acquisition mechanisms might necessitate the design of a multi-component vaccine to elicit effective protection.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.720)<br />
+    &gt; Following the bioinformatic analysis of the gene encoding ABC transporter substrate-binding protein, the first 31 amino acids were recognized as signal peptide (SP) and their corresponding coding sequences were omitted during the forward primer design. The target gene was successfully PCR-amplified where agarose gel electrophoresis displayed the gene under investigation as a single band at its expected size (1728 bp) as shown in Figure 1 (lane 1). The gene was then cloned in pQE31 plasmid vector, and subsequently transformed into E. coli M15 (pREP4) expression host (Figure 1, lane 2). Sequencing analysis (Supplementary file S1) confirmed the sequence and identity of the gene encoding ABC transporter substrate-binding protein of A. baumannii. Following protein induction with IPTG, SDS-PAGE demonstrated successful protein expression in E. coli M15 (pREP4) host where the protein appeared as a pure band at its expected size (65 kDa) following Ni-NTA metal affinity chromatography (Figure 2).</li>
+</ul>
+<h3 id="12-discovering-and-summarizing-relationships-between-chemicals-genes-proteins-and-diseases-in-pubchem">[12] Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem</h3>
+<ul>
+<li>Authors: L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Research Metrics and Analytics</li>
+<li>URL: https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>DOI: 10.3389/frma.2021.689059</li>
+<li>PMID: 34322655</li>
+<li>PMCID: 8311438</li>
+<li>Citations: 23</li>
+<li>Influential citations: 1</li>
+<li>Summary: The literature knowledge panels developed and implemented in PubChem help to uncover and summarize important relationships between chemicals, genes, proteins, and diseases by analyzing co-occurrences of terms in biomedical literature abstracts.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.719)<br />
+    &gt; We decided to prioritize human genes and proteins. The following strategy has been implemented to resolve gene and protein text entities to the most reasonable gene, protein, or enzyme symbol (corresponding to human, when possible):<br />
+    &gt; -Try to find a match among Human Genome Organization (HUGO) Gene Nomenclature Committee (HGNC) names (Braschi et al., 2019;HUGO, 2021);<br />
+    &gt; -Try to find a match among names in The IUPHAR/BPS Guide to Pharmacology (Armstrong et al., 2020; IUPHAR/BPS, 2021); -Try to find matches among names in UniProt (Bateman et al., 2017); -Otherwise, try to match to an enzyme name and resolve to an EC number (Bairoch, 2000;Expassy, 2021).<br />
+    &gt; In general, it is very difficult and often impossible to distinguish the name of a gene from the name of the protein encoded by that gene. Therefore, gene and protein names are not strictly distinguished from each other but considered as one category. Therefore, the annotations considered in this study can be grouped into three categories: chemicals, genes/proteins, and diseases.</li>
+</ul>
+<h3 id="13-ca-liberibacter-asiaticus-proteins-orthologous-with-psyma-encoded-proteins-of-sinorhizobium-meliloti-hypothetical-roles-in-plant-host-interaction">[13] ‘Ca. Liberibacter asiaticus’ Proteins Orthologous with pSymA-Encoded Proteins of Sinorhizobium meliloti: Hypothetical Roles in Plant Host Interaction</h3>
+<ul>
+<li>Authors: L. Kuykendall, J. Shao, J. Hartung</li>
+<li>Year: 2012</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/d1903bab3348459a5230cb86962e8df123d9be22</li>
+<li>DOI: 10.1371/journal.pone.0038725</li>
+<li>PMID: 22761700</li>
+<li>PMCID: 3382624</li>
+<li>Citations: 8</li>
+<li>Summary: The presence of multiple orthologs defies mutational analysis and is consistent with the hypothesis that these proteins may be of particular importance in host/microbe interaction and their duplication likely facilitates their ongoing evolution.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.715)<br />
+    &gt; ATP Binding Cassette type amino acid transporters comprise the largest class of genes shared by 'Ca. Liberibacter asiaticus', pSymA and the S. meliloti chromosome (Table 2). For most ABCtype transporter proteins encoded by 'Ca. Liberibacter asiaticus' genes there are multiple homologs on pSymA, dispersed over the megaplasmid (Table S1). YP_003064586 is an example of an ABC-type transporter protein from 'Ca. Liberibacter asiaticus'. In addition to NP_435288.1 there are 10 more pSymA-encoded proteins homologous to YP_003064586 (E = 4e-67 up to 1e-14), and all are annotated as general amino acid transporters with an ATP binding site and other characteristics of an ABC type amino acid transporter. The corresponding genes are dispersed across the pSymA (Fig. 1A; Table 2).<br />
+    &gt; YP_003064753 is a proline/glycine betaine ABC transporter protein with eight pSymA-encoded homologs (Table S1). YP_003064754, another proline/glycine betaine permease/ABC transporter permease protein, has two pSymA-encoded homologs. 'Ca. Liberibacter asiaticus' YP_003065117 and YP_003064552, both ATP-binding ABC-type transporter proteins, each have four homologs encoded by genes on pSymA. YP_003065525, a putative amino acid-binding periplasmic protein, is homologous to two pSymA-encoded predicted proteins. YP_003065526, an ABC-type amino acid transporter permease, has 7 homologs encoded by pSymA genes. These are examples of multiple, redundant shared homologs of ABC-type amino acid transport systems encoded by pSymA. 'Ca.</li>
+</ul>
+<h3 id="14-environment-sensing-and-response-mediated-by-abc-transporters">[14] Environment sensing and response mediated by ABC transporters</h3>
+<ul>
+<li>Authors: Sarah E. Giuliani, A. Frank, Danielle M. Corgliano, Catherine Seifert, L. Hauser et al.</li>
+<li>Year: 2011</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/cc4616ae2df0e74a413ae71b9560d956107ef0c5</li>
+<li>DOI: 10.1186/1471-2164-12-S1-S8</li>
+<li>PMID: 21810210</li>
+<li>PMCID: 3223731</li>
+<li>Citations: 65</li>
+<li>Influential citations: 2</li>
+<li>Summary: The functional screen identified specific ligands that bound to ABC transporter periplasmic binding subunits from R. palustris that provide unique insight for the metabolic capabilities of this organism and are consistent with the ecological niche of strain isolation.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.714)<br />
+    &gt; Three proteins (RPA2499, RPA2628, and RPA3810) were identified as amino acid binding proteins via the FTS screening (Table 1). This observation is consistent with the assigned annotation and the general functional prediction of TransportDB (Table 2). The set of binding proteins specific for amino acids provide transport capabilities for seven of the individual amino acids. The genes encoding the RPA2628 (PBP), RPA2629 and RPA2630 (integral membrane subunits) (methionine/ cysteine/histidine) are orthologs of a verified amino acid transporter in Rhizobium leguminosarum [32]. They are also localized in a cluster of 10 ABC transporter proteins containing four periplasmic binding proteins (three screened by FTS assay, Additional file 1) and RPA2628 was the only protein with specific ligand binding. The characterized set of binding proteins reflects an emphasis on maintenance of sulfate and nitrogen stores. RPA2499, annotated as an arginine binding protein, is adjacent to an "amidase" gene. Asparagine has a N:C ratio of 2:4, which makes it an efficient molecule for the storage and transport of nitrogen.</li>
+</ul>
+<h3 id="15-genomic-and-metabolomic-insights-into-the-antimicrobial-compounds-and-plant-growth-promoting-potential-of-bacillus-velezensis-q-426">[15] Genomic and metabolomic insights into the antimicrobial compounds and plant growth-promoting potential of Bacillus velezensis Q-426</h3>
+<ul>
+<li>Authors: Lulu Wang, Ruochen Fan, Haodi Ma, Yu Sun, Yang Huang et al.</li>
+<li>Year: 2023</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/dafda64a4e7dbdc0906aa66bc17fd6ee5856514c</li>
+<li>DOI: 10.1186/s12864-023-09662-1</li>
+<li>PMID: 37794314</li>
+<li>PMCID: 10548584</li>
+<li>Citations: 30</li>
+<li>Influential citations: 2</li>
+<li>Summary: This study laid the theoretical foundation for the development of secondary metabolites and the application of B. velezensis Q-426 as a plant growth-promoting strain in ecological agriculture.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.711)<br />
+    &gt; These proteins accounted for 9.20% and 8.66% of the total protein sequences, respectively. The annotation results suggested that 119 genes participated in secondary metabolite biosynthesis, transport, and catabolism. As expected, the lipopeptides including surfactin, iturin, and fengycin gene clusters, were found in the genome sequence of Q-426.<br />
+    &gt; In the present study, we used the InterProScan database [25] to predict all of the protein domains and functional sites of B. velezensis Q-426 and extract the information of GO [26,27]. Based on the GO functional annotation shown in Fig. 3, the identified proteins were classified into 3 large groups, including biological process, cellular components, and molecular functions. The results suggested that the proteins were annotated into 48 functional groups, including 26 biological processes, 12 cellular components, and 10 molecular functions (Fig. 3). In biological processes, the proteins were mainly involved in metabolic processes (1746 genes), cellular processes (1689 genes), and localization (624 genes). In cellular components, the proteins were mainly involved in cell (1135 genes), cell part (1135 genes), and organelle (225 genes). In molecular functions, the proteins were mainly involved in catalytic activity (1723 genes), binding (1391 genes), and transporter activity (286 genes).<br />
+    &gt; The genes involved in the metabolic pathways were analyzed statistically using the KEGG analysis tool in the genome sequence of B. velezensis Q-426 [28]. The KEGG analysis results showed that the proteins were annotated to 36 KEGG pathways, classified into 6 large groups, including cellular processes (163 genes), environmental information processing (300 genes), genetic information processing (185 genes), human diseases (77 genes), metabolism (887 genes), and organismal systems (34 genes) (Fig. 4). Carbohydrate metabolism pathways (187 genes) and membrane transport (171 genes) were the primary enriched pathways, followed by amino acid metabolism (162 genes). The KEGG database analysis showed a great number of two-component systems (114 genes) and ABC transporters (135 genes).</li>
+</ul>
+<h3 id="16-miclique-an-algorithm-to-identify-differentially-coexpressed-disease-gene-subset-from-microarray-data">[16] MIClique: An Algorithm to Identify Differentially Coexpressed Disease Gene Subset from Microarray Data</h3>
+<ul>
+<li>Authors: Huanping Zhang, Xiaofeng Song, Huinan Wang, Xiaobai Zhang</li>
+<li>Year: 2010</li>
+<li>Venue: Journal of Biomedicine and Biotechnology</li>
+<li>URL: https://www.semanticscholar.org/paper/db76c2ba82c53c1eb0967c1196ae98ca75de22e5</li>
+<li>DOI: 10.1155/2009/642524</li>
+<li>PMID: 20169000</li>
+<li>PMCID: 2822236</li>
+<li>Citations: 18</li>
+<li>Influential citations: 1</li>
+<li>Summary: By applying the MIClique algorithm to real gene expression data, some DEC gene subsets which correlated under one experimental condition but uncorrelated under another condition are detected from the graph of colon dataset and leukemia dataset.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.711)<br />
+    &gt; Table 3 lists the Genbank accession number, the gene symbols, accession number in UniProtKB (UniProt Knowledgebase), and gene descriptions given by colon data. The UniProtKB is the central hub for the collection of information on proteins such as amino acid sequence, protein name or description, taxonomic data, and biological ontology [24]. Figure 6 depicts gene expression profiles of the eight genes in normal and disease samples. As shown in Figure 6, the profiles of these genes are highly coexpressed in normal samples (samples 1-22) while the coexpression pattern disappears in disease samples (samples 23-62).</li>
+</ul>
+<h3 id="17-the-ultra-high-affinity-transport-proteins-of-ubiquitous-marine-bacteria">[17] The ultra-high affinity transport proteins of ubiquitous marine bacteria</h3>
+<ul>
+<li>Authors: B. Clifton, Uria Alcolombri, Gen-Ichiro Uechi, C. Jackson, P. Laurino</li>
+<li>Year: 2024</li>
+<li>Venue: Nature</li>
+<li>URL: https://www.semanticscholar.org/paper/e261e726c69c86a4cf2bc4cd049a0931df48f585</li>
+<li>DOI: 10.1038/s41586-024-07924-w</li>
+<li>PMID: 39261732</li>
+<li>PMCID: 11485210</li>
+<li>Citations: 25</li>
+<li>Influential citations: 1</li>
+<li>Summary: Genome-wide characterization of solute-binding proteins in SAR11, a group of ubiquitous marine bacteria, reveals that they generally combine high binding affinities with narrow binding specificities, suggesting a molecular mechanism for the adaptation of SAR11 to diverse marine environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; Nineteen candidate SBP genes in the genome of Ca. P. ubique strain HTCC1062 were identified through a search of the TransportDB 2.0 database 59 (http://membranetransport.org; accessed 22 January 2020). One of these genes, SAR11_0371, was annotated as a 'possible transmembrane receptor' in UniProt and showed a non-canonical predicted domain structure consisting of a short SBP-like domain (170 amino acids) followed by a coiled coil domain and unidentified C-terminal domain. Additionally, genome context analysis showed that, unlike the other ABC SBP genes in Ca. P. ubique HTCC1062, SAR11_0371 was not colocalized with genes encoding the membrane permease or ATP-binding cassette components of an ABC transport system. Thus, SAR11_0371 was considered not to represent the SBP component of an SBP-dependent transport system and was excluded from the analysis. We also attempted to identify additional SBP genes through a search of the UniProt database for proteins in Ca. P. ubique belonging to Pfam clans CL0177 (PBP; periplasmic binding protein) and CL0144 (Periplas_BP; periplasmic binding protein like); however, this search did not return any additional candidate genes.</li>
+</ul>
+<h3 id="18-quantitative-proteomic-dataset-of-whole-protein-in-three-melanoma-samples-of-921-921-a-and-921-b">[18] Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B</h3>
+<ul>
+<li>Authors: Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al.</li>
+<li>Year: 2022</li>
+<li>Venue: Data in Brief</li>
+<li>URL: https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385</li>
+<li>DOI: 10.1016/j.dib.2022.108592</li>
+<li>PMID: 36164296</li>
+<li>PMCID: 9508510</li>
+<li>Citations: 2</li>
+<li>Influential citations: 1</li>
+<li>Summary: Covering differential proteomes of three cell lines in a pairwise model, the data could be used to further screen the kinesins that play a vital role in regulating the growth of UM.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; 2.8.1. Annotation methods 2.8.1.1. Functional annotation. UniProt-GOA database was utilized to retrieve Gene Ontology (GO) annotation proteome. First, the identified protein identity was converted to UniProt identity and then mapped to GO identity based on the protein identity. When the identified protein was not annotated by UniProt-GOA, the functional annotation of that protein was conducted using the InterProScan software according to the amino acid sequence alignment approach. All proteins were then classified into 3 groups: molecular function, cellular component and biological process.</li>
+</ul>
+<h3 id="19-genome-wide-identification-of-conditionally-essential-genes-supporting-streptococcus-suis-growth-in-serum-and-cerebrospinal-fluid">[19] Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid</h3>
+<ul>
+<li>Authors: Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Virulence</li>
+<li>URL: https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>DOI: 10.1080/21505594.2025.2600145</li>
+<li>PMID: 41396007</li>
+<li>PMCID: 12707516</li>
+<li>Citations: 1</li>
+<li>Summary: Using Tn-Seq coupled with Nanopore sequencing to identify conditionally essential genes for growth of S. suis provides new insights into the genetic requirements for S. suis survival in host-like environments and a deeper understanding of its ability to adapt to distinct physiological niches.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.704)<br />
+    &gt; Gene SSU_RS04755 has been predicted to encode a basic membrane family protein (BMP), a transmembrane component of specific ABC transporters. Growth curve experiments did not reveal a significant reduction in the growth rate of our ΔSSU_RS04755 mutant. The operon genes with SSU_RS04755 were predicted to encode an ATPbinding protein and a permease which are typical components of an ABC transporter. Both predicted ATPbinding protein and permease encoding genes appeared as CEGs in our Tn-seq results (Table 1). The protein sequence associated with SSU_RS04755 shares significant identity with lipoproteins that are components of nucleoside ABC transporters in Gram-positive bacteria (see above), suggesting that SSU_RS04755 and its operon genes may encode an ABC transporter complex involved in nucleoside transport. To investigate the possible functional equivalence of SSU_RS04755 operon genes with ABC transporters, we performed amino acid sequence alignments of SSU_RS04755 with PnrA and TmpC, which are homologous nucleoside binding lipoproteins from S. pneumoniae and Treponema pallidum (T. pallidum) respectively [49,50]. Using the crystal structure of PnrA binding to adenosine [49], we confirmed that all but one (T70) of the specific amino acids involved in adenosine binding by PnrA were conserved in SSU_RS04755 (Figure 5(c)).<br />
+    &gt; To verify if the structural positions of these amino acids were conserved, we performed a structural prediction (see methods) of the predicted S. suis lipoprotein SSU_RS04755 and aligned it to the structure of PnrA (ID 6y9U in Protein Data Bank (PDB). We confirmed that all amino acids involved in the adenosine binding are located at the same position in both protein structures.</li>
+</ul>
+<h3 id="20-evaluation-of-proteins-released-to-medium-in-yeast-bacteria-co-culture-system">[20] Evaluation of Proteins Released to Medium in Yeast-Bacteria Co-culture System</h3>
+<ul>
+<li>Authors: Ayşegül Yanik, Ç. Tarhan</li>
+<li>Year: 2023</li>
+<li>Venue: Journal of Advanced Research in Natural and Applied Sciences</li>
+<li>URL: https://www.semanticscholar.org/paper/bf1e6e710a760d61cdce04ea82c683106fe2ad6d</li>
+<li>DOI: 10.28979/jarnas.1196962</li>
+<li>Summary: The wild strain of Schizosaccharomyces pombe and the DH5α strain of Escherichia coli were grown in their own specific media, then cultured for 48 hours and 72 hours by cultivating in media containing 0,1% glucose with different cell number, and finally the differentiation in the proteins released by the cells into the medium was observed in SDS polyacrylamide gels.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.704)<br />
+    &gt; The proteins identified as a result of LC-MS/MS analysis were evaluated in UniProt and the names and functions of the proteins are given as an appendix. Here, 6 protein-coding genes in the bands of the proteins released into the medium by the co-culture were found in the S.pombe genome and were classified according to their biological functions and cellular locations using the online platform PANTHER (Figure 2). Other 257 protein-coding genes were found in the E. coli genome. These proteins were also classified according to their cellular location (Figure 3) and their cellular functions (Figure 4). Maltose/maltodextrin-binding periplasmic protein (malE) and D-galactose-binding periplasmic protein (mglB) found in E. coli cells are among the binding proteins found in LC-MS-MS results. The binding protein MglB has a high affinity for glucose (Ferenci, 1996), and at low glucose concentration, glucose is mainly taken up by cells in this way. In a study by Egli et al. (1993), giving 1.8 mg l−1 galactose to a low glucose-containing E. coli culture decreased the glucose utilization of the cells and led to glucose accumulation in continuous culture. In addition, Hua and., (2004) found that the expression of a series of genes encoding membrane transporter proteins was significantly induced in cultures of limited chemostats for various carbon sources, and that about half of these genes were maltose (all genes of malGFE and malK-lamB-malM operons), galactose. They showed that there are genes involved in a wide variety of high-affinity ABC transport systems that facilitate uptake (three genes of the mglBAC operon). In E. coli, the ABC transporter gene family covers approximately 5% of the entire genome (Linton and Higgins, 1998). This shows how important these genes are. Carbon-limited cultures have been proposed to investigate bacterial growth and behavior under environmental conditions (Matin, 1979;Moriarty, 1993;Morita, 1993).</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>H. Hao, Fei Li, Jing Han, S. Foley, Menghong Dai et al. (2017). Cj1199 Affect the Development of Erythromycin Resistance in Campylobacter jejuni through Regulation of Leucine Biosynthesis. Frontiers in Microbiology. https://www.semanticscholar.org/paper/9152e27a908296795b4779c02d4aa02ffae2f388</li>
+<li>H. Kumar, Lin-ya Tang, Chengyuan Yang, P. Kim (2023). FusionPDB: a knowledgebase of human fusion proteins. Nucleic Acids Research. https://www.semanticscholar.org/paper/6abc299ca227f23e802b197c4d7fdfcaca024697</li>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>Qing Li, Yawei Zhang, Xianfeng Ren, Qingguo Meng, Baocheng Xu et al. (2025). Genomic and Proteomic Characterization of the Deltamethrin-Degrading Bacterium Paracoccus sp. P-2. Microorganisms. https://www.semanticscholar.org/paper/74c0d94a67b8f801f8322fe976457dfd4c3fd76c</li>
+<li>Reema K. Gudhka, B. Neilan, B. Burns (2015). Adaptation, Ecology, and Evolution of the Halophilic Stromatolite Archaeon Halococcus hamelinensis Inferred through Genome Analyses. Archaea. https://www.semanticscholar.org/paper/d650f910b391d57d43d94e5305e4902735d9f51f</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>J. Bond, A. Donaldson, S. Woodgate, K. Kamath, M. McKay et al. (2022). Quantification of cytosol and membrane proteins in rumen epithelium of sheep with low or high CH4 emission phenotype. PLoS ONE. https://www.semanticscholar.org/paper/b1e6e0b34671baf1eb1ec74743f7301a52572b0b</li>
+<li>Tiago Pedreira, Christoph Elfmann, Neil Singh, J. Stülke (2021). Syn Wiki: Functional annotation of the first artificial organism Mycoplasma mycoides JCVI‐syn3A. Protein Science : A Publication of the Protein Society. https://www.semanticscholar.org/paper/d9974c7fedefa8ec51f166d8546c8b0e819a7e14</li>
+<li>Salma Abdallah, Mervat A. Kassem, Nelly M. Mohamed, M. Bahey-El-Din (2023). Exploration of the Potential of the ATP-Binding Cassette (ABC) Transporter Antigen as a Vaccine Candidate Against. Journal of Advanced Pharmacy Research. https://www.semanticscholar.org/paper/58d3fd58dae0a8e2caf8473c4f60be5dcea04c57</li>
+<li>L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al. (2021). Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem. Frontiers in Research Metrics and Analytics. https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>L. Kuykendall, J. Shao, J. Hartung (2012). ‘Ca. Liberibacter asiaticus’ Proteins Orthologous with pSymA-Encoded Proteins of Sinorhizobium meliloti: Hypothetical Roles in Plant Host Interaction. PLoS ONE. https://www.semanticscholar.org/paper/d1903bab3348459a5230cb86962e8df123d9be22</li>
+<li>Sarah E. Giuliani, A. Frank, Danielle M. Corgliano, Catherine Seifert, L. Hauser et al. (2011). Environment sensing and response mediated by ABC transporters. BMC Genomics. https://www.semanticscholar.org/paper/cc4616ae2df0e74a413ae71b9560d956107ef0c5</li>
+<li>Lulu Wang, Ruochen Fan, Haodi Ma, Yu Sun, Yang Huang et al. (2023). Genomic and metabolomic insights into the antimicrobial compounds and plant growth-promoting potential of Bacillus velezensis Q-426. BMC Genomics. https://www.semanticscholar.org/paper/dafda64a4e7dbdc0906aa66bc17fd6ee5856514c</li>
+<li>Huanping Zhang, Xiaofeng Song, Huinan Wang, Xiaobai Zhang (2010). MIClique: An Algorithm to Identify Differentially Coexpressed Disease Gene Subset from Microarray Data. Journal of Biomedicine and Biotechnology. https://www.semanticscholar.org/paper/db76c2ba82c53c1eb0967c1196ae98ca75de22e5</li>
+<li>B. Clifton, Uria Alcolombri, Gen-Ichiro Uechi, C. Jackson, P. Laurino (2024). The ultra-high affinity transport proteins of ubiquitous marine bacteria. Nature. https://www.semanticscholar.org/paper/e261e726c69c86a4cf2bc4cd049a0931df48f585</li>
+<li>Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al. (2022). Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B. Data in Brief. https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385</li>
+<li>Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al. (2025). Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid. Virulence. https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>Ayşegül Yanik, Ç. Tarhan (2023). Evaluation of Proteins Released to Medium in Yeast-Bacteria Co-culture System. Journal of Advanced Research in Natural and Applied Sciences. https://www.semanticscholar.org/paper/bf1e6e710a760d61cdce04ea82c683106fe2ad6d</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EM6
+gene_symbol: PP_4428
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PP_4428 encodes Amino acid ABC transporter, periplasmic amino acid-binding protein, an EhuB-like periplasmic
+  ectoine/osmoprotectant-binding component of a predicted ABC importer.
+existing_annotations:
+- term:
+    id: GO:0033294
+    label: ectoine binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Ectoine binding/transport context is appropriate for the EhuB-family periplasmic binding protein.
+    action: ACCEPT
+    reason: The EhuB family evidence supports ectoine/osmoprotectant-binding component context for this substrate-binding
+      protein.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.&#39;
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: DR   InterPro; IPR001638; Solute-binding_3/MltF_N.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: DR   InterPro; IPR014337; Ectoine_EhuB.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding
+        protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+- term:
+    id: GO:0051470
+    label: ectoine transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Ectoine binding/transport context is appropriate for the EhuB-family periplasmic binding protein.
+    action: ACCEPT
+    reason: The EhuB family evidence supports ectoine/osmoprotectant-binding component context for this substrate-binding
+      protein.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.&#39;
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: DR   InterPro; IPR001638; Solute-binding_3/MltF_N.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: DR   InterPro; IPR014337; Ectoine_EhuB.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding
+        protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+- term:
+    id: GO:0030313
+    label: cell envelope
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+  qualifier: located_in
+  review:
+    summary: Adds cell envelope as a conservative first-pass term absent from fetched GOA rows.
+    action: NEW
+    reason: The product, family, and domain metadata support this ABC importer component assignment in the first-pass review.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.&#39;
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: DR   InterPro; IPR001638; Solute-binding_3/MltF_N.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: DR   InterPro; IPR014337; Ectoine_EhuB.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+      supporting_text: KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.
+    - reference_id: file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding
+        protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+  title: UniProtKB entry for PP_4428 (Q88EM6)
+  findings:
+  - supporting_text: &#39;DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+  - supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.&#39;
+  - supporting_text: DR   InterPro; IPR001638; Solute-binding_3/MltF_N.
+  - supporting_text: DR   InterPro; IPR014337; Ectoine_EhuB.
+  - supporting_text: KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.
+- id: file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+  title: Asta retrieval report for PP_4428 (Q88EM6)
+  findings:
+  - supporting_text: &#39;- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding
+      protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+core_functions:
+- description: EhuB-family ectoine/osmoprotectant-binding component of an ABC importer.
+  locations:
+  - id: GO:0030313
+    label: cell envelope
+  supported_by:
+  - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+    supporting_text: &#39;DE   SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+  - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+    supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial solute-binding protein 3 family.&#39;
+  - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+    supporting_text: DR   InterPro; IPR001638; Solute-binding_3/MltF_N.
+  - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+    supporting_text: DR   InterPro; IPR014337; Ectoine_EhuB.
+  - reference_id: file:PSEPK/PP_4428/PP_4428-uniprot.txt
+    supporting_text: KW   Signal {ECO:0000256|ARBA:ARBA00022729, ECO:0000256|SAM:SignalP}.
+  - reference_id: file:PSEPK/PP_4428/PP_4428-deep-research-asta.md
+    supporting_text: &#39;- **Protein Description:** SubName: Full=Amino acid ABC transporter, periplasmic amino acid-binding
+      protein {ECO:0000313|EMBL:AAN70005.1};&#39;
+  molecular_function:
+    id: GO:0033294
+    label: ectoine binding
+  directly_involved_in:
+  - id: GO:0051470
+    label: ectoine transmembrane transport
+proposed_new_terms: []
+suggested_questions:
+- question: Which substrate and partner ATPase/permease/binding-protein components define this ABC importer system in KT2440?
+suggested_experiments:
+- description: Test uptake of candidate amino acids or osmoprotectants in wild-type, deletion, and complemented strains, ideally
+    with operon-level mutants that separate binding-protein, permease, and ATPase contributions.
+  experiment_type: ABC importer genetics and uptake assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

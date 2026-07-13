@@ -1,0 +1,5 @@
+# zwfB notes
+
+- UniProt identifies `zwfB` (Q88FP7) as the Pseudomonas putida KT2440 enzyme reviewed in `zwfB-ai-review.yaml`; the first-pass curation uses this record for enzyme identity and pathway placement. [file:PSEPK/zwfB/zwfB-uniprot.txt, "RecName: Full=Glucose-6-phosphate 1-dehydrogenase"]
+- The KT2440 isozyme paper reports that the strain has three G6PDHs and that zwfA plus zwfB carry most measurable activity, supporting ACCEPT on the specific G6PDH and oxidative PPP terms. [PMID:33727391 Cofactor Specificity of Glucose-6-Phosphate Dehydrogenase Isozymes in Pseudomonas putida Reveals a General Principle Underlying Glycolytic Strategies in Bacteria, "We show that the three G6PDHs of strain KT2440 have different cofactor specificities and that the isoforms encoded by zwfA and zwfB carry most of the activity"]
+- Asta retrieval was run and kept as the gene-level retrieval provider for this batch, but its hits were mostly generic database/name-disambiguation papers rather than direct KT2440 enzyme studies. [file:PSEPK/zwfB/zwfB-deep-research-asta.md, "Papers retrieved:"]

@@ -1,0 +1,3375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_1250 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_1250</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q877Q1" target="_blank" class="term-link">
+                        Q877Q1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_1250";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q877Q1" data-a="DESCRIPTION: PP_1250 encodes a bacterial reverse transcriptase-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_1250 encodes a bacterial reverse transcriptase-family RNA-directed DNA polymerase with group II intron/maturase-family domain support. Its supported first-pass role is RNA-templated DNA synthesis in retroelement or group-II-intron mobile-element biology, not chromosomal DNA replication or a resolved antiviral-defense module.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q877Q1" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA binding is retained as compatible group-II-intron/reverse-transcriptase context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Group-II-intron/maturase-family reverse transcriptases are RNA-associated enzymes, and the InterPro-derived RNA-binding row is compatible with the RNA-directed DNA polymerase role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q877Q1	PP_1250	enables	GO:0003723	RNA binding	molecular_function	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR000123	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	RNA-directed DNA polymerase	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0003723; F:RNA binding; IEA:InterPro.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR030931; Group_II_RT_mat.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR013597; Mat_intron_G2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  uniprot_accession: Q877Q1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003887" target="_blank" class="term-link">
+                                    GO:0003887
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed DNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q877Q1" data-a="GO:0003887" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA-directed DNA polymerase activity is not the right specific call for this reverse-transcriptase-family record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The product and UniProt GO cross-reference support RNA-directed DNA polymerase activity. The DNA-directed polymerase row is an automated over-propagation and should be replaced by the RT activity already present on the record.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003964" target="_blank" class="term-link">
+                                    RNA-directed DNA polymerase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q877Q1	PP_1250	enables	GO:0003964	RNA-directed DNA polymerase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR000123|EC:2.7.7.49|UniRule:UR000414873	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	RNA-directed DNA polymerase	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0003964; F:RNA-directed DNA polymerase activity; IEA:UniProtKB-KW.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR030931; Group_II_RT_mat.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  uniprot_accession: Q877Q1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003964" target="_blank" class="term-link">
+                                    GO:0003964
+                                </a>
+                            </span>
+                            <span class="term-label">RNA-directed DNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q877Q1" data-a="GO:0003964" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA-directed DNA polymerase activity is the core reverse-transcriptase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt record names RNA-directed DNA polymerase activity with EC 2.7.7.49 and reverse-transcriptase/group-II-intron domain support.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q877Q1	PP_1250	enables	GO:0003964	RNA-directed DNA polymerase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR000123|EC:2.7.7.49|UniRule:UR000414873	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	RNA-directed DNA polymerase	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0003964; F:RNA-directed DNA polymerase activity; IEA:UniProtKB-KW.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR030931; Group_II_RT_mat.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  uniprot_accession: Q877Q1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006278" target="_blank" class="term-link">
+                                    GO:0006278
+                                </a>
+                            </span>
+                            <span class="term-label">RNA-templated DNA biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q877Q1" data-a="GO:0006278" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA-templated DNA biosynthetic process is compatible with the reverse-transcriptase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The record supports RNA-directed DNA polymerase activity in a mobile/retroelement context. The broader process term is retained without asserting a resolved cognate intron, retron, or defense pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q877Q1	PP_1250	involved_in	GO:0006278	RNA-templated DNA biosynthetic process	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR000123	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	RNA-directed DNA polymerase	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR030931; Group_II_RT_mat.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  uniprot_accession: Q877Q1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q877Q1" data-a="GO:0016740" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent transferase/nucleotidyltransferase term is redundant with the specific reverse-transcriptase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The more specific RNA-directed DNA polymerase activity captures the actual catalytic role. The parent term is technically related but adds little functional value for this review.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q877Q1	PP_1250	enables	GO:0016740	transferase activity	molecular_function	ECO:0000256	IEA	GO_REF:0000104	UniRule:UR000414873	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	RNA-directed DNA polymerase	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  uniprot_accession: Q877Q1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016779" target="_blank" class="term-link">
+                                    GO:0016779
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotidyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q877Q1" data-a="GO:0016779" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent transferase/nucleotidyltransferase term is redundant with the specific reverse-transcriptase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The more specific RNA-directed DNA polymerase activity captures the actual catalytic role. The parent term is technically related but adds little functional value for this review.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q877Q1	PP_1250	enables	GO:0016779	nucleotidyltransferase activity	molecular_function	ECO:0000256	IEA	GO_REF:0000104	UniRule:UR000414873	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	RNA-directed DNA polymerase	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  uniprot_accession: Q877Q1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Bacterial reverse-transcriptase-family RNA-directed DNA polymerase activity in RNA-templated DNA biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q877Q1" data-a="FUNCTION: Bacterial reverse-transcriptase-family RNA-directe..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003964" target="_blank" class="term-link">
+                            RNA-directed DNA polymerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006278" target="_blank" class="term-link">
+                                RNA-templated DNA biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q877Q1	PP_1250	enables	GO:0003964	RNA-directed DNA polymerase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR000123|EC:2.7.7.49|UniRule:UR000414873	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	RNA-directed DNA polymerase	20260706</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   GO; GO:0003964; F:RNA-directed DNA polymerase activity; IEA:UniProtKB-KW.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR030931; Group_II_RT_mat.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR000477; RT_dom.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">  uniprot_accession: Q877Q1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">  protein_description: &#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">  protein_family: Belongs to the bacterial reverse transcriptase family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_1250/PP_1250-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_1250</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt provides product, GO cross-reference, family, and domain context used in this first-pass review.</div>
+
+                        <div class="finding-text">"DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_1250/PP_1250-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_1250</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the machine-sourced annotations reviewed for this gene.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for PP_1250</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Asta retrieval was generated for this first-pass review and used as lightweight identity/retrieval context.</div>
+
+                        <div class="finding-text">"  uniprot_accession: Q877Q1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What cognate RNA element and genomic target, if any, define the mobile-element role of PP_1250?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q877Q1" data-a="Q: What cognate RNA element and genomic target, if an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Identify RNAs associated with PP_1250 and test purified protein for RNA-directed DNA polymerase activity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_1250 functions as a mobile-element reverse transcriptase with a specific cognate RNA.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: RNA association and polymerase assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q877Q1" data-a="EXPERIMENT: Identify RNAs associated with PP_1250 and test pur..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_1250-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q877Q1" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-10T05:19:27.994557</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[1] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.799)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="2-lmpd-lipid-maps-proteome-database">[2] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.759)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+</ul>
+<h3 id="3-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[3] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.753)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="4-construction-of-an-ortholog-database-using-the-semantic-web-technology-for-integrative-analysis-of-genomic-data">[4] Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data</h3>
+<ul>
+<li>Authors: H. Chiba, Hiroyo Nishide, I. Uchiyama</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>DOI: 10.1371/journal.pone.0122802</li>
+<li>PMID: 25875762</li>
+<li>PMCID: 4395280</li>
+<li>Citations: 14</li>
+<li>Summary: The ortholog database using the Semantic Web technology can contribute to biological knowledge discovery through integrative data analysis and examples demonstrate that the ortholog information described in RDF can be used to link various biological data such as taxonomy information and Gene Ontology.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.720)<br />
+    &gt; A typical use of an ortholog database is transferring functional annotations from known genes in model organisms to genes of unknown function in other organisms, on the basis of the conjecture that orthologs are usually functionally conserved. To demonstrate such an application in our database, we showed a query to retrieve ortholog information of a specified protein.<br />
+    &gt; Here, we specified a UniProt ID to obtain ortholog information. For describing functional categories of genes, we used Gene Ontology (GO) [24]. The UniProt GO Annotation (UniProt-GOA) database [25] (http://www.ebi.ac.uk/GOA) provides GO term assignment to proteins with evidence codes (http://www.geneontology.org/GO.evidence.shtml). We created an ontology for GO annotation (GOA-O, Table 1, http://purl.jp/bio/11/goa) and described UniProt-GOA data in RDF using it (Table 2). If some model organisms have experimentally verified GO annotations, we can transfer such a validated annotation to orthologs of other organisms.</li>
+</ul>
+<h3 id="5-molecular-mechanisms-underlying-response-to-influenza-in-grey-seals-halichoerus-grypus-a-potential-wild-reservoir">[5] Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir</h3>
+<ul>
+<li>Authors: Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Molecular ecology</li>
+<li>URL: https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>DOI: 10.1111/mec.70012</li>
+<li>PMID: 40613337</li>
+<li>PMCID: 12288799</li>
+<li>Citations: 3</li>
+<li>Summary: It is hypothesized that the combination of down‐ and up‐regulated immune gene expression may prevent overstimulation of the immune response, acting as an adaptation in grey seals to resist IAV‐associated mortality.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.715)<br />
+    &gt; Top hits were required to have a percent query coverage (QC) ≥ 80 to be used for annotating transcripts. A subsequent blastx search against the Swiss-Prot database (downloaded from NCBI 07/02/2021) for transcripts without a sufficient hit was conducted using the parameters max_target_seqs 2, max_hsps 1, e-value 0.001 and qcov_hsp_perc 80. Genes without a published gene symbol (named 'LOC' + Gene ID in NCBI's database) were assigned a UniProt gene symbol based on the protein annotation listed in the RefSeq entries, when possible. Ultimately, a list of transcript identifiers and gene symbols were compiled into a transcript-to-gene map for subsequent analyses.<br />
+    &gt; To further facilitate analyses of gene functions, additional steps were taken to identify the putative function of genes annotated with a symbol that began with 'LOC'. First 'LOC' genes with a protein-coding gene description in NCBI's database were manually assigned the appropriate gene symbol. Transcript sequences of remaining 'LOC' genes were queried through a blastn search against NCBI's nucleotide database (parameters: max target seq = 2, max hsps = 1, evalue = 0.01, perc identity = 90). Results from the blastn search were filtered to exclude hits with query coverage &lt; 90 and hits that included vague terms (e.g., 'uncharacterized', 'genome assembly' and 'chromosome'). Gene symbols were extracted from the first hit for each transcript and assigned as the identity of that gene for genes with only a single transcript with hits or with consistent hits across transcripts. For genes with multiple transcripts that matched different gene symbols, the annotation was manually determined based on the number of transcripts for each gene symbol hit and query coverage/% identity values. For any 'LOC' genes that were identified as a gene already present in the dataset, gene counts were concatenated for further analysis.</li>
+</ul>
+<h3 id="6-resa3-a-web-tool-for-resampling-analysis-of-arbitrary-annotations">[6] ResA3: A Web Tool for Resampling Analysis of Arbitrary Annotations</h3>
+<ul>
+<li>Authors: A. Ruhs, F. Cemic, T. Braun, M. Krüger</li>
+<li>Year: 2013</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/81d8d1bc8cf5b02d9e7027a010f6dedc6be55b38</li>
+<li>DOI: 10.1371/journal.pone.0053743</li>
+<li>PMID: 23382850</li>
+<li>PMCID: 3557297</li>
+<li>Citations: 6</li>
+<li>Summary: ResA3 (Resampling Analysis of Arbitrary Annotations, short: ResA) is a novel tool to facilitate the analysis of enrichment and regulation of annotations deposited in various online resources such as KEGG, Gene Ontology and Pfam or any kind of classification.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.705)<br />
+    &gt; Datasets can be inserted or uploaded to the web interface (Figure 2b). Data must be tab separated and formatted as shown in Figure 3A. They could include gene symbols and UniProt identifiers, which are used for the Gene Ontology annotation feature. To annotate a dataset which contains gene symbols and/ or UniProt identifiers, the appropriate organism can be set (Figure 2d) and the user can choose between full or slim GO annotation (Figure 2e) and full or experimental evidence (Figure 2f). The annotation is based on the gene and UniProt identifiers provided by UniProt-GOA and will be updated monthly.<br />
+    &gt; It is essential that the first column contains the experimental value (log fold-change, isotope incorporation, intensity, etc.). Titles of the annotation columns are used to discriminate between different types of annotation in the results. If a pasted dataset already contains annotations such as KEGG and Pfam, these terms must reside in tab separated and titled columns (Figure 3A and online help). Annotations need to be located in the last columns. Importantly, semi-colons must separate multiple identifiers or terms in one column. For example, multiple identifiers are common for protein groups of mass spectrometric data and annotation will be done for all entries. Similarly, multiple terms are also common with Gene Ontology as one gene can be associated with several compartments at the same time and any of these terms will be treated independently. When columns of annotation are provided, the correct number of columns must be set in the respective spin-box in the web interface (Figure 2c). The dataset used in the example analysis already contains three annotation columns (KEGG, Pfam and InterPro) and is available on the web site of the tool as tab separated text file and Excel file (Figure 2a).<br />
+    &gt; Regulation or the enrichment based on various statistics (estimators) can be tested depending on the focus of the analysis (Figure 2g). The number of resamplings R can be set in the range from 500 to 10,000 (Figure 2h).</li>
+</ul>
+<h3 id="7-cronos-the-cross-reference-navigation-server">[7] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.703)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="8-spore-germination-of-the-obligate-biotroph-spongospora-subterranea-transcriptome-analysis-reveals-germination-associated-genes">[8] Spore Germination of the Obligate Biotroph Spongospora subterranea: Transcriptome Analysis Reveals Germination Associated Genes</h3>
+<ul>
+<li>Authors: Sadegh Balotf, R. Tegg, D. Nichols, C. Wilson</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/d6fe7c793bbd642b3cf0b2c098589c5c5b8f7eef</li>
+<li>DOI: 10.3389/fmicb.2021.691877</li>
+<li>PMID: 34234764</li>
+<li>PMCID: 8256667</li>
+<li>Citations: 10</li>
+<li>Summary: The datasets generated in this study provide a basic knowledge of the physiological processes associated with spore germination and will facilitate functional predictions of novel genes in S. subterranea and other plasmodiophorids.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.702)<br />
+    &gt; Of 679 differentially expressed transcripts, 570 transcripts were annotated in protein databases. Gene ontology (GO) enrichment analysis of differentially expressed genes (DEGs) was conducted to identify the functional categories of the annotated genes. These DEGs were assigned to GO-terms for biological processes and molecular functions (David annotation). The significantly (Pvalue &lt;0.05) enriched biological processes (top 25 only) and molecular functions are presented in Figure 3. The complete list of GO categories of DEGs is listed in Supplementary Table 3.<br />
+    &gt; The major functional categories of biological processes were as follows: cellular metabolic process, organic substance metabolic process and metabolic process (n = 38 each); primary metabolic process (n = 36); macromolecule metabolic process (n = 32); cellular macromolecule metabolic process (n = 30); protein metabolic process (n = 24); response to stimulus (n = 23) and cellular protein metabolic process (n = 21) (Figure 3A). Among the various categories, binding (n = 35), protein binding and transferase activity (n = 16 each) were dominantly represented within the molecular function category. Other significantly represented categories include kinase activity (n = 8) and macromolecular complex binding (n = 4) (Figure 3B).<br />
+    &gt; The functional annotation of DEGs was also retrieved from UniProt (Figure 4). Transport (n = 34), transcription regulation (n = 27), Ubl conjugation pathway (n = 18), DNA repair (n = 11) and mRNA processing (n = 11) were the most represented functions in the DEGs.<br />
+    &gt; After obtaining the functional annotation of the identified transcripts from the gene and protein databases, we generated a list of selected DEGs with the possible role in the germination of resting spores in S. subterranea (Table 2). Among the upregulated group, the majority of genes were related to the initiation and regulation of transcription such as heat shock protein, transcription initiation factor and proteasome. The DNA repair genes such as DNA repair factor IIH helicase (Table 2 and Supplementary Table 2) were also found in the upregulated transcript.</li>
+</ul>
+<h3 id="9-genetools-application-for-functional-annotation-and-statistical-hypothesis-testing">[9] GeneTools – application for functional annotation and statistical hypothesis testing</h3>
+<ul>
+<li>Authors: V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al.</li>
+<li>Year: 2006</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>DOI: 10.1186/1471-2105-7-470</li>
+<li>PMID: 17062145</li>
+<li>PMCID: 1630634</li>
+<li>Citations: 107</li>
+<li>Influential citations: 11</li>
+<li>Summary: GeneTools is the first "all in one" annotation tool, providing users with a rapid extraction of highly relevant gene annotation data for e.g. thousands of genes or clones at once.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.695)<br />
+    &gt; The database enables searching by gene symbols/names, GenBank accession numbers, UniGene cluster IDs, Swiss-Prot entry names and several unique clone IDs (IMAGE clone IDs, University of Iowa clone IDs, Operon oligo IDs, TAIR IDs and a subset of selected Affymetrix and Agilent IDs).<br />
+    &gt; The names and symbols of genes/proteins may be highly ambiguous [20]. We therefore recommend using primary gene IDs, like GeneBank accession numbers or specific probe IDs when querying the database. However, if gene names or symbols are used, caution is advised because only official names/symbols associated with UniProt knowledgebase will be recognized. The underlying database is updated on a weekly basis with annotation information from several external databases including UniGene, Swiss-Prot, Entrez Gene and GO. User data are submitted to the database as text files of gene reporters and analysis of the annotation data can be performed through three user interfaces: the NMC Annotation Tool, the GO Annotator Tool and eGOn. Analysis results and annotation data can be exported in various formats.</li>
+</ul>
+<h3 id="10-protocol-for-gene-annotation-prediction-and-validation-of-genomic-gene-expansion">[10] Protocol for gene annotation, prediction, and validation of genomic gene expansion</h3>
+<ul>
+<li>Authors: Quanwei Zhang, Zhengdong D. Zhang</li>
+<li>Year: 2022</li>
+<li>Venue: STAR Protocols</li>
+<li>URL: https://www.semanticscholar.org/paper/af8e3a73daaa04214d43f4ec1d9b1c0fcd42b8e3</li>
+<li>DOI: 10.1016/j.xpro.2022.101692</li>
+<li>PMID: 36125934</li>
+<li>PMCID: 9494284</li>
+<li>Citations: 1</li>
+<li>Summary: A detailed step-by-step protocol for gene annotation, prediction of genomic gene expansion, and its computational and experimental validation is described and steps to discover functionality of each copy of replicated genes are detailed.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.690)<br />
+    &gt; 3. Gene annotation and functional annotation. a. Gene structure annotation.<br />
+    &gt; In addition to gene prediction models, evidence from orthologous protein sequences and transcriptome assembly could be used to improve annotation quality. Protein sequences of orthologous genes can be obtained from UniProt (The UniProt, 2017). Ones from Swiss-Port have been reviewed and thus are of higher quality. Transcriptome assembly may be available from previous studies or can be assembled de novo from RNA-seq reads by Trinity (Haas et al., 2013). High quality transcriptome assembly can be selected as described in (Zhang et al., 2021). Note: Details about gene structure annotation (Holt and Yandell, 2011) can be found at http:// gmod.org/wiki/MAKER_Tutorial, https://darencard.net/blog/2017-05-16-maker-genomeannotation/, and the protocol (Campbell et al., 2014).<br />
+    &gt; b. Quality measurement and functional annotation.<br />
+    &gt; For each predicted gene, Maker2 provides the annotation edit distance (AED) score, which measures the goodness of fit between its predicted gene structure and its evidence support. The lower the score, the more accurate the prediction. If more than 90% genes with AED scores lower than 0.5, the genome can be considered well annotated. In addition to the AED score, a high proportion of recognizable domains contained in predicted protein -e.g., higher than 50% -also indicates a good annotation. Recognizable protein domains can by scanned by InterProScan (Jones et al., 2014), assigning potential function to predicted genes.<br />
+    &gt; Note: Besides the aforementioned quality measurement, we strongly recommend measuring the completeness of the genome assembly and annotation by checking the existence of a set of Benchmarking Universal Single-Copy Orthologs (BUSCO) (Simao et al., 2015). A high-level completeness of genome assembly and annotation is imperative for a better identification of gene expansion. Based on the result of this analysis, researchers can decide whether they need to further improve the genome assembly before predicting gene expansion. A detailed protocol of BUSCO is available at</li>
+</ul>
+<h3 id="11-undergraduate-bioinformatics-conceptualizing-form-and-function-on-a-molecular-scale">[11] Undergraduate Bioinformatics Conceptualizing Form and Function on a Molecular Scale</h3>
+<ul>
+<li>Authors: P. Kramer, Jack Treml</li>
+<li>Year: 2022</li>
+<li>Venue: Midwestern Journal of Undergraduate Sciences</li>
+<li>URL: https://www.semanticscholar.org/paper/58a6af68fc2fd768735d429724ffdd52e16dfb27</li>
+<li>DOI: 10.17161/mjusc.v1i1.18565</li>
+<li>Summary: The following is a walkthrough of a project designed to overcome the lack of sense for proteins as real objects.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.687)<br />
+    &gt; i. Click "See more" to view a bar chart containing data on where in the body's tissues the gene is expressed (as determined by RNA sequencing). Save and include this bar chart as the deliverable for this step.<br />
+    &gt; II. Universal Protein Research Knowledgebase (UniProtKB) 8 6. UniProt Entry Number<br />
+    &gt; i. Follow the UniProt link in the Resources then search for the protein using the NCBI Gene ID ii. Carefully select the result that best matches the gene and organism of interest by clicking on the blue entry number. iii. This page will be used later to gather further details about the protein.<br />
+    &gt; III. RCSB Protein Data Bank (PDB) 9 7. RCSB PDB Solved Structure Identifi er i. Follow the RCSB PDB link in the Resources and search for the protein by either the common name or the NCBI Gene ID, making sure to select the organism of interest on the left. ii. You must ensure that your chosen protein has an existing solved structure in this data bank in order to do a mutational analysis in later parts of this exercise.<br />
+    &gt; IV. NCBI GenBank 10 8. AA Protein Sequence i. From the NCBI Gene page, go to the "Genomic regions, transcripts, and products" section and then click "GenBank" on the right. Scroll down to the fi rst Coding Sequence "CDS" section and look directly after "/translation=" for the full protein sequence. ii. Sequence needs to be in FASTA Format consisting of '&gt;' followed by a simple name, a return, and then the sequence in one continuous line of text. See "FASTA Formatting" link in Resources.</li>
+</ul>
+<h3 id="12-mtd-a-cloud-based-omics-database-and-interactive-platform-for-myceliophthora-thermophila">[12] MTD: A cloud-based omics database and interactive platform for Myceliophthora thermophila</h3>
+<ul>
+<li>Authors: Jiacheng Dong, Zhitao Mao, Haoran Li, Ruoyu Wang, Yutao Wang et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Synthetic and Systems Biotechnology</li>
+<li>URL: https://www.semanticscholar.org/paper/d3bb60ddd3eb08ddd4808324bbd432a4a0ae19ba</li>
+<li>DOI: 10.1016/j.synbio.2025.04.001</li>
+<li>PMID: 40276250</li>
+<li>PMCID: 12018684</li>
+<li>Summary: Shifts in metabolic allocation in a glucoamylase hyperproduction strain of M. thermophila are identified, highlighting changes in fatty acid biosynthesis and amino acids biosynthesis pathways, which provide new insights into the underlying phenotypic alterations.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.685)<br />
+    &gt; Single-gene search: Gene annotation is essential for biologists to understand a gene's function. MTD's single-gene search interface allows researchers to obtain a comprehensive gene description by entering or selecting a gene ID. The results include sequence information, CAZy family, Pfam domains, GO/KEGG annotations, and phenotype information (Fig. 2D), along with sequence-based predictions such as optimal protein activity temperature, melting temperature (Tm), subcellular localization, and transcription factor scores. To enhance data accessibility, links to external databases such as NCBI, KEGG, FungiDB [4], UniProt, and JGI are also provided, facilitating cross-referencing of gene annotations across various resources.<br />
+    &gt; Unlike the static genome, the transcriptome captures dynamic gene expression changes in response to developmental or environmental conditions, establishing a dynamic link between an organism's genome and its physical characteristics [63]. In the single-gene retrieval interface, the expression of the searched gene is visualized in the form of box plots and scatter plots across transcriptome datasets (Fig. 2E). When hovering over any data point, users can view the corresponding experimental details, such as mutant name, sample processing methods, and growth conditions. This interactive feature reveals gene expression responses to environmental factors, allowing researchers to quickly identify experimental conditions of interest and explore the gene's potential roles in diverse biological contexts. Moreover, clicking on the dataset title will direct users to the GEO browser for further detailed descriptions. KEGG Pathway or Gene List Search: In transcriptome studies, researchers typically adopt a "bottom-up" approach: first sequencing all mRNA in a cell, identifying differentially expressed genes between conditions, and then performing GO/KEGG enrichment analysis to interpret functional distributions. MTD, however, offers a complementary "top-down" search strategy, enabling users to examine the expression of genes within a specific KEGG pathway (Fig. 3A) or a user-defined gene set. A unique feature of MTD is its manually curated data categorization system, which organizes sample data with detailed annotations based on experimental conditions.</li>
+</ul>
+<h3 id="13-next-generation-sequencing-and-transcriptome-analysis-predicts-biosynthetic-pathway-of-sennosides-from-senna-cassia-angustifolia-vahl-a-non-model-plant-with-potent-laxative-properties">[13] Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties</h3>
+<ul>
+<li>Authors: Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al.</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e</li>
+<li>DOI: 10.1371/journal.pone.0129422</li>
+<li>PMID: 26098898</li>
+<li>PMCID: 4476680</li>
+<li>Citations: 81</li>
+<li>Influential citations: 3</li>
+<li>Summary: A set of putative genes involved in various secondary metabolite pathways, especially those related to the synthesis of sennosides are identified which will serve as an important platform for public information about gene expression, genomics, and functional genomics in senna.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.681)<br />
+    &gt; Further the assembled transcript contigs were validated using CLC Genomics workbench (CLC Bio, Boston, MA 02108 USA) by mapping high quality reads back to the assembled transcript contigs. ORF-Predictor [57], an online tool, was used on default parameters to identify the coding DNA sequences (CDS) from assembled transcript contigs. GC counts of transcripts was determined using a custom-made perl script.<br />
+    &gt; Functional annotations. The functional annotation was performed by aligning coding DNA sequence (CDS) to NCBI 'green plant database (txid 33090)' database using basic local alignment search tool (BLASTX) [58] with an E-value threshold of 1e -06 and GO assignments were used to classify the functions of the predicted CDS. The GO mapping also provided ontology of defined terms representing gene product properties which were grouped into three main domains: biological process (BP), molecular function (MF) and cellular component (CC). GO mapping was carried out in order to retrieve GO terms for all the BLASTX functionally annotated CDS. The GO mapping used defined criteria to retrieve GO terms for annotated CDS which included use of BLASTX result accession IDs to retrieve gene names or symbols, UniProt IDs and direct search in the dbxref table of GO database. Identified gene names or symbols were then searched in the species specific entries of the gene-product tables of GO database. UniProt IDs made use of protein information resource (PIR) which includes protein sequence database (PSD), UniProt, SwissProt, TrEMBL, RefSeq, GenPept, and PDB databases. Gene Ontology analysis helps in specifying all the annotated nodes comprising of GO functional groups. CDS were compared against the COG (Clusters of Orthologous Groups) database for the analysis of phylogenetically widespread domain families. CDS were compared against Pfam database for higher-level groupings of related protein families, known as clans and the identification of domains that occurs within proteins. BLASTX was used against uniprot-swissprot database with cut-off e-value 1e-6 to annotate predicted CDS against protein.</li>
+</ul>
+<h3 id="14-discovery-of-simple-sequence-repeat-markers-through-transcriptome-analysis-of-baccaurea-motleyana">[14] Discovery of Simple Sequence Repeat Markers through Transcriptome Analysis of Baccaurea motleyana</h3>
+<ul>
+<li>Authors: K. Nasir, Muhammad Fairuz Mohd Yusof, M. S. F. A. Razak, Siti Norsaidah Ibrahim, Mira Farzana Mohamad Moktar et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Journal of Food Science and Engineering</li>
+<li>URL: https://www.semanticscholar.org/paper/f99fe2940881ec45ecbd8ba3da7f10b4fb22fc3b</li>
+<li>DOI: 10.17265/2159-5828/2020.02.001</li>
+<li>Summary: Baccaurea motleyana (rambai) is underutilized fruits that are native to Malaysia, Indonesia and Thailand and used for simple sequence repeat (SSR) analysis by MIcroSAtellite (MISA).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.678)<br />
+    &gt; To get comprehensive gene function of rambai genes, gene annotation to seven databases, namely National Center for Biotechnology Information (NCBI) non-redundant protein sequences (NR), NCBI nucleotide sequences (NT), Kyoto Encyclopedia of Genes and Genome Ortholog (KO), SwissProt, Protein family (Pfam), Gene Ontology (GO) and Cluster of Orthologous Groups (KOG), was used as reference.<br />
+    &gt; The NCBI non-redundant protein sequences (NR), include protein sequence information from GenBank, Protein Data Bank (PDB), SwissProt, Protein Information Resource (PIR) and Protein Research Foundation (PRF). The NCBI nucleotide sequences (NT) are the nucleotide sequence database that includes nucleotide sequence from GenBank of the European Bioinformatics Institute (EMBL) and DNA Data Bank of Japan (DDBJ). KEGG is a database resource for understanding high-level functions and utilities of the biological system, such as cell, organism and ecosystem, from molecular-level information, especially for large-scale molecular datasets generated by genome sequencing and other high-throughput experimental technologies. KEGG is an established Cluster of Orthologous (KO) annotation system that can accomplish the function annotation of the genome/transcriptome of a newly sequenced species. SwissProt is a manual annotated and reviewed protein sequence database that has a high-quality protein sequence database from experimental results, computed features and scientific conclusions. Pfam is comprehensive collection of protein domains and families, represented as multiple sequence alignments and as profile of hidden Markov models. Many proteins are composed of structural domains, and the protein sequence of a specific structural domain possesses a certain degree of conservative property. GO is the established standard for the functional annotation of gene products and controlled vocabulary used to classify the functional attributes of gene products of a biological process, a molecular function and a cellular component.</li>
+</ul>
+<h3 id="15-the-surface-proteome-of-bovine-unsexed-and-sexed-spermatozoa">[15] The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa</h3>
+<ul>
+<li>Authors: P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Animals : an Open Access Journal from MDPI</li>
+<li>URL: https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>DOI: 10.3390/ani15040484</li>
+<li>PMID: 40002966</li>
+<li>PMCID: 11852025</li>
+<li>Citations: 2</li>
+<li>Summary: Differences in surface proteins between X- and Y-chromosome-bearing bovine spermatozoa are explored to identify potential targets for sperm sexing by LC-MS/MS analysis, with 5 transmembrane proteins showing promise as markers for X-sperm.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.677)<br />
+    &gt; The protein sequences were functionally annotated by combining information retrieved from the UniProt database ( [25], accessed on 9 June 2022) and one-to-one fast orthology assignments using the eggNOG-mapper v.2.1.7 tool ( [26], accessed on 9 June 2022), as described in [27]. Briefly, the gene name, protein name, length, Gene Ontology (GO) IDs, and chromosome associated with each protein entry were obtained from UniProt using the retrieve/ID mapping tool. Additionally, gene names, descriptions, and experimentally validated GO IDs were obtained from eggNOG, with consideration given to a taxonomic scope auto-adjusted per query, a minimum hit bit-score of 60, and thresholds of 80% for identity, minimum query coverage, and minimum subject coverage.<br />
+    &gt; Out of the 130 detected proteins, 71 (54.6%) had information manually verified by UniProt curators (Supplementary Spreadsheet S1.5). Utilizing the eggNOG-mapper v2.1.7 tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a descrip-tion, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.<br />
+    &gt; tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a description, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.</li>
+</ul>
+<h3 id="16-a-manual-curation-strategy-to-improve-genome-annotation-application-to-a-set-of-haloarchael-genomes">[16] A Manual Curation Strategy to Improve Genome Annotation: Application to a Set of Haloarchael Genomes</h3>
+<ul>
+<li>Authors: F. Pfeiffer, D. Oesterhelt</li>
+<li>Year: 2015</li>
+<li>Venue: Life</li>
+<li>URL: https://www.semanticscholar.org/paper/f5983d01e0ac838554f7f5c29481d70a9d728c30</li>
+<li>DOI: 10.3390/life5021427</li>
+<li>PMID: 26042526</li>
+<li>PMCID: 4500146</li>
+<li>Citations: 38</li>
+<li>Influential citations: 1</li>
+<li>Summary: A manual curation effort is described that attempts to produce high-quality genome annotations for a set of haloarchaeal genomes (Halobacterium salinarum and Hbt. hubeiense, Haloferax volcanii and Hfx. mediterranei).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.676)<br />
+    &gt; Labelling of such a gene as "inactivated" seems biologically correct. This is translated to the CDS qualifier /pseudo in EMBL and securely ensures that the protein translation is not present in UniProt (e.g., searching for OE_1059R results in no hit). When, however, an invalid partial translation product is produced but not tagged as disrupted (as is the case for VNG0034H), then this is considered by EMBL as a "regular" gene (CDS). Such a gene fragment is included as a regular protein in UniProt (VNG0034H is Q9HSX6). Upon superficial analysis, this may be taken as evidence for an "improved" (because less incomplete) genome annotation in strain NRC-1 compared to strain R1. In addition, according to EMBL requirements, the "CDS" coordinates of OE_1059R must be given as 29913-31570, thus covering and including the integrated transposon ISH1 (with its transposase gene). Only a "tolerated" misc_feature annotation allows representation of this disrupted gene in a biologically meaningful way, representing the reconstructed ancestral gene.</li>
+</ul>
+<h3 id="17-ten-steps-to-get-started-in-genome-assembly-and-annotation">[17] Ten steps to get started in Genome Assembly and Annotation</h3>
+<ul>
+<li>Authors: Victoria Dominguez Del Angel, Erik Hjerde, L. Sterck, S. Capella-Gutiérrez, C. Notredame et al.</li>
+<li>Year: 2018</li>
+<li>Venue: F1000Research</li>
+<li>URL: https://www.semanticscholar.org/paper/1b1090dcbd0f6a609f0448957b7e464997879ea8</li>
+<li>DOI: 10.12688/f1000research.13598.1</li>
+<li>PMID: 29568489</li>
+<li>PMCID: 5850084</li>
+<li>Citations: 109</li>
+<li>Influential citations: 1</li>
+<li>Summary: Ten steps to facilitate researchers getting started in genome assembly and genome annotation are presented and the importance of data management is stressed, and advice on where to submit data and how to make results Findable, Accessible, Interoperable, and Reusable (FAIR).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.675)<br />
+    &gt; The ultimate goal of the functional annotation process (Figure 4) is to assign biologically relevant information to predicted polypeptides, and to the features they derive from (e.g. gene, mRNA). This process is especially relevant nowadays in the context of the NGS era due to the capacity of sequencing, assembling, and annotating full genomes in short periods of time, e.g. less than a month. Functional elements could range from putative name and/or symbols for protein-coding genes, e.g. ADH to its putative biological function, e.g. alcohol dehydrogenase, associated gene ontology terms, e.g. GO:0004022, functional sites, e.g. METAL 47 47 Zinc 1, and domains, e.g. IPR002328, among other features. The function of predicted proteins can be computationally inferred based on the similarity between the sequence of interest and other sequences in different public repositories, e.g. BLASTP against Uniprot. Caution should be taken when assigning results merely based on sequence similarity as two evolutionary independent sequences which share some common domains could be considered homologs 62 . Thus, whenever possible, it is better to use orthologous sequences for annotation purposes rather than simply similar sequences 63 . With the growing number of sequences in those public repositories, it is possible to perform various searches and combine obtained results into a consensus annotation. The accurate assignment of the functional elements is a complex process, and the best annotation will involve manual curation.<br />
+    &gt; There are two main outcomes of the functional annotation process. The first is the assignment of functional elements to genes. Downstream analysis of these elements allow further understanding of specific genome properties, e.g. metabolic pathways, and similarities compared with closely related species. The second result of the functional annotation is the additional quality check for the predicted gene set. It is possible to identify problematic and/or suspicious genes by the presence of specific domains, suspicious orthology assignment and/or absence of other functional elements, e.g. functional completeness. These Page 13 of 19</li>
+</ul>
+<h3 id="18-discovering-and-summarizing-relationships-between-chemicals-genes-proteins-and-diseases-in-pubchem">[18] Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem</h3>
+<ul>
+<li>Authors: L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Research Metrics and Analytics</li>
+<li>URL: https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>DOI: 10.3389/frma.2021.689059</li>
+<li>PMID: 34322655</li>
+<li>PMCID: 8311438</li>
+<li>Citations: 23</li>
+<li>Influential citations: 1</li>
+<li>Summary: The literature knowledge panels developed and implemented in PubChem help to uncover and summarize important relationships between chemicals, genes, proteins, and diseases by analyzing co-occurrences of terms in biomedical literature abstracts.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.668)<br />
+    &gt; We decided to prioritize human genes and proteins. The following strategy has been implemented to resolve gene and protein text entities to the most reasonable gene, protein, or enzyme symbol (corresponding to human, when possible):<br />
+    &gt; -Try to find a match among Human Genome Organization (HUGO) Gene Nomenclature Committee (HGNC) names (Braschi et al., 2019;HUGO, 2021);<br />
+    &gt; -Try to find a match among names in The IUPHAR/BPS Guide to Pharmacology (Armstrong et al., 2020; IUPHAR/BPS, 2021); -Try to find matches among names in UniProt (Bateman et al., 2017); -Otherwise, try to match to an enzyme name and resolve to an EC number (Bairoch, 2000;Expassy, 2021).<br />
+    &gt; In general, it is very difficult and often impossible to distinguish the name of a gene from the name of the protein encoded by that gene. Therefore, gene and protein names are not strictly distinguished from each other but considered as one category. Therefore, the annotations considered in this study can be grouped into three categories: chemicals, genes/proteins, and diseases.</li>
+</ul>
+<h3 id="19-mitotic-spindle-proteomics-in-chinese-hamster-ovary-cells">[19] Mitotic Spindle Proteomics in Chinese Hamster Ovary Cells</h3>
+<ul>
+<li>Authors: Mary Kate Bonner, D. Poole, Tao Xu, Ali Sarkeshik, J. Yates et al.</li>
+<li>Year: 2011</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/8a46e242e657489c1933c76e06a37618f7d1901f</li>
+<li>DOI: 10.1371/journal.pone.0020489</li>
+<li>PMID: 21647379</li>
+<li>PMCID: 3103581</li>
+<li>Citations: 51</li>
+<li>Influential citations: 3</li>
+<li>Summary: This work reports the first proteomic study of the mitotic spindle from Chinese Hamster Ovary (CHO) cells and identifies proteins that are unique to the CHO spindle.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.668)<br />
+    &gt; The lists of proteins used for the comparison contain more items than listed previously due to expansion out of gene clusters, for example, to allow the updating and comparison of current HGNC gene symbols. These lists of proteins were compared in Microsoft Excel 2011 using PivotTable.<br />
+    &gt; The protein set for the CHO midbody was derived from the accession numbers in Table S1 and Table S2 from Skop et al. [9]. Original accession numbers were updated to more recent UniProt accessions (2/2010), and duplicates from different species or different protein isoforms were removed. The unique UniProt accessions were mapped to gene names using UniProt KB Unimart, UniProt dataset [82], and these gene names were confirmed manually as HGNC symbols using HGNC, with ambiguities checked using BLASTP of the sequence corresponding to the original accession number. Accessions that didn't map successfully in Unimart were manually analyzed using BLASTP against the human RefSeq protein set using sequences from the original accessions, combined with TreeFam.org data for the non-human UniProt accessions. HGNC symbols were updated again on 12/14/2010 before comparison with this paper's protein set.<br />
+    &gt; The protein set for the HeLa spindle proteome is derived from the 1121 accession numbers in Sauer et al. supplementary table 1 column 2 [17]. Updating the 1116 UniProt accession numbers and 5 IPI accession numbers from 795 rows required several steps. Most proteins were updated to current UniProt accessions using UniProt retrieve. Duplicates were removed. Sequences for the IPI accession numbers and 16 defunct UniProt accession numbers were recovered from other sources on the web, and BLASTP against the human RefSeq protein set with a cutoff of at least 90% identity was used to update some of these accessions. The unique current UniProt accessions were mapped to HGNC symbols using UniProt ID mapping to HGNC IDs. Biomart, database Ensembl Genes 60, dataset GRCh37.p2 [http://uswest.ensembl.org/biomart/martview/]</li>
+</ul>
+<h3 id="20-pangenome-of-acinetobacter-baumannii-uncovers-two-groups-of-genomes-one-of-them-with-genes-involved-in-crisprcas-defence-systems-associated-with-the-absence-of-plasmids-and-exclusive-genes-for-biofilm-formation">[20] Pangenome of Acinetobacter baumannii uncovers two groups of genomes, one of them with genes involved in CRISPR/Cas defence systems associated with the absence of plasmids and exclusive genes for biofilm formation</h3>
+<ul>
+<li>Authors: Eugenio L Mangas, Alejandro Rubio, R. Álvarez-Marín, Gema Labrador-Herrera, J. Pachón et al.</li>
+<li>Year: 2019</li>
+<li>Venue: Microbial Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/ccdc06e24b4cff1ddca5e537c65e5f14c5f017b3</li>
+<li>DOI: 10.1099/mgen.0.000309</li>
+<li>PMID: 31626589</li>
+<li>PMCID: 6927304</li>
+<li>Citations: 64</li>
+<li>Influential citations: 2</li>
+<li>Summary: A genomics analysis of almost 2500 strains found two different groups of genomes found based on the number of shared genes, one of which rarely has plasmids, and bears clustered regularly interspaced short palindromic repeat (CRISPR) sequences, in addition to CRISPR-associated genes (cas genes) or restriction-modification system genes.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.666)<br />
+    &gt; To homogenize the genome annotation, the sequences of all genomes were analysed using the same protocol. The proteinencoding genes were predicted using Prokka version 1.13 [24], and the predicted protein sequences were functionally annotated using Sma3s v2 and UniProt taxonomic division bacteria 2019_01 as a reference database [25,55].<br />
+    &gt; To annotate specific genes, GO (gene ontology) terms and UniProt keywords assigned by Sma3s were used. To find genes associated with CRISPR systems, protein sequences coming</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>H. Chiba, Hiroyo Nishide, I. Uchiyama (2015). Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data. PLoS ONE. https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al. (2025). Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir. Molecular ecology. https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>A. Ruhs, F. Cemic, T. Braun, M. Krüger (2013). ResA3: A Web Tool for Resampling Analysis of Arbitrary Annotations. PLoS ONE. https://www.semanticscholar.org/paper/81d8d1bc8cf5b02d9e7027a010f6dedc6be55b38</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>Sadegh Balotf, R. Tegg, D. Nichols, C. Wilson (2021). Spore Germination of the Obligate Biotroph Spongospora subterranea: Transcriptome Analysis Reveals Germination Associated Genes. Frontiers in Microbiology. https://www.semanticscholar.org/paper/d6fe7c793bbd642b3cf0b2c098589c5c5b8f7eef</li>
+<li>V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al. (2006). GeneTools – application for functional annotation and statistical hypothesis testing. BMC Bioinformatics. https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>Quanwei Zhang, Zhengdong D. Zhang (2022). Protocol for gene annotation, prediction, and validation of genomic gene expansion. STAR Protocols. https://www.semanticscholar.org/paper/af8e3a73daaa04214d43f4ec1d9b1c0fcd42b8e3</li>
+<li>P. Kramer, Jack Treml (2022). Undergraduate Bioinformatics Conceptualizing Form and Function on a Molecular Scale. Midwestern Journal of Undergraduate Sciences. https://www.semanticscholar.org/paper/58a6af68fc2fd768735d429724ffdd52e16dfb27</li>
+<li>Jiacheng Dong, Zhitao Mao, Haoran Li, Ruoyu Wang, Yutao Wang et al. (2025). MTD: A cloud-based omics database and interactive platform for Myceliophthora thermophila. Synthetic and Systems Biotechnology. https://www.semanticscholar.org/paper/d3bb60ddd3eb08ddd4808324bbd432a4a0ae19ba</li>
+<li>Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al. (2015). Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties. PLoS ONE. https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e</li>
+<li>K. Nasir, Muhammad Fairuz Mohd Yusof, M. S. F. A. Razak, Siti Norsaidah Ibrahim, Mira Farzana Mohamad Moktar et al. (2020). Discovery of Simple Sequence Repeat Markers through Transcriptome Analysis of Baccaurea motleyana. Journal of Food Science and Engineering. https://www.semanticscholar.org/paper/f99fe2940881ec45ecbd8ba3da7f10b4fb22fc3b</li>
+<li>P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al. (2025). The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa. Animals : an Open Access Journal from MDPI. https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>F. Pfeiffer, D. Oesterhelt (2015). A Manual Curation Strategy to Improve Genome Annotation: Application to a Set of Haloarchael Genomes. Life. https://www.semanticscholar.org/paper/f5983d01e0ac838554f7f5c29481d70a9d728c30</li>
+<li>Victoria Dominguez Del Angel, Erik Hjerde, L. Sterck, S. Capella-Gutiérrez, C. Notredame et al. (2018). Ten steps to get started in Genome Assembly and Annotation. F1000Research. https://www.semanticscholar.org/paper/1b1090dcbd0f6a609f0448957b7e464997879ea8</li>
+<li>L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al. (2021). Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem. Frontiers in Research Metrics and Analytics. https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>Mary Kate Bonner, D. Poole, Tao Xu, Ali Sarkeshik, J. Yates et al. (2011). Mitotic Spindle Proteomics in Chinese Hamster Ovary Cells. PLoS ONE. https://www.semanticscholar.org/paper/8a46e242e657489c1933c76e06a37618f7d1901f</li>
+<li>Eugenio L Mangas, Alejandro Rubio, R. Álvarez-Marín, Gema Labrador-Herrera, J. Pachón et al. (2019). Pangenome of Acinetobacter baumannii uncovers two groups of genomes, one of them with genes involved in CRISPR/Cas defence systems associated with the absence of plasmids and exclusive genes for biofilm formation. Microbial Genomics. https://www.semanticscholar.org/paper/ccdc06e24b4cff1ddca5e537c65e5f14c5f017b3</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q877Q1
+gene_symbol: PP_1250
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PP_1250 encodes a bacterial reverse transcriptase-family RNA-directed DNA polymerase with group II intron/maturase-family
+  domain support. Its supported first-pass role is RNA-templated DNA synthesis in retroelement or group-II-intron mobile-element
+  biology, not chromosomal DNA replication or a resolved antiviral-defense module.
+existing_annotations:
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: RNA binding is retained as compatible group-II-intron/reverse-transcriptase context.
+    action: ACCEPT
+    reason: Group-II-intron/maturase-family reverse transcriptases are RNA-associated enzymes, and the InterPro-derived RNA-binding
+      row is compatible with the RNA-directed DNA polymerase role.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tenables\tGO:0003723\tRNA binding\tmolecular_function\tECO:0000256\tIEA\t\
+        GO_REF:0000002\tInterPro:IPR000123\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950\
+        \ / KT2440)\tInterPro\tRNA-directed DNA polymerase\t20260706&#34;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   GO; GO:0003723; F:RNA binding; IEA:InterPro.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR030931; Group_II_RT_mat.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR013597; Mat_intron_G2.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000477; RT_dom.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+- term:
+    id: GO:0003887
+    label: DNA-directed DNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: DNA-directed DNA polymerase activity is not the right specific call for this reverse-transcriptase-family record.
+    action: MODIFY
+    reason: The product and UniProt GO cross-reference support RNA-directed DNA polymerase activity. The DNA-directed polymerase
+      row is an automated over-propagation and should be replaced by the RT activity already present on the record.
+    proposed_replacement_terms:
+    - id: GO:0003964
+      label: RNA-directed DNA polymerase activity
+    supported_by:
+    - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tenables\tGO:0003964\tRNA-directed DNA polymerase activity\tmolecular_function\t\
+        ECO:0000501\tIEA\tGO_REF:0000120\tInterPro:IPR000123|EC:2.7.7.49|UniRule:UR000414873\t160488\tPseudomonas putida (strain\
+        \ ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tRNA-directed DNA polymerase\t20260706&#34;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   GO; GO:0003964; F:RNA-directed DNA polymerase activity; IEA:UniProtKB-KW.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR030931; Group_II_RT_mat.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000477; RT_dom.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+- term:
+    id: GO:0003964
+    label: RNA-directed DNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RNA-directed DNA polymerase activity is the core reverse-transcriptase activity.
+    action: ACCEPT
+    reason: The UniProt record names RNA-directed DNA polymerase activity with EC 2.7.7.49 and reverse-transcriptase/group-II-intron
+      domain support.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tenables\tGO:0003964\tRNA-directed DNA polymerase activity\tmolecular_function\t\
+        ECO:0000501\tIEA\tGO_REF:0000120\tInterPro:IPR000123|EC:2.7.7.49|UniRule:UR000414873\t160488\tPseudomonas putida (strain\
+        \ ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tRNA-directed DNA polymerase\t20260706&#34;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   GO; GO:0003964; F:RNA-directed DNA polymerase activity; IEA:UniProtKB-KW.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR030931; Group_II_RT_mat.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000477; RT_dom.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+- term:
+    id: GO:0006278
+    label: RNA-templated DNA biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: RNA-templated DNA biosynthetic process is compatible with the reverse-transcriptase activity.
+    action: ACCEPT
+    reason: The record supports RNA-directed DNA polymerase activity in a mobile/retroelement context. The broader process
+      term is retained without asserting a resolved cognate intron, retron, or defense pathway.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tinvolved_in\tGO:0006278\tRNA-templated DNA biosynthetic process\tbiological_process\t\
+        ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR000123\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP\
+        \ 8728 / NCIMB 11950 / KT2440)\tInterPro\tRNA-directed DNA polymerase\t20260706&#34;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR030931; Group_II_RT_mat.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000477; RT_dom.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: This parent transferase/nucleotidyltransferase term is redundant with the specific reverse-transcriptase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The more specific RNA-directed DNA polymerase activity captures the actual catalytic role. The parent term is
+      technically related but adds little functional value for this review.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tenables\tGO:0016740\ttransferase activity\tmolecular_function\tECO:0000256\t\
+        IEA\tGO_REF:0000104\tUniRule:UR000414873\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB\
+        \ 11950 / KT2440)\tUniProt\tRNA-directed DNA polymerase\t20260706&#34;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000477; RT_dom.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+- term:
+    id: GO:0016779
+    label: nucleotidyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: This parent transferase/nucleotidyltransferase term is redundant with the specific reverse-transcriptase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The more specific RNA-directed DNA polymerase activity captures the actual catalytic role. The parent term is
+      technically related but adds little functional value for this review.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tenables\tGO:0016779\tnucleotidyltransferase activity\tmolecular_function\t\
+        ECO:0000256\tIEA\tGO_REF:0000104\tUniRule:UR000414873\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 /\
+        \ CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tRNA-directed DNA polymerase\t20260706&#34;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000477; RT_dom.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+      supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+    - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+      supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based
+    on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+  title: UniProtKB entry for PP_1250
+  findings:
+  - statement: UniProt provides product, GO cross-reference, family, and domain context used in this first-pass review.
+    supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+- id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+  title: QuickGO GOA annotations for PP_1250
+  findings:
+  - statement: The fetched GOA table contains the machine-sourced annotations reviewed for this gene.
+- id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+  title: Asta retrieval report for PP_1250
+  findings:
+  - statement: Asta retrieval was generated for this first-pass review and used as lightweight identity/retrieval context.
+    supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+core_functions:
+- description: Bacterial reverse-transcriptase-family RNA-directed DNA polymerase activity in RNA-templated DNA biosynthesis.
+  supported_by:
+  - reference_id: file:PSEPK/PP_1250/PP_1250-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ877Q1\tPP_1250\tenables\tGO:0003964\tRNA-directed DNA polymerase activity\tmolecular_function\t\
+      ECO:0000501\tIEA\tGO_REF:0000120\tInterPro:IPR000123|EC:2.7.7.49|UniRule:UR000414873\t160488\tPseudomonas putida (strain\
+      \ ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tRNA-directed DNA polymerase\t20260706&#34;
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: &#39;DE   RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: DR   GO; GO:0003964; F:RNA-directed DNA polymerase activity; IEA:UniProtKB-KW.
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: DR   InterPro; IPR030931; Group_II_RT_mat.
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: DR   InterPro; IPR000477; RT_dom.
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: DR   InterPro; IPR000123; Reverse_transcriptase_msDNA.
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the bacterial reverse transcriptase family.&#39;
+  - reference_id: file:PSEPK/PP_1250/PP_1250-uniprot.txt
+    supporting_text: DR   PANTHER; PTHR34047; NUCLEAR INTRON MATURASE 1, MITOCHONDRIAL-RELATED; 1.
+  - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+    supporting_text: &#39;  uniprot_accession: Q877Q1&#39;
+  - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+    supporting_text: &#39;  protein_description: &#39;&#39;RecName: Full=RNA-directed DNA polymerase {ECO:0000256|ARBA:ARBA00012493};&#39;
+  - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+    supporting_text: &#39;  protein_family: Belongs to the bacterial reverse transcriptase family.&#39;
+  - reference_id: file:PSEPK/PP_1250/PP_1250-deep-research-asta.md
+    supporting_text: &#39;  protein_domains: DNA/RNA_pol_sf. (IPR043502); Group_II_RT_mat. (IPR030931); GrpII_Intron_Splice-Mob/Def.&#39;
+  molecular_function:
+    id: GO:0003964
+    label: RNA-directed DNA polymerase activity
+  directly_involved_in:
+  - id: GO:0006278
+    label: RNA-templated DNA biosynthetic process
+proposed_new_terms: []
+suggested_questions:
+- question: What cognate RNA element and genomic target, if any, define the mobile-element role of PP_1250?
+suggested_experiments:
+- experiment_type: RNA association and polymerase assay
+  description: Identify RNAs associated with PP_1250 and test purified protein for RNA-directed DNA polymerase activity.
+  hypothesis: PP_1250 functions as a mobile-element reverse transcriptase with a specific cognate RNA.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

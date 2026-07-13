@@ -26,3 +26,17 @@
 - GO:0006352 DNA-templated transcription initiation and GO:2000142 regulation of DNA-templated transcription initiation capture the direct process-level role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468 regulation of gene expression.
 - GO:0003677 DNA binding is too generic for a sigma factor whose core activity is promoter specificity within RNA polymerase holoenzyme rather than a standalone DNA-binding regulator.
 - Biofilm formation is well supported but should be treated as a non-core pleiotropic output of the RpoS regulon rather than the main evolved function of the protein.
+
+## 2026-07-10 sigma/anti-sigma first pass
+
+- Batch: `projects/P_PUTIDA/batches/module_regulation_signal_transduction_sigma_anti_sigma_and_sigma_factors.tsv`.
+- Main conclusion: existing curated RNA polymerase sigma factor RpoS (Sigma S) (Sigma-38).
+- Existing curated YAML decisions were preserved; Asta retrieval is available for future follow-up but was not used to rewrite this review.
+
+Primary provenance:
+- [file:PSEPK/rpoS/rpoS-goa.tsv "UniProtKB	Q88ME8	rpoS	enables	GO:0016987	sigma factor activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR009042|InterPro:IPR012761|UniRule:UR000184394	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	RNA polymerase sigma factor RpoS	20260302"]
+- [file:PSEPK/rpoS/rpoS-uniprot.txt "DE   RecName: Full=RNA polymerase sigma factor RpoS {ECO:0000256|HAMAP-Rule:MF_00959};"]
+- [file:PSEPK/rpoS/rpoS-uniprot.txt "CC   -!- SIMILARITY: Belongs to the sigma-70 factor family. RpoS subfamily."]
+- [file:PSEPK/rpoS/rpoS-uniprot.txt "DR   InterPro; IPR007627; RNA_pol_sigma70_r2."]
+- [file:PSEPK/rpoS/rpoS-uniprot.txt "KW   Sigma factor {ECO:0000256|ARBA:ARBA00023082, ECO:0000256|HAMAP-"]
+- [file:PSEPK/rpoS/rpoS-deep-research-asta.md "- **Protein Description:** RecName: Full=RNA polymerase sigma factor RpoS {ECO:0000256|HAMAP-Rule:MF_00959}; AltName: Full=Sigma S {ECO:0000256|HAMAP-Rule:MF_00959}; AltName: Full=Sigma-38 {ECO:0000256|HAMAP-Rule:MF_00959};"]
