@@ -21,7 +21,7 @@ This subproject identifies human proteins annotated to "autophagy" (GO:0006914) 
 
 - Batch 1 (4/4 complete): ABL1, BCL2, FOXO1, LRRK2
 - Batch 2 (5/5 complete): DRAM1, DRAM2, DAP, CLTC, HMGB1
-- Batch 3 (5/5 complete): IFI16, IRF8, LRPPRC, HAP1/APEX1, GRAMD1A
+- Batch 3 (5/5 complete): IFI16, IRF8, LRPPRC, APEX1, GRAMD1A
 - Total reviewed: 14/123 genes (11.4%)
 - Over-annotation rate: 79% (11/14)
 - Legitimate annotations: 3 (DRAM1, DRAM2, DAP)
