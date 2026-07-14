@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Tim10 (S. pombe)
 
-Source: Tim10-bioreason-rl-predictions.md
+Source: tim10-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5
