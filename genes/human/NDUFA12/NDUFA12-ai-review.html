@@ -1,0 +1,3482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDUFA12 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NDUFA12</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UI09" target="_blank" class="term-link">
+                        Q9UI09
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NDUFA12";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UI09" data-a="DESCRIPTION: NDUFA12 (B17.2; also called the 13 kDa differentia..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NDUFA12 (B17.2; also called the 13 kDa differentiation-associated protein, DAP13) is an accessory (supernumerary) subunit of mitochondrial respiratory Complex I (NADH:ubiquinone oxidoreductase), the first enzyme of the mitochondrial electron transport chain. It is a stable structural subunit of the mature holoenzyme, located in the peripheral (matrix) arm near the junction of the N- and Q-modules, and is a peripheral inner-membrane protein exposed to the matrix. NDUFA12 is non-catalytic: it does not itself carry out NADH oxidation, quinone reduction, or proton pumping, but contributes structurally to the assembly and stability of a fully functional Complex I that transfers electrons from NADH to ubiquinone and contributes to the proton-motive force used for ATP synthesis. It is distinct from its paralog NDUFAF2/NDUFA12L, which is a Complex I assembly factor rather than a mature-enzyme subunit; in NDUFA12-knockout cells the assembly factor NDUFAF2 can substitute in the complex. Biallelic loss-of-function variants in NDUFA12 cause mitochondrial complex I deficiency (nuclear type 23) and Leigh syndrome.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0045271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred membership of NDUFA12 in respiratory chain Complex I. Correct and well supported by direct experimental structural/biochemical data (below); retained as background support for the core structural fact.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Accessory subunit of the mitochondrial membrane respiratory</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005743" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of inner-membrane localization. Consistent with UniProt (mitochondrion inner membrane; peripheral membrane protein; matrix side) and with the ComplexPortal IDA below. Correct but redundant with the experimental annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;membrane&#39; term from InterPro2GO. Uninformative given the specific, experimentally supported localization to the mitochondrial inner membrane (matrix side); over-general and superseded.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0045271" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of Complex I membership; correct but redundant with the IDA/IMP/IPI experimental annotations that establish this as the core structural fact.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                    GO:1902600
+                                </a>
+                            </span>
+                            <span class="term-label">proton transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:1902600" data-r="GO_REF:0000108" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inferred by logical inference from the GO:0008137 &#39;NADH dehydrogenase (ubiquinone) activity&#39; MF annotation. That MF annotation is itself an over-annotation for this non-catalytic accessory subunit (see below), and NDUFA12 does not itself translocate protons. Proton pumping is a complex-level activity carried out by the membrane-arm core (ND) subunits, not by NDUFA12.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from a high-throughput binary interactome screen (HuRI), with partner TMED8 (Q6PL24). The term is uninformative and the Y2H partner is not among the physiologically relevant Complex I contacts of NDUFA12; kept per policy but flagged as over-annotated rather than a meaningful molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005739" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of mitochondrial localization from mouse ortholog. Correct but coarser than the experimentally supported inner-membrane / Complex I localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005743" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (cryo-EM of the human respiratory megacomplex, ComplexPortal curation) placing NDUFA12 in the mitochondrial inner membrane as part of Complex I. This is the core, experimentally grounded localization (matrix-side peripheral inner membrane).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Matrix side</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30030361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30030361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of mammalian oxidative phosphorylation complexes I-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0009060" data-r="PMID:30030361" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Complex-level process attributed by ComplexPortal from a review of OXPHOS assembly. Aerobic respiration is a role of Complex I as a whole; NDUFA12 participates only structurally. True but not a distinct NDUFA12 molecular contribution, so retained as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042776" target="_blank" class="term-link">
+                                    GO:0042776
+                                </a>
+                            </span>
+                            <span class="term-label">proton motive force-driven mitochondrial ATP synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30030361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30030361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Assembly of mammalian oxidative phosphorylation complexes I-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0042776" data-r="PMID:30030361" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Complex-level (OXPHOS) contribution attributed by ComplexPortal. NDUFA12 as a structural subunit contributes to a functional Complex I that helps generate the proton-motive force, but does not itself drive ATP synthesis; retained as non-core context.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0045271" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Physical-interaction (cryo-EM, ComplexPortal) evidence assigning NDUFA12 to Complex I. Directly supports the core structural fact that NDUFA12 is a subunit of the mature holoenzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence (HPA) localization to mitochondrion. Correct but coarser than the inner-membrane / Complex I localization; retained as supporting, non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial-proteome localization to mitochondrion. Consistent but coarse; redundant with the more specific inner-membrane annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12611891
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The subunit composition of the human NADH dehydrogenase obta...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0045271" data-r="PMID:12611891" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct identification of NDUFA12 (the differentiation-linked 13 kDa protein, DAP13) as a subunit of immunopurified human Complex I by mass spectrometry. Core, foundational experimental evidence for Complex I membership.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" target="_blank" class="term-link">
+                                        PMID:12611891
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">differentiation linked processes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24746669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24746669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cyclin B1/Cdk1 coordinates mitochondrial respiration for cel...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0045271" data-r="PMID:24746669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutation/phenotype evidence associating NDUFA12 with Complex I. Complex I membership itself is robustly established; accepted as consistent with the core structural fact.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27626371
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Accessory subunits are integral for assembly and function of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0045271" data-r="PMID:27626371" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (CRISPR knockout + quantitative proteomics) evidence that NDUFA12 is an accessory subunit of human Complex I. Establishes it as an integral, non-catalytic component of the holoenzyme (its slot can be substituted by the NDUFAF2 paralog in knockouts). Core structural annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">believed not to be</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042775" target="_blank" class="term-link">
+                                    GO:0042775
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial ATP synthesis coupled electron transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24746669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24746669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cyclin B1/Cdk1 coordinates mitochondrial respiration for cel...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0042775" data-r="PMID:24746669" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation from a study of cyclin B1/Cdk1 phosphorylation of Complex I subunits enhancing CI activity for G2/M progression. This is a complex-level electron-transport role and a cell-cycle regulatory context rather than NDUFA12&#39;s core evolved molecular function; retained (not removed, being experimental) as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-163217
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005743" data-r="Reactome:R-HSA-163217" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to mitochondrial inner membrane. Correct and consistent with the experimental inner-membrane annotation; redundant.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799179
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005743" data-r="Reactome:R-HSA-6799179" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to mitochondrial inner membrane (Complex I biogenesis pathway). Consistent; redundant with the experimental annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799196
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005743" data-r="Reactome:R-HSA-6799196" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to mitochondrial inner membrane. Consistent and correct; redundant with the experimental inner-membrane annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800870
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0005743" data-r="Reactome:R-HSA-6800870" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization to mitochondrial inner membrane. Consistent and correct; redundant with the experimental inner-membrane annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008137" target="_blank" class="term-link">
+                                    GO:0008137
+                                </a>
+                            </span>
+                            <span class="term-label">NADH dehydrogenase (ubiquinone) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10830904" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10830904
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the human complex I NDUFB7 and 17.2-kDa ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UI09" data-a="GO:0008137" data-r="PMID:10830904" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> &#39;Enables NADH dehydrogenase (ubiquinone) activity&#39; is an over-annotation for NDUFA12: UniProt states it is &#39;believed not to be involved in catalysis&#39;, and it is a supernumerary structural subunit, not a redox catalytic subunit. This complex-level activity is carried out by the core (NDUFS/NDUFV/ND) subunits. NDUFA12 should be represented as contributing_to this activity (via structural molecule activity), not as enabling it directly. The NAS derives from the enzyme name in the original cDNA paper, not from a demonstrated catalytic activity of this subunit.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    structural molecule activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">involved in catalysis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NDUFA12 (B17.2) is a non-catalytic accessory (supernumerary) structural subunit of the peripheral (matrix) arm of mitochondrial Complex I, near the N/Q-module junction. It does not independently catalyze NADH oxidation, quinone reduction, or proton translocation; instead it provides a structural molecule activity that stabilizes the mature holoenzyme and thereby contributes to the complex-level NADH:ubiquinone oxidoreductase activity, supporting electron transfer from NADH to ubiquinone within a fully assembled, functional Complex I.</h3>
+                <span class="vote-buttons" data-g="Q9UI09" data-a="FUNCTION: NDUFA12 (B17.2) is a non-catalytic accessory (supe..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006120" target="_blank" class="term-link">
+                                mitochondrial electron transport, NADH to ubiquinone
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex I assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                            respiratory chain complex I
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Accessory subunit of the mitochondrial membrane respiratory</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NDUFA12/NDUFA12-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">believed not to be</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link">
+                                PMID:27626371
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Accessory subunits are integral for assembly and function of human</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10830904" target="_blank" class="term-link">
+                            PMID:10830904
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the human complex I NDUFB7 and 17.2-kDa cDNAs and mutational analysis of 19 genes of the HP fraction in complex I-deficient-patients.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12611891" target="_blank" class="term-link">
+                            PMID:12611891
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The subunit composition of the human NADH dehydrogenase obtained by rapid one-step immunopurification.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24746669" target="_blank" class="term-link">
+                            PMID:24746669
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cyclin B1/Cdk1 coordinates mitochondrial respiration for cell-cycle G2/M progression.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27626371" target="_blank" class="term-link">
+                            PMID:27626371
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Accessory subunits are integral for assembly and function of human mitochondrial complex I.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link">
+                            PMID:28844695
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of Human Mitochondrial Respiratory Megacomplex I(2)III(2)IV(2).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30030361" target="_blank" class="term-link">
+                            PMID:30030361
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Assembly of mammalian oxidative phosphorylation complexes I-V and supercomplexes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-163217
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complex I oxidises NADH to NAD+, reduces CoQ to CoQH2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799179
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799196
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting in Complex I</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800870
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NDUF subunits bind to form the FP subcomplex</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NDUFA12-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UI09" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ndufa12-b172-review-notes">NDUFA12 (B17.2) review notes</h1>
+<h2 id="identity-authoritative-uniprot">Identity (authoritative: UniProt)</h2>
+<ul>
+<li>UniProt entry: <strong>Q9UI09</strong>, name <strong>NDUAC_HUMAN</strong>, gene <strong>NDUFA12</strong> (synonym DAP13), 145 aa, human (NCBITaxon:9606).<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "ID   NDUAC_HUMAN"; "GN   Name=NDUFA12; Synonyms=DAP13;"]</li>
+<li>RecName: "NADH dehydrogenase [ubiquinone] 1 alpha subcomplex subunit 12"; AltNames "13 kDa differentiation-associated protein" (hence DAP13), "Complex I-B17.2 / CI-B17.2", "NADH-ubiquinone oxidoreductase subunit B17.2".<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "AltName: Full=13 kDa differentiation-associated protein"; "AltName: Full=Complex I-B17.2"]</li>
+</ul>
+<h2 id="core-biology">Core biology</h2>
+<ul>
+<li><strong>Accessory (supernumerary) subunit of Complex I</strong> (NADH:ubiquinone oxidoreductase), the first enzyme of the mitochondrial respiratory chain (45 subunits in humans). It is a <strong>genuine stable subunit of the mature holoenzyme</strong>, located in the <strong>peripheral (matrix) arm</strong> near the N/Q-module junction. <strong>Non-catalytic</strong> ("believed not to be involved in catalysis").<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "Accessory subunit of the mitochondrial membrane respiratory"; "chain NADH dehydrogenase (Complex I), that is believed not to be"; "involved in catalysis."]</li>
+<li>Complex I transfers electrons from NADH to the respiratory chain; the immediate electron acceptor is ubiquinone.<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "Complex I functions in the transfer of electrons"; "from NADH to the respiratory chain. The immediate electron acceptor for"]</li>
+<li><strong>Subcellular location:</strong> mitochondrion inner membrane; peripheral membrane protein; matrix side.<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion inner membrane"; "Matrix side"]</li>
+<li><strong>SIMILARITY:</strong> "Belongs to the complex I NDUFA12 subunit family."<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "Belongs to the complex I NDUFA12 subunit family."]</li>
+</ul>
+<h2 id="ndufa12-vs-ndufaf2-do-not-conflate">NDUFA12 vs NDUFAF2 (do NOT conflate)</h2>
+<ul>
+<li><strong>NDUFA12 is the mature-enzyme subunit</strong>, NOT the assembly factor. Its paralog <strong>NDUFAF2 (a.k.a. NDUFA12L)</strong> is the assembly factor.</li>
+<li>In NDUFA12-knockout cells, Complex I assembly is not affected, "probably due to substitution by the NDUFAF2 paralog."<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "In NDUFA12-knockout cells, complex I assembly is not"; "affected, probably due to substitution by the NDUFAF2 paralog."]</li>
+<li>Consequence for BP annotation: unlike many accessory subunits, NDUFA12 is dispensable for <em>assembly</em> per se (its slot can be filled by NDUFAF2), so the strongest core BP is electron transport / OXPHOS rather than complex-I assembly. It is nonetheless required for a fully mature, correctly functioning complex, and its loss causes disease (below).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>Mitochondrial complex I deficiency, nuclear type 23 (MC1DN23)</strong> [MIM:618244]; autosomal recessive; NDUFA12 mutations are a cause of Leigh syndrome. A truncating variant (60-Arg--Lys-145 del) is documented.<br />
+  [file:human/NDUFA12/NDUFA12-uniprot.txt "Mitochondrial complex I deficiency, nuclear type 23 (MC1DN23)"; PMID:21617257 (Ostergaard et al. 2011, J Med Genet) "Respiratory chain complex I deficiency due to NDUFA12 mutations as a new cause of Leigh syndrome"]</li>
+</ul>
+<h2 id="evidence-sources-for-existing-annotations">Evidence sources for existing annotations</h2>
+<ul>
+<li><strong>PMID:12611891</strong> (Murray et al. 2003, JBC) — one-step immunopurification of human Complex I; MS identifies human homologues of 42 polypeptides including "a protein thought to be in differentiation linked processes" (= DAP13/NDUFA12). Basis for IDA part_of Complex I. Abstract-only in cache (full_text_available: false).</li>
+<li><strong>PMID:27626371</strong> (Stroud et al. 2016, Nature) — CRISPR knockout of each accessory subunit + quantitative proteomics; "25 subunits are strictly required for assembly of a functional complex." Basis for FUNCTION (accessory, not catalytic) and IDA part_of Complex I. Abstract-only in cache.</li>
+<li><strong>PMID:28844695</strong> (Guo et al. 2017, Cell) — cryo-EM of human megacomplex I2III2IV2; "reveals the precise assignment of individual subunits of human CI". Basis for ComplexPortal IDA inner membrane + IPI part_of Complex I. Abstract-only in cache.</li>
+<li><strong>PMID:30030361</strong> (Signes &amp; Fernandez-Vizarra 2018, Essays Biochem) — review of OXPHOS assembly; supernumerary subunits "play essential roles in assembly, regulation and stability." Basis for ComplexPortal NAS aerobic respiration + NAS proton-motive-force ATP synthesis (complex-level roles, NAS). Abstract-only in cache.</li>
+<li><strong>PMID:24746669</strong> (Wang et al. 2014, Dev Cell) — cyclin B1/Cdk1 phosphorylates CI subunits to enhance CI activity for G2/M. Used for IMP part_of Complex I and IMP "mitochondrial ATP synthesis coupled electron transport." Abstract-only in cache; the abstract concerns CI subunits generically (does not name NDUFA12); curator (UniProt/CAFA) read full text — do not overrule, but these are complex-level BP claims better treated as context (KEEP_AS_NON_CORE / defer) rather than core NDUFA12-specific evidence.</li>
+<li><strong>PMID:32296183</strong> (Luck et al. 2020, Nature — HuRI) — human binary interactome; source of the three IntAct IPI "protein binding" annotations (partners TMED8/Q6PL24, MYO15B/Q96JP2, SYT4/Q9H2B2). Full text available but NDUFA12/partners appear only in supplementary data, not main text (no verbatim main-text quote). These Y2H binary hits are not the biologically relevant Complex I contacts → over-annotation of the uninformative "protein binding" term.</li>
+<li><strong>PMID:34800366</strong> (FlyBase HTP mitochondrion) and <strong>GO_REF:0000052</strong> (HPA IDA) — localization to mitochondrion; consistent but coarser than inner-membrane/Complex I.</li>
+<li><strong>PMID:10830904</strong> (Triepels et al. 2000, Hum Genet) — original cDNA characterization of the 17.2-kDa (B17.2) subunit; the NAS "NADH dehydrogenase (ubiquinone) activity" (GO:0008137) enables annotation reflects the name of the enzyme, not an independent catalytic activity of this non-catalytic subunit.</li>
+</ul>
+<h2 id="annotation-decisions-summary">Annotation decisions (summary)</h2>
+<ul>
+<li><strong>Complex I membership (GO:0045271) — multiple lines (IBA, IEA, IDA×2 exp, IMP, IPI):</strong> the IDA/IMP/IPI experimental ones = ACCEPT (core structural fact). Redundant IEA/IBA = ACCEPT/KEEP_AS_NON_CORE (defer to experimental).</li>
+<li><strong>Localization:</strong> inner membrane IDA (ComplexPortal, PMID:28844695) = ACCEPT (core, matrix-side peripheral). IEA inner membrane, mitochondrion (Ensembl/HPA/FlyBase), Reactome TAS inner membrane = ACCEPT/KEEP_AS_NON_CORE (consistent, coarser or redundant). <code>membrane</code> (GO:0016020, InterPro IEA) = MARK_AS_OVER_ANNOTATED (too general given the specific inner-membrane localization).</li>
+<li><strong>MF GO:0008137 "NADH dehydrogenase (ubiquinone) activity" enables (NAS, PMID:10830904):</strong> MARK_AS_OVER_ANNOTATED — NDUFA12 is explicitly non-catalytic; it <em>contributes to</em> the complex-level activity but does not <em>enable</em> it. Correct representation in core_functions: molecular_function = GO:0005198 (structural molecule activity), contributes_to = GO:0008137.</li>
+<li><strong>MF GO:0005515 "protein binding" (IPI×3, PMID:32296183/HuRI):</strong> MARK_AS_OVER_ANNOTATED per policy (never REMOVE a bare protein-binding IPI); uninformative term, binary-interactome partners not the Complex I contacts.</li>
+<li><strong>BP proton transmembrane transport (GO:1902600, IEA GO_REF:0000108 from GO:0008137):</strong> MARK_AS_OVER_ANNOTATED — inferred from the MF that itself is an over-annotation for this non-catalytic subunit; NDUFA12 does not itself pump protons.</li>
+<li><strong>BP proton motive force-driven ATP synthesis (GO:0042776, NAS) &amp; aerobic respiration (GO:0009060, NAS):</strong> complex-level roles; KEEP_AS_NON_CORE (true of Complex I as a whole, not a distinct NDUFA12 molecular contribution).</li>
+<li><strong>BP mitochondrial ATP synthesis coupled electron transport (GO:0042775, IMP, PMID:24746669):</strong> KEEP_AS_NON_CORE — experimental (do not REMOVE), but the paper is about generic CI-subunit phosphorylation in the cell cycle, not NDUFA12's core evolved function.</li>
+</ul>
+<h2 id="core-function-synthesis">Core function (synthesis)</h2>
+<ul>
+<li>MF: <strong>GO:0005198 structural molecule activity</strong> (honest, non-catalytic).</li>
+<li>contributes_to: <strong>GO:0008137 NADH dehydrogenase (ubiquinone) activity</strong> (complex-level).</li>
+<li>BP: <strong>GO:0006120 mitochondrial electron transport, NADH to ubiquinone</strong> and <strong>GO:0032981 mitochondrial respiratory chain complex I assembly</strong> (structural role in a mature, functional complex).</li>
+<li>location: <strong>GO:0005743 mitochondrial inner membrane</strong> (matrix-side peripheral).</li>
+<li>in_complex: <strong>GO:0045271 respiratory chain complex I</strong>.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UI09
+gene_symbol: NDUFA12
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NDUFA12 (B17.2; also called the 13 kDa differentiation-associated protein, DAP13)
+  is an accessory (supernumerary) subunit of mitochondrial respiratory Complex I
+  (NADH:ubiquinone oxidoreductase), the first enzyme of the mitochondrial electron
+  transport chain. It is a stable structural subunit of the mature holoenzyme,
+  located in the peripheral (matrix) arm near the junction of the N- and Q-modules,
+  and is a peripheral inner-membrane protein exposed to the matrix. NDUFA12 is
+  non-catalytic: it does not itself carry out NADH oxidation, quinone reduction, or
+  proton pumping, but contributes structurally to the assembly and stability of a
+  fully functional Complex I that transfers electrons from NADH to ubiquinone and
+  contributes to the proton-motive force used for ATP synthesis. It is distinct from
+  its paralog NDUFAF2/NDUFA12L, which is a Complex I assembly factor rather than a
+  mature-enzyme subunit; in NDUFA12-knockout cells the assembly factor NDUFAF2 can
+  substitute in the complex. Biallelic loss-of-function variants in NDUFA12 cause
+  mitochondrial complex I deficiency (nuclear type 23) and Leigh syndrome.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9UI09-1
+- name: &#39;2&#39;
+  id: Q9UI09-2
+  sequence_note: VSP_046948
+existing_annotations:
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred membership of NDUFA12 in respiratory chain Complex I.
+      Correct and well supported by direct experimental structural/biochemical data
+      (below); retained as background support for the core structural fact.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+      supporting_text: &#34;Accessory subunit of the mitochondrial membrane respiratory&#34;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assignment of inner-membrane localization. Consistent with UniProt
+      (mitochondrion inner membrane; peripheral membrane protein; matrix side) and
+      with the ComplexPortal IDA below. Correct but redundant with the experimental
+      annotation.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion inner membrane&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic &#39;membrane&#39; term from InterPro2GO. Uninformative given the specific,
+      experimentally supported localization to the mitochondrial inner membrane
+      (matrix side); over-general and superseded.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Electronic assertion of Complex I membership; correct but redundant with the
+      IDA/IMP/IPI experimental annotations that establish this as the core structural
+      fact.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:1902600
+    label: proton transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Inferred by logical inference from the GO:0008137 &#39;NADH dehydrogenase
+      (ubiquinone) activity&#39; MF annotation. That MF annotation is itself an
+      over-annotation for this non-catalytic accessory subunit (see below), and
+      NDUFA12 does not itself translocate protons. Proton pumping is a complex-level
+      activity carried out by the membrane-arm core (ND) subunits, not by NDUFA12.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from a high-throughput binary interactome screen (HuRI),
+      with partner TMED8 (Q6PL24). The term is uninformative and the Y2H partner is
+      not among the physiologically relevant Complex I contacts of NDUFA12; kept per
+      policy but flagged as over-annotated rather than a meaningful molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic transfer of mitochondrial localization from mouse ortholog. Correct
+      but coarser than the experimentally supported inner-membrane / Complex I
+      localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:28844695
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (cryo-EM of the human respiratory megacomplex, ComplexPortal
+      curation) placing NDUFA12 in the mitochondrial inner membrane as part of
+      Complex I. This is the core, experimentally grounded localization (matrix-side
+      peripheral inner membrane).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+      supporting_text: &#34;Matrix side&#34;
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: NAS
+  original_reference_id: PMID:30030361
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Complex-level process attributed by ComplexPortal from a review of OXPHOS
+      assembly. Aerobic respiration is a role of Complex I as a whole; NDUFA12
+      participates only structurally. True but not a distinct NDUFA12 molecular
+      contribution, so retained as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0042776
+    label: proton motive force-driven mitochondrial ATP synthesis
+  evidence_type: NAS
+  original_reference_id: PMID:30030361
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Complex-level (OXPHOS) contribution attributed by ComplexPortal. NDUFA12 as a
+      structural subunit contributes to a functional Complex I that helps generate the
+      proton-motive force, but does not itself drive ATP synthesis; retained as
+      non-core context.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IPI
+  original_reference_id: PMID:28844695
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Physical-interaction (cryo-EM, ComplexPortal) evidence assigning NDUFA12 to
+      Complex I. Directly supports the core structural fact that NDUFA12 is a subunit
+      of the mature holoenzyme.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence (HPA) localization to mitochondrion. Correct but coarser than
+      the inner-membrane / Complex I localization; retained as supporting, non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial-proteome localization to mitochondrion. Consistent
+      but coarse; redundant with the more specific inner-membrane annotations.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IDA
+  original_reference_id: PMID:12611891
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Direct identification of NDUFA12 (the differentiation-linked 13 kDa protein,
+      DAP13) as a subunit of immunopurified human Complex I by mass spectrometry.
+      Core, foundational experimental evidence for Complex I membership.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12611891
+      supporting_text: &#34;differentiation linked processes&#34;
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IMP
+  original_reference_id: PMID:24746669
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Mutation/phenotype evidence associating NDUFA12 with Complex I. Complex I
+      membership itself is robustly established; accepted as consistent with the core
+      structural fact.
+    action: ACCEPT
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IDA
+  original_reference_id: PMID:27626371
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Direct (CRISPR knockout + quantitative proteomics) evidence that NDUFA12 is an
+      accessory subunit of human Complex I. Establishes it as an integral,
+      non-catalytic component of the holoenzyme (its slot can be substituted by the
+      NDUFAF2 paralog in knockouts). Core structural annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+      supporting_text: &#34;believed not to be&#34;
+- term:
+    id: GO:0042775
+    label: mitochondrial ATP synthesis coupled electron transport
+  evidence_type: IMP
+  original_reference_id: PMID:24746669
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) annotation from a study of cyclin B1/Cdk1 phosphorylation of
+      Complex I subunits enhancing CI activity for G2/M progression. This is a
+      complex-level electron-transport role and a cell-cycle regulatory context rather
+      than NDUFA12&#39;s core evolved molecular function; retained (not removed, being
+      experimental) as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-163217
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to mitochondrial inner membrane. Correct
+      and consistent with the experimental inner-membrane annotation; redundant.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799179
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to mitochondrial inner membrane (Complex I
+      biogenesis pathway). Consistent; redundant with the experimental annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799196
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to mitochondrial inner membrane. Consistent
+      and correct; redundant with the experimental inner-membrane annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800870
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization to mitochondrial inner membrane. Consistent
+      and correct; redundant with the experimental inner-membrane annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008137
+    label: NADH dehydrogenase (ubiquinone) activity
+  evidence_type: NAS
+  original_reference_id: PMID:10830904
+  qualifier: enables
+  review:
+    summary: &gt;-
+      &#39;Enables NADH dehydrogenase (ubiquinone) activity&#39; is an over-annotation for
+      NDUFA12: UniProt states it is &#39;believed not to be involved in catalysis&#39;, and it
+      is a supernumerary structural subunit, not a redox catalytic subunit. This
+      complex-level activity is carried out by the core (NDUFS/NDUFV/ND) subunits.
+      NDUFA12 should be represented as contributing_to this activity (via structural
+      molecule activity), not as enabling it directly. The NAS derives from the enzyme
+      name in the original cDNA paper, not from a demonstrated catalytic activity of
+      this subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+      supporting_text: &#34;involved in catalysis.&#34;
+    proposed_replacement_terms:
+    - id: GO:0005198
+      label: structural molecule activity
+core_functions:
+- description: &gt;-
+    NDUFA12 (B17.2) is a non-catalytic accessory (supernumerary) structural subunit
+    of the peripheral (matrix) arm of mitochondrial Complex I, near the N/Q-module
+    junction. It does not independently catalyze NADH oxidation, quinone reduction,
+    or proton translocation; instead it provides a structural molecule activity that
+    stabilizes the mature holoenzyme and thereby contributes to the complex-level
+    NADH:ubiquinone oxidoreductase activity, supporting electron transfer from NADH
+    to ubiquinone within a fully assembled, functional Complex I.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  contributes_to_molecular_function:
+    id: GO:0008137
+    label: NADH dehydrogenase (ubiquinone) activity
+  directly_involved_in:
+  - id: GO:0006120
+    label: mitochondrial electron transport, NADH to ubiquinone
+  - id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0045271
+    label: respiratory chain complex I
+  supported_by:
+  - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+    supporting_text: &#34;Accessory subunit of the mitochondrial membrane respiratory&#34;
+  - reference_id: file:human/NDUFA12/NDUFA12-uniprot.txt
+    supporting_text: &#34;believed not to be&#34;
+  - reference_id: PMID:27626371
+    supporting_text: &#34;Accessory subunits are integral for assembly and function of human&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10830904
+  title: Characterization of the human complex I NDUFB7 and 17.2-kDa cDNAs and mutational
+    analysis of 19 genes of the HP fraction in complex I-deficient-patients.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original characterization of the human 17.2-kDa (B17.2) Complex I subunit cDNA
+      (= NDUFA12). Establishes identity; the derived NAS &#39;NADH dehydrogenase
+      (ubiquinone) activity&#39; MF reflects the enzyme name, not a catalytic activity of
+      this non-catalytic subunit.
+- id: PMID:12611891
+  title: The subunit composition of the human NADH dehydrogenase obtained by rapid
+    one-step immunopurification.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mass-spec identification of NDUFA12 (the differentiation-linked 13 kDa protein)
+      as a subunit of immunopurified human Complex I. Direct support for Complex I
+      membership. Cached record is abstract-only.
+- id: PMID:24746669
+  title: Cyclin B1/Cdk1 coordinates mitochondrial respiration for cell-cycle G2/M
+    progression.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Study of cyclin B1/Cdk1 phosphorylation of Complex I subunits to enhance CI
+      activity for G2/M. Abstract addresses CI subunits generically (does not name
+      NDUFA12); underpins complex-level BP annotations treated here as non-core.
+      Abstract-only in cache.
+- id: PMID:27626371
+  title: Accessory subunits are integral for assembly and function of human mitochondrial
+    complex I.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      CRISPR knockout of each accessory subunit + quantitative proteomics defining
+      NDUFA12 as an integral accessory (non-catalytic) subunit of human Complex I.
+      Primary support for the accessory-subunit function. Cached record is abstract-only.
+- id: PMID:28844695
+  title: Architecture of Human Mitochondrial Respiratory Megacomplex I(2)III(2)IV(2).
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cryo-EM of the human respiratory megacomplex assigning individual CI subunits,
+      including NDUFA12, in the inner membrane. Supports inner-membrane localization
+      and Complex I membership (ComplexPortal curation). Cached record is abstract-only.
+- id: PMID:30030361
+  title: Assembly of mammalian oxidative phosphorylation complexes I-V and supercomplexes.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Review of OXPHOS/supercomplex assembly; supernumerary subunits play roles in
+      assembly, regulation and stability. Basis for ComplexPortal NAS complex-level BP
+      annotations. Abstract-only in cache.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      HuRI high-throughput binary (Y2H) interactome. Source of the three IntAct IPI
+      &#39;protein binding&#39; annotations (TMED8, MYO15B, SYT4). Full text available but the
+      NDUFA12 interactions appear only in supplementary data, not the main text; these
+      binary hits are not the physiologically relevant Complex I contacts, hence the
+      uninformative MF is treated as over-annotation.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial-proteome study; supports mitochondrial
+      localization of NDUFA12 (coarse relative to inner-membrane/Complex I). Cached
+      record is very large; localization use is consistent with UniProt.
+- id: Reactome:R-HSA-163217
+  title: Complex I oxidises NADH to NAD+, reduces CoQ to CoQH2
+  findings: []
+- id: Reactome:R-HSA-6799179
+  title: Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex
+  findings: []
+- id: Reactome:R-HSA-6799196
+  title: The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting
+    in Complex I
+  findings: []
+- id: Reactome:R-HSA-6800870
+  title: NDUF subunits bind to form the FP subcomplex
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

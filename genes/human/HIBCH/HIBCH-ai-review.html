@@ -1,0 +1,3197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIBCH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HIBCH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6NVY1" target="_blank" class="term-link">
+                        Q6NVY1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HIBCH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6NVY1" data-a="DESCRIPTION: HIBCH (3-hydroxyisobutyryl-CoA hydrolase, mitochon..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HIBCH (3-hydroxyisobutyryl-CoA hydrolase, mitochondrial; EC 3.1.2.4) is a soluble enzyme of the mitochondrial matrix belonging to the enoyl-CoA hydratase/isomerase (crotonase) superfamily. It catalyzes a dedicated step of valine catabolism, the hydrolysis of the thioester 3-hydroxyisobutyryl-CoA (HIBYL-CoA; 3-hydroxy-2-methylpropanoyl-CoA) to 3-hydroxyisobutyrate (3-hydroxy-2-methylpropanoate) plus free coenzyme A. By deacylating this intermediate, HIBCH diverts the valine-degradation pathway to the free-acid branch; this hydrolytic step is thought to protect against accumulation of the upstream reactive intermediate methacrylyl-CoA. The enzyme also shows activity toward related short-chain acyl-CoA thioesters, including isobutyryl-CoA and 3-hydroxypropanoyl-CoA (a propionate-metabolism intermediate). HIBCH is synthesized as a precursor with a cleaved N-terminal mitochondrial targeting presequence, and the mature protein resides in the matrix; it is most abundant in liver, heart and kidney, and is also detected in muscle and brain. Biallelic loss-of-function variants cause 3-hydroxyisobutyryl-CoA hydrolase deficiency (HIBCHD), an autosomal-recessive inborn error of valine metabolism presenting as a Leigh-like progressive infantile neurodegeneration with basal ganglia lesions, lactic acidosis and 3-hydroxyisobutyric aciduria.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003860" target="_blank" class="term-link">
+                                    GO:0003860
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyisobutyryl-CoA hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0003860" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the defining 3-hydroxyisobutyryl-CoA hydrolase activity from the crotonase-superfamily tree. This is the core, experimentally established molecular function of HIBCH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; independently supported by direct experimental evidence on the human enzyme (PMID:8824301) and by the EC 3.1.2.4 / RHEA:20888 catalytic-activity annotation in UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link">
+                                        PMID:8824301
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) localization to the mitochondrion. HIBCH is a well-established mitochondrial matrix enzyme, so the compartment is correct but less specific than the mitochondrial matrix annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment but subsumed by the more precise mitochondrial matrix annotation (GO:0005759), which better captures where this soluble enzyme acts.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                    GO:0006574
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0006574" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that HIBCH participates in L-valine catabolism, consistent with its role as the 3-hydroxyisobutyryl-CoA hydrolase of the valine degradation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A core biological process for HIBCH; the UniProt PATHWAY line assigns it to L-valine degradation and its deficiency is defined as an inborn error of valine metabolism. Also supported by direct genetic (IMP) evidence (PMID:40056416).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HIBCH/HIBCH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-acid degradation; L-valine degradation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003860" target="_blank" class="term-link">
+                                    GO:0003860
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyisobutyryl-CoA hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0003860" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the defining EC 3.1.2.4 / RHEA:20888 activity via combined IEA methods (InterPro signature IPR032259, plus EC and RHEA mapping). This is the core molecular function and is independently confirmed by experimental data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; duplicate of the experimentally supported GO:0003860 annotation, backed by the HIBYL-CoA-H-specific InterPro entry and the EC 3.1.2.4 catalytic activity in UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HIBCH/HIBCH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.1.2.4;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic localization to the mitochondrion from the UniProt Subcellular Location controlled vocabulary (SL-0173). Correct compartment, consistent with experimental evidence, but less specific than the matrix annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but subsumed by the more precise mitochondrial matrix localization (GO:0005759).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HIBCH/HIBCH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009083" target="_blank" class="term-link">
+                                    GO:0009083
+                                </a>
+                            </span>
+                            <span class="term-label">branched-chain amino acid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70895
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0009083" data-r="Reactome:R-HSA-70895" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) placement of HIBCH in branched-chain amino acid catabolism. HIBCH acts specifically in the valine branch (hydrolysis of 3-hydroxyisobutyryl-CoA), so this broader parent term is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but broad; the specific and experimentally supported L-valine catabolic process (GO:0006574) is the more informative core biological process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                    GO:0006574
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0006574" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of L-valine catabolic process from the UniPathway mapping (UPA00362, L-valine degradation). Correct and consistent with the core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process; duplicate of the IBA/IMP-supported annotation and of the UniProt PATHWAY assignment to L-valine degradation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HIBCH/HIBCH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-acid degradation; L-valine degradation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003860" target="_blank" class="term-link">
+                                    GO:0003860
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyisobutyryl-CoA hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8824301
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Primary structure and tissue-specific expression of human be...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0003860" data-r="PMID:8824301" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of the defining 3-hydroxyisobutyryl-CoA hydrolase activity. The recombinant human enzyme, expressed in E. coli, reproduced the substrate specificity of the purified rat liver enzyme for HIBYL-CoA hydrolysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration of the core molecular function of HIBCH.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link">
+                                        PMID:8824301
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003860" target="_blank" class="term-link">
+                                    GO:0003860
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyisobutyryl-CoA hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9916727
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0003860" data-r="Reactome:R-HSA-9916727" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of 3-hydroxyisobutyryl-CoA hydrolase activity in the context of the HIBCH-deficiency disease pathway (pathogenic variants that lose the ability to synthesize beta-hydroxyisobutyrate).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function applied in the disease context; consistent with the experimental EXP/IDA evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence-based (IDA, HPA) mitochondrial localization. Correct compartment but less precise than the matrix annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Subsumed by the more specific mitochondrial matrix localization (GO:0005759).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40056416
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ectopic protein lysine methacrylation contributes to defects...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005759" data-r="PMID:40056416" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localization of HIBCH to the mitochondrial matrix, the precise compartment for this soluble matrix enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Best-supported and most specific subcellular localization; this is the core location of HIBCH.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                                        PMID:40056416
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">results in abnormal mitochondrial morphology and respiratory defects.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                    GO:0006574
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40056416
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ectopic protein lysine methacrylation contributes to defects...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0006574" data-r="PMID:40056416" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IMP) evidence that HIBCH acts in valine catabolism: its loss (like loss of the upstream enzyme ECHS1) elevates protein lysine methacrylation, reflecting build-up of the reactive valine-pathway intermediate methacrylyl-CoA whose downstream product HIBCH normally processes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A core biological process of HIBCH, supported by genetic loss-of-function evidence and consistent with HIBCH deficiency being an inborn error of valine metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                                        PMID:40056416
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9916727
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005759" data-r="Reactome:R-HSA-9916727" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) mitochondrial matrix localization within the HIBCH-deficiency disease pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific localization; consistent with the IDA evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) detection of HIBCH in a high-confidence human mitochondrial proteome (MitoCoP). Confirms mitochondrial localization at lower specificity than the matrix term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports mitochondrial localization but is subsumed by the more specific mitochondrial matrix annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70881
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0005759" data-r="Reactome:R-HSA-70881" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) mitochondrial matrix localization for the HIBCH-catalyzed reaction (beta-hydroxyisobutyryl-CoA + H2O =&gt; beta-hydroxyisobutyrate + CoA).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific localization; consistent with the experimental IDA evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003860" target="_blank" class="term-link">
+                                    GO:0003860
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyisobutyryl-CoA hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8824301
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Primary structure and tissue-specific expression of human be...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6NVY1" data-a="GO:0003860" data-r="PMID:8824301" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) demonstration of 3-hydroxyisobutyryl-CoA hydrolase activity using purified/recombinant enzyme, the strongest evidence for the gene&#39;s core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Definitive experimental support for the core 3-hydroxyisobutyryl-CoA hydrolase activity of HIBCH.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link">
+                                        PMID:8824301
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes a dedicated hydrolytic step of mitochondrial valine catabolism: the hydrolysis of 3-hydroxyisobutyryl-CoA (HIBYL-CoA) to 3-hydroxyisobutyrate and free coenzyme A (EC 3.1.2.4). This deacylation commits the pathway to the free-acid branch and is thought to protect against accumulation of the reactive upstream intermediate methacrylyl-CoA; its loss causes the inborn error of valine metabolism HIBCH deficiency.</h3>
+                <span class="vote-buttons" data-g="Q6NVY1" data-a="FUNCTION: Catalyzes a dedicated hydrolytic step of mitochond..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003860" target="_blank" class="term-link">
+                            3-hydroxyisobutyryl-CoA hydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006574" target="_blank" class="term-link">
+                                L-valine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link">
+                                PMID:8824301
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HIBCH/HIBCH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Amino-acid degradation; L-valine degradation.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HIBCH is part of the high-confidence human mitochondrial proteome (MitoCoP).</div>
+
+                        <div class="finding-text">"Quantitative high-confidence human mitochondrial proteome and its dynamics"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40056416" target="_blank" class="term-link">
+                            PMID:40056416
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ectopic protein lysine methacrylation contributes to defects caused by loss of HIBCH or ECHS1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of HIBCH (or the upstream valine-pathway enzyme ECHS1) causes abnormal mitochondrial morphology and respiratory defects and elevates protein lysine methacrylation, consistent with build-up of reactive valine-pathway thioesters.</div>
+
+                        <div class="finding-text">"results in abnormal mitochondrial morphology and respiratory defects."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8824301" target="_blank" class="term-link">
+                            PMID:8824301
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Primary structure and tissue-specific expression of human beta-hydroxyisobutyryl-coenzyme A hydrolase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HIBYL-CoA hydrolase specifically hydrolyzes 3-hydroxyisobutyryl-CoA (a valine catabolite) and also hydrolyzes beta-hydroxypropionyl-CoA; the human enzyme is homologous to the enoyl-CoA hydratase/isomerase family and is expressed predominantly in liver, heart and kidney.</div>
+
+                        <div class="finding-text">"beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70881
+
+                    </span>
+                </div>
+
+                <div class="reference-title">beta-hydroxyisobutyryl-CoA + H2O =&gt; beta-hydroxyisobutyrate + CoA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70895
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Branched-chain amino acid catabolism</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9916727
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HIBCH mutants don&#39;t synthesize beta-hydroxyisobutyrate</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond 3-hydroxyisobutyryl-CoA, how physiologically significant are HIBCH&#39;s activities toward isobutyryl-CoA and 3-hydroxypropanoyl-CoA, and do they represent distinct biological roles (e.g. in a minor pathway of propionate metabolism) worth capturing?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6NVY1" data-a="Q: Beyond 3-hydroxyisobutyryl-CoA, how physiologicall..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the neurotoxicity of HIBCH deficiency driven primarily by accumulation of methacrylyl-CoA / 3-hydroxyisobutyryl-CoA and consequent ectopic protein lysine methacrylation, or by depletion of the free-acid product 3-hydroxyisobutyrate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6NVY1" data-a="Q: Is the neurotoxicity of HIBCH deficiency driven pr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure in vitro hydrolase kinetics (KM/kcat) of purified recombinant human HIBCH against 3-hydroxyisobutyryl-CoA, isobutyryl-CoA and 3-hydroxypropanoyl-CoA to define its true substrate preference and rank its contribution to valine versus propionate metabolism.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HIBCH is a valine-pathway-dedicated hydrolase with highest catalytic efficiency for 3-hydroxyisobutyryl-CoA, explaining why its deficiency presents as an inborn error of valine metabolism.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q6NVY1" data-a="EXPERIMENT: Measure in vitro hydrolase kinetics (KM/kcat) of p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In HIBCH-null cells and patient fibroblasts, perform metabolomic tracing of valine carbon combined with quantitative proteomics of lysine methacrylation to determine which accumulating thioester most strongly correlates with mitochondrial dysfunction.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Accumulation of reactive valine-pathway acyl-CoA thioesters and ensuing ectopic lysine methacrylation, rather than loss of 3-hydroxyisobutyrate production, is the principal driver of the HIBCH-deficiency phenotype.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q6NVY1" data-a="EXPERIMENT: In HIBCH-null cells and patient fibroblasts, perfo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HIBCH-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6NVY1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hibch-review-notes">HIBCH review notes</h1>
+<p>Gene: <strong>HIBCH</strong> (3-hydroxyisobutyryl-CoA hydrolase, mitochondrial), human, UniProt <strong>Q6NVY1</strong>, HGNC:4908, GeneID 26275, EC 3.1.2.4.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>HIBCH is a mitochondrial-matrix enzyme of the enoyl-CoA hydratase/isomerase<br />
+(crotonase) superfamily that catalyzes a step of <strong>valine catabolism</strong>: the<br />
+hydrolysis of <strong>3-hydroxyisobutyryl-CoA (HIBYL-CoA)</strong> to <strong>3-hydroxyisobutyrate</strong><br />
+(3-hydroxy-2-methylpropanoate) + free <strong>CoA</strong> (EC 3.1.2.4). By deacylating this<br />
+intermediate it diverts the pathway to the free-acid branch and is thought to<br />
+prevent accumulation of the upstream reactive intermediate <strong>methacrylyl-CoA</strong>.</p>
+<ul>
+<li>Catalytic activity and function (UniProt): "Hydrolyzes 3-hydroxyisobutyryl-CoA<br />
+  (HIBYL-CoA), a saline catabolite. Has high activity toward isobutyryl-CoA."<br />
+  [file:human/HIBCH/HIBCH-uniprot.txt "Hydrolyzes 3-hydroxyisobutyryl-CoA (HIBYL-CoA), a saline"]</li>
+<li>Reaction (UniProt CATALYTIC ACTIVITY): 3-hydroxy-2-methylpropanoyl-CoA + H2O =<br />
+  3-hydroxy-2-methylpropanoate + CoA + H(+); EC=3.1.2.4; Rhea:RHEA:20888.<br />
+  [file:human/HIBCH/HIBCH-uniprot.txt "EC=3.1.2.4;"]</li>
+<li>Pathway (UniProt): "Amino-acid degradation; L-valine degradation."<br />
+  [file:human/HIBCH/HIBCH-uniprot.txt "Amino-acid degradation; L-valine degradation."]</li>
+<li>Family (UniProt SIMILARITY): "Belongs to the enoyl-CoA hydratase/isomerase family."<br />
+  [file:human/HIBCH/HIBCH-uniprot.txt "Belongs to the enoyl-CoA hydratase/isomerase family."]</li>
+<li>Subcellular location (UniProt): Mitochondrion (ECO:0000250). N-terminal transit<br />
+  peptide 1..32; mature chain 33..386. [file:human/HIBCH/HIBCH-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion"]</li>
+</ul>
+<h2 id="primary-biochemistry">Primary biochemistry</h2>
+<p>[PMID:8824301 Hawes et al. 1996, J Biol Chem — cloning + biochemistry; abstract-only in cache]<br />
+- "beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific<br />
+  hydrolysis of HIBYL-CoA, a saline catabolite, as well as the hydrolysis of<br />
+  beta-hydroxypropionyl-CoA, an intermediate in a minor pathway of propionate metabolism."<br />
+- Homology: "showed significant homology to the enoyl-CoA hydratase/isomerase enzyme family."<br />
+- Recombinant human enzyme expressed in E. coli reproduced the rat substrate specificity.<br />
+- Tissue expression: "predominant expression in liver, heart, and kidney"; UniProt TISSUE<br />
+  SPECIFICITY adds kidney/heart/muscle/brain, not lung.<br />
+- This is the reference behind both the EXP and IDA <code>GO:0003860</code> MF annotations in GOA, and<br />
+  Reactome R-HSA-70881.</p>
+<h2 id="disease-genetic-requirement">Disease / genetic requirement</h2>
+<ul>
+<li>HIBCH deficiency (HIBCHD, MIM 250620): autosomal recessive inborn error of valine<br />
+  metabolism; delayed psychomotor development, neurodegeneration, increased lactic acid,<br />
+  basal ganglia lesions (Leigh-like). [file:human/HIBCH/HIBCH-uniprot.txt "An autosomal recessive inborn error of valine metabolism."]<br />
+  First described by Loupatty et al. 2007 (PMID:17160907; Y122C variant) — not in local cache.</li>
+<li>Reactome R-HSA-9916727 "HIBCH mutants don't synthesize beta-hydroxyisobutyrate": lists<br />
+  pathogenic variants (Y122C, C163F, G317F, K377*, G345S) with decreased protein/activity in<br />
+  fibroblasts.</li>
+</ul>
+<p>[PMID:40056416 Li et al. 2025, Cell Rep — abstract-only in cache; basis of FlyBase IMP + IDA]<br />
+- "The absence of HIBCH or ECHS1, two Leigh syndrome genes, in cultured cells results in<br />
+  abnormal mitochondrial morphology and respiratory defects."<br />
+- Loss of HIBCH elevates lysine methacrylation (Kmea), reflecting accumulation of the<br />
+  reactive valine-pathway intermediate methacrylyl-CoA (HIBCH's upstream substrate pool):<br />
+  "Elevated lysine methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells<br />
+  and fly tissues." This is the genetic (IMP) support for the L-valine catabolic process<br />
+  annotation and (IDA) for mitochondrial matrix localization.</p>
+<h2 id="localization-evidence">Localization evidence</h2>
+<ul>
+<li>IDA mitochondrial matrix (GO:0005759) from PMID:40056416 (FlyBase).</li>
+<li>IDA mitochondrion (GO:0005739) from HPA immunofluorescence (GO_REF:0000052).</li>
+<li>HTP mitochondrion from PMID:34800366 (MitoCoP high-confidence human mitochondrial proteome;<br />
+  HIBCH is one entry among the mitochondrial proteome).</li>
+<li>Reactome TAS matrix (R-HSA-9916727, R-HSA-70881).</li>
+<li>All consistent; matrix (GO:0005759) is the most specific/correct compartment for this<br />
+  soluble matrix enzyme.</li>
+</ul>
+<h2 id="go-term-verification-ols-current">GO term verification (OLS, current)</h2>
+<ul>
+<li>GO:0003860 = 3-hydroxyisobutyryl-CoA hydrolase activity (MF). Definition: "3-hydroxy-2-<br />
+  methylpropanoyl-CoA + H2O = CoA + 3-hydroxy-2-methylpropanoate." — matches EC 3.1.2.4 / RHEA:20888. Not obsolete.</li>
+<li>GO:0006574 = L-valine catabolic process (BP). Not obsolete.</li>
+<li>GO:0005759 = mitochondrial matrix (CC). Not obsolete.</li>
+</ul>
+<h2 id="curation-decisions-16-goa-annotations">Curation decisions (16 GOA annotations)</h2>
+<p>Core, kept as core (ACCEPT):<br />
+- GO:0003860 MF — EXP (PMID:8824301), IDA (PMID:8824301): defining catalytic activity.<br />
+- GO:0003860 MF — TAS (Reactome R-HSA-9916727): the disease-context reaction annotation.<br />
+- GO:0006574 L-valine catabolic process — IMP (PMID:40056416): core BP.<br />
+- GO:0005759 mitochondrial matrix — IDA (PMID:40056416): core, most specific location.</p>
+<p>ACCEPT (correct but redundant/electronic support for the core):<br />
+- GO:0003860 MF — IBA (GO_REF:0000033), IEA (GO_REF:0000120 InterPro/EC/RHEA).<br />
+- GO:0006574 — IBA (GO_REF:0000033), IEA (GO_REF:0000041 UniPathway).<br />
+- GO:0005759 mitochondrial matrix — TAS Reactome R-HSA-9916727, R-HSA-70881.</p>
+<p>KEEP_AS_NON_CORE (correct but broader/less specific than the core term):<br />
+- GO:0009083 branched-chain amino acid catabolic process — TAS (Reactome R-HSA-70895): correct<br />
+  but broad parent of L-valine catabolic process.<br />
+- GO:0005739 mitochondrion — IBA, IEA (SubCell), IDA (HPA), HTP (PMID:34800366): correct<br />
+  compartment, subsumed by the more specific mitochondrial matrix annotations.</p>
+<p>No REMOVE actions: every annotation is biologically correct for HIBCH. No experimental<br />
+annotations second-guessed. No bare "protein binding" annotations present in GOA for this gene.</p>
+<h2 id="core-functions-synthesized">Core functions (synthesized)</h2>
+<ol>
+<li>MF GO:0003860 (3-hydroxyisobutyryl-CoA hydrolase activity); BP GO:0006574 (L-valine<br />
+   catabolic process); location GO:0005759 (mitochondrial matrix).<br />
+</content><br />
+</invoke></li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6NVY1
+gene_symbol: HIBCH
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  HIBCH (3-hydroxyisobutyryl-CoA hydrolase, mitochondrial; EC 3.1.2.4) is a soluble
+  enzyme of the mitochondrial matrix belonging to the enoyl-CoA hydratase/isomerase
+  (crotonase) superfamily. It catalyzes a dedicated step of valine catabolism, the
+  hydrolysis of the thioester 3-hydroxyisobutyryl-CoA (HIBYL-CoA;
+  3-hydroxy-2-methylpropanoyl-CoA) to 3-hydroxyisobutyrate (3-hydroxy-2-methylpropanoate)
+  plus free coenzyme A. By deacylating this intermediate, HIBCH diverts the
+  valine-degradation pathway to the free-acid branch; this hydrolytic step is thought to
+  protect against accumulation of the upstream reactive intermediate methacrylyl-CoA. The
+  enzyme also shows activity toward related short-chain acyl-CoA thioesters, including
+  isobutyryl-CoA and 3-hydroxypropanoyl-CoA (a propionate-metabolism intermediate). HIBCH
+  is synthesized as a precursor with a cleaved N-terminal mitochondrial targeting
+  presequence, and the mature protein resides in the matrix; it is most abundant in liver,
+  heart and kidney, and is also detected in muscle and brain. Biallelic loss-of-function
+  variants cause 3-hydroxyisobutyryl-CoA hydrolase deficiency (HIBCHD), an
+  autosomal-recessive inborn error of valine metabolism presenting as a Leigh-like
+  progressive infantile neurodegeneration with basal ganglia lesions, lactic acidosis and
+  3-hydroxyisobutyric aciduria.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q6NVY1-1
+- name: &#39;2&#39;
+  id: Q6NVY1-2
+  sequence_note: VSP_024780
+existing_annotations:
+# --- 1: 3-hydroxyisobutyryl-CoA hydrolase activity (IBA) ---
+- term:
+    id: GO:0003860
+    label: 3-hydroxyisobutyryl-CoA hydrolase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the defining 3-hydroxyisobutyryl-CoA hydrolase
+      activity from the crotonase-superfamily tree. This is the core, experimentally
+      established molecular function of HIBCH.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; independently supported by direct experimental
+      evidence on the human enzyme (PMID:8824301) and by the EC 3.1.2.4 / RHEA:20888
+      catalytic-activity annotation in UniProt.
+    supported_by:
+      - reference_id: PMID:8824301
+        supporting_text: &#34;beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific&#34;
+        full_text_unavailable: true
+# --- 2: mitochondrion (IBA) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) localization to the mitochondrion. HIBCH is a well-established
+      mitochondrial matrix enzyme, so the compartment is correct but less specific than the
+      mitochondrial matrix annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct compartment but subsumed by the more precise mitochondrial matrix annotation
+      (GO:0005759), which better captures where this soluble enzyme acts.
+# --- 3: L-valine catabolic process (IBA) ---
+- term:
+    id: GO:0006574
+    label: L-valine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that HIBCH participates in L-valine catabolism,
+      consistent with its role as the 3-hydroxyisobutyryl-CoA hydrolase of the valine
+      degradation pathway.
+    action: ACCEPT
+    reason: &gt;-
+      A core biological process for HIBCH; the UniProt PATHWAY line assigns it to L-valine
+      degradation and its deficiency is defined as an inborn error of valine metabolism.
+      Also supported by direct genetic (IMP) evidence (PMID:40056416).
+    supported_by:
+      - reference_id: file:human/HIBCH/HIBCH-uniprot.txt
+        supporting_text: &#34;Amino-acid degradation; L-valine degradation.&#34;
+# --- 4: 3-hydroxyisobutyryl-CoA hydrolase activity (IEA, InterPro/EC/RHEA) ---
+- term:
+    id: GO:0003860
+    label: 3-hydroxyisobutyryl-CoA hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the defining EC 3.1.2.4 / RHEA:20888 activity via combined
+      IEA methods (InterPro signature IPR032259, plus EC and RHEA mapping). This is the core
+      molecular function and is independently confirmed by experimental data.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; duplicate of the experimentally supported GO:0003860
+      annotation, backed by the HIBYL-CoA-H-specific InterPro entry and the EC 3.1.2.4
+      catalytic activity in UniProt.
+    supported_by:
+      - reference_id: file:human/HIBCH/HIBCH-uniprot.txt
+        supporting_text: &#34;EC=3.1.2.4;&#34;
+# --- 5: mitochondrion (IEA, SubCell) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic localization to the mitochondrion from the UniProt Subcellular Location
+      controlled vocabulary (SL-0173). Correct compartment, consistent with experimental
+      evidence, but less specific than the matrix annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but subsumed by the more precise mitochondrial matrix localization
+      (GO:0005759).
+    supported_by:
+      - reference_id: file:human/HIBCH/HIBCH-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+# --- 6: branched-chain amino acid catabolic process (TAS, Reactome) ---
+- term:
+    id: GO:0009083
+    label: branched-chain amino acid catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70895
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) placement of HIBCH in branched-chain amino acid catabolism. HIBCH acts
+      specifically in the valine branch (hydrolysis of 3-hydroxyisobutyryl-CoA), so this
+      broader parent term is correct.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but broad; the specific and experimentally supported L-valine catabolic
+      process (GO:0006574) is the more informative core biological process.
+# --- 7: L-valine catabolic process (IEA, UniPathway) ---
+- term:
+    id: GO:0006574
+    label: L-valine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment of L-valine catabolic process from the UniPathway mapping
+      (UPA00362, L-valine degradation). Correct and consistent with the core biological
+      process.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process; duplicate of the IBA/IMP-supported annotation and of
+      the UniProt PATHWAY assignment to L-valine degradation.
+    supported_by:
+      - reference_id: file:human/HIBCH/HIBCH-uniprot.txt
+        supporting_text: &#34;Amino-acid degradation; L-valine degradation.&#34;
+# --- 8: 3-hydroxyisobutyryl-CoA hydrolase activity (EXP, PMID:8824301) ---
+- term:
+    id: GO:0003860
+    label: 3-hydroxyisobutyryl-CoA hydrolase activity
+  evidence_type: EXP
+  original_reference_id: PMID:8824301
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of the defining 3-hydroxyisobutyryl-CoA hydrolase
+      activity. The recombinant human enzyme, expressed in E. coli, reproduced the substrate
+      specificity of the purified rat liver enzyme for HIBYL-CoA hydrolysis.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration of the core molecular function of HIBCH.
+    supported_by:
+      - reference_id: PMID:8824301
+        supporting_text: &#34;beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific&#34;
+        full_text_unavailable: true
+# --- 9: 3-hydroxyisobutyryl-CoA hydrolase activity (TAS, Reactome disease) ---
+- term:
+    id: GO:0003860
+    label: 3-hydroxyisobutyryl-CoA hydrolase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9916727
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation of 3-hydroxyisobutyryl-CoA hydrolase activity in the context
+      of the HIBCH-deficiency disease pathway (pathogenic variants that lose the ability to
+      synthesize beta-hydroxyisobutyrate).
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function applied in the disease context; consistent with the
+      experimental EXP/IDA evidence.
+# --- 10: mitochondrion (IDA, HPA) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence-based (IDA, HPA) mitochondrial localization. Correct compartment
+      but less precise than the matrix annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Subsumed by the more specific mitochondrial matrix localization (GO:0005759).
+# --- 11: mitochondrial matrix (IDA, PMID:40056416) ---
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:40056416
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) localization of HIBCH to the mitochondrial matrix, the
+      precise compartment for this soluble matrix enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Best-supported and most specific subcellular localization; this is the core location
+      of HIBCH.
+    supported_by:
+      - reference_id: PMID:40056416
+        supporting_text: &#34;results in abnormal mitochondrial morphology and respiratory defects.&#34;
+        full_text_unavailable: true
+# --- 12: L-valine catabolic process (IMP, PMID:40056416) ---
+- term:
+    id: GO:0006574
+    label: L-valine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:40056416
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IMP) evidence that HIBCH acts in valine catabolism: its loss
+      (like loss of the upstream enzyme ECHS1) elevates protein lysine methacrylation,
+      reflecting build-up of the reactive valine-pathway intermediate methacrylyl-CoA whose
+      downstream product HIBCH normally processes.
+    action: ACCEPT
+    reason: &gt;-
+      A core biological process of HIBCH, supported by genetic loss-of-function evidence and
+      consistent with HIBCH deficiency being an inborn error of valine metabolism.
+    supported_by:
+      - reference_id: PMID:40056416
+        supporting_text: &#34;methacrylation (Kmea) is observed in both HIBCH- and ECHS1-deficient cells and&#34;
+        full_text_unavailable: true
+# --- 13: mitochondrial matrix (TAS, Reactome disease) ---
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9916727
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) mitochondrial matrix localization within the HIBCH-deficiency disease
+      pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific localization; consistent with the IDA evidence.
+# --- 14: mitochondrion (HTP, PMID:34800366) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) detection of HIBCH in a high-confidence human mitochondrial
+      proteome (MitoCoP). Confirms mitochondrial localization at lower specificity than the
+      matrix term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supports mitochondrial localization but is subsumed by the more specific mitochondrial
+      matrix annotation.
+# --- 15: mitochondrial matrix (TAS, Reactome reaction) ---
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70881
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) mitochondrial matrix localization for the HIBCH-catalyzed reaction
+      (beta-hydroxyisobutyryl-CoA + H2O =&gt; beta-hydroxyisobutyrate + CoA).
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific localization; consistent with the experimental IDA evidence.
+# --- 16: 3-hydroxyisobutyryl-CoA hydrolase activity (IDA, PMID:8824301) ---
+- term:
+    id: GO:0003860
+    label: 3-hydroxyisobutyryl-CoA hydrolase activity
+  evidence_type: IDA
+  original_reference_id: PMID:8824301
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) demonstration of 3-hydroxyisobutyryl-CoA hydrolase activity
+      using purified/recombinant enzyme, the strongest evidence for the gene&#39;s core molecular
+      function.
+    action: ACCEPT
+    reason: &gt;-
+      Definitive experimental support for the core 3-hydroxyisobutyryl-CoA hydrolase activity
+      of HIBCH.
+    supported_by:
+      - reference_id: PMID:8824301
+        supporting_text: &#34;beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific&#34;
+        full_text_unavailable: true
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+    - statement: &gt;-
+        HIBCH is part of the high-confidence human mitochondrial proteome (MitoCoP).
+      supporting_text: &gt;-
+        Quantitative high-confidence human mitochondrial proteome and its dynamics
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput proteomic confirmation of mitochondrial localization; HIBCH is one
+      entry among the mitochondrial proteome. Supports only generic mitochondrion (HTP).
+- id: PMID:40056416
+  title: Ectopic protein lysine methacrylation contributes to defects caused by loss
+    of HIBCH or ECHS1.
+  findings:
+    - statement: &gt;-
+        Loss of HIBCH (or the upstream valine-pathway enzyme ECHS1) causes abnormal
+        mitochondrial morphology and respiratory defects and elevates protein lysine
+        methacrylation, consistent with build-up of reactive valine-pathway thioesters.
+      supporting_text: &gt;-
+        results in abnormal mitochondrial morphology and respiratory defects.
+      full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache; basis for the FlyBase IMP annotation to L-valine catabolic
+      process and the IDA annotation to mitochondrial matrix. Mechanistically links HIBCH
+      loss to valine-pathway intermediate (methacrylyl-CoA) accumulation and Leigh-like
+      disease.
+- id: PMID:8824301
+  title: Primary structure and tissue-specific expression of human beta-hydroxyisobutyryl-coenzyme
+    A hydrolase.
+  findings:
+    - statement: &gt;-
+        HIBYL-CoA hydrolase specifically hydrolyzes 3-hydroxyisobutyryl-CoA (a valine
+        catabolite) and also hydrolyzes beta-hydroxypropionyl-CoA; the human enzyme is
+        homologous to the enoyl-CoA hydratase/isomerase family and is expressed
+        predominantly in liver, heart and kidney.
+      supporting_text: &gt;-
+        beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific
+      full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original cloning and biochemical characterization of human HIBCH; abstract-only in
+      cache. Underpins the EXP and IDA GO:0003860 core molecular-function annotations and
+      Reactome R-HSA-70881.
+- id: Reactome:R-HSA-70881
+  title: beta-hydroxyisobutyryl-CoA + H2O =&gt; beta-hydroxyisobutyrate + CoA
+  findings: []
+- id: Reactome:R-HSA-70895
+  title: Branched-chain amino acid catabolism
+  findings: []
+- id: Reactome:R-HSA-9916727
+  title: HIBCH mutants don&#39;t synthesize beta-hydroxyisobutyrate
+  findings: []
+core_functions:
+- description: &gt;-
+    Catalyzes a dedicated hydrolytic step of mitochondrial valine catabolism: the hydrolysis
+    of 3-hydroxyisobutyryl-CoA (HIBYL-CoA) to 3-hydroxyisobutyrate and free coenzyme A
+    (EC 3.1.2.4). This deacylation commits the pathway to the free-acid branch and is thought
+    to protect against accumulation of the reactive upstream intermediate methacrylyl-CoA;
+    its loss causes the inborn error of valine metabolism HIBCH deficiency.
+  supported_by:
+    - reference_id: PMID:8824301
+      supporting_text: &#34;beta-Hydroxyisobutyryl-CoA (HIBYL-CoA) hydrolase is responsible for the specific&#34;
+      full_text_unavailable: true
+    - reference_id: file:human/HIBCH/HIBCH-uniprot.txt
+      supporting_text: &#34;Amino-acid degradation; L-valine degradation.&#34;
+  molecular_function:
+    id: GO:0003860
+    label: 3-hydroxyisobutyryl-CoA hydrolase activity
+  directly_involved_in:
+    - id: GO:0006574
+      label: L-valine catabolic process
+  locations:
+    - id: GO:0005759
+      label: mitochondrial matrix
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Beyond 3-hydroxyisobutyryl-CoA, how physiologically significant are HIBCH&#39;s activities
+    toward isobutyryl-CoA and 3-hydroxypropanoyl-CoA, and do they represent distinct
+    biological roles (e.g. in a minor pathway of propionate metabolism) worth capturing?
+- question: &gt;-
+    Is the neurotoxicity of HIBCH deficiency driven primarily by accumulation of
+    methacrylyl-CoA / 3-hydroxyisobutyryl-CoA and consequent ectopic protein lysine
+    methacrylation, or by depletion of the free-acid product 3-hydroxyisobutyrate?
+suggested_experiments:
+- description: &gt;-
+    Measure in vitro hydrolase kinetics (KM/kcat) of purified recombinant human HIBCH against
+    3-hydroxyisobutyryl-CoA, isobutyryl-CoA and 3-hydroxypropanoyl-CoA to define its true
+    substrate preference and rank its contribution to valine versus propionate metabolism.
+  hypothesis: &gt;-
+    HIBCH is a valine-pathway-dedicated hydrolase with highest catalytic efficiency for
+    3-hydroxyisobutyryl-CoA, explaining why its deficiency presents as an inborn error of
+    valine metabolism.
+- description: &gt;-
+    In HIBCH-null cells and patient fibroblasts, perform metabolomic tracing of valine carbon
+    combined with quantitative proteomics of lysine methacrylation to determine which
+    accumulating thioester most strongly correlates with mitochondrial dysfunction.
+  hypothesis: &gt;-
+    Accumulation of reactive valine-pathway acyl-CoA thioesters and ensuing ectopic lysine
+    methacrylation, rather than loss of 3-hydroxyisobutyrate production, is the principal
+    driver of the HIBCH-deficiency phenotype.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

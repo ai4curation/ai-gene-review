@@ -1,0 +1,4247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PYCR1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PYCR1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P32322" target="_blank" class="term-link">
+                        P32322
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PYCR1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P32322" data-a="DESCRIPTION: PYCR1 (pyrroline-5-carboxylate reductase 1) is a m..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PYCR1 (pyrroline-5-carboxylate reductase 1) is a mitochondrial NAD(P)H-dependent oxidoreductase (EC 1.5.1.2) that catalyzes the final, committed step of proline biosynthesis: the reduction of (S)-1-pyrroline-5-carboxylate (P5C) to L-proline. P5C is the common intermediate produced from glutamate (via P5C synthase) or from ornithine (via ornithine aminotransferase); PYCR1 acts primarily on the glutamate route. The enzyme is a homodecamer assembled as five homodimers, with each subunit built from an N-terminal Rossmann-fold dinucleotide-binding domain and a C-terminal dimerization domain. At physiological substrate and cofactor concentrations it has higher activity with NADH than NADPH, and it is competitively inhibited by its product proline. Beyond supplying proline for protein synthesis and collagen, PYCR1 participates in the proline/P5C redox cycle that shuttles reducing equivalents between mitochondria and cytosol, linking it to redox homeostasis and the cellular response to oxidative stress. Loss-of-function variants in PYCR1 cause autosomal recessive cutis laxa type 2B and 3B (progeroid/De Barsy-like phenotypes), with altered mitochondrial morphology and membrane potential and increased apoptosis under oxidative stress. PYCR1 is frequently overexpressed in cancers, where proline biosynthesis supports tumor growth.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic molecular function of PYCR1, robustly supported experimentally in human (kinetics and crystal structures) and conserved across the P5C reductase family. The phylogenetic (IBA) inference is fully consistent with the direct evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PYCR1/PYCR1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Oxidoreductase that catalyzes the last step in proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0055129" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. PYCR1 catalyzes the final step of L-proline biosynthesis; the IBA inference matches the experimental human data and the UniProt pathway annotation (L-proline from L-glutamate 5-semialdehyde, step 1/1).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PYCR1/PYCR1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-acid biosynthesis; L-proline biosynthesis; L-proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro/Rhea/EC) assignment of the core catalytic activity. Redundant with the experimental IDA annotations but correct; keep as supporting the core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005739" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic localization to mitochondrion, consistent with experimental IDA subcellular-fractionation and co-localization evidence. Correct; the more specific mitochondrial matrix term is also annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034599" target="_blank" class="term-link">
+                                    GO:0034599
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0034599" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation duplicating the experimental IMP annotation (PMID:19648921), where fibroblasts from affected individuals showed increased apoptosis upon oxidative stress. A genuine but non-core role of PYCR1; retain as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0055129" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro/UniPathway) assignment of the core proline biosynthesis process. Redundant with experimental IDA/IBA annotations but correct.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23743200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DJ-1 cooperates with PYCR1 in cell protection against oxidat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005515" data-r="PMID:23743200" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a physical interaction with DJ-1/PARK7. Uninformative as a molecular function term (it does not describe what PYCR1 does), so mark as over-annotated rather than accept. The underlying interaction is real (DJ-1 directly binds PYCR1 and enhances its activity) and is captured biologically elsewhere.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                                        PMID:23743200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DJ-1 directly bound to PYCR1 in vivo and in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput binary interactome (HuRI) screen (interaction with TNPO2). Uninformative molecular-function term; the interaction is not known to correspond to a specific biological function of PYCR1. Mark as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16730026
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human pyrroline-5-carboxylate reductase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0042802" data-r="PMID:16730026" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association reported from the crystal structure, which showed a decameric architecture of five homodimers. &#34;Identical protein binding&#34; is a defensible capture of the obligate homo-oligomerization that underlies catalysis, but it is not the core function; keep as non-core. The oligomeric state is better represented by the pyrroline-5-carboxylate reductase complex annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link">
+                                        PMID:16730026
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a decameric architecture with five homodimer subunits</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2722838" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2722838
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purified human erythrocyte pyrroline-5-carboxylate reductase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0042802" data-r="PMID:2722838" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association from early sizing-chromatography work on purified human erythrocyte P5C reductase, which showed a 300,000-350,000 Mr native species consistent with a 10- to 12-mer. Supports homo-oligomerization; keep as non-core (see the complex annotation for the oligomeric assembly).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2722838" target="_blank" class="term-link">
+                                        PMID:2722838
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">suggesting that the native enzyme exists as a 10- to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902792" target="_blank" class="term-link">
+                                    GO:1902792
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28258219
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Resolving the cofactor-binding site in the proline biosynthe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:1902792" data-r="PMID:28258219" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PYCR1 assembles into a homodecamer (pentamer of dimers), directly demonstrated by crystallography and sedimentation velocity. This complex is the catalytically active form. Accurate and informative; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link">
+                                        PMID:28258219
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PYCR1 forms a concentration-dependent decamer in solution, consistent with the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23024808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23024808
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional specialization in proline biosynthesis of melanom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="PMID:23024808" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct enzymatic characterization of human PYCR1 (catalytic activity, kinetics, cofactor preference, product inhibition). Strong support for the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PYCR1/PYCR1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">concentrations, has higher specific activity in the presence of NADH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28258219
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Resolving the cofactor-binding site in the proline biosynthe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="PMID:28258219" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct kinetic and mutational characterization of human PYCR1, including the T238A mutant with decreased P5C reductase activity confirming the catalytic mechanism. Strong support for the core function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link">
+                                        PMID:28258219
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzing the NAD(P)H-dependent reduction of Δ1-pyrroline-5-carboxylate (P5C) to proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23024808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23024808
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional specialization in proline biosynthesis of melanom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005739" data-r="PMID:23024808" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular fractionation localized PYCR1 (and PYCR2) to the mitochondria. Correct localization; the more specific mitochondrial matrix is also annotated. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23024808" target="_blank" class="term-link">
+                                        PMID:23024808
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are localized in the mitochondria, and primarily involved in the conversion of glutamate to proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23024808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23024808
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional specialization in proline biosynthesis of melanom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0055129" data-r="PMID:23024808" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct isotope-tracing evidence that PYCR1 contributes to proline biosynthesis, primarily production of proline from glutamate. Core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23024808" target="_blank" class="term-link">
+                                        PMID:23024808
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PYCR1 contributes primarily to production of proline from glutamate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28258219
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Resolving the cofactor-binding site in the proline biosynthe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0055129" data-r="PMID:28258219" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Structural/kinetic study framing PYCR1 as the final enzyme in proline biosynthesis. Supports the core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link">
+                                        PMID:28258219
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is the final enzyme in proline biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23743200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DJ-1 cooperates with PYCR1 in cell protection against oxidat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="PMID:23743200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic activity annotated from the DJ-1/PYCR1 study, which measured PYCR1 enzymatic activity (enhanced in vitro by DJ-1). Consistent with the core function; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                                        PMID:23743200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DJ-1 enhanced the enzymatic activity of PYCR1 in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903377" target="_blank" class="term-link">
+                                    GO:1903377
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of oxidative stress-induced neuron intrinsic apoptotic signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23743200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DJ-1 cooperates with PYCR1 in cell protection against oxidat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:1903377" data-r="PMID:23743200" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Highly specific process term derived from the DJ-1/PYCR1 oxidative-stress-protection study. The paper reports that cells knocked down for DJ-1 and PYCR1 showed lower viability under oxidative stress, placing PYCR1 on an anti-oxidative-stress pathway, but the &#34;neuron intrinsic apoptotic signaling&#34; specificity is an over-reach: the cited experiments used cell lines and did not establish a neuron-specific apoptotic pathway. This is a plausible but non-core, over-specified role; retain as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                                        PMID:23743200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cells knocked down for DJ-1 and PYCR1 showed lower viability under oxidative stress conditions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24930674" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24930674
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Frequent amplification of ORAOV1 gene in esophageal squamous...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005515" data-r="PMID:24930674" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the interaction of PYCR1 (P5C reductase) with ORAOV1/LTO1 demonstrated by peptide mass fingerprinting. Uninformative molecular-function term; the physical interaction is real but does not describe PYCR1&#39;s function. Mark as over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24930674" target="_blank" class="term-link">
+                                        PMID:24930674
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ORAOV1 bound to pyrroline-5-carboxylate reductase (PYCR), which is associated with proline metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70664
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005759" data-r="Reactome:R-HSA-70664" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing the PYCR1 decamer reaction in the mitochondrial matrix, consistent with the mitochondrial localization established experimentally. Appropriate and more specific than &#34;mitochondrion&#34;; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70664
+
+                                </span>
+
+                                <div class="support-text">PYCR1 decamer reduces (S)-1-pyrroline-5-carboxylate to L-Pro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23743200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DJ-1 cooperates with PYCR1 in cell protection against oxidat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005739" data-r="PMID:23743200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PYCR1 co-localized with DJ-1 in mitochondria. Correct localization; accept (mitochondrial matrix is the more specific annotation).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                                        PMID:23743200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DJ-1 and PYCR1 colocalized in mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051881" target="_blank" class="term-link">
+                                    GO:0051881
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of mitochondrial membrane potential</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23743200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DJ-1 cooperates with PYCR1 in cell protection against oxidat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0051881" data-r="PMID:23743200" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The DJ-1/PYCR1 study reports that both proteins are involved in regulation of mitochondrial membrane potential (differently). Also supported independently by the cutis-laxa fibroblast work (PMID:19648921), which found altered mitochondrial membrane potential in patient cells. A genuine downstream/physiological effect of PYCR1 dysfunction rather than its core function; retain as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                                        PMID:23743200
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">involved in regulation of mitochondrial membrane potential</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16730026
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human pyrroline-5-carboxylate reductase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="PMID:16730026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct enzymatic/mutagenesis characterization (Glu221) from the first human PYCR1 crystal structure. Strong support for the core catalytic activity. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link">
+                                        PMID:16730026
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the reduction of Delta(1)-pyrroline-5-carboxylate (P5C) to proline using NAD(P)H as the cofactor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16730026
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human pyrroline-5-carboxylate reductase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0055129" data-r="PMID:16730026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process supported by the structural/enzymatic study. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link">
+                                        PMID:16730026
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the reduction of Delta(1)-pyrroline-5-carboxylate (P5C) to proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648921" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19648921
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PYCR1 cause cutis laxa with progeroid features.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0005739" data-r="PMID:19648921" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Co-localization study in the cutis-laxa paper showed PYCR1 localizes to mitochondria. Correct localization; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19648921" target="_blank" class="term-link">
+                                        PMID:19648921
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an enzyme involved in proline metabolism, localizes to mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034599" target="_blank" class="term-link">
+                                    GO:0034599
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648921" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19648921
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PYCR1 cause cutis laxa with progeroid features.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0034599" data-r="PMID:19648921" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fibroblasts from PYCR1-deficient (cutis laxa) individuals showed increased apoptosis upon oxidative stress, implicating PYCR1 in the cellular response to oxidative stress. A genuine but non-core, disease-related role; retain as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19648921" target="_blank" class="term-link">
+                                        PMID:19648921
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">increased apoptosis rate upon oxidative stress were evident in fibroblasts from affected individuals</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                                    GO:0004735
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroline-5-carboxylate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1730675" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1730675
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning human pyrroline-5-carboxylate reductase cDNA by comp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0004735" data-r="PMID:1730675" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Original cDNA-cloning paper; PYCR1 complemented proline auxotrophy in yeast and the enzyme catalyzes the NAD(P)H-dependent conversion of P5C to proline. Traceable author statement supporting the core catalytic activity. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1730675" target="_blank" class="term-link">
+                                        PMID:1730675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the NAD(P)H-dependent</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1730675" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1730675
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning human pyrroline-5-carboxylate reductase cDNA by comp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32322" data-a="GO:0055129" data-r="PMID:1730675" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cloning by complementation of proline auxotrophy establishes PYCR1&#39;s role in proline biosynthesis. Core biological process; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1730675" target="_blank" class="term-link">
+                                        PMID:1730675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">two of which gained proline prototrophy</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the terminal step of L-proline biosynthesis: the NAD(P)H-dependent reduction of (S)-1-pyrroline-5-carboxylate (P5C) to L-proline, acting mainly on P5C derived from glutamate. Functions as a mitochondrial homodecamer with higher activity toward NADH than NADPH at physiological concentrations and is competitively inhibited by product proline.</h3>
+                <span class="vote-buttons" data-g="P32322" data-a="FUNCTION: Catalyzes the terminal step of L-proline biosynthe..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004735" target="_blank" class="term-link">
+                            pyrroline-5-carboxylate reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                L-proline biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902792" target="_blank" class="term-link">
+                            pyrroline-5-carboxylate reductase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PYCR1/PYCR1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Oxidoreductase that catalyzes the last step in proline</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link">
+                                PMID:28258219
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzing the NAD(P)H-dependent reduction of Δ1-pyrroline-5-carboxylate (P5C) to proline</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PYCR1/PYCR1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P32322 (P5CR1_HUMAN) record</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" target="_blank" class="term-link">
+                            PMID:16730026
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human pyrroline-5-carboxylate reductase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1730675" target="_blank" class="term-link">
+                            PMID:1730675
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning human pyrroline-5-carboxylate reductase cDNA by complementation in Saccharomyces cerevisiae.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19648921" target="_blank" class="term-link">
+                            PMID:19648921
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in PYCR1 cause cutis laxa with progeroid features.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23024808" target="_blank" class="term-link">
+                            PMID:23024808
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional specialization in proline biosynthesis of melanoma.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                            PMID:23743200
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DJ-1 cooperates with PYCR1 in cell protection against oxidative stress.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24930674" target="_blank" class="term-link">
+                            PMID:24930674
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frequent amplification of ORAOV1 gene in esophageal squamous cell cancer promotes an aggressive phenotype via proline metabolism and ROS production.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2722838" target="_blank" class="term-link">
+                            PMID:2722838
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purified human erythrocyte pyrroline-5-carboxylate reductase. Preferential oxidation of NADPH.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28258219" target="_blank" class="term-link">
+                            PMID:28258219
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Resolving the cofactor-binding site in the proline biosynthetic enzyme human pyrroline-5-carboxylate reductase 1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70664
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PYCR1 decamer reduces (S)-1-pyrroline-5-carboxylate to L-Pro</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PYCR1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P32322" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pycr1-human-gene-review-notes">PYCR1 (human) — gene review notes</h1>
+<p>UniProt: P32322 (P5CR1_HUMAN); HGNC:9721; NCBI Gene 5831; chromosome 17q25.<br />
+Source files read: <code>PYCR1-uniprot.txt</code>, <code>PYCR1-goa.tsv</code>, cached <code>publications/PMID_*.md</code>,<br />
+<code>reactome/R-HSA-70664.md</code>. No deep-research file (falcon out of credits) — notes are<br />
+grounded directly in the local records.</p>
+<h2 id="core-identity-and-function">Core identity and function</h2>
+<p>PYCR1 is <strong>pyrroline-5-carboxylate reductase 1</strong>, EC 1.5.1.2, a mitochondrial<br />
+NAD(P)H-dependent oxidoreductase that catalyzes the <strong>last step of proline<br />
+biosynthesis</strong>: reduction of (S)-1-pyrroline-5-carboxylate (P5C) to L-proline.</p>
+<ul>
+<li>[file:human/PYCR1/PYCR1-uniprot.txt "Oxidoreductase that catalyzes the last step in proline"] /<br />
+  "biosynthesis, which corresponds to the reduction of pyrroline-5-" (CC FUNCTION, lines 238-239).</li>
+<li>UniProt CATALYTIC ACTIVITY: L-proline + NADP(+) = (S)-1-pyrroline-5-carboxylate + NADPH + 2 H(+)<br />
+  (RHEA:14109) and the NAD(+) counterpart (RHEA:14105); EC=1.5.1.2. PhysiologicalDirection is<br />
+  right-to-left, i.e. P5C -&gt; proline.</li>
+<li>UniProt PATHWAY: [file:human/PYCR1/PYCR1-uniprot.txt "Amino-acid biosynthesis; L-proline biosynthesis; L-proline"]<br />
+  from L-glutamate 5-semialdehyde: step 1/1.</li>
+<li>Cofactor preference: [file:human/PYCR1/PYCR1-uniprot.txt "concentrations, has higher specific activity in the presence of NADH"]<br />
+  (physiologic conditions). Consistent with Reactome using the NADH reaction.</li>
+<li>GO term IDs verified against current ontology (OLS): GO:0004735 pyrroline-5-carboxylate reductase<br />
+  activity; GO:0055129 L-proline biosynthetic process; GO:1902792 pyrroline-5-carboxylate reductase<br />
+  complex; GO:0005759 mitochondrial matrix — all non-obsolete, labels current.</li>
+</ul>
+<h2 id="structure-assembly">Structure / assembly</h2>
+<ul>
+<li>Homodecamer = pentamer of dimers. <a href="https://pubmed.ncbi.nlm.nih.gov/16730026" title="a decameric architecture with five homodimer subunits">PMID:16730026</a><br />
+  (first human crystal structure; also mutagenesis of Glu221, Rossmann motif).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/28258219" title="PYCR1 forms a concentration-dependent decamer in solution, consistent with the">PMID:28258219</a><br />
+  pentamer-of-dimers assembly (sedimentation velocity + crystallography). This paper corrected the<br />
+  earlier mis-assignment of the cofactor site: NADPH binds the N-terminal Rossmann fold, ~25 Å from<br />
+  the previously proposed C-terminal site. T238A mutant has decreased P5C reductase activity.</li>
+<li>Early biochemistry: <a href="https://pubmed.ncbi.nlm.nih.gov/2722838" title="suggesting that the native enzyme exists as a 10- to">PMID:2722838</a> 12-mer<br />
+  (human erythrocyte enzyme; NADH vs NADPH kinetics; note this paper argued a possible NADP+-<br />
+  generating role in erythrocytes, i.e. proline oxidation direction — a cell-type-specific nuance).</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrion / mitochondrial matrix.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19648921" title="an enzyme involved in proline metabolism, localizes to mitochondria">PMID:19648921</a> (co-localization).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23024808" title="are localized in the mitochondria, and primarily involved in the conversion of glutamate to proline">PMID:23024808</a><br />
+  (subcellular fractionation; PYCR1 &amp; PYCR2 mitochondrial, PYCRL cytoplasmic).</li>
+<li>Reactome places the reaction in the mitochondrial matrix (R-HSA-70664, TAS).</li>
+</ul>
+<h2 id="substrateroute-specialization-de-ingeniis-2012-pmid23024808-full-text">Substrate/route specialization (De Ingeniis 2012, PMID:23024808, full text)</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23024808" title="PYCR1 contributes primarily to production of proline from glutamate">PMID:23024808</a>; under some<br />
+  conditions (no extracellular proline, high ornithine) it can also use the ornithine route, but this<br />
+  is unlikely physiological. PYCR2 exclusively glutamate route; PYCRL exclusively ornithine route.</li>
+<li>NADH-preferring, product-(proline)-inhibited (mitochondrial PYCRs).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>UniProt DISEASE: ARCL2B [MIM:612940] and ARCL3B [MIM:614438] — autosomal recessive cutis laxa,<br />
+  progeroid/De Barsy-like. Caused by PYCR1 variants (evidence PubMed:19576563, 19648921, 22052856).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19648921">PMID:19648921</a> (Nat Genet): mutations cause cutis laxa with progeroid features; patient fibroblasts<br />
+  show altered mitochondrial morphology, membrane potential, and<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19648921" title="increased apoptosis rate upon oxidative stress were evident in fibroblasts from affected individuals">PMID:19648921</a>.</li>
+</ul>
+<h2 id="interactions-non-core-roles">Interactions / non-core roles</h2>
+<ul>
+<li>DJ-1/PARK7: <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" title="DJ-1 directly bound to PYCR1 in vivo and in">PMID:23743200</a> vitro;<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23743200" title="DJ-1 enhanced the enzymatic activity of PYCR1 in vitro">PMID:23743200</a>;<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23743200" title="DJ-1 and PYCR1 colocalized in mitochondria">PMID:23743200</a>;<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23743200" title="involved in regulation of mitochondrial membrane potential">PMID:23743200</a>;<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23743200" title="cells knocked down for DJ-1 and PYCR1 showed lower viability under oxidative stress conditions">PMID:23743200</a><br />
+  — shared anti-oxidative-stress pathway.</li>
+<li>ORAOV1/LTO1: <a href="https://pubmed.ncbi.nlm.nih.gov/24930674" title="ORAOV1 bound to pyrroline-5-carboxylate reductase (PYCR), which is associated with proline metabolism">PMID:24930674</a><br />
+  and ROS production in esophageal cancer.</li>
+<li>TNPO2: binary interaction from HuRI interactome (PMID:32296183) — generic protein binding only.</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions (summary)</h2>
+<ul>
+<li><strong>Core</strong>: GO:0004735 (MF), GO:0055129 (BP), GO:1902792 (complex), GO:0005759 mitochondrial matrix<br />
+  (location). All catalytic-activity, proline-biosynthesis, complex, and mitochondrial-localization<br />
+  annotations ACCEPTed (experimental IDA/IBA/IEA/TAS all concordant).</li>
+<li><strong>KEEP_AS_NON_CORE</strong>: oxidative-stress response (GO:0034599), regulation of mitochondrial membrane<br />
+  potential (GO:0051881), the over-specific GO:1903377 (neuron intrinsic apoptotic — cell lines used,<br />
+  not neuron-specific), and the two identical-protein-binding (homo-oligomerization) annotations.</li>
+<li><strong>MARK_AS_OVER_ANNOTATED</strong> (not REMOVE — experimental IPI): the three bare "protein binding"<br />
+  (GO:0005515) annotations (DJ-1, TNPO2, ORAOV1/LTO1). Interactions are real but the plain MF term is<br />
+  uninformative; per policy these IPI annotations are marked over-annotated rather than removed.</li>
+<li>No annotations REMOVEd. No experimental annotations removed.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P32322
+gene_symbol: PYCR1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PYCR1 (pyrroline-5-carboxylate reductase 1) is a mitochondrial NAD(P)H-dependent
+  oxidoreductase (EC 1.5.1.2) that catalyzes the final, committed step of proline
+  biosynthesis: the reduction of (S)-1-pyrroline-5-carboxylate (P5C) to L-proline.
+  P5C is the common intermediate produced from glutamate (via P5C synthase) or from
+  ornithine (via ornithine aminotransferase); PYCR1 acts primarily on the glutamate
+  route. The enzyme is a homodecamer assembled as five homodimers, with each subunit
+  built from an N-terminal Rossmann-fold dinucleotide-binding domain and a C-terminal
+  dimerization domain. At physiological substrate and cofactor concentrations it has
+  higher activity with NADH than NADPH, and it is competitively inhibited by its
+  product proline. Beyond supplying proline for protein synthesis and collagen,
+  PYCR1 participates in the proline/P5C redox cycle that shuttles reducing equivalents
+  between mitochondria and cytosol, linking it to redox homeostasis and the cellular
+  response to oxidative stress. Loss-of-function variants in PYCR1 cause autosomal
+  recessive cutis laxa type 2B and 3B (progeroid/De Barsy-like phenotypes), with
+  altered mitochondrial morphology and membrane potential and increased apoptosis
+  under oxidative stress. PYCR1 is frequently overexpressed in cancers, where
+  proline biosynthesis supports tumor growth.
+alternative_products:
+- name: &#39;1&#39;
+  id: P32322-1
+- name: &#39;2&#39;
+  id: P32322-2
+  sequence_note: VSP_044507
+- name: &#39;3&#39;
+  id: P32322-3
+  sequence_note: VSP_054616
+existing_annotations:
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core catalytic molecular function of PYCR1, robustly supported experimentally in
+      human (kinetics and crystal structures) and conserved across the P5C reductase
+      family. The phylogenetic (IBA) inference is fully consistent with the direct
+      evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PYCR1/PYCR1-uniprot.txt
+      supporting_text: Oxidoreductase that catalyzes the last step in proline
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. PYCR1 catalyzes the final step of L-proline biosynthesis;
+      the IBA inference matches the experimental human data and the UniProt pathway
+      annotation (L-proline from L-glutamate 5-semialdehyde, step 1/1).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PYCR1/PYCR1-uniprot.txt
+      supporting_text: &#39;Amino-acid biosynthesis; L-proline biosynthesis; L-proline&#39;
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro/Rhea/EC) assignment of the core catalytic activity.
+      Redundant with the experimental IDA annotations but correct; keep as supporting
+      the core function.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic localization to mitochondrion, consistent with experimental IDA
+      subcellular-fractionation and co-localization evidence. Correct; the more specific
+      mitochondrial matrix term is also annotated.
+    action: ACCEPT
+- term:
+    id: GO:0034599
+    label: cellular response to oxidative stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic annotation duplicating the experimental IMP annotation (PMID:19648921),
+      where fibroblasts from affected individuals showed increased apoptosis upon oxidative
+      stress. A genuine but non-core role of PYCR1; retain as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro/UniPathway) assignment of the core proline biosynthesis
+      process. Redundant with experimental IDA/IBA annotations but correct.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23743200
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a physical interaction with DJ-1/PARK7. Uninformative as
+      a molecular function term (it does not describe what PYCR1 does), so mark as
+      over-annotated rather than accept. The underlying interaction is real (DJ-1 directly
+      binds PYCR1 and enhances its activity) and is captured biologically elsewhere.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:23743200
+      supporting_text: DJ-1 directly bound to PYCR1 in vivo and in
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput binary interactome (HuRI) screen
+      (interaction with TNPO2). Uninformative molecular-function term; the interaction is
+      not known to correspond to a specific biological function of PYCR1. Mark as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16730026
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-association reported from the crystal structure, which showed a decameric
+      architecture of five homodimers. &#34;Identical protein binding&#34; is a defensible
+      capture of the obligate homo-oligomerization that underlies catalysis, but it is
+      not the core function; keep as non-core. The oligomeric state is better represented
+      by the pyrroline-5-carboxylate reductase complex annotation.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:16730026
+      supporting_text: a decameric architecture with five homodimer subunits
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:2722838
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-association from early sizing-chromatography work on purified human erythrocyte
+      P5C reductase, which showed a 300,000-350,000 Mr native species consistent with a
+      10- to 12-mer. Supports homo-oligomerization; keep as non-core (see the complex
+      annotation for the oligomeric assembly).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:2722838
+      supporting_text: suggesting that the native enzyme exists as a 10- to
+- term:
+    id: GO:1902792
+    label: pyrroline-5-carboxylate reductase complex
+  evidence_type: IDA
+  original_reference_id: PMID:28258219
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      PYCR1 assembles into a homodecamer (pentamer of dimers), directly demonstrated by
+      crystallography and sedimentation velocity. This complex is the catalytically active
+      form. Accurate and informative; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28258219
+      supporting_text: PYCR1 forms a concentration-dependent decamer in solution, consistent
+        with the
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:23024808
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct enzymatic characterization of human PYCR1 (catalytic activity, kinetics,
+      cofactor preference, product inhibition). Strong support for the core molecular
+      function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PYCR1/PYCR1-uniprot.txt
+      supporting_text: concentrations, has higher specific activity in the presence of NADH
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:28258219
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct kinetic and mutational characterization of human PYCR1, including the T238A
+      mutant with decreased P5C reductase activity confirming the catalytic mechanism.
+      Strong support for the core function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28258219
+      supporting_text: catalyzing the NAD(P)H-dependent reduction of Δ1-pyrroline-5-carboxylate
+        (P5C) to proline
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:23024808
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Subcellular fractionation localized PYCR1 (and PYCR2) to the mitochondria. Correct
+      localization; the more specific mitochondrial matrix is also annotated. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23024808
+      supporting_text: are localized in the mitochondria, and primarily involved in the
+        conversion of glutamate to proline
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:23024808
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct isotope-tracing evidence that PYCR1 contributes to proline biosynthesis,
+      primarily production of proline from glutamate. Core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23024808
+      supporting_text: PYCR1 contributes primarily to production of proline from glutamate
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:28258219
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Structural/kinetic study framing PYCR1 as the final enzyme in proline biosynthesis.
+      Supports the core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28258219
+      supporting_text: is the final enzyme in proline biosynthesis
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:23743200
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core catalytic activity annotated from the DJ-1/PYCR1 study, which measured PYCR1
+      enzymatic activity (enhanced in vitro by DJ-1). Consistent with the core function;
+      accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23743200
+      supporting_text: DJ-1 enhanced the enzymatic activity of PYCR1 in vitro
+- term:
+    id: GO:1903377
+    label: negative regulation of oxidative stress-induced neuron intrinsic apoptotic
+      signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:23743200
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Highly specific process term derived from the DJ-1/PYCR1 oxidative-stress-protection
+      study. The paper reports that cells knocked down for DJ-1 and PYCR1 showed lower
+      viability under oxidative stress, placing PYCR1 on an anti-oxidative-stress pathway,
+      but the &#34;neuron intrinsic apoptotic signaling&#34; specificity is an over-reach: the
+      cited experiments used cell lines and did not establish a neuron-specific apoptotic
+      pathway. This is a plausible but non-core, over-specified role; retain as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:23743200
+      supporting_text: cells knocked down for DJ-1 and PYCR1 showed lower viability under
+        oxidative stress conditions
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24930674
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the interaction of PYCR1 (P5C reductase) with ORAOV1/LTO1
+      demonstrated by peptide mass fingerprinting. Uninformative molecular-function term;
+      the physical interaction is real but does not describe PYCR1&#39;s function. Mark as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:24930674
+      supporting_text: ORAOV1 bound to pyrroline-5-carboxylate reductase (PYCR), which is
+        associated with proline metabolism
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70664
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing the PYCR1 decamer reaction in the
+      mitochondrial matrix, consistent with the mitochondrial localization established
+      experimentally. Appropriate and more specific than &#34;mitochondrion&#34;; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70664
+      supporting_text: PYCR1 decamer reduces (S)-1-pyrroline-5-carboxylate to L-Pro
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:23743200
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      PYCR1 co-localized with DJ-1 in mitochondria. Correct localization; accept
+      (mitochondrial matrix is the more specific annotation).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23743200
+      supporting_text: DJ-1 and PYCR1 colocalized in mitochondria
+- term:
+    id: GO:0051881
+    label: regulation of mitochondrial membrane potential
+  evidence_type: IMP
+  original_reference_id: PMID:23743200
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The DJ-1/PYCR1 study reports that both proteins are involved in regulation of
+      mitochondrial membrane potential (differently). Also supported independently by
+      the cutis-laxa fibroblast work (PMID:19648921), which found altered mitochondrial
+      membrane potential in patient cells. A genuine downstream/physiological effect of
+      PYCR1 dysfunction rather than its core function; retain as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:23743200
+      supporting_text: involved in regulation of mitochondrial membrane potential
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16730026
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct enzymatic/mutagenesis characterization (Glu221) from the first human PYCR1
+      crystal structure. Strong support for the core catalytic activity. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16730026
+      supporting_text: catalyzes the reduction of Delta(1)-pyrroline-5-carboxylate (P5C)
+        to proline using NAD(P)H as the cofactor
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:16730026
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process supported by the structural/enzymatic study. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16730026
+      supporting_text: catalyzes the reduction of Delta(1)-pyrroline-5-carboxylate (P5C)
+        to proline
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:19648921
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Co-localization study in the cutis-laxa paper showed PYCR1 localizes to
+      mitochondria. Correct localization; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:19648921
+      supporting_text: an enzyme involved in proline metabolism, localizes to mitochondria
+- term:
+    id: GO:0034599
+    label: cellular response to oxidative stress
+  evidence_type: IMP
+  original_reference_id: PMID:19648921
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Fibroblasts from PYCR1-deficient (cutis laxa) individuals showed increased apoptosis
+      upon oxidative stress, implicating PYCR1 in the cellular response to oxidative stress.
+      A genuine but non-core, disease-related role; retain as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19648921
+      supporting_text: increased apoptosis rate upon oxidative stress were evident in fibroblasts
+        from affected individuals
+- term:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  evidence_type: TAS
+  original_reference_id: PMID:1730675
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Original cDNA-cloning paper; PYCR1 complemented proline auxotrophy in yeast and the
+      enzyme catalyzes the NAD(P)H-dependent conversion of P5C to proline. Traceable
+      author statement supporting the core catalytic activity. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:1730675
+      supporting_text: catalyzes the NAD(P)H-dependent
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:1730675
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Cloning by complementation of proline auxotrophy establishes PYCR1&#39;s role in proline
+      biosynthesis. Core biological process; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:1730675
+      supporting_text: two of which gained proline prototrophy
+core_functions:
+- description: &gt;-
+    Catalyzes the terminal step of L-proline biosynthesis: the NAD(P)H-dependent
+    reduction of (S)-1-pyrroline-5-carboxylate (P5C) to L-proline, acting mainly on
+    P5C derived from glutamate. Functions as a mitochondrial homodecamer with higher
+    activity toward NADH than NADPH at physiological concentrations and is competitively
+    inhibited by product proline.
+  molecular_function:
+    id: GO:0004735
+    label: pyrroline-5-carboxylate reductase activity
+  directly_involved_in:
+  - id: GO:0055129
+    label: L-proline biosynthetic process
+  in_complex:
+    id: GO:1902792
+    label: pyrroline-5-carboxylate reductase complex
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/PYCR1/PYCR1-uniprot.txt
+    supporting_text: Oxidoreductase that catalyzes the last step in proline
+  - reference_id: PMID:28258219
+    supporting_text: catalyzing the NAD(P)H-dependent reduction of Δ1-pyrroline-5-carboxylate
+      (P5C) to proline
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/PYCR1/PYCR1-uniprot.txt
+  title: UniProtKB P32322 (P5CR1_HUMAN) record
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Authoritative UniProt record; establishes the core catalytic activity (EC 1.5.1.2),
+      NADH cofactor preference, mitochondrial localization, homodecamer assembly, proline
+      biosynthesis pathway (step 1/1), and the ARCL2B/ARCL3B disease associations.
+- id: PMID:16730026
+  title: Crystal structure of human pyrroline-5-carboxylate reductase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      First human PYCR1 crystal structure; decameric (five homodimers) architecture,
+      Rossmann motif and Glu221 catalytic role, and NAD(P)H-dependent P5C-to-proline
+      catalysis. Directly supports the core MF, homo-oligomerization, and complex.
+- id: PMID:1730675
+  title: Cloning human pyrroline-5-carboxylate reductase cDNA by complementation in
+    Saccharomyces cerevisiae.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original human PYCR1 cDNA cloning by complementation of yeast proline auxotrophy;
+      establishes the gene identity, EC 1.5.1.2 activity, and role in proline biosynthesis.
+- id: PMID:19648921
+  title: Mutations in PYCR1 cause cutis laxa with progeroid features.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Landmark disease paper linking PYCR1 loss-of-function to ARCL2B/ARCL3B; demonstrates
+      mitochondrial localization, altered mitochondrial morphology/membrane potential, and
+      increased apoptosis under oxidative stress in patient fibroblasts.
+- id: PMID:23024808
+  title: Functional specialization in proline biosynthesis of melanoma.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text available; isotope-tracing and kinetic dissection of PYCR1/PYCR2/PYCRL.
+      Shows PYCR1 is mitochondrial and contributes primarily to proline production from
+      glutamate, with NADH preference and product (proline) inhibition.
+- id: PMID:23743200
+  title: DJ-1 cooperates with PYCR1 in cell protection against oxidative stress.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reports a direct DJ-1(PARK7)-PYCR1 interaction that enhances PYCR1 activity, joint
+      mitochondrial co-localization, and a shared anti-oxidative-stress pathway; basis for
+      the oxidative-stress and membrane-potential annotations. Abstract-only in cache.
+- id: PMID:24930674
+  title: Frequent amplification of ORAOV1 gene in esophageal squamous cell cancer
+    promotes an aggressive phenotype via proline metabolism and ROS production.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ORAOV1/LTO1 binds PYCR (peptide mass fingerprinting) and modulates proline metabolism
+      and ROS in esophageal cancer; source of the LTO1 protein-binding annotation. The
+      binding is real but the plain &#34;protein binding&#34; MF term is uninformative.
+- id: PMID:2722838
+  title: Purified human erythrocyte pyrroline-5-carboxylate reductase. Preferential
+    oxidation of NADPH.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Early biochemical purification of human P5C reductase; native 10-12-mer assembly,
+      NADH/NADPH kinetics and cofactor preference. Supports homo-oligomerization and the
+      catalytic activity.
+- id: PMID:28258219
+  title: Resolving the cofactor-binding site in the proline biosynthetic enzyme human
+    pyrroline-5-carboxylate reductase 1.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Definitive structural/kinetic study locating the NADPH cofactor site in the
+      N-terminal Rossmann fold, confirming the decameric (pentamer-of-dimers) assembly,
+      and validating catalysis via the T238A mutant. Supports core MF, complex, and BP.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI high-throughput yeast two-hybrid interactome (source of the TNPO2 binary
+      interaction). Provides only a generic &#34;protein binding&#34; datapoint with no functional
+      annotation for PYCR1.
+- id: Reactome:R-HSA-70664
+  title: PYCR1 decamer reduces (S)-1-pyrroline-5-carboxylate to L-Pro
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction placing the PYCR1 decamer reaction in the mitochondrial matrix;
+      supports the core catalytic activity and the mitochondrial matrix localization.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

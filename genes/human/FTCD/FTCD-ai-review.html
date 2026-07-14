@@ -1,0 +1,4416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTCD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FTCD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95954" target="_blank" class="term-link">
+                        O95954
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FTCD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95954" data-a="DESCRIPTION: FTCD (formimidoyltransferase-cyclodeaminase; gluta..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FTCD (formimidoyltransferase-cyclodeaminase; glutamate formimidoyltransferase-cyclodeaminase) is a bifunctional cytosolic enzyme that catalyzes the last two steps of L-histidine catabolism, channeling the histidine-derived one-carbon (formimino) unit into the folate one-carbon pool. Its N-terminal domain has glutamate formimidoyltransferase activity (EC 2.1.2.5), transferring the formimino group between N-formimidoyl-L-glutamate and tetrahydrofolate to produce L-glutamate and 5-formimino-tetrahydrofolate; its C-terminal domain has formimidoyltetrahydrofolate cyclodeaminase activity (EC 4.3.1.4), converting 5-formimino-tetrahydrofolate to 5,10-methenyl-tetrahydrofolate with release of ammonia. The protein assembles into a homooctamer arranged as a tetramer of dimers forming a planar ring, with polyglutamate (folate) binding sites, and is strongly expressed in liver. Beyond its cytosolic catalytic role it associates reversibly with the Golgi apparatus (the historical &#34;58K Golgi protein&#34;) and, in rodent orthologs, binds microtubules and bundles vimentin filaments. Loss-of-function variants cause glutamate formiminotransferase deficiency (formiminoglutamic aciduria), an autosomal recessive inborn error of folate metabolism marked by urinary excretion of formiminoglutamate (FIGLU). The human protein is also the LC1 autoantigen recognized in type 2 autoimmune hepatitis.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>L-histidine catabolic process to glutamate</h3>
+                <span class="vote-buttons" data-g="O95954" data-a="L-histidine catabolic process to glutamate" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the breakdown of L-histidine, ultimately yielding L-glutamate, and in the process converting tetrahydrofolate to 5-formimino-tetrahydrofolate and then to 5,10-methenyl-tetrahydrofolate.</p>
+
+
+
+            <p><strong>Justification:</strong> The historical GO terms &#39;L-histidine catabolic process to glutamate and formamide&#39; (GO:0019556) and &#39;L-histidine catabolic process to glutamate and formate&#39; (GO:0019557) are obsolete, leaving no live specific term for the folate-coupled histidine-to-glutamate route that FTCD completes. A specific descendant of GO:0006548 (L-histidine catabolic process) that captures the tetrahydrofolate-coupled glutamate-forming route would allow precise annotation.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006548" target="_blank" class="term-link">
+                    L-histidine catabolic process
+                </a>
+            </p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0000139" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of Golgi-membrane localization. FTCD (the &#34;58K Golgi protein&#34;) genuinely associates with the Golgi apparatus, but this is a reversible, secondary localization; catalysis occurs in the cytosol. The &#34;is_active_in&#34; qualifier overstates the case, since the enzymatic activity is cytosolic rather than Golgi-based.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Golgi association is a real, documented secondary property of FTCD but not its core cytosolic catalytic role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030409" target="_blank" class="term-link">
+                                    GO:0030409
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate formimidoyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030409" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic support for the N-terminal formimidoyltransferase activity (EC 2.1.2.5). This is one of the two core catalytic functions of this bifunctional enzyme and is also supported experimentally (IDA, PMID:12815595).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030412" target="_blank" class="term-link">
+                                    GO:0030412
+                                </a>
+                            </span>
+                            <span class="term-label">formimidoyltetrahydrofolate cyclodeaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030412" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic support for the C-terminal cyclodeaminase activity (EC 4.3.1.4), the second core catalytic function of this bifunctional enzyme, consistent with UniProt (by similarity to P53603) and the cyclodeaminase/cyclohydrolase family assignment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level catalytic activity term from InterPro2GO. FTCD is an enzyme, so this is not wrong, but it is far too general given that the two specific catalytic activities (GO:0030409, GO:0030412) are already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative parent term subsumed by the specific catalytic MF annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005542" target="_blank" class="term-link">
+                                    GO:0005542
+                                </a>
+                            </span>
+                            <span class="term-label">folic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005542" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Folic acid binding is a genuine molecular function of FTCD: both catalytic activities use tetrahydrofolate/5-formimino-THF as substrate, and UniProt describes four polyglutamate (folate) binding sites in the homooctamer. Supported by the UniProt Folate-binding keyword and DrugBank folinic-acid/tetrahydrofolate ligand entries.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005794" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi apparatus localization from UniProt Subcellular Location mapping. This is a real secondary localization of FTCD (the &#34;58K Golgi protein&#34;), demonstrated in human hepatocytes as reversible Golgi-membrane association, but the enzyme&#39;s catalytic role is cytosolic.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005814" target="_blank" class="term-link">
+                                    GO:0005814
+                                </a>
+                            </span>
+                            <span class="term-label">centriole</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005814" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Centriole/centrosome localization from UniProt Subcellular Location mapping, based on PubMed:16534631 (Golgi 58K protein localized to the centrosome, more abundant around the mother centriole). A genuine but secondary structural localization, not the catalytic compartment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol localization from UniProt Subcellular Location mapping. This is the primary, catalytically relevant compartment for FTCD (Reactome annotates &#34;Cytosolic FTCD&#34;) and is also supported by human IDA (PMID:14697341).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transferase activity from InterPro2GO. Correct in kind (the formimidoyltransferase is an EC 2 transferase) but far too general; subsumed by GO:0030409.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative parent term subsumed by the specific formimidoyltransferase MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030409" target="_blank" class="term-link">
+                                    GO:0030409
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate formimidoyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030409" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (RHEA/EC 2.1.2.5) support for the formimidoyltransferase activity. Redundant with the experimental IDA and phylogenetic IBA for the same core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030412" target="_blank" class="term-link">
+                                    GO:0030412
+                                </a>
+                            </span>
+                            <span class="term-label">formimidoyltetrahydrofolate cyclodeaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030412" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (RHEA/EC 4.3.1.4) support for the cyclodeaminase activity, the second core catalytic function. Redundant with the IBA/ISS annotations for the same activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a systematic high-throughput binary interactome screen (Rolland et al., Cell 2014). Uninformative about FTCD&#39;s function; the reported partners do not indicate a coherent additional role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Non-informative GO:0005515 from a large-scale interactome map with no FTCD-specific functional follow-up.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI systematic binary interactome map (Luck et al., Nature 2020). Uninformative about FTCD&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Non-informative GO:0005515 from a large-scale interactome map with no FTCD-specific functional follow-up.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0000139" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi-membrane localization transferred from the rat ortholog (O88618) via Ensembl Compara. Consistent with the documented reversible Golgi-membrane association of human FTCD (PMID:14697341); a genuine secondary localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005783" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER localization transferred from the rat ortholog (O88618) via Ensembl Compara, mirroring the UniProt ISS annotation. A secondary membrane-associated pool, not the catalytic compartment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005793" target="_blank" class="term-link">
+                                    GO:0005793
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum-Golgi intermediate compartment</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005793" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ERGIC localization transferred from the rat ortholog (O88618) via Ensembl Compara, mirroring the UniProt ISS annotation. Secondary localization consistent with the endomembrane-associated pool of FTCD.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007010" target="_blank" class="term-link">
+                                    GO:0007010
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeleton organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0007010" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoskeleton organization transferred from the rat ortholog (O88618), reflecting the rodent vimentin-bundling / microtubule-binding property. The dedicated human study found that human FTCD does not interact with cytoskeleton proteins (PMID:14697341), so this process annotation is at best a rodent-specific, non-core property for the human gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Transferred from rodent; the human ortholog paper (PMID:14697341) reports no interaction with cytoskeleton proteins.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008017" target="_blank" class="term-link">
+                                    GO:0008017
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0008017" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Microtubule binding transferred from the rat ortholog (O88618). In rats FTCD binds brain microtubules and vimentin, but the human protein was reported not to interact with cytoskeleton proteins (PMID:14697341); non-core / rodent-specific for human.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Rodent-specific property; not reproduced for human FTCD.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005794" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi apparatus localization by sequence similarity to the fish/rodent ortholog. Real secondary localization of FTCD, not the primary catalytic compartment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030412" target="_blank" class="term-link">
+                                    GO:0030412
+                                </a>
+                            </span>
+                            <span class="term-label">formimidoyltetrahydrofolate cyclodeaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030412" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cyclodeaminase activity (EC 4.3.1.4) by sequence similarity, consistent with UniProt&#39;s by-similarity assignment (from P53603) and the C-terminal cyclodeaminase/cyclohydrolase family. Second core catalytic function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030409" target="_blank" class="term-link">
+                                    GO:0030409
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate formimidoyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12815595" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12815595
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of glutamate formiminotransferase defici...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030409" data-r="PMID:12815595" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for the formimidoyltransferase activity: mutagenesis of FTCD and measurement of formimidoyltransferase activity (disease variants R135C and R299P reduce activity to 61% and 57% of wild-type). This is the core, experimentally established molecular function of FTCD.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030409" target="_blank" class="term-link">
+                                    GO:0030409
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate formimidoyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030409" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Formimidoyltransferase activity by sequence similarity; redundant with the experimental IDA and IBA annotations for the same core catalytic function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0000139" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi-membrane localization by sequence similarity to the rodent ortholog, consistent with the human IDA (PMID:14697341). Genuine secondary localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14697341" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14697341
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the antigenicity of the formiminotransfe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0000139" data-r="PMID:14697341" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct human evidence of Golgi-membrane association: FTCD antigen is found associated with the Golgi membranes and binds reversibly to them. A real secondary localization, but the catalytic function is cytosolic, so this is non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005783" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER localization by sequence similarity to the rodent ortholog. Secondary endomembrane- associated pool, not the catalytic compartment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005793" target="_blank" class="term-link">
+                                    GO:0005793
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum-Golgi intermediate compartment</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005793" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ERGIC localization by sequence similarity to the rodent ortholog. Secondary localization consistent with the endomembrane-associated pool of FTCD.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14697341" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14697341
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the antigenicity of the formiminotransfe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005829" data-r="PMID:14697341" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct human evidence that FTCD is present free in the cytosol (in addition to Golgi-membrane association). The cytosol is the primary, catalytically relevant localization of FTCD.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008017" target="_blank" class="term-link">
+                                    GO:0008017
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0008017" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Microtubule binding by sequence similarity to the rodent ortholog. In rats FTCD binds brain microtubules; however the human protein was reported not to interact with cytoskeleton proteins (PMID:14697341), so this is a rodent-specific / non-core property for human FTCD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Rodent-specific property; not reproduced for human FTCD.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008017" target="_blank" class="term-link">
+                                    GO:0008017
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14697341" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14697341
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the antigenicity of the formiminotransfe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0008017" data-r="PMID:14697341" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Microtubule-binding IDA attributed to PMID:14697341. That paper characterizes rat FTCD as binding brain microtubules and vimentin, but explicitly reports that the human protein does not interact with liver-specific cytoskeleton proteins. The human microtubule-binding is therefore weakly supported / arguably contradicted by the same study; retained (experimental) but flagged as an over-annotation rather than a core human function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited human study reports no cytoskeleton interaction for human FTCD; microtubule binding is a rodent property.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030868" target="_blank" class="term-link">
+                                    GO:0030868
+                                </a>
+                            </span>
+                            <span class="term-label">smooth endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14697341" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14697341
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the antigenicity of the formiminotransfe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0030868" data-r="PMID:14697341" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localization to smooth ER membrane from subcellular fractionation of human hepatocytes. A secondary membrane-associated pool consistent with the ER/Golgi endomembrane associations; not the primary cytosolic catalytic compartment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detection of FTCD in urinary exosome proteomics (one of 1132 proteins identified by LC-MS/MS). This reflects bystander presence in a shed vesicle proteome rather than a functional extracellular localization of a cytosolic metabolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mass-spec bystander detection in a bulk exosome proteome; not a functional localization for this cytosolic enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70920
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005829" data-r="Reactome:R-HSA-70920" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (traceable author statement) places the FTCD reaction in the cytosol (&#34;Cytosolic formimidoyltransferase-cyclodeaminase&#34;). Consistent with the primary catalytic localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10029623" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10029623
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Formiminotransferase cyclodeaminase is an organ-specific aut...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0005737" data-r="PMID:10029623" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm localization (TAS). FTCD was identified as a liver cytosolic autoantigen; the cytoplasm term is correct but general relative to the more precise cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but a general parent of the more informative cytosol annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006760" target="_blank" class="term-link">
+                                    GO:0006760
+                                </a>
+                            </span>
+                            <span class="term-label">folic acid-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10029623" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10029623
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Formiminotransferase cyclodeaminase is an organ-specific aut...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95954" data-a="GO:0006760" data-r="PMID:10029623" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Folate metabolism process annotation. Captures FTCD&#39;s core biological role: it channels the histidine-derived one-carbon (formimino) unit into the folate one-carbon pool, generating 5-formimino-THF and then 5,10-methenyl-THF. The more specific L-histidine catabolic process (GO:0006548) is also applicable and is proposed as an additional term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>N-terminal domain: transfers the formimino group between N-formimidoyl-L-glutamate and tetrahydrofolate (glutamate formimidoyltransferase, EC 2.1.2.5), producing L-glutamate and 5-formimino-tetrahydrofolate as the penultimate step of L-histidine catabolism.</h3>
+                <span class="vote-buttons" data-g="O95954" data-a="FUNCTION: N-terminal domain: transfers the formimino group b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030409" target="_blank" class="term-link">
+                            glutamate formimidoyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006548" target="_blank" class="term-link">
+                                L-histidine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006760" target="_blank" class="term-link">
+                                folic acid-containing compound metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:58928" target="_blank" class="term-link">
+                                N-formimidoyl-L-glutamate
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:57453" target="_blank" class="term-link">
+                                tetrahydrofolate
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12815595" target="_blank" class="term-link">
+                                PMID:12815595
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the R135C mutation reduced formiminotransferase activity to 61% of wild-type, whereas the R299P mutation reduced this activity to 57% of wild-type</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/FTCD/FTCD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=5-formimidoyltetrahydrofolate + L-glutamate = N-formimidoyl-L-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>C-terminal domain: converts 5-formimino-tetrahydrofolate to 5,10-methenyl-tetrahydrofolate with release of ammonia (formimidoyltetrahydrofolate cyclodeaminase, EC 4.3.1.4), the final step that feeds the histidine-derived one-carbon unit into the folate pool.</h3>
+                <span class="vote-buttons" data-g="O95954" data-a="FUNCTION: C-terminal domain: converts 5-formimino-tetrahydro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030412" target="_blank" class="term-link">
+                            formimidoyltetrahydrofolate cyclodeaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006548" target="_blank" class="term-link">
+                                L-histidine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006760" target="_blank" class="term-link">
+                                folic acid-containing compound metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:57456" target="_blank" class="term-link">
+                                5-formimidoyltetrahydrofolate
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/FTCD/FTCD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=5-formimidoyltetrahydrofolate + 2 H(+) = (6R)-5,10-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10029623" target="_blank" class="term-link">
+                            PMID:10029623
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Formiminotransferase cyclodeaminase is an organ-specific autoantigen recognized by sera of patients with autoimmune hepatitis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FTCD is a liver-specific cytosolic autoantigen recognized by anti-liver cytosol type 1 autoantibodies in autoimmune hepatitis, present as a ~240 kDa oligomer.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12815595" target="_blank" class="term-link">
+                            PMID:12815595
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The molecular basis of glutamate formiminotransferase deficiency.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Missense variants R135C and R299P reduce glutamate formimidoyltransferase activity to 61% and 57% of wild-type, establishing FTCD&#39;s catalytic function and its role in glutamate formiminotransferase deficiency (FIGLU-uria).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14697341" target="_blank" class="term-link">
+                            PMID:14697341
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the antigenicity of the formiminotransferase-cyclodeaminase in type 2 autoimmune hepatitis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human FTCD is present free in the cytosol and associated with Golgi membranes (reversible binding); the human protein does not interact with cytoskeleton proteins, unlike rat FTCD which binds brain microtubules and vimentin.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FTCD was among 1132 proteins identified by LC-MS/MS in human urinary exosomes; a bulk proteomic detection rather than evidence of functional extracellular localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic binary interactome (Y2H) screen; source of high-throughput protein-binding IPI annotations for FTCD with no gene-specific functional follow-up.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI systematic binary interactome map; source of high-throughput protein-binding IPI annotations for FTCD with no gene-specific functional follow-up.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70920
+
+                    </span>
+                </div>
+
+                <div class="reference-title">N-formiminoglutamate + tetrahydrofolate =&gt; glutamate + 5-formiminotetrahydrofolate</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosolic FTCD catalyzes N-formiminoglutamate + tetrahydrofolate =&gt; glutamate + 5-formiminotetrahydrofolate; the octameric human enzyme is inferred by homology to the porcine protein.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human FTCD bind or bundle vimentin/microtubules under any physiological condition, or is this activity restricted to rodent orthologs? The human ortholog study (PMID:14697341) reported no cytoskeleton interaction, in contrast to rat FTCD.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O95954" data-a="Q: Does human FTCD bind or bundle vimentin/microtubul..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance, if any, of FTCD&#39;s reversible Golgi-membrane and centrosome association given that its catalytic activity is cytosolic?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O95954" data-a="Q: What is the functional significance, if any, of FT..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute recombinant human FTCD and measure both formimidoyltransferase (EC 2.1.2.5) and cyclodeaminase (EC 4.3.1.4) activities directly on the human enzyme, since the current cyclodeaminase annotation for human FTCD rests on homology rather than direct human assay.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O95954" data-a="EXPERIMENT: Reconstitute recombinant human FTCD and measure bo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test purified human FTCD for direct microtubule and vimentin binding in vitro and by co-localization in human cells, to resolve the human-versus-rodent discrepancy in cytoskeleton association.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O95954" data-a="EXPERIMENT: Test purified human FTCD for direct microtubule an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FTCD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95954" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ftcd-formimidoyltransferase-cyclodeaminase-review-notes">FTCD (Formimidoyltransferase-cyclodeaminase) — review notes</h1>
+<p>UniProt: O95954 (FTCD_HUMAN). Gene: FTCD, HGNC:3974, chromosome 21q22.3.<br />
+All primary facts below are grounded in the local UniProt record<br />
+(<code>file:human/FTCD/FTCD-uniprot.txt</code>), the GOA TSV, and cached publications.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>FTCD is a <strong>bifunctional enzyme</strong> ("Multifunctional enzyme" keyword) that catalyzes<br />
+the last two steps of L-histidine catabolism, channeling the histidine-derived<br />
+one-carbon (formimino) unit into the folate one-carbon pool.</p>
+<p>UniProt names two catalytic activities [file:human/FTCD/FTCD-uniprot.txt "Formimidoyltransferase-cyclodeaminase"]:</p>
+<ol>
+<li><strong>Glutamate formimidoyltransferase</strong> (EC 2.1.2.5), N-terminal domain:<br />
+   [file:human/FTCD/FTCD-uniprot.txt "Reaction=5-formimidoyltetrahydrofolate + L-glutamate = N-formimidoyl-L-"]<br />
+   i.e. transfers the formimino group between N-formimidoyl-L-glutamate and<br />
+   tetrahydrofolate. The physiological direction produces L-glutamate +<br />
+   5-formimino-THF from N-formimino-L-glutamate + THF. → GO:0030409.</li>
+<li><strong>Formimidoyltetrahydrofolate cyclodeaminase</strong> (EC 4.3.1.4), C-terminal domain:<br />
+   [file:human/FTCD/FTCD-uniprot.txt "Reaction=5-formimidoyltetrahydrofolate + 2 H(+) = (6R)-5,10-"]<br />
+   converts 5-formimino-THF to 5,10-methenyl-THF, releasing NH4+. → GO:0030412.</li>
+</ol>
+<p>FUNCTION summary: [file:human/FTCD/FTCD-uniprot.txt "Folate-dependent enzyme, that displays both transferase and"]<br />
+[file:human/FTCD/FTCD-uniprot.txt "formiminoglutamate to the folate pool."]</p>
+<p>PATHWAY: [file:human/FTCD/FTCD-uniprot.txt "Amino-acid degradation; L-histidine degradation into L-"]<br />
+(UniPathway UPA00379/UER00555; Reactome R-HSA-70921 Histidine catabolism, and the<br />
+FTCD reaction R-HSA-70920).</p>
+<p>Domain architecture [file:human/FTCD/FTCD-uniprot.txt]: N-subdomain (1-181) +<br />
+C-subdomain (182-326) = formiminotransferase; linker (327-334); C-terminal<br />
+cyclodeaminase/cyclohydrolase (335-541). Active sites: His82 (formimidoyltransferase),<br />
+residue 412 (cyclodeaminase). SIMILARITY: N-terminal formiminotransferase family;<br />
+C-terminal cyclodeaminase/cyclohydrolase family.</p>
+<p>Quaternary structure: <strong>homooctamer</strong> ("Homooctamer, including four polyglutamate<br />
+binding sites. The subunits are arranged as a tetramer of dimers, and form a planar<br />
+ring-shaped structure") — supports folic-acid (polyglutamate) binding, GO:0005542.</p>
+<h2 id="localization">Localization</h2>
+<p>Primary: <strong>cytosol</strong> — [file:human/FTCD/FTCD-uniprot.txt "Cytoplasm, cytosol"].<br />
+This is where catalysis occurs (Reactome "Cytosolic formimidoyltransferase-cyclodeaminase (FTCD)").<br />
+Human IDA support: PMID:14697341 reports the antigen "free in the cytosol and<br />
+associated with the Golgi membranes".</p>
+<p>Secondary, genuine localizations:<br />
+- <strong>Golgi apparatus / Golgi membrane</strong> — the historical "58K Golgi protein" is FTCD.<br />
+  [file:human/FTCD/FTCD-uniprot.txt "Golgi apparatus"]. Human data: PMID:14697341<br />
+  "The human formiminotransferase-cyclodeaminase binds reversibly to the Golgi<br />
+  membranes". Reversible association, not the catalytic compartment → non-core.<br />
+- <strong>Centrosome / centriole</strong> — [file:human/FTCD/FTCD-uniprot.txt<br />
+  "microtubule\n... organizing center, centrosome, centriole"] from PubMed:16534631<br />
+  (Golgi 58K protein localized to the centrosome; "More abundantly located around the<br />
+  mother centriole"). Secondary/structural → non-core.<br />
+- <strong>ER / ERGIC / smooth ER membrane</strong> — ISS from rat ortholog (O88618) and one human<br />
+  IDA (GO:0030868 smooth ER membrane, PMID:14697341). Membrane-associated pool,<br />
+  non-core.</p>
+<h2 id="cytoskeleton-vimentin-treat-with-caution-for-human">Cytoskeleton / vimentin — treat with caution for human</h2>
+<p>UniProt FUNCTION (by similarity to mouse O88618):<br />
+[file:human/FTCD/FTCD-uniprot.txt "Binds and promotes bundling of vimentin filaments originating"]<br />
+[file:human/FTCD/FTCD-uniprot.txt "from the Golgi."]<br />
+This underlies the microtubule-binding (GO:0008017), cytoskeleton-organization<br />
+(GO:0007010) annotations, all transferred by ISS/IEA from the rat/mouse ortholog.</p>
+<p><strong>Important human-specific caveat:</strong> the dedicated human study explicitly found NO<br />
+cytoskeleton interaction: PMID:14697341 abstract — "human formiminotransferase-<br />
+cyclodeaminase does not interact with liver-specific cytoskeleton proteins" and "In<br />
+rats, this octameric protein ... binds brain microtubules (MTs) and vimentin". So the<br />
+vimentin/MT-bundling activity is documented for rat/mouse but was not reproduced for<br />
+the human protein. The human GO:0008017 microtubule-binding IDA (PMID:14697341,<br />
+BHF-UCL) is therefore weakly supported / arguably contradicted by that same paper's<br />
+abstract; I mark it and the derived cytoskeleton terms as over-annotations rather than<br />
+core, but retain (do not delete experimental annotations).</p>
+<h2 id="disease">Disease</h2>
+<p><strong>Glutamate formiminotransferase deficiency</strong> (FIGLU-URIA, MIM:229100), autosomal<br />
+recessive; second most common inborn error of folate metabolism.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12815595" title="Glutamate formiminotransferase deficiency, an autosomal recessive disorder and the second most common inborn error of folate metabolism, is presumed to be due to defects in the bifunctional enzyme glutamate formiminotransferase- cyclodeaminase (FTCD)">PMID:12815595</a>. Hallmark: urinary FIGLU excretion on histidine loading;<br />
+severe form has megaloblastic anemia + intellectual disability. Disease variants<br />
+R135C and R299P reduce formiminotransferase activity to 61% and 57% of wild-type<br />
+respectively in porcine-FTCD mutagenesis <a href="https://pubmed.ncbi.nlm.nih.gov/12815595" title="the R135C mutation reduced formiminotransferase activity to 61% of wild-type, whereas the R299P mutation reduced this activity to 57% of wild-type">PMID:12815595</a>. This is the experimental basis of the<br />
+GO:0030409 IDA.</p>
+<h2 id="autoantigen-note-not-a-molecular-function">Autoantigen note (not a molecular function)</h2>
+<p>FTCD is the <strong>LC1 autoantigen</strong> in type 2 autoimmune hepatitis<br />
+[PMID:10029623 "This enzyme is a liver-specific antigen recognized by the sera of<br />
+patients with autoimmune hepatitis"; PMID:14697341 "hFTCD is the autoantigen<br />
+recognized by anti-liver cytosol type 1 (LC1) autoantibodies"]. Liver-enriched<br />
+expression (UniProt HPA "Tissue enriched (liver)"). This is a disease/immunology<br />
+observation, not a GO molecular function.</p>
+<h2 id="proteinprotein-interactions">Protein–protein interactions</h2>
+<p>The GO:0005515 "protein binding" IPIs come from two large systematic binary<br />
+interactome screens (PMID:25416956 Rolland et al. Cell 2014; PMID:32296183 Luck et al.<br />
+HuRI, Nature 2020). These are high-throughput Y2H maps with no FTCD-specific<br />
+functional follow-up; the interactors (AGR2, CCDC183, HGS, KASH5, MED4, PALS1) do not<br />
+point to a coherent additional function. Bare "protein binding" is uninformative →<br />
+over-annotated.</p>
+<h2 id="annotation-decisions-summary">Annotation decisions (summary)</h2>
+<ul>
+<li>GO:0030409 glutamate formimidoyltransferase activity — CORE MF (IDA PMID:12815595).</li>
+<li>GO:0030412 formimidoyltetrahydrofolate cyclodeaminase activity — CORE MF (IBA/ISS;<br />
+  by homology, EC 4.3.1.4; second catalytic activity of this bifunctional enzyme).</li>
+<li>GO:0005542 folic acid binding — accept (genuine THF/polyglutamate substrate binding).</li>
+<li>GO:0003824 catalytic activity, GO:0016740 transferase activity — over-annotated<br />
+  (generic parents of the specific catalytic terms).</li>
+<li>GO:0006760 folic acid-containing compound metabolic process — CORE BP (channels<br />
+  one-carbon unit into folate pool). L-histidine catabolic process (GO:0006548) is the<br />
+  more specific missing BP → proposed.</li>
+<li>GO:0005829 cytosol — CORE CC.</li>
+<li>GO:0005737 cytoplasm — accept, non-core (general).</li>
+<li>Golgi (GO:0005794, GO:0000139), centriole (GO:0005814), ER (GO:0005783), ERGIC<br />
+  (GO:0005793), smooth ER membrane (GO:0030868) — genuine secondary localizations,<br />
+  KEEP_AS_NON_CORE.</li>
+<li>GO:0008017 microtubule binding, GO:0007010 cytoskeleton organization — over-annotated<br />
+  for human (rat/mouse property; human paper found no cytoskeleton interaction).</li>
+<li>GO:0005515 protein binding (×2 IPI) — over-annotated (HT interactome, uninformative).</li>
+<li>GO:0070062 extracellular exosome — over-annotated (urinary-exosome proteomics<br />
+  bystander detection).<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95954
+gene_symbol: FTCD
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  FTCD (formimidoyltransferase-cyclodeaminase; glutamate formimidoyltransferase-cyclodeaminase)
+  is a bifunctional cytosolic enzyme that catalyzes the last two steps of L-histidine
+  catabolism, channeling the histidine-derived one-carbon (formimino) unit into the folate
+  one-carbon pool. Its N-terminal domain has glutamate formimidoyltransferase activity
+  (EC 2.1.2.5), transferring the formimino group between N-formimidoyl-L-glutamate and
+  tetrahydrofolate to produce L-glutamate and 5-formimino-tetrahydrofolate; its C-terminal
+  domain has formimidoyltetrahydrofolate cyclodeaminase activity (EC 4.3.1.4), converting
+  5-formimino-tetrahydrofolate to 5,10-methenyl-tetrahydrofolate with release of ammonia.
+  The protein assembles into a homooctamer arranged as a tetramer of dimers forming a planar
+  ring, with polyglutamate (folate) binding sites, and is strongly expressed in liver. Beyond
+  its cytosolic catalytic role it associates reversibly with the Golgi apparatus (the historical
+  &#34;58K Golgi protein&#34;) and, in rodent orthologs, binds microtubules and bundles vimentin
+  filaments. Loss-of-function variants cause glutamate formiminotransferase deficiency
+  (formiminoglutamic aciduria), an autosomal recessive inborn error of folate metabolism
+  marked by urinary excretion of formiminoglutamate (FIGLU). The human protein is also the
+  LC1 autoantigen recognized in type 2 autoimmune hepatitis.
+alternative_products:
+- name: A
+  id: O95954-1
+- name: C
+  id: O95954-2
+  sequence_note: VSP_004260
+- name: D
+  id: O95954-3
+  sequence_note: VSP_004259
+- name: E
+  id: O95954-4
+  sequence_note: VSP_004257, VSP_004258
+existing_annotations:
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of Golgi-membrane localization. FTCD (the &#34;58K Golgi
+      protein&#34;) genuinely associates with the Golgi apparatus, but this is a reversible,
+      secondary localization; catalysis occurs in the cytosol. The &#34;is_active_in&#34; qualifier
+      overstates the case, since the enzymatic activity is cytosolic rather than Golgi-based.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Golgi association is a real, documented secondary property of FTCD but not its core
+      cytosolic catalytic role.
+- term:
+    id: GO:0030409
+    label: glutamate formimidoyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic support for the N-terminal formimidoyltransferase activity (EC 2.1.2.5).
+      This is one of the two core catalytic functions of this bifunctional enzyme and is also
+      supported experimentally (IDA, PMID:12815595).
+    action: ACCEPT
+- term:
+    id: GO:0030412
+    label: formimidoyltetrahydrofolate cyclodeaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic support for the C-terminal cyclodeaminase activity (EC 4.3.1.4), the second
+      core catalytic function of this bifunctional enzyme, consistent with UniProt (by similarity
+      to P53603) and the cyclodeaminase/cyclohydrolase family assignment.
+    action: ACCEPT
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level catalytic activity term from InterPro2GO. FTCD is an enzyme, so this is not
+      wrong, but it is far too general given that the two specific catalytic activities
+      (GO:0030409, GO:0030412) are already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative parent term subsumed by the specific catalytic MF annotations.
+- term:
+    id: GO:0005542
+    label: folic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Folic acid binding is a genuine molecular function of FTCD: both catalytic activities use
+      tetrahydrofolate/5-formimino-THF as substrate, and UniProt describes four polyglutamate
+      (folate) binding sites in the homooctamer. Supported by the UniProt Folate-binding keyword
+      and DrugBank folinic-acid/tetrahydrofolate ligand entries.
+    action: ACCEPT
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Golgi apparatus localization from UniProt Subcellular Location mapping. This is a real
+      secondary localization of FTCD (the &#34;58K Golgi protein&#34;), demonstrated in human hepatocytes
+      as reversible Golgi-membrane association, but the enzyme&#39;s catalytic role is cytosolic.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005814
+    label: centriole
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Centriole/centrosome localization from UniProt Subcellular Location mapping, based on
+      PubMed:16534631 (Golgi 58K protein localized to the centrosome, more abundant around the
+      mother centriole). A genuine but secondary structural localization, not the catalytic
+      compartment.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol localization from UniProt Subcellular Location mapping. This is the primary,
+      catalytically relevant compartment for FTCD (Reactome annotates &#34;Cytosolic FTCD&#34;) and is
+      also supported by human IDA (PMID:14697341).
+    action: ACCEPT
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic transferase activity from InterPro2GO. Correct in kind (the formimidoyltransferase
+      is an EC 2 transferase) but far too general; subsumed by GO:0030409.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative parent term subsumed by the specific formimidoyltransferase MF.
+- term:
+    id: GO:0030409
+    label: glutamate formimidoyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (RHEA/EC 2.1.2.5) support for the formimidoyltransferase activity. Redundant with
+      the experimental IDA and phylogenetic IBA for the same core function.
+    action: ACCEPT
+- term:
+    id: GO:0030412
+    label: formimidoyltetrahydrofolate cyclodeaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (RHEA/EC 4.3.1.4) support for the cyclodeaminase activity, the second core
+      catalytic function. Redundant with the IBA/ISS annotations for the same activity.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a systematic high-throughput binary interactome screen
+      (Rolland et al., Cell 2014). Uninformative about FTCD&#39;s function; the reported partners do
+      not indicate a coherent additional role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Non-informative GO:0005515 from a large-scale interactome map with no FTCD-specific
+      functional follow-up.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI systematic binary interactome map (Luck et al.,
+      Nature 2020). Uninformative about FTCD&#39;s molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Non-informative GO:0005515 from a large-scale interactome map with no FTCD-specific
+      functional follow-up.
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Golgi-membrane localization transferred from the rat ortholog (O88618) via Ensembl Compara.
+      Consistent with the documented reversible Golgi-membrane association of human FTCD
+      (PMID:14697341); a genuine secondary localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER localization transferred from the rat ortholog (O88618) via Ensembl Compara, mirroring
+      the UniProt ISS annotation. A secondary membrane-associated pool, not the catalytic
+      compartment.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005793
+    label: endoplasmic reticulum-Golgi intermediate compartment
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ERGIC localization transferred from the rat ortholog (O88618) via Ensembl Compara, mirroring
+      the UniProt ISS annotation. Secondary localization consistent with the endomembrane-associated
+      pool of FTCD.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0007010
+    label: cytoskeleton organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Cytoskeleton organization transferred from the rat ortholog (O88618), reflecting the
+      rodent vimentin-bundling / microtubule-binding property. The dedicated human study found
+      that human FTCD does not interact with cytoskeleton proteins (PMID:14697341), so this
+      process annotation is at best a rodent-specific, non-core property for the human gene.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Transferred from rodent; the human ortholog paper (PMID:14697341) reports no interaction
+      with cytoskeleton proteins.
+- term:
+    id: GO:0008017
+    label: microtubule binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Microtubule binding transferred from the rat ortholog (O88618). In rats FTCD binds brain
+      microtubules and vimentin, but the human protein was reported not to interact with
+      cytoskeleton proteins (PMID:14697341); non-core / rodent-specific for human.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Rodent-specific property; not reproduced for human FTCD.
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Golgi apparatus localization by sequence similarity to the fish/rodent ortholog. Real
+      secondary localization of FTCD, not the primary catalytic compartment.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0030412
+    label: formimidoyltetrahydrofolate cyclodeaminase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Cyclodeaminase activity (EC 4.3.1.4) by sequence similarity, consistent with UniProt&#39;s
+      by-similarity assignment (from P53603) and the C-terminal cyclodeaminase/cyclohydrolase
+      family. Second core catalytic function.
+    action: ACCEPT
+- term:
+    id: GO:0030409
+    label: glutamate formimidoyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12815595
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental support for the formimidoyltransferase activity: mutagenesis of FTCD and
+      measurement of formimidoyltransferase activity (disease variants R135C and R299P reduce
+      activity to 61% and 57% of wild-type). This is the core, experimentally established
+      molecular function of FTCD.
+    action: ACCEPT
+- term:
+    id: GO:0030409
+    label: glutamate formimidoyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Formimidoyltransferase activity by sequence similarity; redundant with the experimental IDA
+      and IBA annotations for the same core catalytic function.
+    action: ACCEPT
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Golgi-membrane localization by sequence similarity to the rodent ortholog, consistent with
+      the human IDA (PMID:14697341). Genuine secondary localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IDA
+  original_reference_id: PMID:14697341
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct human evidence of Golgi-membrane association: FTCD antigen is found associated with
+      the Golgi membranes and binds reversibly to them. A real secondary localization, but the
+      catalytic function is cytosolic, so this is non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER localization by sequence similarity to the rodent ortholog. Secondary endomembrane-
+      associated pool, not the catalytic compartment.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005793
+    label: endoplasmic reticulum-Golgi intermediate compartment
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ERGIC localization by sequence similarity to the rodent ortholog. Secondary localization
+      consistent with the endomembrane-associated pool of FTCD.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:14697341
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct human evidence that FTCD is present free in the cytosol (in addition to Golgi-membrane
+      association). The cytosol is the primary, catalytically relevant localization of FTCD.
+    action: ACCEPT
+- term:
+    id: GO:0008017
+    label: microtubule binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Microtubule binding by sequence similarity to the rodent ortholog. In rats FTCD binds brain
+      microtubules; however the human protein was reported not to interact with cytoskeleton
+      proteins (PMID:14697341), so this is a rodent-specific / non-core property for human FTCD.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Rodent-specific property; not reproduced for human FTCD.
+- term:
+    id: GO:0008017
+    label: microtubule binding
+  evidence_type: IDA
+  original_reference_id: PMID:14697341
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Microtubule-binding IDA attributed to PMID:14697341. That paper characterizes rat FTCD as
+      binding brain microtubules and vimentin, but explicitly reports that the human protein does
+      not interact with liver-specific cytoskeleton proteins. The human microtubule-binding is
+      therefore weakly supported / arguably contradicted by the same study; retained (experimental)
+      but flagged as an over-annotation rather than a core human function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The cited human study reports no cytoskeleton interaction for human FTCD; microtubule
+      binding is a rodent property.
+- term:
+    id: GO:0030868
+    label: smooth endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:14697341
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localization to smooth ER membrane from subcellular fractionation of human hepatocytes.
+      A secondary membrane-associated pool consistent with the ER/Golgi endomembrane associations;
+      not the primary cytosolic catalytic compartment.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Detection of FTCD in urinary exosome proteomics (one of 1132 proteins identified by LC-MS/MS).
+      This reflects bystander presence in a shed vesicle proteome rather than a functional
+      extracellular localization of a cytosolic metabolic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Mass-spec bystander detection in a bulk exosome proteome; not a functional localization for
+      this cytosolic enzyme.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70920
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (traceable author statement) places the FTCD reaction in the cytosol (&#34;Cytosolic
+      formimidoyltransferase-cyclodeaminase&#34;). Consistent with the primary catalytic localization.
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: TAS
+  original_reference_id: PMID:10029623
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasm localization (TAS). FTCD was identified as a liver cytosolic autoantigen; the
+      cytoplasm term is correct but general relative to the more precise cytosol annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but a general parent of the more informative cytosol annotation.
+- term:
+    id: GO:0006760
+    label: folic acid-containing compound metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10029623
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Folate metabolism process annotation. Captures FTCD&#39;s core biological role: it channels the
+      histidine-derived one-carbon (formimino) unit into the folate one-carbon pool, generating
+      5-formimino-THF and then 5,10-methenyl-THF. The more specific L-histidine catabolic process
+      (GO:0006548) is also applicable and is proposed as an additional term.
+    action: ACCEPT
+core_functions:
+- description: &gt;-
+    N-terminal domain: transfers the formimino group between N-formimidoyl-L-glutamate and
+    tetrahydrofolate (glutamate formimidoyltransferase, EC 2.1.2.5), producing L-glutamate and
+    5-formimino-tetrahydrofolate as the penultimate step of L-histidine catabolism.
+  molecular_function:
+    id: GO:0030409
+    label: glutamate formimidoyltransferase activity
+  directly_involved_in:
+  - id: GO:0006548
+    label: L-histidine catabolic process
+  - id: GO:0006760
+    label: folic acid-containing compound metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:58928
+    label: N-formimidoyl-L-glutamate
+  - id: CHEBI:57453
+    label: tetrahydrofolate
+  supported_by:
+  - reference_id: PMID:12815595
+    supporting_text: &#34;the R135C mutation reduced formiminotransferase activity to 61% of wild-type, whereas the R299P mutation reduced this activity to 57% of wild-type&#34;
+  - reference_id: file:human/FTCD/FTCD-uniprot.txt
+    supporting_text: &#34;Reaction=5-formimidoyltetrahydrofolate + L-glutamate = N-formimidoyl-L-&#34;
+- description: &gt;-
+    C-terminal domain: converts 5-formimino-tetrahydrofolate to 5,10-methenyl-tetrahydrofolate with
+    release of ammonia (formimidoyltetrahydrofolate cyclodeaminase, EC 4.3.1.4), the final step
+    that feeds the histidine-derived one-carbon unit into the folate pool.
+  molecular_function:
+    id: GO:0030412
+    label: formimidoyltetrahydrofolate cyclodeaminase activity
+  directly_involved_in:
+  - id: GO:0006548
+    label: L-histidine catabolic process
+  - id: GO:0006760
+    label: folic acid-containing compound metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:57456
+    label: 5-formimidoyltetrahydrofolate
+  supported_by:
+  - reference_id: file:human/FTCD/FTCD-uniprot.txt
+    supporting_text: &#34;Reaction=5-formimidoyltetrahydrofolate + 2 H(+) = (6R)-5,10-&#34;
+proposed_new_terms:
+- proposed_name: L-histidine catabolic process to glutamate
+  proposed_definition: &gt;-
+    The chemical reactions and pathways resulting in the breakdown of L-histidine, ultimately
+    yielding L-glutamate, and in the process converting tetrahydrofolate to
+    5-formimino-tetrahydrofolate and then to 5,10-methenyl-tetrahydrofolate.
+  justification: &gt;-
+    The historical GO terms &#39;L-histidine catabolic process to glutamate and formamide&#39;
+    (GO:0019556) and &#39;L-histidine catabolic process to glutamate and formate&#39; (GO:0019557) are
+    obsolete, leaving no live specific term for the folate-coupled histidine-to-glutamate route
+    that FTCD completes. A specific descendant of GO:0006548 (L-histidine catabolic process) that
+    captures the tetrahydrofolate-coupled glutamate-forming route would allow precise annotation.
+  proposed_parent:
+    id: GO:0006548
+    label: L-histidine catabolic process
+suggested_questions:
+- question: &gt;-
+    Does human FTCD bind or bundle vimentin/microtubules under any physiological condition, or is
+    this activity restricted to rodent orthologs? The human ortholog study (PMID:14697341) reported
+    no cytoskeleton interaction, in contrast to rat FTCD.
+- question: &gt;-
+    What is the functional significance, if any, of FTCD&#39;s reversible Golgi-membrane and
+    centrosome association given that its catalytic activity is cytosolic?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute recombinant human FTCD and measure both formimidoyltransferase (EC 2.1.2.5) and
+    cyclodeaminase (EC 4.3.1.4) activities directly on the human enzyme, since the current
+    cyclodeaminase annotation for human FTCD rests on homology rather than direct human assay.
+- description: &gt;-
+    Test purified human FTCD for direct microtubule and vimentin binding in vitro and by
+    co-localization in human cells, to resolve the human-versus-rodent discrepancy in cytoskeleton
+    association.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10029623
+  title: Formiminotransferase cyclodeaminase is an organ-specific autoantigen recognized
+    by sera of patients with autoimmune hepatitis.
+  findings:
+  - statement: &gt;-
+      FTCD is a liver-specific cytosolic autoantigen recognized by anti-liver cytosol type 1
+      autoantibodies in autoimmune hepatitis, present as a ~240 kDa oligomer.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes human FTCD identity (cytosolic, liver-specific, oligomeric) and
+      the LC1 autoantigen link; used for the cytoplasm and folate-metabolism TAS annotations.
+- id: PMID:12815595
+  title: The molecular basis of glutamate formiminotransferase deficiency.
+  findings:
+  - statement: &gt;-
+      Missense variants R135C and R299P reduce glutamate formimidoyltransferase activity to 61% and
+      57% of wild-type, establishing FTCD&#39;s catalytic function and its role in glutamate
+      formiminotransferase deficiency (FIGLU-uria).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Primary experimental basis for the GO:0030409 IDA and for the disease
+      association (formiminoglutamic aciduria / FIGLU excretion).
+- id: PMID:14697341
+  title: Characterization of the antigenicity of the formiminotransferase-cyclodeaminase
+    in type 2 autoimmune hepatitis.
+  findings:
+  - statement: &gt;-
+      Human FTCD is present free in the cytosol and associated with Golgi membranes (reversible
+      binding); the human protein does not interact with cytoskeleton proteins, unlike rat FTCD
+      which binds brain microtubules and vimentin.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Source of the human cytosol/Golgi IDA localizations and the key caveat that
+      human FTCD does not bind cytoskeleton, undercutting the microtubule-binding annotations.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings:
+  - statement: &gt;-
+      FTCD was among 1132 proteins identified by LC-MS/MS in human urinary exosomes; a bulk
+      proteomic detection rather than evidence of functional extracellular localization.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. High-throughput exosome proteomics; supports the HDA extracellular-exosome
+      annotation but is a bystander detection.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      Systematic binary interactome (Y2H) screen; source of high-throughput protein-binding IPI
+      annotations for FTCD with no gene-specific functional follow-up.
+    reference_section_type: METHODS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Large-scale interactome map; the resulting GO:0005515 annotation is
+      non-informative for FTCD function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI systematic binary interactome map; source of high-throughput protein-binding IPI
+      annotations for FTCD with no gene-specific functional follow-up.
+    reference_section_type: METHODS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Large-scale interactome map; the resulting GO:0005515 annotation is
+      non-informative for FTCD function.
+- id: Reactome:R-HSA-70920
+  title: N-formiminoglutamate + tetrahydrofolate =&gt; glutamate + 5-formiminotetrahydrofolate
+  findings:
+  - statement: &gt;-
+      Cytosolic FTCD catalyzes N-formiminoglutamate + tetrahydrofolate =&gt; glutamate +
+      5-formiminotetrahydrofolate; the octameric human enzyme is inferred by homology to the
+      porcine protein.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome pathway step for FTCD; supports cytosolic localization and the formimidoyltransferase
+      reaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

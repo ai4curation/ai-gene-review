@@ -1,0 +1,5323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODC1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ODC1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P11926" target="_blank" class="term-link">
+                        P11926
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ODC1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P11926" data-a="DESCRIPTION: ODC1 is ornithine decarboxylase (EC 4.1.1.17), the..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ODC1 is ornithine decarboxylase (EC 4.1.1.17), the pyridoxal 5&#39;-phosphate (PLP)-dependent lyase that catalyzes the first and rate-limiting step of polyamine biosynthesis: decarboxylation of L-ornithine to putrescine plus CO2. Putrescine is the precursor of the higher polyamines spermidine and spermine, which are essential for cell proliferation, growth and differentiation. The enzyme is an obligate homodimer whose two active sites are built from residues of both subunits (Lys69 covalently binds the PLP cofactor; Cys360 acts as the proton donor), so only the dimer is catalytically active. ODC is among the most tightly regulated enzymes in eukaryotes: it has an exceptionally short half-life and its degradation is triggered by ornithine decarboxylase antizymes (OAZ1/2/3), which bind ODC monomers, prevent productive dimerization and target ODC for ubiquitin-independent destruction by the 26S proteasome; antizyme inhibitors (AZIN1/AZIN2) counteract this. ODC acts in the cytosol (and nucleus). In humans, gain-of-function C-terminal truncating variants that escape nonsense-mediated decay cause Bachmann-Bupp syndrome, and ODC/polyamine metabolism is a well-established cancer drug target (irreversibly inhibited by alpha-difluoromethylornithine/eflornithine).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009446" target="_blank" class="term-link">
+                                    GO:0009446
+                                </a>
+                            </span>
+                            <span class="term-label">putrescine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0009446" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the rate-limiting step of putrescine biosynthesis. This is a core biological process for ODC1 and is well supported by the enzyme&#39;s catalytic activity and pathway placement.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the first and rate-limiting step of polyamine biosynthesis that converts ornithine into putrescine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) is_active_in cytoplasm. ODC is a cytosolic enzyme; cytoplasm/cytosol is its correct localization. The more precise cytosol (GO:0005829) is also annotated by Reactome.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    GO:0004586
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0004586" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation of the defining catalytic activity of ODC1. This is the core molecular function and is directly supported by experimental structural/kinetic characterization of human ODC.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-ornithine + H(+) = putrescine + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) annotation of the generic root-level catalytic activity. This is correct but far too general given that the specific activity (ornithine decarboxylase, GO:0004586) is experimentally established. Replace with the specific molecular function.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    ornithine decarboxylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-ornithine + H(+) = putrescine + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    GO:0004586
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0004586" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA, combined-method / EC 4.1.1.17 mapping) annotation of the core catalytic activity. Correct and redundant with the experimental GO:0004586 annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=4.1.1.17</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006595" target="_blank" class="term-link">
+                                    GO:0006595
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0006595" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation to the broad parent process. Correct but general; the specific putrescine/polyamine biosynthetic process better captures ODC&#39;s role. Kept as a non-core, correct-but-general grouping term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">which is the precursor for the polyamines, spermidine and spermine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006596" target="_blank" class="term-link">
+                                    GO:0006596
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0006596" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) annotation to polyamine biosynthetic process. Correct; ODC catalyzes the committed first step of polyamine biosynthesis. Slightly more general than the specific putrescine biosynthetic process but accurate.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the first and rate-limiting step of polyamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale binary interactome screen (partner Q92993 = KAT5). Uninformative as a molecular function; not removed per policy for IPI protein-binding, but flagged as over-annotated. ODC&#39;s biologically meaningful binding (antizyme OAZ and antizyme inhibitor AZIN) is captured elsewhere.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale AP-MS interactome study (partner Q9UMX2 = OAZ3, an antizyme). The uninformative &#34;protein binding&#34; term is marked over-annotated; the underlying OAZ interaction is biologically real and captured by the antizyme-binding function in core_functions.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29892012
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An interactome perturbation framework prioritizes damaging m...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005515" data-r="PMID:29892012" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from an interactome-perturbation screen (partner Q9H8Y8 = GORASP2). Uninformative molecular-function term; marked over-annotated per policy (IPI protein binding not removed).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a variant-effect interactome study (partner Q9UMX2 = OAZ3). Uninformative term; over-annotated. The OAZ (antizyme) interaction itself is meaningful and captured in core_functions.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI reference binary interactome (partners include Q92993 = KAT5, Q9H8Y8 = GORASP2, Q9UMX2-2 = OAZ3). Uninformative MF term; over-annotated per policy.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a cell-specific AP-MS interactome study (partner Q9UMX2 = OAZ3). Uninformative term; over-annotated. OAZ binding is real and captured separately.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005737" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-projected (IEA) cytoplasm localization from mouse ortholog (P00860). Consistent with the established cytosolic localization of ODC.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009446" target="_blank" class="term-link">
+                                    GO:0009446
+                                </a>
+                            </span>
+                            <span class="term-label">putrescine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0009446" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-projected (IEA) putrescine biosynthetic process from mouse ortholog. Core biological process; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">converts ornithine into putrescine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042176" target="_blank" class="term-link">
+                                    GO:0042176
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0042176" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-projected (IEA) &#34;regulation of protein catabolic process&#34;. This reflects the fact that ODC is itself a substrate of antizyme-directed ubiquitin-independent proteasomal degradation and that its C-terminal degradation elements are the target of that pathway. As a process ascribed to ODC it reads as ODC regulating catabolism, which over-interprets the biology (ODC is the regulated target, not the regulator). Not a core function; retained as a non-core, indirect involvement.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Additionally, OAZ1 targets ODC monomers for ubiquitin-independent proteolytic destruction by the 26S proteasome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0042803" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-projected (IEA) homodimerization activity. Well supported: ODC is an obligate homodimer and only the dimer is catalytically active, with active sites built from residues of both subunits. Core to the enzyme&#39;s function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer. Only the dimer is catalytically active, as the active sites are constructed of residues from both monomers</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006595" target="_blank" class="term-link">
+                                    GO:0006595
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-351202
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0006595" data-r="Reactome:R-HSA-351202" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to the broad polyamine metabolic process (&#34;Metabolism of polyamines&#34;). Correct but general; kept as a non-core grouping term, subsumed by the specific putrescine/polyamine biosynthetic process annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-351202
+
+                                </span>
+
+                                <div class="support-text">Polyamine levels are tightly regulated at the level of the enzyme ornithine decarboxylase (ODC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042978" target="_blank" class="term-link">
+                                    GO:0042978
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10623504" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10623504
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human ornithine decarboxylase at 2.1 A ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0042978" data-r="PMID:10623504" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term means &#34;binds to and increases ornithine decarboxylase activity&#34;, i.e. it describes an activator OF ODC (the role of antizyme inhibitors AZIN1/AZIN2), not the decarboxylase itself. ODC1 is the enzyme, not its activator, so this is a wrong-direction over-annotation. The cited reference (PMID:10623504) is the human ODC crystal structure and concerns antizyme-binding/structure, not an activator activity of ODC. Per policy an experimental (EXP) annotation is not removed; marked as over-annotated. The genuine molecular function is ornithine decarboxylase activity (GO:0004586).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10623504" target="_blank" class="term-link">
+                                        PMID:10623504
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ornithine decarboxylase (ODC, EC 4.1.1.17) performs the first step in polyamine biosynthesis, the decarboxylation of ornithine to putrescine.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    GO:0004586
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17407445" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17407445
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A structural insight into the inhibition of human and Leishm...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0004586" data-r="PMID:17407445" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of the core ornithine decarboxylase activity, supported by structural and kinetic characterization of human ODC (KM 0.08 mM for L-ornithine; EC 4.1.1.17 assigned from this study). Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17407445" target="_blank" class="term-link">
+                                        PMID:17407445
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the first committed enzyme in the polyamine biosynthesis pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-350567
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005829" data-r="Reactome:R-HSA-350567" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol localization (antizyme-binding reaction context). ODC is cytosolic; correct core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-350578
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005829" data-r="Reactome:R-HSA-350578" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol localization (NQO1-ODC interaction context). Redundant with other cytosol annotations; correct core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-353125
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005829" data-r="Reactome:R-HSA-353125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol localization (proteasomal degradation-of-ODC context). Redundant with other cytosol annotations; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70692
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005829" data-r="Reactome:R-HSA-70692" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol localization tied directly to the ornithine =&gt; putrescine + CO2 reaction. Correct core localization for the enzymatic activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9955574
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005829" data-r="Reactome:R-HSA-9955574" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol localization (ODC dimerization context). Consistent with cytosolic dimeric holoenzyme; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-9955574
+
+                                </span>
+
+                                <div class="support-text">Cytosolic pyridoxal phosphate-conjugated ornithine decarboxylase 1 (PXLP-K69-ODC1) monomers dimerize to form catalytically active ODC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator ISS transfer (from mouse ortholog P00860) of cytoplasm localization. Consistent with established cytosolic localization; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70692
+
+                                </span>
+
+                                <div class="support-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    GO:0004586
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0004586" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator ISS transfer (from mouse ortholog P00860) of the core ornithine decarboxylase activity. Correct and redundant with the experimental GO:0004586 annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-ornithine + H(+) = putrescine + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    GO:0004586
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17900240
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human ornithine decarboxylase paralogue (ODCp) is an antizym...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0004586" data-r="PMID:17900240" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) annotation of ornithine decarboxylase activity. The cited study measured ODC activity and ODC degradation to characterize the ODC/antizyme/antizyme-inhibitor system, using human ODC as the enzyme. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link">
+                                        PMID:17900240
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ODC (ornithine decarboxylase), the rate-limiting enzyme in polyamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009446" target="_blank" class="term-link">
+                                    GO:0009446
+                                </a>
+                            </span>
+                            <span class="term-label">putrescine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0009446" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator ISS transfer (from mouse ortholog) of putrescine biosynthetic process. Core biological process; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">converts ornithine into putrescine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042176" target="_blank" class="term-link">
+                                    GO:0042176
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0042176" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator ISS transfer of &#34;regulation of protein catabolic process&#34;. As with the IEA version, this reflects ODC being the target of antizyme-directed proteasomal degradation (its C-terminus carries degradation determinants) rather than ODC actively regulating catabolism. Not a core function; kept as non-core indirect involvement.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Additionally, OAZ1 targets ODC monomers for ubiquitin-independent proteolytic destruction by the 26S proteasome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0042803" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator ISS transfer (from mouse ortholog) of homodimerization activity. Strongly supported: ODC functions only as a homodimer with shared active sites. Core to activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ODC1/ODC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer. Only the dimer is catalytically active, as the active sites are constructed of residues from both monomers</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009615" target="_blank" class="term-link">
+                                    GO:0009615
+                                </a>
+                            </span>
+                            <span class="term-label">response to virus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16548883" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16548883
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transcriptomic and proteomic analyses of rhabdomyosarcoma ce...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0009615" data-r="PMID:16548883" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEP annotation from a transcriptomic/proteomic study reporting that ODC1 protein and mRNA are down-regulated upon enterovirus 71 infection of rhabdomyosarcoma cells. This is a differential-expression observation in one viral context, not evidence of a dedicated antiviral function of ODC1. Kept as a non-core annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16548883" target="_blank" class="term-link">
+                                        PMID:16548883
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Western blot analyses of APOB, CLU, DCAMKL1 and ODC1 proteins correlated protein and transcript levels.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                                    GO:0004586
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2317811" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2317811
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of human chromosome 2 ornithine decarboxylase gen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11926" data-a="GO:0004586" data-r="PMID:2317811" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation of ornithine decarboxylase activity. The cited study demonstrated that the human chromosome-2 ODC gene encodes functional ODC by expressing it in ODC-deficient CHO cells, restoring 70-400-fold ODC activity. Core molecular function; correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2317811" target="_blank" class="term-link">
+                                        PMID:2317811
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the ODC gene from human chromosome 2 encodes functional ODC protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ornithine decarboxylase: PLP-dependent decarboxylation of L-ornithine to putrescine (+ CO2), the committed and rate-limiting step of polyamine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="P11926" data-a="FUNCTION: Ornithine decarboxylase: PLP-dependent decarboxyla..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                            ornithine decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ODC1/ODC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=L-ornithine + H(+) = putrescine + CO2</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17407445" target="_blank" class="term-link">
+                                PMID:17407445
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the first committed enzyme in the polyamine biosynthesis pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds the pyridoxal 5&#39;-phosphate cofactor (covalently via Lys69) required for the decarboxylation reaction.</h3>
+                <span class="vote-buttons" data-g="P11926" data-a="FUNCTION: Binds the pyridoxal 5&#39;-phosphate cofactor (covalen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ODC1/ODC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Forms an obligate homodimer; only the dimer is catalytically active because each of the two active sites is assembled from residues of both subunits.</h3>
+                <span class="vote-buttons" data-g="P11926" data-a="FUNCTION: Forms an obligate homodimer; only the dimer is cat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                            protein homodimerization activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ODC1/ODC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Homodimer. Only the dimer is catalytically active, as the active sites are constructed of residues from both monomers</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts in the cytosol as a homodimer to produce putrescine, the precursor of spermidine and spermine, driving the polyamine biosynthetic pathway.</h3>
+                <span class="vote-buttons" data-g="P11926" data-a="FUNCTION: Acts in the cytosol as a homodimer to produce putr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004586" target="_blank" class="term-link">
+                            ornithine decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ODC1/ODC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the first and rate-limiting step of polyamine biosynthesis that converts ornithine into putrescine</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-70692
+
+                        </span>
+
+                        <div class="finding-text">L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10623504" target="_blank" class="term-link">
+                            PMID:10623504
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human ornithine decarboxylase at 2.1 A resolution: structural insights to antizyme binding.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human ODC crystal structure at 2.1 A; describes the C-terminal basal degradation elements and antizyme-binding surface, establishing the dimeric enzyme and antizyme-mediated degradation model.</div>
+
+                        <div class="finding-text">"Ornithine decarboxylase (ODC, EC 4.1.1.17) performs the first step in polyamine biosynthesis, the decarboxylation of ornithine to putrescine."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16548883" target="_blank" class="term-link">
+                            PMID:16548883
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transcriptomic and proteomic analyses of rhabdomyosarcoma cells reveal differential cellular gene expression in response to enterovirus 71 infection.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ODC1 protein and transcript are differentially expressed (down-regulated) in rhabdomyosarcoma cells infected with enterovirus 71; basis of the response-to-virus IEP annotation.</div>
+
+                        <div class="finding-text">"Western blot analyses of APOB, CLU, DCAMKL1 and ODC1 proteins correlated protein and transcript levels."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17407445" target="_blank" class="term-link">
+                            PMID:17407445
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A structural insight into the inhibition of human and Leishmania donovani ornithine decarboxylases by 1-amino-oxy-3-aminopropane.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural and kinetic characterization of human ODC (KM 0.08 mM for L-ornithine; EC 4.1.1.17). Two active sites at the dimer interface with Lys69 and Cys360 from opposite monomers; PLP-dependent enzyme.</div>
+
+                        <div class="finding-text">"The two active sites are found at the dimer interface, between the N-terminal domain of one monomer and the C-terminal domain of the other, with Lys 69 and Cys 360 contributing to each active site from opposite monomers"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link">
+                            PMID:17900240
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human ornithine decarboxylase paralogue (ODCp) is an antizyme inhibitor but not an arginine decarboxylase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Uses ODC-activity and ODC-degradation assays with human ODC to establish that the ODC paralogue is an antizyme inhibitor (AZIN2); reaffirms ODC as the rate-limiting polyamine-biosynthesis enzyme regulated by antizymes.</div>
+
+                        <div class="finding-text">"ODC (ornithine decarboxylase), the rate-limiting enzyme in polyamine biosynthesis, is regulated by specific inhibitors, AZs (antizymes)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2317811" target="_blank" class="term-link">
+                            PMID:2317811
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of human chromosome 2 ornithine decarboxylase gene in ornithine decarboxylase-deficient Chinese hamster ovary cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The human chromosome-2 ODC gene encodes functional ODC: expression in ODC-deficient CHO cells restored 70-400-fold ODC activity and increased growth, showing ODC/putrescine is required for cell proliferation.</div>
+
+                        <div class="finding-text">"the ODC gene from human chromosome 2 encodes functional ODC protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput binary interactome map; source of a bare &#34;protein binding&#34; IPI annotation (partner KAT5). No specific functional interpretation for ODC1.</div>
+
+                        <div class="finding-text">"a systematic map of ?14,000 high-quality human binary protein-protein interactions"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale AP-MS interactome study; source of a bare &#34;protein binding&#34; IPI annotation (partner OAZ3).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link">
+                            PMID:29892012
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An interactome perturbation framework prioritizes damaging missense mutations for developmental disorders.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Interactome-perturbation screen; source of a bare &#34;protein binding&#34; IPI annotation (partner GORASP2).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Variant-effect interactome study; source of a bare &#34;protein binding&#34; IPI annotation (partner OAZ3).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI reference binary interactome; source of a bare &#34;protein binding&#34; IPI annotation (partners KAT5, GORASP2, OAZ3).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cell-specific AP-MS interactome study; source of a bare &#34;protein binding&#34; IPI annotation (partner OAZ3).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-350567
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Antizyme OAZ binds to Ornithine decarboxylase</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Antizymes (OAZ) bind ODC monomers, preventing dimerization into active ODC; AZIN1 negatively regulates the OAZ-ODC interaction by binding OAZ.</div>
+
+                        <div class="finding-text">"Members of the OAZ (Ornithine decarboxylase antizyme) protein family bind ODC (ornithine decarboxylase) monomers"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-350578
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NQO1 interaction with ODC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NQO1 stabilizes ODC and protects it from proteasomal degradation.</div>
+
+                        <div class="finding-text">"ODC is stabilized and protected from proteasomal degradation by interaction with NQO1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-351202
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metabolism of polyamines</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Polyamines are derived from ornithine by decarboxylation; polyamine levels are tightly regulated at the level of ODC.</div>
+
+                        <div class="finding-text">"Polyamine levels are tightly regulated at the level of the enzyme ornithine decarboxylase (ODC)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-353125
+
+                    </span>
+                </div>
+
+                <div class="reference-title">26S proteosome degrades ODC holoenzyme complex</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ODC turnover by the 26S proteasome is ubiquitin-independent; antizyme association (not ubiquitination) directs ODC to the proteasome.</div>
+
+                        <div class="finding-text">"Proteolytic processing of ODC is highly unusual in that ubiquitination is not required for this degradation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70692
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ornithine =&gt; putrescine + CO2</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosolic ODC, conjugated with pyridoxal phosphate and active as a dimer, converts L-ornithine into putrescine.</div>
+
+                        <div class="finding-text">"L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase (ODC). The enzyme, conjugated with pyridoxal phosphate, is active as a dimer"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9955574
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ODC dimerizes</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PLP-conjugated ODC1 monomers dimerize to form the catalytically active enzyme.</div>
+
+                        <div class="finding-text">"monomers dimerize to form catalytically active ODC"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ODC1/ODC1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry P11926 (DCOR_HUMAN), Ornithine decarboxylase</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Authoritative UniProt record: catalytic activity (L-ornithine + H+ = putrescine + CO2, EC 4.1.1.17), PLP cofactor, obligate homodimer with shared active sites, antizyme-mediated ubiquitin-independent degradation, and Bachmann-Bupp syndrome gain-of-function truncating variants.</div>
+
+                        <div class="finding-text">"Catalyzes the first and rate-limiting step of polyamine biosynthesis that converts ornithine into putrescine"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond the cytosol, under what conditions does ODC1 localize to or act in the nucleus, and is any nuclear pool functionally distinct?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P11926" data-a="Q: Beyond the cytosol, under what conditions does ODC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of the ODC1 C-terminal degradation elements to dissect how Bachmann-Bupp gain-of-function truncations increase enzyme stability/activity and putrescine output, paired with polyamine metabolomics in patient-derived cells.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P11926" data-a="EXPERIMENT: Structure-guided mutagenesis of the ODC1 C-termina..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ODC1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P11926" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="odc1-ornithine-decarboxylase-1-review-notes">ODC1 (Ornithine decarboxylase 1) — review notes</h1>
+<p>UniProt: P11926 (DCOR_HUMAN). Gene: ODC1. HGNC:8109. Human (NCBITaxon:9606).<br />
+EC 4.1.1.17. 461 aa.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>ODC1 is <strong>ornithine decarboxylase</strong>, the PLP (pyridoxal 5'-phosphate)-dependent<br />
+lyase that catalyzes the <strong>first and rate-limiting step of polyamine biosynthesis</strong>:<br />
+decarboxylation of L-ornithine to putrescine + CO2.</p>
+<ul>
+<li>Reaction (UniProt CATALYTIC ACTIVITY): "L-ornithine + H(+) = putrescine + CO2"<br />
+  (Rhea:22964; EC 4.1.1.17) [file:human/ODC1/ODC1-uniprot.txt].</li>
+<li>Function (UniProt): "Catalyzes the first and rate-limiting step of polyamine<br />
+  biosynthesis that converts ornithine into putrescine, which is the precursor for<br />
+  the polyamines, spermidine and spermine" [file:human/ODC1/ODC1-uniprot.txt;<br />
+  ECO:0000269|PubMed:17900240].</li>
+<li>Cofactor: pyridoxal 5'-phosphate (ChEBI:CHEBI:597326), covalently attached as<br />
+  N6-(pyridoxal phosphate)lysine at Lys69 [file:human/ODC1/ODC1-uniprot.txt MOD_RES 69].</li>
+<li>Pathway: "Amine and polyamine biosynthesis; putrescine biosynthesis via<br />
+  L-ornithine pathway; putrescine from L-ornithine: step 1/1" (UniPathway<br />
+  UPA00535/UER00288) [file:human/ODC1/ODC1-uniprot.txt].</li>
+</ul>
+<h2 id="quaternary-structure-obligate-homodimer">Quaternary structure — obligate homodimer</h2>
+<ul>
+<li>UniProt SUBUNIT: "Homodimer. Only the dimer is catalytically active, as the<br />
+  active sites are constructed of residues from both monomers" [file:human/ODC1/ODC1-uniprot.txt].</li>
+<li>The crystal structure paper confirms the dimeric enzyme with two active sites at<br />
+  the dimer interface: "The two active sites are found at the dimer interface,<br />
+  between the N-terminal domain of one monomer and the C-terminal domain of the<br />
+  other, with Lys 69 and Cys 360 contributing to each active site from opposite<br />
+  monomers" [PMID:17407445 full text, "The two active sites are found at the dimer<br />
+  interface"]. ACT_SITE 360 is "Proton donor; shared with dimeric partner"<br />
+  [file:human/ODC1/ODC1-uniprot.txt]. Structure of human ODC solved at 2.1 Å<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10623504">PMID:10623504</a>.</li>
+<li>Reactome models the dimerization step: "Cytosolic pyridoxal phosphate-conjugated<br />
+  ornithine decarboxylase 1 (PXLP-K69-ODC1) monomers dimerize to form catalytically<br />
+  active ODC" [Reactome:R-HSA-9955574].</li>
+</ul>
+<h2 id="kinetics-catalytic-validation">Kinetics / catalytic validation</h2>
+<ul>
+<li>KM = 0.08 mM for L-ornithine; kcat = 3.3 sec^-1 [file:human/ODC1/ODC1-uniprot.txt;<br />
+  ECO:0000269|PubMed:17407445]. Catalytic activity assigned EC 4.1.1.17 from this<br />
+  structural/biochemical study <a href="https://pubmed.ncbi.nlm.nih.gov/17407445">PMID:17407445</a>. This is the basis for the<br />
+  IDA/EXP annotations of ornithine decarboxylase activity (GO:0004586).</li>
+</ul>
+<h2 id="regulation-antizyme-antizyme-inhibitor-axis-the-odc-hallmark">Regulation — antizyme / antizyme inhibitor axis (the ODC hallmark)</h2>
+<p>ODC is one of the most tightly regulated enzymes known; it has a very short<br />
+half-life and is degraded by a ubiquitin-independent mechanism.</p>
+<ul>
+<li>UniProt ACTIVITY REGULATION: "Inhibited by antizymes (AZs) OAZ1, OAZ2 and OAZ3 in<br />
+  response to polyamine levels. AZs inhibit the assembly of the functional homodimer<br />
+  by binding to ODC monomers. Additionally, OAZ1 targets ODC monomers for<br />
+  ubiquitin-independent proteolytic destruction by the 26S proteasome"<br />
+  [file:human/ODC1/ODC1-uniprot.txt; PMID:17900240].</li>
+<li>Antizyme (OAZ1/2/3) binds ODC monomers, blocks productive dimerization, and<br />
+  targets ODC to the 26S proteasome without ubiquitination<br />
+  [Reactome:R-HSA-350567; R-HSA-353125; R-HSA-350562].</li>
+<li>Antizyme inhibitor AZIN1 counteracts antizyme by sequestering it<br />
+  [Reactome:R-HSA-350567].</li>
+<li>NQO1 stabilizes ODC and protects it from proteasomal degradation<br />
+  [Reactome:R-HSA-350578].</li>
+<li>Structural basis of antizyme regulation solved as ODC:OAZ1 (PMID:26305948) and<br />
+  ODC:OAZ1:AZIN complexes (PMID:26443277) [cited in UniProt DR; not separately in GOA].</li>
+</ul>
+<p>Note on GO:0042978 "ornithine decarboxylase activator activity": this term<br />
+("Binds to and increases ornithine decarboxylase activity") describes an<br />
+antizyme-inhibitor–like activator, NOT the enzyme itself. ODC1 is the decarboxylase,<br />
+not its activator; the antizyme inhibitors (AZIN1/AZIN2) are the activators of ODC.<br />
+The GO:0042978 EXP annotation (via Reactome, PMID:10623504) is a directionality<br />
+over-annotation and is marked as over-annotated (experimental → not removed).</p>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosolic enzyme. UniProt-curated GO (DR lines): C:cytoplasm ISS, C:cytosol TAS<br />
+  (Reactome). Reactome consistently describes "cytosolic ornithine decarboxylase"<br />
+  [Reactome:R-HSA-70692]. IBA is_active_in cytoplasm [ODC1-goa.tsv]. Cytoplasm/cytosol<br />
+  is the core localization.</li>
+</ul>
+<h2 id="post-translational-modification-inhibition">Post-translational modification / inhibition</h2>
+<ul>
+<li>S-nitrosylation inhibits the enzyme; S-nitrosylated on Cys360 in the active site<br />
+  [file:human/ODC1/ODC1-uniprot.txt PTM; PMID:10462479, PMID:11461922]. (Not in GOA.)</li>
+<li>Phosphoserine 303 (by CK2) [file:human/ODC1/ODC1-uniprot.txt MOD_RES 303].</li>
+</ul>
+<h2 id="response-to-virus-weak">Response to virus (weak)</h2>
+<ul>
+<li>ODC1 protein/mRNA down-regulated in response to enterovirus 71 (EV71) infection<br />
+  in rhabdomyosarcoma cells [PMID:16548883, abstract: "Western blot analyses of APOB,<br />
+  CLU, DCAMKL1 and ODC1 proteins correlated protein and transcript levels"; UniProt<br />
+  INDUCTION "Down-regulated in response to enterovirus 71 (EV71) infection"]. This is<br />
+  the basis of the GO:0009615 "response to virus" IEP annotation. It reflects<br />
+  differential expression in one viral-infection transcriptomic/proteomic study, not<br />
+  a dedicated antiviral function of ODC1; kept as non-core.</li>
+</ul>
+<h2 id="interactome-high-throughput-annotations">Interactome (high-throughput) annotations</h2>
+<p>Bare GO:0005515 "protein binding" IPI annotations come from proteome-scale binary<br />
+interactome / AP-MS screens (Rolland 2014 PMID:25416956; Luck 2020 PMID:32296183;<br />
+Huttlin 2017 PMID:28514442, 2021 PMID:33961781; Sahni 2015 PMID:29892012;<br />
+Fragoza 2019 PMID:31515488). Partners recorded in GOA WITH/FROM:<br />
+- Q9UMX2 = OAZ3 (ornithine decarboxylase antizyme 3) — biologically meaningful<br />
+  (antizyme binding; UniProt INTERACTION lists OAZ3).<br />
+- Q92993 = KAT5 (histone acetyltransferase KAT5/TIP60).<br />
+- Q9H8Y8 = GORASP2 (Golgi reassembly-stacking protein 2).<br />
+Per policy, bare "protein binding" IPI is not removed; marked over-annotated (the term<br />
+is uninformative). The biologically informative binding — antizyme (OAZ) and antizyme<br />
+inhibitor (AZIN) — is captured in core_functions and via the regulation annotations.</p>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Bachmann-Bupp syndrome (BABS, MIM:619075): autosomal dominant; global developmental<br />
+  delay, alopecia/hypotrichosis, macrocephaly, facial dysmorphism, white-matter<br />
+  abnormalities. Caused by <strong>gain-of-function C-terminal truncating variants</strong> distal<br />
+  enough to escape nonsense-mediated decay, giving ODC1 superactivity/stabilization<br />
+  [file:human/ODC1/ODC1-uniprot.txt DISEASE; PMID:30239107 (448-461 del),<br />
+  PMID:30475435 (419-461 del)]. VAR_085001 characterized as "gain-of-function variant<br />
+  resulting in increased putrescine biosynthesis ... increased ODC1 protein levels in<br />
+  patient red blood cells" [file:human/ODC1/ODC1-uniprot.txt VARIANT 448..461].</li>
+<li>ODC is a well-established oncology target (polyamines drive proliferation); DFMO<br />
+  (eflornithine) is the classic irreversible inhibitor [PMID:17407445; DrugBank<br />
+  DB06243 Eflornithine].</li>
+</ul>
+<h2 id="annotation-review-summary">Annotation review summary</h2>
+<p>Core molecular function: ornithine decarboxylase activity (GO:0004586) + PLP binding<br />
+(GO:0030170; not in GOA — proposed) + homodimerization (GO:0042803).<br />
+Core biological process: putrescine biosynthetic process (GO:0009446) / polyamine<br />
+biosynthetic process (GO:0006596).<br />
+Core localization: cytosol / cytoplasm (GO:0005829 / GO:0005737).</p>
+<p>Over-annotations / non-core:<br />
+- GO:0042978 ornithine decarboxylase activator activity — wrong-direction; ODC is the<br />
+  enzyme, activation is the antizyme inhibitor's role → MARK_AS_OVER_ANNOTATED.<br />
+- GO:0003824 catalytic activity (IEA) — too general (root-ish MF) → MODIFY to GO:0004586.<br />
+- GO:0005515 protein binding (IPI ×10) — uninformative → MARK_AS_OVER_ANNOTATED.<br />
+- GO:0009615 response to virus (IEP) — single expression study → KEEP_AS_NON_CORE.<br />
+- GO:0042176 regulation of protein catabolic process (ISS/IEA) — reflects ODC being a<br />
+  substrate of antizyme-directed degradation, not ODC regulating catabolism → this is<br />
+  ODC's own regulated turnover, arguably KEEP_AS_NON_CORE (ODC is target, and its<br />
+  C-terminus is a degradation determinant), but the term reads as ODC <em>regulating</em><br />
+  protein catabolism, which is over-interpreted → MARK_AS_OVER_ANNOTATED / non-core.<br />
+</content><br />
+</invoke></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P11926
+gene_symbol: ODC1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ODC1 is ornithine decarboxylase (EC 4.1.1.17), the pyridoxal 5&#39;-phosphate
+  (PLP)-dependent lyase that catalyzes the first and rate-limiting step of
+  polyamine biosynthesis: decarboxylation of L-ornithine to putrescine plus CO2.
+  Putrescine is the precursor of the higher polyamines spermidine and spermine,
+  which are essential for cell proliferation, growth and differentiation. The
+  enzyme is an obligate homodimer whose two active sites are built from residues
+  of both subunits (Lys69 covalently binds the PLP cofactor; Cys360 acts as the
+  proton donor), so only the dimer is catalytically active. ODC is among the most
+  tightly regulated enzymes in eukaryotes: it has an exceptionally short half-life
+  and its degradation is triggered by ornithine decarboxylase antizymes (OAZ1/2/3),
+  which bind ODC monomers, prevent productive dimerization and target ODC for
+  ubiquitin-independent destruction by the 26S proteasome; antizyme inhibitors
+  (AZIN1/AZIN2) counteract this. ODC acts in the cytosol (and nucleus). In humans,
+  gain-of-function C-terminal truncating variants that escape nonsense-mediated
+  decay cause Bachmann-Bupp syndrome, and ODC/polyamine metabolism is a
+  well-established cancer drug target (irreversibly inhibited by
+  alpha-difluoromethylornithine/eflornithine).
+existing_annotations:
+- term:
+    id: GO:0009446
+    label: putrescine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the rate-limiting step of putrescine
+      biosynthesis. This is a core biological process for ODC1 and is well
+      supported by the enzyme&#39;s catalytic activity and pathway placement.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the first and rate-limiting step of polyamine biosynthesis that
+        converts ornithine into putrescine
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) is_active_in cytoplasm. ODC is a cytosolic enzyme;
+      cytoplasm/cytosol is its correct localization. The more precise cytosol
+      (GO:0005829) is also annotated by Reactome.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation of the defining catalytic activity of ODC1.
+      This is the core molecular function and is directly supported by
+      experimental structural/kinetic characterization of human ODC.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=L-ornithine + H(+) = putrescine + CO2
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) annotation of the generic root-level catalytic activity.
+      This is correct but far too general given that the specific activity
+      (ornithine decarboxylase, GO:0004586) is experimentally established. Replace
+      with the specific molecular function.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0004586
+      label: ornithine decarboxylase activity
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=L-ornithine + H(+) = putrescine + CO2
+- term:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA, combined-method / EC 4.1.1.17 mapping) annotation of the
+      core catalytic activity. Correct and redundant with the experimental
+      GO:0004586 annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        EC=4.1.1.17
+- term:
+    id: GO:0006595
+    label: polyamine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic annotation to the broad parent process. Correct but general;
+      the specific putrescine/polyamine biosynthetic process better captures ODC&#39;s
+      role. Kept as a non-core, correct-but-general grouping term.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        which is the precursor for the polyamines, spermidine and spermine
+- term:
+    id: GO:0006596
+    label: polyamine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) annotation to polyamine biosynthetic process. Correct;
+      ODC catalyzes the committed first step of polyamine biosynthesis. Slightly
+      more general than the specific putrescine biosynthetic process but accurate.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the first and rate-limiting step of polyamine biosynthesis
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale binary interactome screen
+      (partner Q92993 = KAT5). Uninformative as a molecular function; not removed
+      per policy for IPI protein-binding, but flagged as over-annotated. ODC&#39;s
+      biologically meaningful binding (antizyme OAZ and antizyme inhibitor AZIN)
+      is captured elsewhere.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale AP-MS interactome study (partner
+      Q9UMX2 = OAZ3, an antizyme). The uninformative &#34;protein binding&#34; term is
+      marked over-annotated; the underlying OAZ interaction is biologically real
+      and captured by the antizyme-binding function in core_functions.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29892012
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from an interactome-perturbation screen (partner
+      Q9H8Y8 = GORASP2). Uninformative molecular-function term; marked
+      over-annotated per policy (IPI protein binding not removed).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a variant-effect interactome study (partner
+      Q9UMX2 = OAZ3). Uninformative term; over-annotated. The OAZ (antizyme)
+      interaction itself is meaningful and captured in core_functions.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI reference binary interactome (partners
+      include Q92993 = KAT5, Q9H8Y8 = GORASP2, Q9UMX2-2 = OAZ3). Uninformative MF
+      term; over-annotated per policy.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a cell-specific AP-MS interactome study (partner
+      Q9UMX2 = OAZ3). Uninformative term; over-annotated. OAZ binding is real and
+      captured separately.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ensembl-projected (IEA) cytoplasm localization from mouse ortholog (P00860).
+      Consistent with the established cytosolic localization of ODC.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0009446
+    label: putrescine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl-projected (IEA) putrescine biosynthetic process from mouse ortholog.
+      Core biological process; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        converts ornithine into putrescine
+- term:
+    id: GO:0042176
+    label: regulation of protein catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl-projected (IEA) &#34;regulation of protein catabolic process&#34;. This
+      reflects the fact that ODC is itself a substrate of antizyme-directed
+      ubiquitin-independent proteasomal degradation and that its C-terminal
+      degradation elements are the target of that pathway. As a process ascribed to
+      ODC it reads as ODC regulating catabolism, which over-interprets the biology
+      (ODC is the regulated target, not the regulator). Not a core function;
+      retained as a non-core, indirect involvement.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Additionally, OAZ1 targets ODC monomers for ubiquitin-independent
+        proteolytic destruction by the 26S proteasome
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Ensembl-projected (IEA) homodimerization activity. Well supported: ODC is an
+      obligate homodimer and only the dimer is catalytically active, with active
+      sites built from residues of both subunits. Core to the enzyme&#39;s function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Homodimer. Only the dimer is catalytically active, as the active sites are
+        constructed of residues from both monomers
+- term:
+    id: GO:0006595
+    label: polyamine metabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-351202
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome TAS annotation to the broad polyamine metabolic process
+      (&#34;Metabolism of polyamines&#34;). Correct but general; kept as a non-core
+      grouping term, subsumed by the specific putrescine/polyamine biosynthetic
+      process annotations.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: Reactome:R-HSA-351202
+      supporting_text: &gt;-
+        Polyamine levels are tightly regulated at the level of the enzyme ornithine
+        decarboxylase (ODC)
+- term:
+    id: GO:0042978
+    label: ornithine decarboxylase activator activity
+  evidence_type: EXP
+  original_reference_id: PMID:10623504
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This term means &#34;binds to and increases ornithine decarboxylase activity&#34;,
+      i.e. it describes an activator OF ODC (the role of antizyme inhibitors
+      AZIN1/AZIN2), not the decarboxylase itself. ODC1 is the enzyme, not its
+      activator, so this is a wrong-direction over-annotation. The cited reference
+      (PMID:10623504) is the human ODC crystal structure and concerns
+      antizyme-binding/structure, not an activator activity of ODC. Per policy an
+      experimental (EXP) annotation is not removed; marked as over-annotated. The
+      genuine molecular function is ornithine decarboxylase activity (GO:0004586).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:10623504
+      supporting_text: &gt;-
+        Ornithine decarboxylase (ODC, EC 4.1.1.17) performs the first step in
+        polyamine biosynthesis, the decarboxylation of ornithine to putrescine.
+- term:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17407445
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of the core ornithine decarboxylase activity,
+      supported by structural and kinetic characterization of human ODC (KM 0.08
+      mM for L-ornithine; EC 4.1.1.17 assigned from this study). Core molecular
+      function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17407445
+      supporting_text: &gt;-
+        the first committed enzyme in the polyamine biosynthesis pathway
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-350567
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol localization (antizyme-binding reaction context). ODC
+      is cytosolic; correct core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-350578
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol localization (NQO1-ODC interaction context). Redundant
+      with other cytosol annotations; correct core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-353125
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol localization (proteasomal degradation-of-ODC context).
+      Redundant with other cytosol annotations; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70692
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol localization tied directly to the ornithine =&gt;
+      putrescine + CO2 reaction. Correct core localization for the enzymatic
+      activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9955574
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol localization (ODC dimerization context). Consistent
+      with cytosolic dimeric holoenzyme; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-9955574
+      supporting_text: &gt;-
+        Cytosolic pyridoxal phosphate-conjugated ornithine decarboxylase 1
+        (PXLP-K69-ODC1) monomers dimerize to form catalytically active ODC
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Curator ISS transfer (from mouse ortholog P00860) of cytoplasm localization.
+      Consistent with established cytosolic localization; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-70692
+      supporting_text: &gt;-
+        L-ornithine is converted into putrescine by cytosolic ornithine
+        decarboxylase (ODC).
+- term:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Curator ISS transfer (from mouse ortholog P00860) of the core ornithine
+      decarboxylase activity. Correct and redundant with the experimental
+      GO:0004586 annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=L-ornithine + H(+) = putrescine + CO2
+- term:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17900240
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) annotation of ornithine decarboxylase activity. The cited
+      study measured ODC activity and ODC degradation to characterize the
+      ODC/antizyme/antizyme-inhibitor system, using human ODC as the enzyme. Core
+      molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17900240
+      supporting_text: &gt;-
+        ODC (ornithine decarboxylase), the rate-limiting enzyme in polyamine
+        biosynthesis
+- term:
+    id: GO:0009446
+    label: putrescine biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator ISS transfer (from mouse ortholog) of putrescine biosynthetic
+      process. Core biological process; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        converts ornithine into putrescine
+- term:
+    id: GO:0042176
+    label: regulation of protein catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator ISS transfer of &#34;regulation of protein catabolic process&#34;. As with
+      the IEA version, this reflects ODC being the target of antizyme-directed
+      proteasomal degradation (its C-terminus carries degradation determinants)
+      rather than ODC actively regulating catabolism. Not a core function; kept as
+      non-core indirect involvement.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Additionally, OAZ1 targets ODC monomers for ubiquitin-independent
+        proteolytic destruction by the 26S proteasome
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Curator ISS transfer (from mouse ortholog) of homodimerization activity.
+      Strongly supported: ODC functions only as a homodimer with shared active
+      sites. Core to activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ODC1/ODC1-uniprot.txt
+      supporting_text: &gt;-
+        Homodimer. Only the dimer is catalytically active, as the active sites are
+        constructed of residues from both monomers
+- term:
+    id: GO:0009615
+    label: response to virus
+  evidence_type: IEP
+  original_reference_id: PMID:16548883
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IEP annotation from a transcriptomic/proteomic study reporting that ODC1
+      protein and mRNA are down-regulated upon enterovirus 71 infection of
+      rhabdomyosarcoma cells. This is a differential-expression observation in one
+      viral context, not evidence of a dedicated antiviral function of ODC1. Kept
+      as a non-core annotation.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:16548883
+      supporting_text: &gt;-
+        Western blot analyses of APOB, CLU, DCAMKL1 and ODC1 proteins correlated
+        protein and transcript levels.
+- term:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2317811
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS annotation of ornithine decarboxylase activity. The cited study
+      demonstrated that the human chromosome-2 ODC gene encodes functional ODC by
+      expressing it in ODC-deficient CHO cells, restoring 70-400-fold ODC activity.
+      Core molecular function; correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:2317811
+      supporting_text: &gt;-
+        the ODC gene from human chromosome 2 encodes functional ODC protein
+core_functions:
+- description: &gt;-
+    Ornithine decarboxylase: PLP-dependent decarboxylation of L-ornithine to
+    putrescine (+ CO2), the committed and rate-limiting step of polyamine
+    biosynthesis.
+  molecular_function:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  supported_by:
+  - reference_id: file:human/ODC1/ODC1-uniprot.txt
+    supporting_text: &gt;-
+      Reaction=L-ornithine + H(+) = putrescine + CO2
+  - reference_id: PMID:17407445
+    supporting_text: &gt;-
+      the first committed enzyme in the polyamine biosynthesis pathway
+- description: &gt;-
+    Binds the pyridoxal 5&#39;-phosphate cofactor (covalently via Lys69) required for
+    the decarboxylation reaction.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  supported_by:
+  - reference_id: file:human/ODC1/ODC1-uniprot.txt
+    supporting_text: &gt;-
+      Name=pyridoxal 5&#39;-phosphate
+- description: &gt;-
+    Forms an obligate homodimer; only the dimer is catalytically active because
+    each of the two active sites is assembled from residues of both subunits.
+  molecular_function:
+    id: GO:0042803
+    label: protein homodimerization activity
+  supported_by:
+  - reference_id: file:human/ODC1/ODC1-uniprot.txt
+    supporting_text: &gt;-
+      Homodimer. Only the dimer is catalytically active, as the active sites are
+      constructed of residues from both monomers
+- description: &gt;-
+    Acts in the cytosol as a homodimer to produce putrescine, the precursor of
+    spermidine and spermine, driving the polyamine biosynthetic pathway.
+  molecular_function:
+    id: GO:0004586
+    label: ornithine decarboxylase activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/ODC1/ODC1-uniprot.txt
+    supporting_text: &gt;-
+      Catalyzes the first and rate-limiting step of polyamine biosynthesis that
+      converts ornithine into putrescine
+  - reference_id: Reactome:R-HSA-70692
+    supporting_text: &gt;-
+      L-ornithine is converted into putrescine by cytosolic ornithine
+      decarboxylase (ODC).
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10623504
+  title: &#39;Crystal structure of human ornithine decarboxylase at 2.1 A resolution:
+    structural insights to antizyme binding.&#39;
+  findings:
+  - statement: &gt;-
+      Human ODC crystal structure at 2.1 A; describes the C-terminal basal
+      degradation elements and antizyme-binding surface, establishing the dimeric
+      enzyme and antizyme-mediated degradation model.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Ornithine decarboxylase (ODC, EC 4.1.1.17) performs the first step in
+      polyamine biosynthesis, the decarboxylation of ornithine to putrescine.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correctly cited human ODC structure. Note it does NOT support the GO:0042978
+      &#34;ornithine decarboxylase activator activity&#34; annotation attributed to it via
+      Reactome; that term describes an activator of ODC (antizyme inhibitor), not
+      the enzyme.
+- id: PMID:16548883
+  title: Transcriptomic and proteomic analyses of rhabdomyosarcoma cells reveal differential
+    cellular gene expression in response to enterovirus 71 infection.
+  findings:
+  - statement: &gt;-
+      ODC1 protein and transcript are differentially expressed (down-regulated) in
+      rhabdomyosarcoma cells infected with enterovirus 71; basis of the
+      response-to-virus IEP annotation.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Western blot analyses of APOB, CLU, DCAMKL1 and ODC1 proteins correlated
+      protein and transcript levels.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Expression-profiling study; supports a non-core response-to-virus annotation,
+      not a dedicated antiviral function.
+- id: PMID:17407445
+  title: A structural insight into the inhibition of human and Leishmania donovani
+    ornithine decarboxylases by 1-amino-oxy-3-aminopropane.
+  findings:
+  - statement: &gt;-
+      Structural and kinetic characterization of human ODC (KM 0.08 mM for
+      L-ornithine; EC 4.1.1.17). Two active sites at the dimer interface with Lys69
+      and Cys360 from opposite monomers; PLP-dependent enzyme.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      The two active sites are found at the dimer interface, between the N-terminal
+      domain of one monomer and the C-terminal domain of the other, with Lys 69 and
+      Cys 360 contributing to each active site from opposite monomers
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; directly establishes catalytic activity, kinetics and
+      the obligate-dimer active-site architecture. Basis of the EC assignment.
+- id: PMID:17900240
+  title: Human ornithine decarboxylase paralogue (ODCp) is an antizyme inhibitor but
+    not an arginine decarboxylase.
+  findings:
+  - statement: &gt;-
+      Uses ODC-activity and ODC-degradation assays with human ODC to establish that
+      the ODC paralogue is an antizyme inhibitor (AZIN2); reaffirms ODC as the
+      rate-limiting polyamine-biosynthesis enzyme regulated by antizymes.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      ODC (ornithine decarboxylase), the rate-limiting enzyme in polyamine
+      biosynthesis, is regulated by specific inhibitors, AZs (antizymes)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; the assay measures ODC activity directly (basis of the
+      IDA GO:0004586 annotation) and characterizes the antizyme/AZIN regulation of
+      ODC.
+- id: PMID:2317811
+  title: Expression of human chromosome 2 ornithine decarboxylase gene in ornithine
+    decarboxylase-deficient Chinese hamster ovary cells.
+  findings:
+  - statement: &gt;-
+      The human chromosome-2 ODC gene encodes functional ODC: expression in
+      ODC-deficient CHO cells restored 70-400-fold ODC activity and increased
+      growth, showing ODC/putrescine is required for cell proliferation.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      the ODC gene from human chromosome 2 encodes functional ODC protein
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes that the human ODC1 gene product is a functional ornithine
+      decarboxylase; basis of the TAS GO:0004586 annotation.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      High-throughput binary interactome map; source of a bare &#34;protein binding&#34;
+      IPI annotation (partner KAT5). No specific functional interpretation for ODC1.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      a systematic map of ?14,000 high-quality human binary protein-protein
+      interactions
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale screen; supports only an uninformative protein-binding
+      annotation.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings:
+  - statement: &gt;-
+      Large-scale AP-MS interactome study; source of a bare &#34;protein binding&#34; IPI
+      annotation (partner OAZ3).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput interactome; the OAZ3 partner is biologically plausible but
+      the annotation itself is uninformative &#34;protein binding&#34;.
+- id: PMID:29892012
+  title: An interactome perturbation framework prioritizes damaging missense mutations
+    for developmental disorders.
+  findings:
+  - statement: &gt;-
+      Interactome-perturbation screen; source of a bare &#34;protein binding&#34; IPI
+      annotation (partner GORASP2).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput screen supporting only uninformative protein binding.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings:
+  - statement: &gt;-
+      Variant-effect interactome study; source of a bare &#34;protein binding&#34; IPI
+      annotation (partner OAZ3).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput screen; uninformative protein-binding annotation.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI reference binary interactome; source of a bare &#34;protein binding&#34; IPI
+      annotation (partners KAT5, GORASP2, OAZ3).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale binary map; uninformative protein-binding annotation.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings:
+  - statement: &gt;-
+      Cell-specific AP-MS interactome study; source of a bare &#34;protein binding&#34; IPI
+      annotation (partner OAZ3).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput interactome; uninformative protein-binding annotation.
+- id: Reactome:R-HSA-350567
+  title: Antizyme OAZ binds to Ornithine decarboxylase
+  findings:
+  - statement: &gt;-
+      Antizymes (OAZ) bind ODC monomers, preventing dimerization into active ODC;
+      AZIN1 negatively regulates the OAZ-ODC interaction by binding OAZ.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      Members of the OAZ (Ornithine decarboxylase antizyme) protein family bind ODC
+      (ornithine decarboxylase) monomers
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+- id: Reactome:R-HSA-350578
+  title: NQO1 interaction with ODC
+  findings:
+  - statement: &gt;-
+      NQO1 stabilizes ODC and protects it from proteasomal degradation.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      ODC is stabilized and protected from proteasomal degradation by interaction
+      with NQO1
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+- id: Reactome:R-HSA-351202
+  title: Metabolism of polyamines
+  findings:
+  - statement: &gt;-
+      Polyamines are derived from ornithine by decarboxylation; polyamine levels
+      are tightly regulated at the level of ODC.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      Polyamine levels are tightly regulated at the level of the enzyme ornithine
+      decarboxylase (ODC)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+- id: Reactome:R-HSA-353125
+  title: 26S proteosome degrades ODC holoenzyme complex
+  findings:
+  - statement: &gt;-
+      ODC turnover by the 26S proteasome is ubiquitin-independent; antizyme
+      association (not ubiquitination) directs ODC to the proteasome.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      Proteolytic processing of ODC is highly unusual in that ubiquitination is not
+      required for this degradation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+- id: Reactome:R-HSA-70692
+  title: ornithine =&gt; putrescine + CO2
+  findings:
+  - statement: &gt;-
+      Cytosolic ODC, conjugated with pyridoxal phosphate and active as a dimer,
+      converts L-ornithine into putrescine.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      L-ornithine is converted into putrescine by cytosolic ornithine decarboxylase
+      (ODC). The enzyme, conjugated with pyridoxal phosphate, is active as a dimer
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+- id: Reactome:R-HSA-9955574
+  title: ODC dimerizes
+  findings:
+  - statement: &gt;-
+      PLP-conjugated ODC1 monomers dimerize to form the catalytically active
+      enzyme.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      monomers dimerize to form catalytically active ODC
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+- id: file:human/ODC1/ODC1-uniprot.txt
+  title: UniProt entry P11926 (DCOR_HUMAN), Ornithine decarboxylase
+  findings:
+  - statement: &gt;-
+      Authoritative UniProt record: catalytic activity (L-ornithine + H+ =
+      putrescine + CO2, EC 4.1.1.17), PLP cofactor, obligate homodimer with shared
+      active sites, antizyme-mediated ubiquitin-independent degradation, and
+      Bachmann-Bupp syndrome gain-of-function truncating variants.
+    reference_section_type: OTHER
+    supporting_text: &gt;-
+      Catalyzes the first and rate-limiting step of polyamine biosynthesis that
+      converts ornithine into putrescine
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+suggested_questions:
+- question: &gt;-
+    Beyond the cytosol, under what conditions does ODC1 localize to or act in the
+    nucleus, and is any nuclear pool functionally distinct?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided mutagenesis of the ODC1 C-terminal degradation elements to
+    dissect how Bachmann-Bupp gain-of-function truncations increase enzyme
+    stability/activity and putrescine output, paired with polyamine metabolomics
+    in patient-derived cells.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

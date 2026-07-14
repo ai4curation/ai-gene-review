@@ -1,0 +1,3675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OAT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P04181" target="_blank" class="term-link">
+                        P04181
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "OAT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P04181" data-a="DESCRIPTION: Ornithine aminotransferase (ornithine delta-aminot..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Ornithine aminotransferase (ornithine delta-aminotransferase; EC 2.6.1.13) is a nuclear-encoded, mitochondrial-matrix, pyridoxal-5&#39;-phosphate (PLP)-dependent enzyme of the class-III aminotransferase family. It catalyzes the reversible transfer of the delta-amino group of L-ornithine to 2-oxoglutarate, forming L-glutamate 5-semialdehyde (which cyclizes spontaneously to delta-1-pyrroline-5-carboxylate, P5C) and L-glutamate. The active enzyme is a homohexamer with the PLP cofactor bound as a Schiff base to an active-site lysine (Lys-292). OAT links the ornithine pool of the urea cycle and arginine metabolism to the glutamate/proline/P5C pool: in most tissues it acts catabolically (net ornithine degradation), while in the small intestine it runs in the biosynthetic direction toward ornithine, citrulline and arginine. It thereby contributes to L-proline biosynthesis and to arginine/ornithine catabolism and to ornithine homeostasis. Loss-of-function mutations cause gyrate atrophy of the choroid and retina, an autosomal recessive chorioretinal degeneration with hyperornithinemia.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0004587" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA/PAN-GO) assignment of the core ornithine aminotransferase molecular function. This is the correct catalytic activity for OAT (EC 2.6.1.13) and is corroborated by direct experimental evidence (IMP in PMID:1737786 and PMID:23076989), the cofactor structure, and the UniProt CATALYTIC ACTIVITY block.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible interconversion of L-ornithine and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of mitochondrial localization. Correct but less precise than the experimentally supported mitochondrial matrix (GO:0005759). Keep as a correct general-compartment annotation; the matrix term is the core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006527" target="_blank" class="term-link">
+                                    GO:0006527
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0006527" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment to arginine catabolism. Biologically appropriate: ornithine derived from arginine (via arginase) is catabolized by OAT to glutamate/P5C, so OAT participates in the arginine-to-glutamate/proline catabolic route via ornithine. Accept as a genuine biological process for the enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0004587" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the ornithine aminotransferase activity via InterPro/RHEA/EC mapping (IPR010164, RHEA:25160, EC:2.6.1.13). Redundant with, and consistent with, the experimentally supported core MF. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible interconversion of L-ornithine and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005759" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (ARBA / UniProtKB-SubCell SL-0170) of mitochondrial matrix localization. Matches the experimentally determined location and is the correct specific compartment. Accept as core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008483" target="_blank" class="term-link">
+                                    GO:0008483
+                                </a>
+                            </span>
+                            <span class="term-label">transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0008483" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment of the general transaminase activity. This is a parent of the specific and experimentally supported ornithine aminotransferase activity (GO:0004587) and adds no information beyond it. Over-annotated (too general).
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    L-ornithine transaminase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment of PLP binding (IPR005814). Directly supported by experiment: OAT is a PLP-dependent enzyme with the cofactor covalently bound as a Schiff base at Lys-292 (identified in PMID:3754226) and the crystal structure (PMID:9514741) defines the PLP cofactor. Core cofactor-binding function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale neurodegenerative-disease interactome (Y2H) screen, reporting an OAT-APP interaction. Uninformative for OAT&#39;s molecular function and the interaction is not an established functional partnership. Retained per policy (do not REMOVE an IPI) but flagged as over-annotated; not used in core functions.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005739" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara orthology transfer of mitochondrial localization (from rat P04182). Correct but less precise than mitochondrial matrix. Keep as a correct general-compartment annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0055129" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway mapping (UPA00098) of L-proline biosynthesis. OAT catalyzes step 1/1 of the L-glutamate-5-semialdehyde-from-L-ornithine sub-pathway (the semialdehyde/P5C feeding proline synthesis), so this is a genuine core biological process for the enzyme. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-proline biosynthesis; L-glutamate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localization to mitochondrion. Direct experimental support for mitochondrial localization; correct but less precise than the matrix sub-compartment. Keep as a correct general-compartment annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial-proteome study assigning OAT to mitochondrion. Consistent with the established localization; less precise than mitochondrial matrix. Keep as a correct general-compartment annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1737786" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1737786
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ornithine delta-aminotransferase mutations in gyrate atrophy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0004587" data-r="PMID:1737786" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support for ornithine aminotransferase activity: gyrate-atrophy missense alleles were reproduced by site-directed mutagenesis and expressed in CHO cells, and shown to inactivate the enzyme, demonstrating that OAT carries this catalytic activity. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1737786" target="_blank" class="term-link">
+                                        PMID:1737786
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirms that several of these mutations inactivate ornithine delta-aminotransferase and cause gyrate atrophy</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23076989" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23076989
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of missense mutations of OAT, causing gy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0004587" data-r="PMID:23076989" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support for ornithine aminotransferase activity: OAT missense mutants expressed in a yeast strain lacking the OAT ortholog &#34;markedly reduced enzymatic activity&#34;, confirming that OAT catalyzes this reaction. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23076989" target="_blank" class="term-link">
+                                        PMID:23076989
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All mutations markedly reduced enzymatic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23076989" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23076989
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of missense mutations of OAT, causing gy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005759" data-r="PMID:23076989" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) determination of mitochondrial-matrix localization from the functional-analysis study of OAT. This is the specific, correct compartment and the core location for the enzyme. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23076989" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23076989
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of missense mutations of OAT, causing gy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0042802" data-r="PMID:23076989" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association annotation reflecting the OAT homohexamer, which is required to form the active enzyme (PMID:23076989 shows mutants that &#34;failed to assemble to form the active OAT hexamer&#34;). Informative for oligomerization but not a distinct catalytic function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OAT/OAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homohexamer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70654
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005759" data-r="Reactome:R-HSA-70654" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assignment of mitochondrial-matrix localization (forward reaction: ornithine + alpha-ketoglutarate -&gt; glutamate + glutamate gamma-semialdehyde). Consistent with the experimental location. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70666
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005759" data-r="Reactome:R-HSA-70666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assignment of mitochondrial-matrix localization (reverse reaction: glutamate + glutamate gamma-semialdehyde -&gt; ornithine + alpha-ketoglutarate). Consistent with the experimental location. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3456579" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3456579
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of human ornithine aminotransferase mRNA.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0005759" data-r="PMID:3456579" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement (cDNA-cloning paper) describing OAT as a mitochondrial matrix enzyme. Consistent with the experimentally supported location, though weaker evidence than the IDA. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3456579" target="_blank" class="term-link">
+                                        PMID:3456579
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a nonabundant mitochondrial matrix enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                                    GO:0004587
+                                </a>
+                            </span>
+                            <span class="term-label">L-ornithine transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3456579" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3456579
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of human ornithine aminotransferase mRNA.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0004587" data-r="PMID:3456579" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement of ornithine aminotransferase activity from the cDNA-cloning paper, which identifies OAT by its enzyme activity (EC 2.6.1.13). Consistent with the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3456579" target="_blank" class="term-link">
+                                        PMID:3456579
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">L-ornithine:2-oxo-acid aminotransferase, EC 2.6.1.13), a nonabundant</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                    GO:0007601
+                                </a>
+                            </span>
+                            <span class="term-label">visual perception</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2793865" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2793865
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Point mutation affecting processing of the ornithine aminotr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P04181" data-a="GO:0007601" data-r="PMID:2793865" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the disease phenotype: OAT deficiency causes gyrate atrophy of the choroid and retina, which impairs vision. However, OAT is a mitochondrial metabolic enzyme and does not act directly in the visual-perception (phototransduction) process; the retinal degeneration is a downstream consequence of a metabolic defect (hyperornithinemia). This is an over-annotation of the biological process; the retina is affected, but visual perception is not a molecular role of the enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridoxal-5&#39;-phosphate-dependent ornithine aminotransferase (ornithine delta-aminotransferase, EC 2.6.1.13): reversibly transfers the delta-amino group of L-ornithine to 2-oxoglutarate, forming L-glutamate 5-semialdehyde (which cyclizes to P5C) and L-glutamate, in the mitochondrial matrix. This links the ornithine pool of arginine/urea-cycle metabolism to the glutamate/proline/P5C pool.</h3>
+                <span class="vote-buttons" data-g="P04181" data-a="FUNCTION: Pyridoxal-5&#39;-phosphate-dependent ornithine aminotr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004587" target="_blank" class="term-link">
+                            L-ornithine transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                L-proline biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006527" target="_blank" class="term-link">
+                                L-arginine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/OAT/OAT-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the reversible interconversion of L-ornithine and</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1737786" target="_blank" class="term-link">
+                                PMID:1737786
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ornithine delta-aminotransferase is a nuclear-encoded mitochondrial matrix enzyme which catalyzes the reversible interconversion of ornithine and alpha-ketoglutarate to glutamate semialdehyde and glutamate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23076989" target="_blank" class="term-link">
+                                PMID:23076989
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">All mutations markedly reduced enzymatic activity.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds the pyridoxal 5&#39;-phosphate (vitamin B6) cofactor, covalently attached as a Schiff base to the active-site lysine (Lys-292), which is required for the aminotransferase catalytic mechanism.</h3>
+                <span class="vote-buttons" data-g="P04181" data-a="FUNCTION: Binds the pyridoxal 5&#39;-phosphate (vitamin B6) cofa..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/OAT/OAT-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1737786" target="_blank" class="term-link">
+                            PMID:1737786
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ornithine delta-aminotransferase mutations in gyrate atrophy. Allelic heterogeneity and functional consequences.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OAT is a nuclear-encoded mitochondrial matrix enzyme catalyzing the reversible interconversion of ornithine + alpha-ketoglutarate and glutamate semialdehyde + glutamate; site-directed mutagenesis of gyrate-atrophy alleles inactivates the enzyme.</div>
+
+                        <div class="finding-text">"ornithine delta-aminotransferase is a nuclear-encoded mitochondrial matrix enzyme which catalyzes the reversible interconversion of ornithine and alpha-ketoglutarate to glutamate semialdehyde and glutamate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23076989" target="_blank" class="term-link">
+                            PMID:23076989
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional analysis of missense mutations of OAT, causing gyrate atrophy of choroid and retina.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OAT is a homohexameric enzyme; disease missense mutants markedly reduce enzymatic activity, are unstable/degraded, or fail to assemble the active hexamer.</div>
+
+                        <div class="finding-text">"homoexameric enzyme ornithine-delta-aminotransferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2793865" target="_blank" class="term-link">
+                            PMID:2793865
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Point mutation affecting processing of the ornithine aminotransferase precursor protein in gyrate atrophy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A generalized deficiency of the mitochondrial enzyme OAT is the inborn error in gyrate atrophy, a degenerative disease of the choroid and retina that leads to blindness.</div>
+
+                        <div class="finding-text">"A generalized deficiency of the mitochondrial enzyme, ornithine aminotransferase (OAT) is the inborn error in gyrate atrophy"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3456579" target="_blank" class="term-link">
+                            PMID:3456579
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning of human ornithine aminotransferase mRNA.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OAT (EC 2.6.1.13) is a nonabundant mitochondrial matrix enzyme, severely deficient in the hereditary chorioretinal degenerative disease gyrate atrophy.</div>
+
+                        <div class="finding-text">"a nonabundant mitochondrial matrix enzyme that is severely deficient in a hereditary chorioretinal degenerative disease (gyrate atrophy)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70654
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ornithine + alpha-ketoglutarate &lt;=&gt; glutamate + L-glutamate gamma-semialdehyde [OAT]</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70666
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glutamate + L-glutamate gamma-semialdehyde &lt;=&gt; ornithine + alpha-ketoglutarate [OAT]</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/OAT/OAT-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P04181 (OAT_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(OAT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04181" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="oat-ornithine-aminotransferase-review-notes">OAT (Ornithine aminotransferase) — review notes</h1>
+<p>UniProt: P04181 (OAT_HUMAN). HGNC:8091. Gene on chromosome 10. EC 2.6.1.13.<br />
+MANE-Select transcript ENST00000368845.6 / NP_000265.1.</p>
+<h2 id="core-biology-from-local-files">Core biology (from local files)</h2>
+<p>OAT is the nuclear-encoded, mitochondrial-matrix, pyridoxal-5'-phosphate (PLP)-dependent<br />
+aminotransferase (class-III PLP-dependent / aminotransferase-3 family) that reversibly<br />
+transfers the delta-amino group of L-ornithine to 2-oxoglutarate (alpha-ketoglutarate),<br />
+producing L-glutamate 5-semialdehyde (which spontaneously cyclizes to<br />
+delta-1-pyrroline-5-carboxylate, P5C) and L-glutamate.</p>
+<ul>
+<li>Reaction (UniProt CATALYTIC ACTIVITY, Rhea:RHEA:25160): "L-ornithine + 2-oxoglutarate =<br />
+  L-glutamate 5-semialdehyde + L-glutamate; EC=2.6.1.13"<br />
+  [file:human/OAT/OAT-uniprot.txt].</li>
+<li>FUNCTION: [file:human/OAT/OAT-uniprot.txt "Catalyzes the reversible interconversion of L-ornithine and"]<br />
+  (continues "2-oxoglutarate to L-glutamate semialdehyde and L-glutamate.").</li>
+<li>Cofactor: pyridoxal 5'-phosphate, covalently bound as N6-(pyridoxal phosphate)lysine at<br />
+  Lys-292 (active-site Schiff base) [file:human/OAT/OAT-uniprot.txt MOD_RES 292;<br />
+  PMID:3754226 identified PLP at Lys-292].</li>
+<li>Pathway: "Amino-acid biosynthesis; L-proline biosynthesis; L-glutamate 5-semialdehyde<br />
+  from L-ornithine: step 1/1" (UniPathway UPA00098 / UER00358)<br />
+  [file:human/OAT/OAT-uniprot.txt].</li>
+<li>Quaternary structure: homohexamer [file:human/OAT/OAT-uniprot.txt "Homohexamer."];<br />
+  confirmed in PMID:23076989 ("the homoexameric enzyme ornithine-delta-aminotransferase").</li>
+<li>Location: mitochondrion matrix [file:human/OAT/OAT-uniprot.txt "Mitochondrion matrix"];<br />
+  IDA to mitochondrial matrix in PMID:23076989 (GOA line).</li>
+<li>Family: class-III PLP-dependent aminotransferase<br />
+  [file:human/OAT/OAT-uniprot.txt "Belongs to the class-III pyridoxal-phosphate-dependent"].</li>
+</ul>
+<h2 id="metabolic-role-directionality">Metabolic role / directionality</h2>
+<p>OAT links the ornithine pool (urea cycle / arginine metabolism) to the glutamate/proline/P5C<br />
+pool. In most tissues it operates catabolically (net ornithine -&gt; P5C/glutamate); in the<br />
+small intestine it runs biosynthetically toward ornithine/citrulline/arginine. Physiological<br />
+directionality is annotated in both directions in UniProt (RHEA:25161 left-to-right;<br />
+RHEA:25162 right-to-left) and captured as two Reactome reactions R-HSA-70654 (forward) and<br />
+R-HSA-70666 (reverse). The tissue-enhanced expression in intestine (UniProt HPA:<br />
+"Tissue enhanced (intestine)") is consistent with the gut biosynthetic role.</p>
+<h2 id="disease">Disease</h2>
+<p>Deficiency causes gyrate atrophy of the choroid and retina (GACR; MIM:258870), an autosomal<br />
+recessive chorioretinal degeneration with hyperornithinemia, early cataract, and type II<br />
+muscle-fiber atrophy, leading to blindness. Many missense alleles characterized.</p>
+<ul>
+<li>PMID:1737786 (Brody et al. 1992): surveyed OAT alleles; "ornithine delta-aminotransferase<br />
+  is a nuclear-encoded mitochondrial matrix enzyme which catalyzes the reversible<br />
+  interconversion of ornithine and alpha-ketoglutarate to glutamate semialdehyde and<br />
+  glutamate"; site-directed mutagenesis + CHO expression "confirms that several of these<br />
+  mutations inactivate ornithine delta-aminotransferase and cause gyrate atrophy". This is<br />
+  the basis for the IMP -&gt; GO:0004587 annotation (loss-of-function mutants abolish activity).</li>
+<li>PMID:23076989 (Doimo et al. 2013): functional analysis of missense mutants expressed in a<br />
+  yeast OAT-ortholog-deletion strain; "All mutations markedly reduced enzymatic activity";<br />
+  mutants "failed to assemble to form the active OAT hexamer". Basis for IMP -&gt; GO:0004587<br />
+  and IDA -&gt; mitochondrial matrix (subcellular location determined).</li>
+<li>PMID:2793865 (Inana et al. 1989): H319Y processing mutant; supports OAT as mitochondrial<br />
+  enzyme whose deficiency causes gyrate atrophy; used for the TAS visual perception<br />
+  annotation (disease context).</li>
+<li>PMID:3456579 (Inana et al. 1986): cloned human OAT cDNA; "a nonabundant mitochondrial<br />
+  matrix enzyme that is severely deficient in a hereditary chorioretinal degenerative<br />
+  disease (gyrate atrophy)". Basis for NAS mitochondrial matrix location and TAS<br />
+  GO:0004587.</li>
+</ul>
+<h2 id="annotation-review-reasoning">Annotation review reasoning</h2>
+<p>Core molecular function = GO:0004587 (current label "L-ornithine transaminase activity",<br />
+= ornithine delta-aminotransferase, EC 2.6.1.13), supported experimentally (IMP in two<br />
+papers) and directly cofactor-supported by PLP binding GO:0030170 (PLP at Lys-292).</p>
+<p>Location: mitochondrial matrix (GO:0005759) is the specific, experimentally supported<br />
+compartment (IDA PMID:23076989; NAS PMID:3456579; TAS Reactome). Broader "mitochondrion"<br />
+(GO:0005739, IDA HPA / HTP / IBA / Ensembl-IEA) and "cytoplasm" (IBA, from UniProt DR) are<br />
+correct-but-less-precise; keep matrix as core, keep the mitochondrion annotations as<br />
+non-core / accept-as-general.</p>
+<p>BP:<br />
+- L-proline biosynthetic process (GO:0055129, IEA UniPathway) — core; OAT is step 1/1 of<br />
+  the L-glutamate-5-semialdehyde-from-ornithine sub-pathway feeding proline synthesis.<br />
+- L-arginine catabolic process (GO:0006527, IBA) — accept (ornithine, from arginine via<br />
+  arginase, is catabolized by OAT); part of arginine/ornithine catabolism.<br />
+- visual perception (GO:0007601, TAS PMID:2793865) — this is a disease phenotype<br />
+  (gyrate atrophy affects the retina), NOT a direct molecular role of the enzyme in the<br />
+  visual-perception process. Keep as non-core (retina is affected by deficiency) — the<br />
+  enzyme does not "do" phototransduction; mark as over-annotation of the biological process.</p>
+<p>MF over-annotations:<br />
+- transaminase activity (GO:0008483, IEA ARBA) — parent of the specific 0004587; less<br />
+  precise, mark as over-annotated (redundant with the specific term).<br />
+- protein binding (GO:0005515, IPI PMID:32814053) — bare protein binding from a large<br />
+  Y2H/interactome screen (APP interaction, EBI-721662/EBI-77613); uninformative; the<br />
+  APP interaction is not an established OAT function. MARK_AS_OVER_ANNOTATED (do not remove<br />
+  IPI per policy).<br />
+- identical protein binding (GO:0042802, IPI PMID:23076989) — reflects the homohexamer;<br />
+  informative as self-association. Accept as non-core (supports oligomerization, not a<br />
+  distinct catalytic MF).</p>
+<p>PMID:32814053 (Haenig et al. 2020) is an interactome-mapping paper focused on<br />
+neurodegenerative-disease proteins; the OAT-APP interaction it reports is a high-throughput<br />
+Y2H hit, not a validated functional partnership. Relevance LOW for OAT function.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P04181
+gene_symbol: OAT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Ornithine aminotransferase (ornithine delta-aminotransferase; EC 2.6.1.13) is a
+  nuclear-encoded, mitochondrial-matrix, pyridoxal-5&#39;-phosphate (PLP)-dependent enzyme of the
+  class-III aminotransferase family. It catalyzes the reversible transfer of the delta-amino
+  group of L-ornithine to 2-oxoglutarate, forming L-glutamate 5-semialdehyde (which cyclizes
+  spontaneously to delta-1-pyrroline-5-carboxylate, P5C) and L-glutamate. The active enzyme is
+  a homohexamer with the PLP cofactor bound as a Schiff base to an active-site lysine
+  (Lys-292). OAT links the ornithine pool of the urea cycle and arginine metabolism to the
+  glutamate/proline/P5C pool: in most tissues it acts catabolically (net ornithine
+  degradation), while in the small intestine it runs in the biosynthetic direction toward
+  ornithine, citrulline and arginine. It thereby contributes to L-proline biosynthesis and to
+  arginine/ornithine catabolism and to ornithine homeostasis. Loss-of-function mutations cause
+  gyrate atrophy of the choroid and retina, an autosomal recessive chorioretinal degeneration
+  with hyperornithinemia.
+alternative_products:
+- name: &#39;1&#39;
+  id: P04181-1
+- name: &#39;2&#39;
+  id: P04181-2
+  sequence_note: VSP_043085
+existing_annotations:
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA/PAN-GO) assignment of the core ornithine aminotransferase molecular
+      function. This is the correct catalytic activity for OAT (EC 2.6.1.13) and is
+      corroborated by direct experimental evidence (IMP in PMID:1737786 and PMID:23076989),
+      the cofactor structure, and the UniProt CATALYTIC ACTIVITY block.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: Catalyzes the reversible interconversion of L-ornithine and
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment of mitochondrial localization. Correct but less precise than the
+      experimentally supported mitochondrial matrix (GO:0005759). Keep as a correct
+      general-compartment annotation; the matrix term is the core location.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: Mitochondrion matrix
+- term:
+    id: GO:0006527
+    label: L-arginine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment to arginine catabolism. Biologically appropriate: ornithine
+      derived from arginine (via arginase) is catabolized by OAT to glutamate/P5C, so OAT
+      participates in the arginine-to-glutamate/proline catabolic route via ornithine. Accept
+      as a genuine biological process for the enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the ornithine aminotransferase activity via InterPro/RHEA/EC
+      mapping (IPR010164, RHEA:25160, EC:2.6.1.13). Redundant with, and consistent with, the
+      experimentally supported core MF. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: Catalyzes the reversible interconversion of L-ornithine and
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assignment (ARBA / UniProtKB-SubCell SL-0170) of mitochondrial matrix
+      localization. Matches the experimentally determined location and is the correct specific
+      compartment. Accept as core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: Mitochondrion matrix
+- term:
+    id: GO:0008483
+    label: transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA electronic assignment of the general transaminase activity. This is a parent of the
+      specific and experimentally supported ornithine aminotransferase activity (GO:0004587)
+      and adds no information beyond it. Over-annotated (too general).
+    action: MARK_AS_OVER_ANNOTATED
+    proposed_replacement_terms:
+    - id: GO:0004587
+      label: L-ornithine transaminase activity
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic assignment of PLP binding (IPR005814). Directly supported by
+      experiment: OAT is a PLP-dependent enzyme with the cofactor covalently bound as a Schiff
+      base at Lys-292 (identified in PMID:3754226) and the crystal structure (PMID:9514741)
+      defines the PLP cofactor. Core cofactor-binding function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: Name=pyridoxal 5&#39;-phosphate
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale neurodegenerative-disease interactome (Y2H)
+      screen, reporting an OAT-APP interaction. Uninformative for OAT&#39;s molecular function and
+      the interaction is not an established functional partnership. Retained per policy (do not
+      REMOVE an IPI) but flagged as over-annotated; not used in core functions.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ensembl-Compara orthology transfer of mitochondrial localization (from rat P04182).
+      Correct but less precise than mitochondrial matrix. Keep as a correct
+      general-compartment annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0055129
+    label: L-proline biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway mapping (UPA00098) of L-proline biosynthesis. OAT catalyzes step 1/1 of the
+      L-glutamate-5-semialdehyde-from-L-ornithine sub-pathway (the semialdehyde/P5C feeding
+      proline synthesis), so this is a genuine core biological process for the enzyme. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: &#39;L-proline biosynthesis; L-glutamate&#39;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localization to mitochondrion. Direct experimental support for
+      mitochondrial localization; correct but less precise than the matrix sub-compartment.
+      Keep as a correct general-compartment annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial-proteome study assigning OAT to mitochondrion. Consistent
+      with the established localization; less precise than mitochondrial matrix. Keep as a
+      correct general-compartment annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IMP
+  original_reference_id: PMID:1737786
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IMP) support for ornithine aminotransferase activity: gyrate-atrophy
+      missense alleles were reproduced by site-directed mutagenesis and expressed in CHO cells,
+      and shown to inactivate the enzyme, demonstrating that OAT carries this catalytic
+      activity. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:1737786
+      supporting_text: &gt;-
+        confirms that several of these mutations inactivate ornithine
+        delta-aminotransferase and cause gyrate atrophy
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: IMP
+  original_reference_id: PMID:23076989
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IMP) support for ornithine aminotransferase activity: OAT missense mutants
+      expressed in a yeast strain lacking the OAT ortholog &#34;markedly reduced enzymatic
+      activity&#34;, confirming that OAT catalyzes this reaction. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23076989
+      supporting_text: All mutations markedly reduced enzymatic activity.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:23076989
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) determination of mitochondrial-matrix localization from the
+      functional-analysis study of OAT. This is the specific, correct compartment and the core
+      location for the enzyme. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23076989
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-association annotation reflecting the OAT homohexamer, which is required to form the
+      active enzyme (PMID:23076989 shows mutants that &#34;failed to assemble to form the active
+      OAT hexamer&#34;). Informative for oligomerization but not a distinct catalytic function.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/OAT/OAT-uniprot.txt
+      supporting_text: Homohexamer.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70654
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assignment of mitochondrial-matrix localization (forward reaction:
+      ornithine + alpha-ketoglutarate -&gt; glutamate + glutamate gamma-semialdehyde). Consistent
+      with the experimental location. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70666
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assignment of mitochondrial-matrix localization (reverse reaction:
+      glutamate + glutamate gamma-semialdehyde -&gt; ornithine + alpha-ketoglutarate). Consistent
+      with the experimental location. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: NAS
+  original_reference_id: PMID:3456579
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Non-traceable author statement (cDNA-cloning paper) describing OAT as a mitochondrial
+      matrix enzyme. Consistent with the experimentally supported location, though weaker
+      evidence than the IDA. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:3456579
+      supporting_text: a nonabundant mitochondrial matrix enzyme
+- term:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  evidence_type: TAS
+  original_reference_id: PMID:3456579
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable author statement of ornithine aminotransferase activity from the cDNA-cloning
+      paper, which identifies OAT by its enzyme activity (EC 2.6.1.13). Consistent with the
+      core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:3456579
+      supporting_text: &#39;L-ornithine:2-oxo-acid aminotransferase, EC 2.6.1.13), a nonabundant&#39;
+- term:
+    id: GO:0007601
+    label: visual perception
+  evidence_type: TAS
+  original_reference_id: PMID:2793865
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This annotation derives from the disease phenotype: OAT deficiency causes gyrate atrophy
+      of the choroid and retina, which impairs vision. However, OAT is a mitochondrial
+      metabolic enzyme and does not act directly in the visual-perception (phototransduction)
+      process; the retinal degeneration is a downstream consequence of a metabolic defect
+      (hyperornithinemia). This is an over-annotation of the biological process; the retina is
+      affected, but visual perception is not a molecular role of the enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO pipeline; correctly maps the class-III PLP-dependent aminotransferase
+      InterPro signature to pyridoxal phosphate binding, consistent with the PLP cofactor at
+      Lys-292.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO/IBA pipeline; correctly recovers the core ornithine aminotransferase activity,
+      mitochondrial localization, and arginine catabolic process.
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniPathway UPA00098 mapping to L-proline biosynthesis; OAT is step 1/1 of the
+      glutamate-5-semialdehyde-from-ornithine sub-pathway.
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: HPA immunofluorescence; mitochondrial localization consistent with experimental data.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Ensembl orthology transfer of mitochondrial localization from rat OAT (P04182);
+      correct but less precise than the human mitochondrial-matrix evidence.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ARBA rule assigned the general transaminase activity, a redundant parent of the specific
+      ornithine aminotransferase activity.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Combined IEA (RHEA/EC + SubCell) correctly recovered ornithine aminotransferase activity
+      and mitochondrial matrix localization.
+- id: PMID:1737786
+  title: Ornithine delta-aminotransferase mutations in gyrate atrophy. Allelic heterogeneity
+    and functional consequences.
+  findings:
+  - statement: &gt;-
+      OAT is a nuclear-encoded mitochondrial matrix enzyme catalyzing the reversible
+      interconversion of ornithine + alpha-ketoglutarate and glutamate semialdehyde +
+      glutamate; site-directed mutagenesis of gyrate-atrophy alleles inactivates the enzyme.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      ornithine delta-aminotransferase is a nuclear-encoded mitochondrial matrix
+      enzyme which catalyzes the reversible interconversion of ornithine and
+      alpha-ketoglutarate to glutamate semialdehyde and glutamate
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; primary experimental basis for the IMP ornithine aminotransferase
+      activity annotation and for the gyrate-atrophy disease association. Abstract-only in
+      cache.
+- id: PMID:23076989
+  title: Functional analysis of missense mutations of OAT, causing gyrate atrophy
+    of choroid and retina.
+  findings:
+  - statement: &gt;-
+      OAT is a homohexameric enzyme; disease missense mutants markedly reduce enzymatic
+      activity, are unstable/degraded, or fail to assemble the active hexamer.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      homoexameric enzyme ornithine-delta-aminotransferase
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; basis for the IMP activity annotation, the IDA mitochondrial-matrix
+      location, the identical-protein-binding (homohexamer) annotation, and subunit
+      structure. Abstract-only in cache.
+- id: PMID:2793865
+  title: Point mutation affecting processing of the ornithine aminotransferase precursor
+    protein in gyrate atrophy.
+  findings:
+  - statement: &gt;-
+      A generalized deficiency of the mitochondrial enzyme OAT is the inborn error in gyrate
+      atrophy, a degenerative disease of the choroid and retina that leads to blindness.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      A generalized deficiency of the mitochondrial enzyme, ornithine aminotransferase
+      (OAT) is the inborn error in gyrate atrophy
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; H319Y processing mutant. Supports the mitochondrial disease context;
+      the visual-perception annotation drawn from it reflects the retinal disease phenotype
+      rather than a direct molecular role.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified large-scale Y2H/interactome study focused on neurodegenerative-disease
+      proteins; source of the bare protein-binding (OAT-APP) IPI. A high-throughput hit, not a
+      validated functional partnership for OAT.
+- id: PMID:3456579
+  title: Molecular cloning of human ornithine aminotransferase mRNA.
+  findings:
+  - statement: &gt;-
+      OAT (EC 2.6.1.13) is a nonabundant mitochondrial matrix enzyme, severely deficient in
+      the hereditary chorioretinal degenerative disease gyrate atrophy.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      a nonabundant mitochondrial matrix enzyme that is severely deficient in a hereditary
+      chorioretinal degenerative disease (gyrate atrophy)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified cDNA-cloning paper; source of the NAS mitochondrial-matrix location and
+      the TAS ornithine aminotransferase activity. Abstract-only in cache.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial-proteome study; corroborates mitochondrial localization of
+      OAT (HTP evidence).
+- id: Reactome:R-HSA-70654
+  title: ornithine + alpha-ketoglutarate &lt;=&gt; glutamate + L-glutamate gamma-semialdehyde
+    [OAT]
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the forward (catabolic) OAT reaction in the mitochondrial matrix;
+      consistent with UniProt and experimental data.
+- id: Reactome:R-HSA-70666
+  title: glutamate + L-glutamate gamma-semialdehyde &lt;=&gt; ornithine + alpha-ketoglutarate
+    [OAT]
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the reverse (biosynthetic) OAT reaction in the mitochondrial
+      matrix; captures the physiological reversibility of the enzyme.
+- id: file:human/OAT/OAT-uniprot.txt
+  title: UniProtKB entry P04181 (OAT_HUMAN)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Authoritative UniProt record; catalytic activity (RHEA:25160, EC 2.6.1.13), PLP cofactor
+      at Lys-292, homohexamer, mitochondrial-matrix location, and L-proline biosynthesis
+      pathway.
+core_functions:
+- description: &gt;-
+    Pyridoxal-5&#39;-phosphate-dependent ornithine aminotransferase (ornithine
+    delta-aminotransferase, EC 2.6.1.13): reversibly transfers the delta-amino group of
+    L-ornithine to 2-oxoglutarate, forming L-glutamate 5-semialdehyde (which cyclizes to
+    P5C) and L-glutamate, in the mitochondrial matrix. This links the ornithine pool of
+    arginine/urea-cycle metabolism to the glutamate/proline/P5C pool.
+  molecular_function:
+    id: GO:0004587
+    label: L-ornithine transaminase activity
+  directly_involved_in:
+  - id: GO:0055129
+    label: L-proline biosynthetic process
+  - id: GO:0006527
+    label: L-arginine catabolic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/OAT/OAT-uniprot.txt
+    supporting_text: Catalyzes the reversible interconversion of L-ornithine and
+  - reference_id: PMID:1737786
+    supporting_text: &gt;-
+      ornithine delta-aminotransferase is a nuclear-encoded mitochondrial matrix
+      enzyme which catalyzes the reversible interconversion of ornithine and
+      alpha-ketoglutarate to glutamate semialdehyde and glutamate
+  - reference_id: PMID:23076989
+    supporting_text: All mutations markedly reduced enzymatic activity.
+- description: &gt;-
+    Binds the pyridoxal 5&#39;-phosphate (vitamin B6) cofactor, covalently attached as a Schiff
+    base to the active-site lysine (Lys-292), which is required for the aminotransferase
+    catalytic mechanism.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/OAT/OAT-uniprot.txt
+    supporting_text: Name=pyridoxal 5&#39;-phosphate
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

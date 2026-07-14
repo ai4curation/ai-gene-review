@@ -1,0 +1,3701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QPRT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>QPRT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q15274" target="_blank" class="term-link">
+                        Q15274
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "QPRT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q15274" data-a="DESCRIPTION: QPRT (quinolinate phosphoribosyltransferase, nicot..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>QPRT (quinolinate phosphoribosyltransferase, nicotinate-nucleotide pyrophosphorylase [carboxylating], EC 2.4.2.19) catalyses the final committed step of de novo NAD+ biosynthesis from L-tryptophan via the kynurenine pathway. It transfers a phosphoribosyl group from 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to quinolinate, with release of CO2 and diphosphate, forming nicotinate D-ribonucleotide (NaMN), which then enters the common NAD+ biosynthetic pathway. The accompanying decarboxylation makes the reaction essentially irreversible. QPRT is a cytosolic Mg2+-dependent type II phosphoribosyltransferase that assembles into a hexamer built from three homodimers, with the active site formed at each dimer interface using residues contributed by both subunits. By consuming quinolinate, QPRT also detoxifies this potent endogenous excitotoxic and convulsant metabolite; loss or reduction of QPRT activity elevates brain quinolinate and is associated with neurodegenerative and epileptic conditions. The enzyme is broadly expressed with enhanced expression in liver.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the core quinolinate phosphoribosyltransferase catalytic activity. This matches the extensive experimental and structural evidence for human QPRT and is the correct, specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core catalytic MF, well supported by IDA/EXP evidence and matching the UniProt/EC 2.4.2.19 reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0009435" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general biological process. QPRT does participate in NAD+ biosynthesis, but a more specific term (&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan, GO:0034354) better captures its actual role at the kynurenine/NAD junction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True parent term subsumed by the more specific GO:0034354 used for the core biological process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                    GO:0034213
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0034213" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of quinolinate catabolism. This is the substrate-consuming view of the QPRT reaction and is independently supported by multiple experimental annotations; it also captures the physiologically important detoxification of the excitotoxin quinolinate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core detoxification/catabolic role, concordant with experimental IDA evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro/RHEA/EC) inference of the core catalytic activity. Correct and redundant with the experimentally supported GO:0004514 annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core MF, mechanically re-derived from EC 2.4.2.19 / RHEA:12733.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic inference of the general NAD+ biosynthetic process. Correct but less specific than GO:0034354.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> General parent process subsumed by the specific de novo from tryptophan term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016763" target="_blank" class="term-link">
+                                    GO:0016763
+                                </a>
+                            </span>
+                            <span class="term-label">pentosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0016763" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO parent-level molecular function. Quinolinate phosphoribosyltransferase is a pentosyltransferase, so this is not wrong, but it is a broad grouping term well upstream of the specific and experimentally established GO:0004514.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-general parent of the specific catalytic MF (GO:0004514); adds no information beyond it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25464930" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25464930
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel interactive partners of neuroligin 3: new aspects for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0005515" data-r="PMID:25464930" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Single binary interaction (QPRT with neuroligin-3, NLGN3) from a yeast two-hybrid screen, validated in neuroblastoma cells/brain tissue. Bare &#34;protein binding&#34; is uninformative as a molecular function and the biological significance of this interaction for QPRT is unclear.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative bare protein binding (IPI); a single PPI, not a molecular function. Retained per policy (not removed).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binary interactions from the HuRI human interactome map (keratin-associated proteins KRTAP1-1/Q07627, KRTAP10-8/P60410 and ADAMTSL4/Q6UY14-3). These high-throughput Y2H partners have no established functional relevance to NAD metabolism, and keratin-associated proteins are common Y2H false-positive preys.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative bare protein binding (IPI) from high-throughput interactome; no functional MF conveyed. Retained per policy.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0042802" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction detected in the HuRI interactome, consistent with QPRT being a homo-oligomer (hexamer of three homodimers). Meaningful for this gene because self-association is required to build the catalytic active sites at the dimer interfaces.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homo-oligomerization is real (hexamer) but is a structural property, not the core catalytic function; captured by the catalytic-complex core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                    GO:0034354
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-197268
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0034354" data-r="Reactome:R-HSA-197268" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable assignment of QPRT to de novo NAD+ biosynthesis from L-tryptophan. This is the most specific and accurate biological process for QPRT, placing it at the final committed step converting quinolinate to NaMN.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process; most specific correct BP term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17868694
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and kinetic characterization of quinolinate phosp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="PMID:17868694" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (steady-state kinetic) characterization of recombinant human QPRTase catalysing the phosphoribosyl transfer to quinolinate. Directly establishes the core catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core catalytic MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24038671" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24038671
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human quinolinic acid phosphoribosy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="PMID:24038671" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Crystal structure plus kinetic analysis of human QPRT (including inhibition by phthalic acid) directly supporting the quinolinate phosphoribosyltransferase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core catalytic MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                    GO:0034213
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24038671" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24038671
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human quinolinic acid phosphoribosy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0034213" data-r="PMID:24038671" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay evidence that human QPRT catabolizes quinolinic acid in the first step of de novo NAD+ biosynthesis. Supports the core catabolic/detoxification process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core quinolinate catabolic process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24038671" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24038671
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of human quinolinic acid phosphoribosy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0042802" data-r="PMID:24038671" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association evidence consistent with the crystallographically observed hexamer built from homodimers. Real, but a structural property rather than the enzyme&#39;s core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homo-oligomerization; captured structurally by the catalytic-complex core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26805589" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26805589
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural Insights into the Quaternary Catalytic Mechanism ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0042802" data-r="PMID:26805589" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction supported by structural and biophysical (ITC, size distribution, heat aggregation) analysis showing QPRT acts as a hexamer of three homodimers, with N-terminal helix alpha1 as a hexamer stabilizer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported homo-oligomerization; structural property, not the core catalytic MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17868694
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and kinetic characterization of quinolinate phosp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0042802" data-r="PMID:17868694" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction consistent with the hexameric arrangement demonstrated by gel filtration and crystallography for recombinant human QPRTase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homo-oligomerization; structural property captured by the catalytic-complex core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902494" target="_blank" class="term-link">
+                                    GO:1902494
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17868694
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and kinetic characterization of quinolinate phosp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:1902494" data-r="PMID:17868694" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> QPRT functions as a homo-oligomeric catalytic complex (hexamer of three homodimers) in which the active site at each dimer interface is completed by a residue (R102) contributed in trans from the partner subunit. Directly supported by structure and gel filtration.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurately describes the functional homo-oligomeric catalytic complex.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection of QPRT in exosomes from expressed prostatic secretions in urine. This is a generic proteomic &#34;found in exosome&#34; observation and does not indicate a functional extracellular localization for what is a soluble cytosolic metabolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HDA exosome detection; not a functionally meaningful localization for a cytosolic enzyme, but retained as observed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-197268
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0005829" data-r="Reactome:R-HSA-197268" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization, consistent with QPRT being a soluble metabolic enzyme of the cytosolic de novo NAD+ pathway. Correct core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core cellular location of this cytosolic enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                    GO:0034213
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3409840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3409840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quinolinic-phosphoribosyl transferase activity is decreased ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0034213" data-r="PMID:3409840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct measurement of quinolinic-phosphoribosyl transferase activity in human brain tissue (shown to be decreased in epileptic foci), supporting the quinolinate catabolic process in humans.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core quinolinate catabolic process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                    GO:0034213
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9473669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9473669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization and functional expression of the cDNA encod...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0034213" data-r="PMID:9473669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional expression of the human QPRTase cDNA (rescuing a nadC-defective E. coli strain) confirms quinolinate catabolic activity of the human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core quinolinate catabolic process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9473669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9473669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization and functional expression of the cDNA encod...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="PMID:9473669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional complementation of a QPRTase-defective (nadC) E. coli strain by the human cDNA, restoring QPRTase activity and growth without nicotinic acid, directly establishing the catalytic activity of human QPRT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental (complementation) support for the core catalytic MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                    GO:0034213
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9473669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9473669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization and functional expression of the cDNA encod...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0034213" data-r="PMID:9473669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same functional-complementation evidence as the involved_in annotation, here with the weaker acts_upstream_of_or_within qualifier. The involved_in framing is preferable; the catabolic process itself is core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the involved_in quinolinate catabolic process annotation; core process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17868694
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and kinetic characterization of quinolinate phosp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="PMID:17868694" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (structural + kinetic) assay of recombinant human QPRTase catalytic activity. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core catalytic MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3409840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3409840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quinolinic-phosphoribosyl transferase activity is decreased ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15274" data-a="GO:0004514" data-r="PMID:3409840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct measurement of QPRTase activity in human brain tissue, supporting the catalytic activity of endogenous human QPRT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core catalytic MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Quinolinate phosphoribosyltransferase (nicotinate-nucleotide pyrophosphorylase, carboxylating; EC 2.4.2.19) catalysing the Mg2+-dependent transfer of a phosphoribosyl group from PRPP to quinolinate, with release of CO2 and diphosphate, to form nicotinate D-ribonucleotide (NaMN) in the final committed step of de novo NAD+ biosynthesis from L-tryptophan, thereby also detoxifying the excitotoxin quinolinate.</h3>
+                <span class="vote-buttons" data-g="Q15274" data-a="FUNCTION: Quinolinate phosphoribosyltransferase (nicotinate-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                            nicotinate-nucleotide diphosphorylase (carboxylating) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                &#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                quinolinate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902494" target="_blank" class="term-link">
+                            catalytic complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/QPRT/QPRT-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" target="_blank" class="term-link">
+                                PMID:17868694
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">to provide the de novo source of NAMN for NAD biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24038671" target="_blank" class="term-link">
+                                PMID:24038671
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">step of the de novo NAD(+) biosynthesis pathway.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" target="_blank" class="term-link">
+                            PMID:17868694
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural and kinetic characterization of quinolinate phosphoribosyltransferase (hQPRTase) from homo sapiens.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant human QPRTase catalyses phosphoribosyl transfer to quinolinate yielding NAMN, CO2 and pyrophosphate; the decarboxylation makes the step essentially irreversible; Km for QA is about 21-23 uM.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The enzyme is a hexamer whose active site, at a dimer interface, is completed by residues (including R102) from the partner subunit; R138, K139, R161 and K171 are essential for activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Shotgun proteomics of EPS-urine exosomes detected about 900 proteins including QPRT; a generic high-throughput exosome detection, not a functional localization study.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24038671" target="_blank" class="term-link">
+                            PMID:24038671
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The crystal structure of human quinolinic acid phosphoribosyltransferase in complex with its inhibitor phthalic acid.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of human QPRT bound to inhibitor phthalic acid plus kinetic analysis; QPRT catabolizes quinolinic acid in the first step of de novo NAD+ biosynthesis, at the junction of NAD+ biosynthesis and the kynurenine pathway.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25464930" target="_blank" class="term-link">
+                            PMID:25464930
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Novel interactive partners of neuroligin 3: new aspects for pathogenesis of autism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">QPRT was identified among neuroligin-3 (NLGN3) interacting candidates from a yeast two-hybrid screen and validated in neuroblastoma cells/brain tissue.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26805589" target="_blank" class="term-link">
+                            PMID:26805589
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural Insights into the Quaternary Catalytic Mechanism of Hexameric Human Quinolinate Phosphoribosyltransferase, a Key Enzyme in de novo NAD Biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human QPRT acts as a hexamer of three dimeric subunits for cooperative reactant binding; the N-terminal helix alpha1 is a critical hexamer stabilizer.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">QPRT is essential for quinolinic acid homeostasis in the brain; its malfunction elevates QA, implicated in neurodegenerative disorders, and it is a target in malignant glioma.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI binary interactome map reporting QPRT self-interaction and binary interactions with keratin-associated proteins and ADAMTSL4.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3409840" target="_blank" class="term-link">
+                            PMID:3409840
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quinolinic-phosphoribosyl transferase activity is decreased in epileptic human brain tissue.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">QPRTase activity was directly measured in human brain biopsies and was specifically reduced in tissue involved in the epileptic discharge, consistent with QPRT catabolizing the excitotoxin/convulsant quinolinic acid.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9473669" target="_blank" class="term-link">
+                            PMID:9473669
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization and functional expression of the cDNA encoding human brain quinolinate phosphoribosyltransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The human QPRTase cDNA encodes a 297-aa protein that rescued a QPRTase-defective (nadC) E. coli strain, restoring QPRTase activity and growth without nicotinic acid; QPRTase is a key enzyme in quinolinate catabolism.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-197268
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QPRT transfers PRIB to QUIN to form NAMN</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">QPRT transfers a phosphoribosyl group to quinolinate to form nicotinate D-ribonucleotide (NaMN); activity is strictly dependent on Mg2+; a rate-limiting step of the tryptophan-to-NAD+ pathway.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(QPRT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q15274" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="qprt-q15274-review-notes">QPRT (Q15274) review notes</h1>
+<p>Gene: <strong>QPRT</strong> — quinolinate phosphoribosyltransferase; HGNC:9755; UniProt NADC_HUMAN, Q15274; human (NCBITaxon:9606); 297 aa; chromosome 16.</p>
+<h2 id="identity-and-enzymatic-function">Identity and enzymatic function</h2>
+<p>UniProt recommended name: <strong>Nicotinate-nucleotide pyrophosphorylase [carboxylating]</strong>, AltName <strong>Quinolinate phosphoribosyltransferase [decarboxylating]</strong> (QAPRTase/QPRTase), <strong>EC 2.4.2.19</strong> [file:human/QPRT/QPRT-uniprot.txt "RecName: Full=Nicotinate-nucleotide pyrophosphorylase [carboxylating]"], [file:human/QPRT/QPRT-uniprot.txt "AltName: Full=Quinolinate phosphoribosyltransferase [decarboxylating]"].</p>
+<p>Catalytic activity (UniProt, EC 2.4.2.19, RHEA:12733):<br />
+<code>nicotinate beta-D-ribonucleotide + CO2 + diphosphate = quinolinate + 5-phospho-alpha-D-ribose 1-diphosphate + 2 H(+)</code> [file:human/QPRT/QPRT-uniprot.txt "Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate ="]. The physiological direction is quinolinate + PRPP -&gt; nicotinate mononucleotide (NaMN) + CO2 + PPi; the decarboxylation makes the step essentially irreversible <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" title="The decarboxylation which occurs along with the phosphoribosyl transfer 27 is essentially an irreversible step.">PMID:17868694</a>.</p>
+<p>GO catalytic term <strong>GO:0004514 nicotinate-nucleotide diphosphorylase (carboxylating) activity</strong> (OLS-verified current label; definition matches the UniProt/EC reaction exactly). This is the single, well-supported core molecular function. Supported by:<br />
+- IDA/EXP in multiple primary papers: enzymatic + kinetic characterization of recombinant hQPRTase <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" title="Steady-state kinetic analysis of hQPRTase was carried out using a continuous UV-assay which monitored the appearance of product.">PMID:17868694</a>, with km ~21-23 uM for QA.<br />
+- functional complementation: human cDNA rescued a QPRTase-defective (nadC) E. coli strain <a href="https://pubmed.ncbi.nlm.nih.gov/9473669" title="Introduction of the human cDNA into a QPRTase defective (nadC) E. coli strain brought about an abrupt increase in QPRTase activity and allowed the cells to grow in the absence of nicotinic acid.">PMID:9473669</a>.<br />
+- crystal structure + inhibition kinetics <a href="https://pubmed.ncbi.nlm.nih.gov/24038671">PMID:24038671</a>.</p>
+<p>Key catalytic/substrate-binding residues (from mutagenesis + structures): QA-binding site formed by R102* (from partner subunit), R138, K139, H159, R161, K171 <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" title="In the hQPRTase structure, this surface is composed of R102*, R138, K139, H159, R161 and K171">PMID:17868694</a>. R138Q, K139A/S, R161Q, K171A/S abolish activity <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" title="The mutants R138Q, K139A, K139S, R161Q and K171A, K171S completely abolished hQPRTase activity.">PMID:17868694</a>.</p>
+<p>Mg2+ dependence: Reactome states the reaction is "strictly dependent on Mg2+ ions being present" [Reactome:R-HSA-197268 "Its activity is strictly dependent on Mg2+ ions being present."]. Note: UniProt does NOT annotate a discrete metal-binding site (all BINDING features are for quinolinate); magnesium binding is therefore a plausible but not GOA-supported MF and is listed only as a candidate, not asserted in core_functions.</p>
+<h2 id="quaternary-structure">Quaternary structure</h2>
+<p>Type II PRTase; alpha/beta barrel fold; functional unit is a <strong>hexamer formed by 3 homodimers</strong> [file:human/QPRT/QPRT-uniprot.txt "Hexamer formed by 3 homodimers."], <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" title="The human enzyme adopts a hexameric arrangement, which places the active sites in close proximity to each other.">PMID:17868694</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/26805589" title="human QPRT acts as a hexamer for cooperative reactant binding via three dimeric subunits">PMID:26805589</a>. The active site sits at a dimer interface and requires the partner subunit (R102* is contributed in trans). N-terminal helix alpha1 (res ~1-12) stabilizes the hexamer; deleting it yields dimers <a href="https://pubmed.ncbi.nlm.nih.gov/26805589">PMID:26805589</a>. This grounds the GO:1902494 "catalytic complex" (part_of, IDA) and GO:0042802 "identical protein binding" (homo-oligomer) annotations.</p>
+<h2 id="biological-process-pathway">Biological process / pathway</h2>
+<p>Final committed step of <strong>de novo NAD+ biosynthesis from L-tryptophan</strong> via the kynurenine pathway: QPRT converts quinolinate to NaMN, which then enters the common NAD+ salvage/de novo pathway <a href="https://pubmed.ncbi.nlm.nih.gov/17868694" title="to provide the de novo source of NAMN for NAD biosynthesis">PMID:17868694</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/24038671" title="QPRT at the junction of two different pathways, that is, de novo NAD(+) biosynthesis and the kynurenine pathway of tryptophan degradation.">PMID:24038671</a>. UniProt PATHWAY: NAD(+) biosynthesis; nicotinate D-ribonucleotide from quinolinate: step 1/1 [file:human/QPRT/QPRT-uniprot.txt "Cofactor biosynthesis; NAD(+) biosynthesis; nicotinate D-"].</p>
+<ul>
+<li><strong>GO:0034354 'de novo' NAD+ biosynthetic process from L-tryptophan</strong> (TAS, Reactome) — most specific correct BP; CORE.</li>
+<li><strong>GO:0009435 NAD+ biosynthetic process</strong> (IBA/IEA) — correct parent, less specific; keep as non-core (subsumed by GO:0034354).</li>
+<li><strong>GO:0034213 quinolinate catabolic process</strong> (multiple IDA + IBA) — the same reaction viewed from the substrate side (QPRT consumes/detoxifies quinolinate). Correct and experimentally supported; CORE (detox role). QA is a potent endogenous excitotoxin, so QPRT's consumption of it is physiologically important <a href="https://pubmed.ncbi.nlm.nih.gov/9473669" title="Quinolinate acts as a most potent endogenous exitotoxin to neurons.">PMID:9473669</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/3409840" title="the excitotoxic and convulsant agent quinolinic acid (QUIN)">PMID:3409840</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<p>Cytosolic enzyme.<br />
+- <strong>GO:0005829 cytosol</strong> (TAS, Reactome) — CORE location; consistent with a soluble cytosolic metabolic enzyme.<br />
+- <strong>GO:0005737 cytoplasm</strong> (IBA) — appears in UniProt DR GO list but NOT in the GOA TSV rows seeded here; broader parent of cytosol.<br />
+- <strong>GO:0070062 extracellular exosome</strong> (HDA, PMID:23533145) — high-throughput exosome/EPS-urine proteomics detection; a generic MS "found-in-exosome" annotation, not indicative of a functional extracellular role. KEEP_AS_NON_CORE (do not treat as a real localization for a cytosolic metabolic enzyme).</p>
+<h2 id="protein-protein-interactions-bare-protein-binding">Protein-protein interactions (bare "protein binding")</h2>
+<p>The IntAct/IPI GO:0005515 rows are individual binary interactions, not informative molecular functions:<br />
+- NLGN3 (Q9NZ94-2): Y2H screen for neuroligin-3 partners <a href="https://pubmed.ncbi.nlm.nih.gov/25464930">PMID:25464930</a>; QPRT was one of 51 candidates validated in neuroblastoma cells/brain tissue <a href="https://pubmed.ncbi.nlm.nih.gov/25464930" title="including EEF1A1, FLNA, ITPRIP, CYP11A1, MT-CO2, GPR175, ACOT2, and QPRT, were further validated">PMID:25464930</a>. Biological significance for QPRT function unclear.<br />
+- KRTAP10-8 (P60410), KRTAP1-1 (Q07627), ADAMTSL4 (Q6UY14-3): from the HuRI binary interactome map <a href="https://pubmed.ncbi.nlm.nih.gov/32296183">PMID:32296183</a>. Keratin-associated proteins are common Y2H sticky/false-positive preys; no functional relevance to NAD metabolism.<br />
+Per curation policy, bare "protein binding" (GO:0005515) IPI is uninformative -&gt; MARK_AS_OVER_ANNOTATED (never REMOVE an IPI). "identical protein binding" (GO:0042802) is meaningful here because QPRT is a homo-oligomer -&gt; ACCEPT/KEEP_AS_NON_CORE.</p>
+<h2 id="other-annotations">Other annotations</h2>
+<ul>
+<li><strong>GO:0016763 pentosyltransferase activity</strong> (IEA, InterPro2GO) — correct but a broad parent of the specific GO:0004514; MARK_AS_OVER_ANNOTATED / redundant with the specific MF.</li>
+<li>IBA/IEA duplicates of GO:0004514 and GO:0009435 — accept the phylogenetic MF; the pipeline IEA/IBA process terms are correct-but-general.</li>
+</ul>
+<h2 id="disease-physiology-context-not-for-go-annotation-directly">Disease / physiology context (not for GO annotation directly)</h2>
+<p>QPRT activity is reduced in epileptic human brain tissue <a href="https://pubmed.ncbi.nlm.nih.gov/3409840" title="A specific reduction of QPRTase activity was observed in tissue primarily involved in the epileptic discharge">PMID:3409840</a>. QPRT loss raises quinolinate, implicated in neurodegeneration (Huntington's, Alzheimer's, epilepsy, AIDS dementia) <a href="https://pubmed.ncbi.nlm.nih.gov/26805589" title="malfunction of QPRT increases QA levels, which is strongly involved in a series of severe neurodegenerative disorders including Huntington's disease, Alzheimer's disease, Epilepsia and AIDS dementia complex">PMID:26805589</a>. Studied as a target in malignant glioma <a href="https://pubmed.ncbi.nlm.nih.gov/26805589">PMID:26805589</a>. These are downstream/physiological and are captured biologically by the QA-catabolism and NAD-biosynthesis process terms.</p>
+<h2 id="core-function-summary">Core function summary</h2>
+<ol>
+<li><strong>GO:0004514</strong> nicotinate-nucleotide diphosphorylase (carboxylating) activity (MF) — the catalytic quinolinate phosphoribosyltransferase activity.</li>
+<li>Directed at BP <strong>GO:0034354</strong> 'de novo' NAD+ biosynthetic process from L-tryptophan and <strong>GO:0034213</strong> quinolinate catabolic process, in <strong>GO:0005829</strong> cytosol, as part of the hexameric catalytic complex (GO:1902494).<br />
+</content><br />
+</invoke></li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q15274
+gene_symbol: QPRT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: QPRT (quinolinate phosphoribosyltransferase, nicotinate-nucleotide pyrophosphorylase
+  [carboxylating], EC 2.4.2.19) catalyses the final committed step of de novo NAD+
+  biosynthesis from L-tryptophan via the kynurenine pathway. It transfers a phosphoribosyl
+  group from 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to quinolinate, with release
+  of CO2 and diphosphate, forming nicotinate D-ribonucleotide (NaMN), which then enters
+  the common NAD+ biosynthetic pathway. The accompanying decarboxylation makes the
+  reaction essentially irreversible. QPRT is a cytosolic Mg2+-dependent type II phosphoribosyltransferase
+  that assembles into a hexamer built from three homodimers, with the active site formed
+  at each dimer interface using residues contributed by both subunits. By consuming
+  quinolinate, QPRT also detoxifies this potent endogenous excitotoxic and convulsant
+  metabolite; loss or reduction of QPRT activity elevates brain quinolinate and is
+  associated with neurodegenerative and epileptic conditions. The enzyme is broadly
+  expressed with enhanced expression in liver.
+existing_annotations:
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) inference of the core quinolinate phosphoribosyltransferase
+      catalytic activity. This matches the extensive experimental and structural evidence
+      for human QPRT and is the correct, specific molecular function.
+    action: ACCEPT
+    reason: Core catalytic MF, well supported by IDA/EXP evidence and matching the
+      UniProt/EC 2.4.2.19 reaction.
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Correct but general biological process. QPRT does participate in NAD+
+      biosynthesis, but a more specific term (&#39;de novo&#39; NAD+ biosynthetic process
+      from L-tryptophan, GO:0034354) better captures its actual role at the kynurenine/NAD
+      junction.
+    action: KEEP_AS_NON_CORE
+    reason: True parent term subsumed by the more specific GO:0034354 used for the
+      core biological process.
+- term:
+    id: GO:0034213
+    label: quinolinate catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic inference of quinolinate catabolism. This is the substrate-consuming
+      view of the QPRT reaction and is independently supported by multiple experimental
+      annotations; it also captures the physiologically important detoxification of
+      the excitotoxin quinolinate.
+    action: ACCEPT
+    reason: Core detoxification/catabolic role, concordant with experimental IDA evidence.
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (ARBA/InterPro/RHEA/EC) inference of the core catalytic activity.
+      Correct and redundant with the experimentally supported GO:0004514 annotations.
+    action: ACCEPT
+    reason: Correct core MF, mechanically re-derived from EC 2.4.2.19 / RHEA:12733.
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic inference of the general NAD+ biosynthetic process. Correct
+      but less specific than GO:0034354.
+    action: KEEP_AS_NON_CORE
+    reason: General parent process subsumed by the specific de novo from tryptophan
+      term.
+- term:
+    id: GO:0016763
+    label: pentosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO parent-level molecular function. Quinolinate phosphoribosyltransferase
+      is a pentosyltransferase, so this is not wrong, but it is a broad grouping term
+      well upstream of the specific and experimentally established GO:0004514.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Over-general parent of the specific catalytic MF (GO:0004514); adds no
+      information beyond it.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25464930
+  qualifier: enables
+  review:
+    summary: Single binary interaction (QPRT with neuroligin-3, NLGN3) from a yeast
+      two-hybrid screen, validated in neuroblastoma cells/brain tissue. Bare &#34;protein
+      binding&#34; is uninformative as a molecular function and the biological significance
+      of this interaction for QPRT is unclear.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative bare protein binding (IPI); a single PPI, not a molecular
+      function. Retained per policy (not removed).
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Binary interactions from the HuRI human interactome map (keratin-associated
+      proteins KRTAP1-1/Q07627, KRTAP10-8/P60410 and ADAMTSL4/Q6UY14-3). These high-throughput
+      Y2H partners have no established functional relevance to NAD metabolism, and
+      keratin-associated proteins are common Y2H false-positive preys.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative bare protein binding (IPI) from high-throughput interactome;
+      no functional MF conveyed. Retained per policy.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Self-interaction detected in the HuRI interactome, consistent with QPRT
+      being a homo-oligomer (hexamer of three homodimers). Meaningful for this gene
+      because self-association is required to build the catalytic active sites at the
+      dimer interfaces.
+    action: KEEP_AS_NON_CORE
+    reason: Homo-oligomerization is real (hexamer) but is a structural property, not
+      the core catalytic function; captured by the catalytic-complex core function.
+- term:
+    id: GO:0034354
+    label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan&#34;
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-197268
+  qualifier: involved_in
+  review:
+    summary: Reactome-traceable assignment of QPRT to de novo NAD+ biosynthesis from
+      L-tryptophan. This is the most specific and accurate biological process for
+      QPRT, placing it at the final committed step converting quinolinate to NaMN.
+    action: ACCEPT
+    reason: Core biological process; most specific correct BP term.
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: EXP
+  original_reference_id: PMID:17868694
+  qualifier: enables
+  review:
+    summary: Experimental (steady-state kinetic) characterization of recombinant human
+      QPRTase catalysing the phosphoribosyl transfer to quinolinate. Directly establishes
+      the core catalytic activity.
+    action: ACCEPT
+    reason: Direct experimental support for the core catalytic MF.
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: IDA
+  original_reference_id: PMID:24038671
+  qualifier: enables
+  review:
+    summary: Crystal structure plus kinetic analysis of human QPRT (including inhibition
+      by phthalic acid) directly supporting the quinolinate phosphoribosyltransferase
+      activity.
+    action: ACCEPT
+    reason: Direct experimental support for the core catalytic MF.
+- term:
+    id: GO:0034213
+    label: quinolinate catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:24038671
+  qualifier: involved_in
+  review:
+    summary: Direct assay evidence that human QPRT catabolizes quinolinic acid in
+      the first step of de novo NAD+ biosynthesis. Supports the core catabolic/detoxification
+      process.
+    action: ACCEPT
+    reason: Direct experimental support for the core quinolinate catabolic process.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24038671
+  qualifier: enables
+  review:
+    summary: Self-association evidence consistent with the crystallographically observed
+      hexamer built from homodimers. Real, but a structural property rather than the
+      enzyme&#39;s core catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: Homo-oligomerization; captured structurally by the catalytic-complex core
+      function.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26805589
+  qualifier: enables
+  review:
+    summary: Self-interaction supported by structural and biophysical (ITC, size distribution,
+      heat aggregation) analysis showing QPRT acts as a hexamer of three homodimers,
+      with N-terminal helix alpha1 as a hexamer stabilizer.
+    action: KEEP_AS_NON_CORE
+    reason: Well-supported homo-oligomerization; structural property, not the core
+      catalytic MF.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17868694
+  qualifier: enables
+  review:
+    summary: Self-interaction consistent with the hexameric arrangement demonstrated
+      by gel filtration and crystallography for recombinant human QPRTase.
+    action: KEEP_AS_NON_CORE
+    reason: Homo-oligomerization; structural property captured by the catalytic-complex
+      core function.
+- term:
+    id: GO:1902494
+    label: catalytic complex
+  evidence_type: IDA
+  original_reference_id: PMID:17868694
+  qualifier: part_of
+  review:
+    summary: QPRT functions as a homo-oligomeric catalytic complex (hexamer of three
+      homodimers) in which the active site at each dimer interface is completed by
+      a residue (R102) contributed in trans from the partner subunit. Directly supported
+      by structure and gel filtration.
+    action: ACCEPT
+    reason: Accurately describes the functional homo-oligomeric catalytic complex.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: High-throughput MS detection of QPRT in exosomes from expressed prostatic
+      secretions in urine. This is a generic proteomic &#34;found in exosome&#34; observation
+      and does not indicate a functional extracellular localization for what is a
+      soluble cytosolic metabolic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: HDA exosome detection; not a functionally meaningful localization for
+      a cytosolic enzyme, but retained as observed.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-197268
+  qualifier: located_in
+  review:
+    summary: Cytosolic localization, consistent with QPRT being a soluble metabolic
+      enzyme of the cytosolic de novo NAD+ pathway. Correct core location.
+    action: ACCEPT
+    reason: Core cellular location of this cytosolic enzyme.
+- term:
+    id: GO:0034213
+    label: quinolinate catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:3409840
+  qualifier: involved_in
+  review:
+    summary: Direct measurement of quinolinic-phosphoribosyl transferase activity
+      in human brain tissue (shown to be decreased in epileptic foci), supporting
+      the quinolinate catabolic process in humans.
+    action: ACCEPT
+    reason: Direct experimental support for the core quinolinate catabolic process.
+- term:
+    id: GO:0034213
+    label: quinolinate catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:9473669
+  qualifier: involved_in
+  review:
+    summary: Functional expression of the human QPRTase cDNA (rescuing a nadC-defective
+      E. coli strain) confirms quinolinate catabolic activity of the human enzyme.
+    action: ACCEPT
+    reason: Direct experimental support for the core quinolinate catabolic process.
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: IDA
+  original_reference_id: PMID:9473669
+  qualifier: enables
+  review:
+    summary: Functional complementation of a QPRTase-defective (nadC) E. coli strain
+      by the human cDNA, restoring QPRTase activity and growth without nicotinic acid,
+      directly establishing the catalytic activity of human QPRT.
+    action: ACCEPT
+    reason: Direct experimental (complementation) support for the core catalytic MF.
+- term:
+    id: GO:0034213
+    label: quinolinate catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:9473669
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Same functional-complementation evidence as the involved_in annotation,
+      here with the weaker acts_upstream_of_or_within qualifier. The involved_in framing
+      is preferable; the catabolic process itself is core.
+    action: ACCEPT
+    reason: Redundant with the involved_in quinolinate catabolic process annotation;
+      core process.
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: IDA
+  original_reference_id: PMID:17868694
+  qualifier: enables
+  review:
+    summary: Direct (structural + kinetic) assay of recombinant human QPRTase catalytic
+      activity. Core molecular function.
+    action: ACCEPT
+    reason: Direct experimental support for the core catalytic MF.
+- term:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  evidence_type: IDA
+  original_reference_id: PMID:3409840
+  qualifier: enables
+  review:
+    summary: Direct measurement of QPRTase activity in human brain tissue, supporting
+      the catalytic activity of endogenous human QPRT.
+    action: ACCEPT
+    reason: Direct experimental support for the core catalytic MF.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: InterPro2GO pipeline; yields the over-general pentosyltransferase
+      activity term. Mechanically correct but uninformative relative to the specific MF.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PAN-GO/GO_Central phylogenetic inference; supports the correct catalytic
+      MF and NAD/quinolinate process terms.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: ARBA/EC/RHEA-based electronic annotation re-deriving the correct
+      catalytic MF and NAD biosynthetic process.
+- id: PMID:17868694
+  title: Structural and kinetic characterization of quinolinate phosphoribosyltransferase
+    (hQPRTase) from homo sapiens.
+  findings:
+  - statement: Recombinant human QPRTase catalyses phosphoribosyl transfer to quinolinate
+      yielding NAMN, CO2 and pyrophosphate; the decarboxylation makes the step essentially
+      irreversible; Km for QA is about 21-23 uM.
+    reference_section_type: RESULTS
+  - statement: The enzyme is a hexamer whose active site, at a dimer interface, is
+      completed by residues (including R102) from the partner subunit; R138, K139,
+      R161 and K171 are essential for activity.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text available; primary structural and kinetic characterization
+      of human QPRT. Directly grounds the catalytic MF, catalytic-complex, and homo-oligomer
+      annotations.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings:
+  - statement: Shotgun proteomics of EPS-urine exosomes detected about 900 proteins
+      including QPRT; a generic high-throughput exosome detection, not a functional
+      localization study.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Abstract-only; supports only the HDA extracellular-exosome detection,
+      which is non-core for a cytosolic enzyme.
+- id: PMID:24038671
+  title: The crystal structure of human quinolinic acid phosphoribosyltransferase
+    in complex with its inhibitor phthalic acid.
+  findings:
+  - statement: Crystal structure of human QPRT bound to inhibitor phthalic acid plus
+      kinetic analysis; QPRT catabolizes quinolinic acid in the first step of de novo
+      NAD+ biosynthesis, at the junction of NAD+ biosynthesis and the kynurenine pathway.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only cache but establishes catalytic activity, quinolinate
+      catabolism, and the hexameric assembly.
+- id: PMID:25464930
+  title: &#39;Novel interactive partners of neuroligin 3: new aspects for pathogenesis
+    of autism.&#39;
+  findings:
+  - statement: QPRT was identified among neuroligin-3 (NLGN3) interacting candidates
+      from a yeast two-hybrid screen and validated in neuroblastoma cells/brain tissue.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Abstract-only; supports a single QPRT-NLGN3 PPI (bare protein binding)
+      of unclear functional significance for QPRT.
+- id: PMID:26805589
+  title: Structural Insights into the Quaternary Catalytic Mechanism of Hexameric
+    Human Quinolinate Phosphoribosyltransferase, a Key Enzyme in de novo NAD Biosynthesis.
+  findings:
+  - statement: Human QPRT acts as a hexamer of three dimeric subunits for cooperative
+      reactant binding; the N-terminal helix alpha1 is a critical hexamer stabilizer.
+    reference_section_type: ABSTRACT
+  - statement: QPRT is essential for quinolinic acid homeostasis in the brain; its
+      malfunction elevates QA, implicated in neurodegenerative disorders, and it is
+      a target in malignant glioma.
+    reference_section_type: INTRODUCTION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text available; grounds the hexameric catalytic-complex and
+      identical-protein-binding annotations and the de novo NAD role.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: HuRI binary interactome map reporting QPRT self-interaction and binary
+      interactions with keratin-associated proteins and ADAMTSL4.
+    reference_section_type: METHODS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput Y2H interactome; QPRT self-interaction is consistent
+      with homo-oligomerization, but the heterologous partners lack functional relevance.
+- id: PMID:3409840
+  title: Quinolinic-phosphoribosyl transferase activity is decreased in epileptic
+    human brain tissue.
+  findings:
+  - statement: QPRTase activity was directly measured in human brain biopsies and
+      was specifically reduced in tissue involved in the epileptic discharge, consistent
+      with QPRT catabolizing the excitotoxin/convulsant quinolinic acid.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Abstract-only; direct assay of endogenous human QPRTase activity
+      and quinolinate catabolism in brain.
+- id: PMID:9473669
+  title: Characterization and functional expression of the cDNA encoding human brain
+    quinolinate phosphoribosyltransferase.
+  findings:
+  - statement: The human QPRTase cDNA encodes a 297-aa protein that rescued a QPRTase-defective
+      (nadC) E. coli strain, restoring QPRTase activity and growth without nicotinic
+      acid; QPRTase is a key enzyme in quinolinate catabolism.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only; functional-complementation evidence directly establishing
+      the catalytic activity and quinolinate catabolic role of human QPRT.
+- id: Reactome:R-HSA-197268
+  title: QPRT transfers PRIB to QUIN to form NAMN
+  findings:
+  - statement: QPRT transfers a phosphoribosyl group to quinolinate to form nicotinate
+      D-ribonucleotide (NaMN); activity is strictly dependent on Mg2+; a rate-limiting
+      step of the tryptophan-to-NAD+ pathway.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction supporting the cytosol location and de novo NAD+
+      from tryptophan process; also notes Mg2+ dependence.
+core_functions:
+- description: Quinolinate phosphoribosyltransferase (nicotinate-nucleotide pyrophosphorylase,
+    carboxylating; EC 2.4.2.19) catalysing the Mg2+-dependent transfer of a phosphoribosyl
+    group from PRPP to quinolinate, with release of CO2 and diphosphate, to form nicotinate
+    D-ribonucleotide (NaMN) in the final committed step of de novo NAD+ biosynthesis
+    from L-tryptophan, thereby also detoxifying the excitotoxin quinolinate.
+  molecular_function:
+    id: GO:0004514
+    label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  directly_involved_in:
+  - id: GO:0034354
+    label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan&#34;
+  - id: GO:0034213
+    label: quinolinate catabolic process
+  in_complex:
+    id: GO:1902494
+    label: catalytic complex
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/QPRT/QPRT-uniprot.txt
+    supporting_text: &#34;Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =&#34;
+  - reference_id: PMID:17868694
+    supporting_text: to provide the de novo source of NAMN for NAD biosynthesis
+  - reference_id: PMID:24038671
+    supporting_text: &#34;step of the de novo NAD(+) biosynthesis pathway.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

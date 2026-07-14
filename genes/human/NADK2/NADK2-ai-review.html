@@ -1,0 +1,3406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NADK2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NADK2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q4G0N4" target="_blank" class="term-link">
+                        Q4G0N4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NADK2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q4G0N4" data-a="DESCRIPTION: NADK2 (NAD kinase 2, mitochondrial; also known as ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NADK2 (NAD kinase 2, mitochondrial; also known as C5orf33, MNADK, NADKD1) is the mitochondrial NAD(+) kinase (EC 2.7.1.23). Following import into the mitochondrial matrix and cleavage of its N-terminal transit peptide, the mature protein assembles into a homodimer that phosphorylates NAD(+) using ATP (and, in vitro, inorganic polyphosphate) to produce NADP(+). It is the source of the mitochondrial NADP(H) pool, the counterpart of the cytosolic NADK. The NADPH generated from this NADP(+) supplies NADP-dependent mitochondrial oxidoreductases, including 2,4-dienoyl-CoA reductase (DECR1) in polyunsaturated fatty acid beta-oxidation, the reductive step of lysine degradation, delta-1-pyrroline-5-carboxylate synthase (ALDH18A1/P5CS) in proline biosynthesis, mitochondrial one-carbon metabolism, and antioxidant defense against reactive oxygen species. The enzyme has low Km for NAD(+), only weak NADH kinase activity, and is feedback-inhibited by NADH, NADPH and NADP(+). It is broadly expressed with highest levels in liver. Loss-of-function mutations cause 2,4-dienoyl-CoA reductase deficiency (DECRD) / NADK2 deficiency, a mitochondrial NADP(H)-deficiency disorder presenting with severe infantile encephalopathy, lactic acidosis and hyperlysinemia.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                                    GO:0003951
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0003951" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of NAD+ kinase activity, the defining and experimentally established catalytic function of NADK2. This is the core molecular function of the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA call matches the direct experimental characterization (IDA, PMID:23212377); NADK2 is the mitochondrial NAD(+) kinase (EC 2.7.1.23).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showing that C5orf33 protein has NADK activity using ATP and poly(P) as phosphoryl donors</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) localization to mitochondrion, consistent with the experimentally confirmed mitochondrial localization of NADK2. A more precise compartment (mitochondrial matrix) is captured by other annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NADK2 carries an N-terminal mitochondrial transit peptide and localizes to mitochondria in human cells (IDA, PMID:23212377); the matrix is the specific submitochondrial compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the C5orf33 protein is localized in mitochondria, whereas Δ62C5orf33 protein is not, confirming that C5orf33 protein is a mitochondrial NADK</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                    GO:0019674
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0019674" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) involvement in NAD+ metabolic process. NADK2 consumes NAD+ to make NADP+, so it participates in NAD+ metabolism; the more informative biological process is NADP+ biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the enzyme&#39;s reaction (NAD+ + ATP -&gt; ADP + NADP+ + H+). NADP+ biosynthetic process (GO:0006741) is proposed as a more specific term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we detected the formation of NADP+ from NAD+ and of ADP from ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                                    GO:0003951
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0003951" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/RHEA/EC) assignment of NAD+ kinase activity, mapped from EC 2.7.1.23 and RHEA:18629. Correct and redundant with the experimental IDA/IBA calls.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EC/RHEA mapping matches the UniProt catalytic activity and the direct experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK2/NADK2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from UniProt Subcellular Location keyword mapping (SL-0173) to mitochondrion. Consistent with experimental localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the experimentally determined mitochondrial localization; the matrix is the specific compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK2/NADK2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005759" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) assignment to the mitochondrial matrix. NADK2 is a soluble matrix enzyme (cleaved transit peptide, no transmembrane segments), so the matrix is the correct and most informative compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The matrix localization is consistent with the transit-peptide-directed import of a soluble kinase and with Reactome/UniProt matrix placement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK2/NADK2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                    GO:0019674
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0019674" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro IPR017437, ATP-NAD kinase PpnK C-domain) assignment to NAD+ metabolic process. Correct for an NAD kinase family member.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The NAD kinase domain signature correctly implies participation in NAD+ metabolism; NADP+ biosynthesis (GO:0006741) is the more precise process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we detected the formation of NADP+ from NAD+ and of ADP from ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence (HPA) localization to mitochondrion. Corroborates the experimental mitochondrial localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent IDA localization consistent with PMID:23212377 and the transit peptide.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteomics places NADK2 in the high-confidence human mitochondrial proteome. Supports, but is less specific than, the matrix annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NADK2 is a bona fide component of the mitochondrial proteome; consistent with all other localization evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8955030
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005759" data-r="Reactome:R-HSA-8955030" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS localization to the mitochondrial matrix, from the reaction &#34;NADK2 dimer phosphorylates NAD+ to NADP+&#34;. This is the correct compartment for the NADK2 catalytic activity and is the core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The matrix is where the soluble NADK2 kinase acts; this Reactome event describes NADK2&#39;s own reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-8955030
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial NAD kinase 2 (NADK2 aka C5orf33, MNADK, NADKD1) uses ATP to phosphorylate NAD+ to NADP+</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9838081
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005759" data-r="Reactome:R-HSA-9838081" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS matrix localization derived from an event in which NADK2 is a substrate of the LONP1 matrix protease (&#34;LONP1 degrades mitochondrial matrix proteins&#34;). The compartment (matrix) is correct, but this event describes LONP1&#39;s function, not NADK2&#39;s, so it is a non-core, indirect localization annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The matrix localization is accurate and consistent with the direct annotations, but this Reactome entry is about LONP1-mediated degradation of matrix proteins rather than NADK2&#39;s own biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-9838081
+
+                                </span>
+
+                                <div class="support-text">LONP1 degrades several mitochondrial matrix proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9838093
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005759" data-r="Reactome:R-HSA-9838093" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS matrix localization from an event in which NADK2 is bound as a substrate by the LONP1 matrix protease (&#34;LONP1 binds mitochondrial matrix proteins&#34;). Correct compartment but an indirect, non-core localization annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matrix localization is accurate; the source event describes LONP1 substrate binding rather than NADK2&#39;s own function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-9838093
+
+                                </span>
+
+                                <div class="support-text">LONP1 binds substrate proteins and degrades them using an ATP-dependent mechanism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                                    GO:0003951
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23212377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a human mitochondrial...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0003951" data-r="PMID:23212377" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that purified NADK2 phosphorylates NAD+ to NADP+ using ATP (or inorganic polyphosphate), with defined kinetics. This is the defining core molecular function of NADK2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purified recombinant protein forms NADP+ from NAD+ and ADP from ATP (TLC), with Km(NAD+) 0.022 mM; unambiguous NAD+ kinase (EC 2.7.1.23) activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we detected the formation of NADP+ from NAD+ and of ADP from ATP (Fig. 2c), showing that C5orf33 protein has NADK activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23212377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a human mitochondrial...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005739" data-r="PMID:23212377" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of mitochondrial localization by immunofluorescence and subcellular fractionation in human cells; transit-peptide dependent. Core localization (matrix compartment).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FLAG-tagged full-length NADK2 localizes to mitochondria while the transit-peptide deletion does not; confirmed by mitochondrial/cytosolic fractionation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">C5orf33 protein was localized in the mitochondrial fraction but not in the cytosolic fraction</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                    GO:0019674
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23212377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a human mitochondrial...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0019674" data-r="PMID:23212377" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that NADK2 activity contributes to mitochondrial NAD(P) metabolism (knockdown reduces mitochondrial NADK activity and perturbs ROS/redox balance). Core biological process; the anabolic product side is NADP+ biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NADK2 catalyzes NAD+ -&gt; NADP+ and its knockdown lowers mitochondrial NADK activity to 47% and elevates ROS, confirming a role in NAD(P) metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NADK activity of the mitochondrial fraction was decreased to 47% upon knockdown of C5orf33</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23212377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a human mitochondrial...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0042803" data-r="PMID:23212377" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADK2 functions as a homodimer (UniProt SUBUNIT; Reactome &#34;NADK2 dimer&#34;). This is a genuine oligomerization property but describes the enzyme&#39;s quaternary structure rather than its catalytic activity, so it is a non-core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The homodimer state is real and relevant to how the active enzyme assembles, but self-association is not the gene&#39;s core functional contribution (NAD+ kinase activity is); recorded as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK2/NADK2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006741" target="_blank" class="term-link">
+                                    GO:0006741
+                                </a>
+                            </span>
+                            <span class="term-label">NADP+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0006741" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new biological-process annotation. GOA records only the broader NAD+ metabolic process for NADK2, but the enzyme&#39;s anabolic product is NADP+; NADK2 is the source of mitochondrial NADP(+). UniProt already carries this term via InterPro (GO:0006741; P:NADP+ biosynthetic process; IEA:InterPro). Proposing it as the more specific, informative process term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                        PMID:23212377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we detected the formation of NADP+ from NAD+ and of ADP from ATP</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK2/NADK2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0006741; P:NADP+ biosynthetic process; IEA:InterPro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4G0N4" data-a="GO:0005524" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular-function annotation. NADK2 binds ATP as the phosphoryl donor of the NAD kinase reaction (Km for ATP 1.7 mM); ATP-binding is a UniProt keyword (ATP-binding) and is intrinsic to the catalytic mechanism but is not present in the GOA experimental set.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK2/NADK2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mitochondrial NAD(+) kinase activity - NADK2 phosphorylates NAD(+) using ATP (or inorganic polyphosphate in vitro) to yield NADP(+), generating the mitochondrial NADP(H) pool. This is the sole known route of mitochondrial NADP(+) biosynthesis in human cells.</h3>
+                <span class="vote-buttons" data-g="Q4G0N4" data-a="FUNCTION: Mitochondrial NAD(+) kinase activity - NADK2 phosp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                            NAD+ kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006741" target="_blank" class="term-link">
+                                NADP+ biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                NAD+ metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                                PMID:23212377
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we detected the formation of NADP+ from NAD+ and of ADP from ATP (Fig. 2c), showing that C5orf33 protein has NADK activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP binding - NADK2 binds ATP as the phosphoryl donor for the NAD kinase reaction (Km for ATP 1.7 mM), and can alternatively use inorganic polyphosphate.</h3>
+                <span class="vote-buttons" data-g="Q4G0N4" data-a="FUNCTION: ATP binding - NADK2 binds ATP as the phosphoryl do..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NADK2/NADK2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23212377" target="_blank" class="term-link">
+                            PMID:23212377
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and characterization of a human mitochondrial NAD kinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24847004" target="_blank" class="term-link">
+                            PMID:24847004
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial NADP(H) deficiency due to a mutation in NADK2 causes dienoyl-CoA reductase deficiency with hyperlysinemia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8955030
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NADK2 dimer phosphorylates NAD+ to NADP+</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9838081
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LONP1 degrades mitochondrial matrix proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9838093
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LONP1 binds mitochondrial matrix proteins</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NADK2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q4G0N4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nadk2-nad-kinase-2-mitochondrial-review-notes">NADK2 (NAD kinase 2, mitochondrial) — review notes</h1>
+<p>UniProt: Q4G0N4 (NADK2_HUMAN). HGNC:26404. Synonyms: C5orf33, MNADK, NADKD1.<br />
+442 aa precursor; residues 1–62 mitochondrial transit peptide, chain 63–442.<br />
+EC 2.7.1.23. Belongs to the NAD kinase family.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>NADK2 is the <strong>mitochondrial NAD(+) kinase</strong> — the enzyme that generates the<br />
+mitochondrial NADP(+) pool. It phosphorylates NAD(+) using ATP (or, in vitro,<br />
+inorganic polyphosphate) to yield NADP(+):</p>
+<blockquote>
+<p>NAD(+) + ATP = ADP + NADP(+) + H(+)   (EC 2.7.1.23, RHEA:18629)<br />
+[file:human/NADK2/NADK2-uniprot.txt "Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629"]</p>
+</blockquote>
+<ul>
+<li>UniProt FUNCTION: "Mitochondrial NAD(+) kinase that phosphorylates NAD(+) to yield<br />
+  NADP(+). Can use both ATP or inorganic polyphosphate as the phosphoryl donor. Also<br />
+  has weak NADH kinase activity in vitro; however NADH kinase activity is much weaker<br />
+  than the NAD(+) kinase activity and may not be relevant in vivo."<br />
+  [file:human/NADK2/NADK2-uniprot.txt]</li>
+<li>Discovered as C5orf33, the "missing" source of human mitochondrial NADP(+):<br />
+  "NAD kinase is the sole NADP(+) biosynthetic enzyme... no mitochondrial NAD kinase<br />
+  has been identified in human, and the source of human mitochondrial NADP(+) remains<br />
+  elusive. Here we present evidence demonstrating that a human protein of unknown<br />
+  function, C5orf33, is a human mitochondrial NAD kinase"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="no mitochondrial NAD kinase has been identified in human, and the source of human mitochondrial NADP(+) remains elusive">PMID:23212377</a></li>
+</ul>
+<h2 id="experimental-evidence-pmid23212377-ohashikawaimurata-2012-nat-commun-full-text-available">Experimental evidence (PMID:23212377, Ohashi/Kawai/Murata 2012, Nat Commun; full text available)</h2>
+<ul>
+<li><strong>Catalytic activity (IDA, MF GO:0003951):</strong> purified recombinant Δ62 protein forms<br />
+  NADP+ from NAD+ and ADP from ATP by TLC.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="we detected the formation of NADP+ from NAD+ and of ADP from ATP (Fig. 2c), showing that C5orf33 protein has NADK activity">PMID:23212377</a></li>
+<li>Kinetics: Km(NAD+) 0.022 mM, Km(ATP) 1.7 mM; NADHK activity only ~10% of NADK<br />
+    activity; inhibited by NADH, NADPH and NADP+.<br />
+    [file:human/NADK2/NADK2-uniprot.txt "Inhibited by NADH, NADPH and NADP(+)."]</li>
+<li><strong>Subcellular location (IDA, CC mitochondrion GO:0005739):</strong> FLAG-tagged full-length<br />
+  protein localizes to mitochondria in HEK293A cells; Δ62 (no transit peptide) does not.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="This observation demonstrated that the C5orf33 protein is localized in mitochondria, whereas Δ62C5orf33 protein is not, confirming that C5orf33 protein is a mitochondrial NADK">PMID:23212377</a></li>
+<li>Also confirmed by cell fractionation: mitochondrial, not cytosolic.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="C5orf33 protein was localized in the mitochondrial fraction but not in the cytosolic fraction">PMID:23212377</a></li>
+<li><strong>Homodimer (IDA, MF GO:0042803 protein homodimerization activity):</strong> UniProt SUBUNIT<br />
+  = Homodimer (ECO:0000305|PubMed:23212377). Reactome names the "NADK2 dimer".<br />
+  [file:human/NADK2/NADK2-uniprot.txt "SUBUNIT: Homodimer."]<br />
+  Note: this is a structural/oligomerization property, not the catalytic function.</li>
+<li><strong>Physiological role (NAD+ metabolic process; ROS defense):</strong> siRNA knockdown reduced<br />
+  mitochondrial NADK activity to 47% and increased intracellular ROS.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="NADK activity of the mitochondrial fraction was decreased to 47% upon knockdown of C5orf33">PMID:23212377</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="human mitochondrial NADK is involved in the regulation of the generation of mitochondrial ROS">PMID:23212377</a></li>
+<li>Widely/ubiquitously expressed; mRNA more abundant than cytosolic NADK in most tissues.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23212377" title="levels of C5orf33 mRNA were higher than those of the human NADK gene in all tissues examined except for colon, spleen and skeletal muscle">PMID:23212377</a></li>
+</ul>
+<h2 id="localization-corroboration">Localization corroboration</h2>
+<ul>
+<li>HPA immunofluorescence (IDA, GO_REF:0000052): mitochondrion.</li>
+<li>High-throughput mitochondrial proteome (HTP, PMID:34800366, Morgenstern et al. 2021,<br />
+  Cell Metab): NADK2 in the high-confidence human mitochondrial proteome.</li>
+<li>UniProt SubCell mapping (IEA, SL-0173 → mitochondrion) and ARBA (mitochondrial matrix).</li>
+<li>Reactome TAS (R-HSA-8955030 NADK2 reaction; R-HSA-9838081/9838093 LONP1 substrate<br />
+  entries): mitochondrial matrix. The matrix is the correct submitochondrial compartment<br />
+  for this soluble matrix enzyme (transit peptide, no TM segments).</li>
+</ul>
+<h2 id="downstream-role-of-the-mitochondrial-nadph-pool">Downstream role of the mitochondrial NADP(H) pool</h2>
+<p>NADK2 supplies the NADPH used by NADP-dependent mitochondrial oxidoreductases. Loss of<br />
+NADK2 causes <strong>mitochondrial NADP(H) deficiency</strong>, secondarily crippling 2,4-dienoyl-CoA<br />
+reductase (DECR1, PUFA β-oxidation) and the first step of lysine degradation (AASS/DHTKD1<br />
+axis), producing DECR deficiency with <strong>hyperlysinemia</strong>. NADPH also feeds proline<br />
+biosynthesis via ALDH18A1/P5CS and antioxidant/one-carbon pathways.</p>
+<p>According to PubMed (Houten et al. 2014, Hum Mol Genet<br />
+<a href="https://doi.org/10.1093/hmg/ddu218">DOI</a>, PMID:24847004):</p>
+<blockquote>
+<p>"NADK2 encodes the mitochondrial NAD kinase, which is crucial for NADP biosynthesis<br />
+evidenced by decreased mitochondrial NADP(H) levels in patient fibroblasts. DECR and<br />
+also the first step in lysine degradation are performed by NADP-dependent<br />
+oxidoreductases explaining their in vivo deficiency."</p>
+</blockquote>
+<p>UniProt DISEASE:</p>
+<blockquote>
+<p>"2,4-dienoyl-CoA reductase deficiency (DECRD) [MIM:616034]: A rare, autosomal<br />
+recessive, inborn error of polyunsaturated fatty acids and lysine metabolism,<br />
+resulting in mitochondrial dysfunction. Affected individuals have a severe<br />
+encephalopathy... increased C10:2 carnitine levels and hyperlysinemia."<br />
+[file:human/NADK2/NADK2-uniprot.txt]</p>
+</blockquote>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<p>Core MF: <strong>GO:0003951 NAD+ kinase activity</strong> (IDA, PMID:23212377) + <strong>GO:0005524 ATP binding</strong><br />
+(phosphoryl-donor substrate; UniProt KW, not in GOA experimental set but real).<br />
+Core BP: <strong>GO:0019674 NAD+ metabolic process</strong> (IDA); the informative/precise BP is<br />
+<strong>GO:0006741 NADP+ biosynthetic process</strong> (UniProt DR InterPro; the actual anabolic role).<br />
+Core CC: <strong>GO:0005759 mitochondrial matrix</strong> (soluble matrix enzyme).</p>
+<ul>
+<li>All GO:0003951 calls (IDA, IBA, IEA) → the catalytic function is the core function; keep.</li>
+<li>Mitochondrion CC calls (IDA, IBA, IEA, HPA IDA, HTP) → correct; matrix is more precise.</li>
+<li>GO:0019674 NAD+ metabolic process → accept (IDA); note the anabolic/product side is<br />
+  NADP+ biosynthesis (GO:0006741), which is more informative and is proposed as a new term.</li>
+<li>GO:0042803 protein homodimerization activity (IDA) → real (homodimer) but it is an<br />
+  oligomerization property, not the catalytic MF; keep as non-core.</li>
+<li>LONP1 Reactome TAS matrix entries (R-HSA-9838081/9838093) → NADK2 is a LONP1 protease<br />
+  substrate; the CC (matrix) is correct, but these do not describe NADK2's own function;<br />
+  keep as non-core matrix localization.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q4G0N4
+gene_symbol: NADK2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: NADK2 (NAD kinase 2, mitochondrial; also known as C5orf33, MNADK, NADKD1)
+  is the mitochondrial NAD(+) kinase (EC 2.7.1.23). Following import into the mitochondrial
+  matrix and cleavage of its N-terminal transit peptide, the mature protein assembles
+  into a homodimer that phosphorylates NAD(+) using ATP (and, in vitro, inorganic
+  polyphosphate) to produce NADP(+). It is the source of the mitochondrial NADP(H)
+  pool, the counterpart of the cytosolic NADK. The NADPH generated from this NADP(+)
+  supplies NADP-dependent mitochondrial oxidoreductases, including 2,4-dienoyl-CoA
+  reductase (DECR1) in polyunsaturated fatty acid beta-oxidation, the reductive step
+  of lysine degradation, delta-1-pyrroline-5-carboxylate synthase (ALDH18A1/P5CS) in
+  proline biosynthesis, mitochondrial one-carbon metabolism, and antioxidant defense
+  against reactive oxygen species. The enzyme has low Km for NAD(+), only weak NADH
+  kinase activity, and is feedback-inhibited by NADH, NADPH and NADP(+). It is broadly
+  expressed with highest levels in liver. Loss-of-function mutations cause 2,4-dienoyl-CoA
+  reductase deficiency (DECRD) / NADK2 deficiency, a mitochondrial NADP(H)-deficiency
+  disorder presenting with severe infantile encephalopathy, lactic acidosis and
+  hyperlysinemia.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q4G0N4-1
+- name: &#39;2&#39;
+  id: Q4G0N4-2
+  sequence_note: VSP_027193
+- name: &#39;3&#39;
+  id: Q4G0N4-3
+  sequence_note: VSP_027192
+existing_annotations:
+- term:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) assignment of NAD+ kinase activity, the defining and
+      experimentally established catalytic function of NADK2. This is the core molecular
+      function of the gene.
+    action: ACCEPT
+    reason: The IBA call matches the direct experimental characterization (IDA, PMID:23212377);
+      NADK2 is the mitochondrial NAD(+) kinase (EC 2.7.1.23).
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: showing that C5orf33 protein has NADK activity using ATP and
+        poly(P) as phosphoryl donors
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) localization to mitochondrion, consistent with the
+      experimentally confirmed mitochondrial localization of NADK2. A more precise
+      compartment (mitochondrial matrix) is captured by other annotations.
+    action: ACCEPT
+    reason: NADK2 carries an N-terminal mitochondrial transit peptide and localizes
+      to mitochondria in human cells (IDA, PMID:23212377); the matrix is the specific
+      submitochondrial compartment.
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: the C5orf33 protein is localized in mitochondria, whereas Δ62C5orf33
+        protein is not, confirming that C5orf33 protein is a mitochondrial NADK
+- term:
+    id: GO:0019674
+    label: NAD+ metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) involvement in NAD+ metabolic process. NADK2 consumes
+      NAD+ to make NADP+, so it participates in NAD+ metabolism; the more informative
+      biological process is NADP+ biosynthesis.
+    action: ACCEPT
+    reason: Consistent with the enzyme&#39;s reaction (NAD+ + ATP -&gt; ADP + NADP+ + H+).
+      NADP+ biosynthetic process (GO:0006741) is proposed as a more specific term.
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: we detected the formation of NADP+ from NAD+ and of ADP from
+        ATP
+- term:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (ARBA/RHEA/EC) assignment of NAD+ kinase activity, mapped from
+      EC 2.7.1.23 and RHEA:18629. Correct and redundant with the experimental IDA/IBA
+      calls.
+    action: ACCEPT
+    reason: The EC/RHEA mapping matches the UniProt catalytic activity and the direct
+      experimental evidence.
+    supported_by:
+    - reference_id: file:human/NADK2/NADK2-uniprot.txt
+      supporting_text: Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic annotation from UniProt Subcellular Location keyword mapping
+      (SL-0173) to mitochondrion. Consistent with experimental localization.
+    action: ACCEPT
+    reason: Matches the experimentally determined mitochondrial localization; the matrix
+      is the specific compartment.
+    supported_by:
+    - reference_id: file:human/NADK2/NADK2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion&#39;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: Electronic (ARBA) assignment to the mitochondrial matrix. NADK2 is a soluble
+      matrix enzyme (cleaved transit peptide, no transmembrane segments), so the matrix
+      is the correct and most informative compartment.
+    action: ACCEPT
+    reason: The matrix localization is consistent with the transit-peptide-directed
+      import of a soluble kinase and with Reactome/UniProt matrix placement.
+    supported_by:
+    - reference_id: file:human/NADK2/NADK2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion&#39;
+- term:
+    id: GO:0019674
+    label: NAD+ metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Electronic (InterPro IPR017437, ATP-NAD kinase PpnK C-domain) assignment
+      to NAD+ metabolic process. Correct for an NAD kinase family member.
+    action: ACCEPT
+    reason: The NAD kinase domain signature correctly implies participation in NAD+
+      metabolism; NADP+ biosynthesis (GO:0006741) is the more precise process.
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: we detected the formation of NADP+ from NAD+ and of ADP from
+        ATP
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Immunofluorescence (HPA) localization to mitochondrion. Corroborates the
+      experimental mitochondrial localization.
+    action: ACCEPT
+    reason: Independent IDA localization consistent with PMID:23212377 and the transit
+      peptide.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: High-throughput mitochondrial proteomics places NADK2 in the high-confidence
+      human mitochondrial proteome. Supports, but is less specific than, the matrix
+      annotation.
+    action: ACCEPT
+    reason: NADK2 is a bona fide component of the mitochondrial proteome; consistent
+      with all other localization evidence.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8955030
+  qualifier: located_in
+  review:
+    summary: Reactome TAS localization to the mitochondrial matrix, from the reaction
+      &#34;NADK2 dimer phosphorylates NAD+ to NADP+&#34;. This is the correct compartment for
+      the NADK2 catalytic activity and is the core localization.
+    action: ACCEPT
+    reason: The matrix is where the soluble NADK2 kinase acts; this Reactome event
+      describes NADK2&#39;s own reaction.
+    supported_by:
+    - reference_id: Reactome:R-HSA-8955030
+      supporting_text: Mitochondrial NAD kinase 2 (NADK2 aka C5orf33, MNADK, NADKD1)
+        uses ATP to phosphorylate NAD+ to NADP+
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9838081
+  qualifier: located_in
+  review:
+    summary: Reactome TAS matrix localization derived from an event in which NADK2
+      is a substrate of the LONP1 matrix protease (&#34;LONP1 degrades mitochondrial matrix
+      proteins&#34;). The compartment (matrix) is correct, but this event describes LONP1&#39;s
+      function, not NADK2&#39;s, so it is a non-core, indirect localization annotation.
+    action: KEEP_AS_NON_CORE
+    reason: The matrix localization is accurate and consistent with the direct
+      annotations, but this Reactome entry is about LONP1-mediated degradation of matrix
+      proteins rather than NADK2&#39;s own biology.
+    supported_by:
+    - reference_id: Reactome:R-HSA-9838081
+      supporting_text: LONP1 degrades several mitochondrial matrix proteins
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9838093
+  qualifier: located_in
+  review:
+    summary: Reactome TAS matrix localization from an event in which NADK2 is bound
+      as a substrate by the LONP1 matrix protease (&#34;LONP1 binds mitochondrial matrix
+      proteins&#34;). Correct compartment but an indirect, non-core localization annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Matrix localization is accurate; the source event describes LONP1 substrate
+      binding rather than NADK2&#39;s own function.
+    supported_by:
+    - reference_id: Reactome:R-HSA-9838093
+      supporting_text: LONP1 binds substrate proteins and degrades them using an
+        ATP-dependent mechanism
+- term:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:23212377
+  qualifier: enables
+  review:
+    summary: Direct experimental demonstration that purified NADK2 phosphorylates NAD+
+      to NADP+ using ATP (or inorganic polyphosphate), with defined kinetics. This
+      is the defining core molecular function of NADK2.
+    action: ACCEPT
+    reason: Purified recombinant protein forms NADP+ from NAD+ and ADP from ATP (TLC),
+      with Km(NAD+) 0.022 mM; unambiguous NAD+ kinase (EC 2.7.1.23) activity.
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: we detected the formation of NADP+ from NAD+ and of ADP from
+        ATP (Fig. 2c), showing that C5orf33 protein has NADK activity
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:23212377
+  qualifier: located_in
+  review:
+    summary: Direct experimental demonstration of mitochondrial localization by
+      immunofluorescence and subcellular fractionation in human cells; transit-peptide
+      dependent. Core localization (matrix compartment).
+    action: ACCEPT
+    reason: FLAG-tagged full-length NADK2 localizes to mitochondria while the transit-peptide
+      deletion does not; confirmed by mitochondrial/cytosolic fractionation.
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: C5orf33 protein was localized in the mitochondrial fraction
+        but not in the cytosolic fraction
+- term:
+    id: GO:0019674
+    label: NAD+ metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:23212377
+  qualifier: involved_in
+  review:
+    summary: Direct evidence that NADK2 activity contributes to mitochondrial NAD(P)
+      metabolism (knockdown reduces mitochondrial NADK activity and perturbs ROS/redox
+      balance). Core biological process; the anabolic product side is NADP+ biosynthesis.
+    action: ACCEPT
+    reason: NADK2 catalyzes NAD+ -&gt; NADP+ and its knockdown lowers mitochondrial NADK
+      activity to 47% and elevates ROS, confirming a role in NAD(P) metabolism.
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: NADK activity of the mitochondrial fraction was decreased to
+        47% upon knockdown of C5orf33
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:23212377
+  qualifier: enables
+  review:
+    summary: NADK2 functions as a homodimer (UniProt SUBUNIT; Reactome &#34;NADK2 dimer&#34;).
+      This is a genuine oligomerization property but describes the enzyme&#39;s quaternary
+      structure rather than its catalytic activity, so it is a non-core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: The homodimer state is real and relevant to how the active enzyme assembles,
+      but self-association is not the gene&#39;s core functional contribution (NAD+ kinase
+      activity is); recorded as non-core.
+    supported_by:
+    - reference_id: file:human/NADK2/NADK2-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homodimer.&#39;
+- term:
+    id: GO:0006741
+    label: NADP+ biosynthetic process
+  evidence_type: IDA
+  qualifier: involved_in
+  review:
+    summary: Proposed new biological-process annotation. GOA records only the broader
+      NAD+ metabolic process for NADK2, but the enzyme&#39;s anabolic product is NADP+;
+      NADK2 is the source of mitochondrial NADP(+). UniProt already carries this term
+      via InterPro (GO:0006741; P:NADP+ biosynthetic process; IEA:InterPro). Proposing
+      it as the more specific, informative process term.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:23212377
+      supporting_text: we detected the formation of NADP+ from NAD+ and of ADP from
+        ATP
+    - reference_id: file:human/NADK2/NADK2-uniprot.txt
+      supporting_text: &#39;GO:0006741; P:NADP+ biosynthetic process; IEA:InterPro&#39;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  qualifier: enables
+  review:
+    summary: Proposed new molecular-function annotation. NADK2 binds ATP as the
+      phosphoryl donor of the NAD kinase reaction (Km for ATP 1.7 mM); ATP-binding is
+      a UniProt keyword (ATP-binding) and is intrinsic to the catalytic mechanism but
+      is not present in the GOA experimental set.
+    action: NEW
+    supported_by:
+    - reference_id: file:human/NADK2/NADK2-uniprot.txt
+      supporting_text: Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629
+core_functions:
+- description: Mitochondrial NAD(+) kinase activity - NADK2 phosphorylates NAD(+) using
+    ATP (or inorganic polyphosphate in vitro) to yield NADP(+), generating the mitochondrial
+    NADP(H) pool. This is the sole known route of mitochondrial NADP(+) biosynthesis
+    in human cells.
+  molecular_function:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  supported_by:
+  - reference_id: PMID:23212377
+    supporting_text: we detected the formation of NADP+ from NAD+ and of ADP from ATP
+      (Fig. 2c), showing that C5orf33 protein has NADK activity
+  directly_involved_in:
+  - id: GO:0006741
+    label: NADP+ biosynthetic process
+  - id: GO:0019674
+    label: NAD+ metabolic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+- description: ATP binding - NADK2 binds ATP as the phosphoryl donor for the NAD kinase
+    reaction (Km for ATP 1.7 mM), and can alternatively use inorganic polyphosphate.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  supported_by:
+  - reference_id: file:human/NADK2/NADK2-uniprot.txt
+    supporting_text: Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+); Xref=Rhea:RHEA:18629
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: InterPro2GO pipeline (IPR017437, ATP-NAD kinase C-domain) correctly
+      assigns NAD+ metabolic process to an NAD kinase family member.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PAN-GO/IBA pipeline correctly recovers the core NAD+ kinase activity,
+      mitochondrial localization, and NAD+ metabolic process.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: SubCell keyword (SL-0173) mapping to mitochondrion; consistent with
+      experimental localization.
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: HPA immunofluorescence IDA localization to mitochondrion; corroborates
+      PMID:23212377.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: ARBA assignment to mitochondrial matrix; correct compartment for
+      this soluble matrix enzyme.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: ARBA/RHEA/EC mapping (EC 2.7.1.23, RHEA:18629) to NAD+ kinase activity;
+      matches the experimental catalytic activity.
+- id: PMID:23212377
+  title: Identification and characterization of a human mitochondrial NAD kinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary paper identifying C5orf33/NADK2 as the human mitochondrial
+      NAD kinase; provides the IDA evidence for NAD+ kinase activity, mitochondrial
+      localization, homodimer, kinetics, and NAD+/redox metabolism. Full text available
+      and quotes verified.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: High-confidence mitochondrial proteomics; supports the HTP mitochondrion
+      localization of NADK2.
+- id: PMID:24847004
+  title: Mitochondrial NADP(H) deficiency due to a mutation in NADK2 causes dienoyl-CoA
+    reductase deficiency with hyperlysinemia.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes NADK2 loss-of-function as the cause of DECRD (mitochondrial
+      NADP(H) deficiency with hyperlysinemia), demonstrating the physiological importance
+      of NADK2-derived mitochondrial NADPH for NADP-dependent oxidoreductases. PubMed-verified
+      (DOI 10.1093/hmg/ddu218); cited in UniProt DISEASE. Not in GOA but underpins the
+      disease/biology in the description.
+- id: Reactome:R-HSA-8955030
+  title: NADK2 dimer phosphorylates NAD+ to NADP+
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction describing NADK2&#39;s own catalytic activity in the
+      mitochondrial matrix; source of a core matrix localization annotation.
+- id: Reactome:R-HSA-9838081
+  title: LONP1 degrades mitochondrial matrix proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: NADK2 appears here only as a LONP1 protease substrate; the matrix
+      localization is correct but the event is about LONP1, not NADK2 function.
+- id: Reactome:R-HSA-9838093
+  title: LONP1 binds mitochondrial matrix proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: NADK2 appears here only as a LONP1 substrate-binding target; matrix
+      compartment correct, event is about LONP1 rather than NADK2.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

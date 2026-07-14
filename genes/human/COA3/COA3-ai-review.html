@@ -1,0 +1,3672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COA3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COA3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y2R0" target="_blank" class="term-link">
+                        Q9Y2R0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COA3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y2R0" data-a="DESCRIPTION: COA3 (also known as CCDC56 and MITRAC12) is a smal..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>COA3 (also known as CCDC56 and MITRAC12) is a small (106 aa) single-pass mitochondrial inner-membrane protein that acts as a non-catalytic assembly factor for respiratory chain complex IV (cytochrome c oxidase). Together with COX14 it is a core component of the MITRAC (mitochondrial translation regulation assembly intermediate of cytochrome c oxidase) complex, which couples translation of the mitochondrially encoded catalytic subunit MT-CO1 (COX1) to complex IV assembly. COA3 associates with newly synthesised MT-CO1 within an early COX1-COA3-COX14 assembly intermediate, stabilises it, and coordinates the incorporation of nuclear-encoded subunits. It has no catalytic activity of its own. Biallelic loss-of-function variants cause mitochondrial complex IV deficiency (nuclear type 14, MC4DN14), presenting with neuropathy, encephalopathy, exercise intolerance, obesity, and short stature.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0033617" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to complex IV assembly, the central and best-supported biological role of COA3 as a MITRAC assembly factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core evolved function of COA3, supported by experimental evidence in human cells (MITRAC characterisation and the early COX1-COA3-COX14 assembly intermediate) and consistent across the COA3 family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                                        PMID:28082314
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation of COX4</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for efficient translation of MT-CO1 and mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing COA3 at the mitochondrial inner membrane, where it functions as a single-pass membrane assembly factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly matches the experimentally determined subcellular localisation and membrane topology of COA3; is_active_in correctly conveys that COA3 carries out its assembly-factor role at this location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to mitochondrial inner membrane derived from the UniProt Subcellular Location vocabulary mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally curated inner-membrane localisation; this IEA mapping is correct and appropriately specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0006457" data-r="GO_REF:0000108" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic inter-ontology inference of the biological process &#39;protein folding&#39; from the &#39;protein folding chaperone&#39; molecular function annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> COA3 is best described as a complex IV assembly factor that stabilises newly synthesised MT-CO1 rather than a bona fide protein-folding catalyst; the generic &#39;protein folding&#39; BP over-states this and is redundant with the more informative complex IV assembly process. The chaperone-type activity is captured by the GO:0044183 molecular-function annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                                        PMID:28082314
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation of COX4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0033617" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation mapping the Coa3 domain (IPR041752) to complex IV assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro-to-GO mapping is correct and corresponds to the experimentally supported core function of COA3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for efficient translation of MT-CO1 and mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005515" data-r="PMID:23260140" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct binary interaction annotations (MT-CO1/P00395 and SURF1/Q15526) recorded as the uninformative &#39;protein binding&#39; molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The underlying interactions with MT-CO1 and SURF1 are real and biologically meaningful (they underpin COA3&#39;s role in the MITRAC assembly intermediate), but the bare &#39;protein binding&#39; term is uninformative about molecular function. Not removed per curation policy for experimental IPI annotations; the interaction partners are better represented in the assembly-factor core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Along with COX14, core component of the MITRAC (mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence-based direct assay localising COA3 to the mitochondrion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than the inner-membrane localisation; retained as a valid direct-assay observation of mitochondrial localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28082314
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A CMC1-knockout reveals translation-independent control of h...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0033617" data-r="PMID:28082314" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (IMP) evidence that COA3 participates in complex IV assembly, from the CMC1-knockout study defining the early COX1-COA3-COX14 intermediate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support that COA3 acts in complex IV biogenesis as part of an early COX1-containing assembly intermediate; this is the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                                        PMID:28082314
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">factors, the cardiomyopathy proteins COA3 and COX14.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                                        PMID:28082314
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation of COX4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28082314
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A CMC1-knockout reveals translation-independent control of h...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0044183" data-r="PMID:28082314" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay molecular-function annotation describing COA3 as a chaperone that stabilises newly synthesised MT-CO1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> COA3 does bind and stabilise nascent MT-CO1 within the COX1-COA3-COX14 intermediate, consistent with a chaperone-type binding activity. However, the protein has no catalytic activity and its defining evolved role is as a complex IV assembly factor rather than a general protein-folding chaperone; retained as a non-core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                                        PMID:28082314
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation of COX4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomics (MitoCoP high-confidence mitochondrial proteome) assignment of COA3 to the mitochondrion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports mitochondrial localisation with high-confidence proteomic evidence; less specific than the inner-membrane annotation but correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                                        PMID:34800366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high-confidence proteome (MitoCoP) of 1,134 protein-coding genes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865350
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="Reactome:R-HSA-9865350" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing COA3 at the mitochondrial inner membrane within the complex IV assembly pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined inner-membrane localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865412
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="Reactome:R-HSA-9865412" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing COA3 at the mitochondrial inner membrane within the complex IV assembly pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined inner-membrane localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865449
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="Reactome:R-HSA-9865449" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing COA3 at the mitochondrial inner membrane within the complex IV assembly pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined inner-membrane localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865579
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="Reactome:R-HSA-9865579" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing COA3 at the mitochondrial inner membrane within the complex IV assembly pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined inner-membrane localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865630
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="Reactome:R-HSA-9865630" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing COA3 at the mitochondrial inner membrane within the complex IV assembly pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined inner-membrane localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865663
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="Reactome:R-HSA-9865663" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing COA3 at the mitochondrial inner membrane within the complex IV assembly pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined inner-membrane localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26321642" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26321642
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC7 Acts as a COX1-Specific Chaperone and Reveals a Chec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005515" data-r="PMID:26321642" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI interaction annotations recording COA3 binding partners (MT-CO1, SURF1, TIMM21, SMIM20/MITRAC7) as the uninformative &#39;protein binding&#39; term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interactions are experimentally supported and biologically relevant to MITRAC/complex IV assembly, but the bare &#39;protein binding&#39; molecular function is uninformative. Not removed per curation policy for experimental IPI; the functional context is captured by the assembly-factor core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26321642" target="_blank" class="term-link">
+                                        PMID:26321642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The MITRAC complex represents</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0005743" data-r="PMID:23260140" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay localisation of COA3 to the mitochondrial inner membrane from the MITRAC characterisation study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Primary experimental evidence for the inner-membrane localisation and single-pass membrane topology of COA3; this is the most authoritative CC annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0033617" data-r="PMID:23260140" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (IMP) evidence from the MITRAC study that COA3 is required for complex IV assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core experimentally supported function; COA3 as a core MITRAC component is required for efficient MT-CO1 translation and complex IV assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for efficient translation of MT-CO1 and mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070131" target="_blank" class="term-link">
+                                    GO:0070131
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of mitochondrial translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2R0" data-a="GO:0070131" data-r="PMID:23260140" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (IMP) evidence that COA3 positively regulates mitochondrial translation, specifically of MT-CO1, coupling translation to complex IV assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the MITRAC study (COA3 required for efficient MT-CO1 translation); this is a genuine secondary function reflecting MITRAC-mediated translational coupling. Later work (PMID:28082314) frames the translation-regulation role as proposed rather than fully established, but the primary IMP evidence justifies retaining it.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COA3/COA3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for efficient translation of MT-CO1 and mitochondrial</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26321642" target="_blank" class="term-link">
+                                        PMID:26321642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">regulates mitochondrial translation of COX1 mRNA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic complex IV (cytochrome c oxidase) assembly factor that, as a core component of the MITRAC complex with COX14, associates with and stabilises newly synthesised MT-CO1 in an early COX1-COA3-COX14 assembly intermediate and coordinates its progression into complex IV assembly. As a MITRAC component it also couples MT-CO1 translation to assembly (positive regulation of mitochondrial translation). No molecular function is asserted because COA3 has no catalytic activity and only binding/chaperone-type molecular functions.</h3>
+                <span class="vote-buttons" data-g="Q9Y2R0" data-a="FUNCTION: Non-catalytic complex IV (cytochrome c oxidase) as..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex IV assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070131" target="_blank" class="term-link">
+                                positive regulation of mitochondrial translation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                                PMID:28082314
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation of COX4</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COA3/COA3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Required for efficient translation of MT-CO1 and mitochondrial</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COA3/COA3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Mitochondrion inner membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link">
+                            PMID:23260140
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MITRAC links mitochondrial protein translocation to respiratory-chain assembly and translational regulation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26321642" target="_blank" class="term-link">
+                            PMID:26321642
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MITRAC7 Acts as a COX1-Specific Chaperone and Reveals a Checkpoint during Cytochrome c Oxidase Assembly.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28082314" target="_blank" class="term-link">
+                            PMID:28082314
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A CMC1-knockout reveals translation-independent control of human mitochondrial complex IV biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/COA3/COA3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q9Y2R0 (COA3_HUMAN) curated entry</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865350
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nascent MT-CO1 binds to MITRAC, Mg2+, PE, CL</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865412
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TIMM21 carries COX4, COX5A, COX6C to MT-CO1:MITRAC</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865449
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metallochaperone inserts Cu2+ into MT-CO1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865579
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MT-CO1 and MT-CO2 complexes associate, installing heme moieties</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865630
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metallochaperone inserts 2Cu2+ into MT-CO2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865663
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MT-CO3, COX6A,B,7A and NDUFA4 bind to holo-MT-CO1,2 complex</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is COA3&#39;s positive effect on MT-CO1 translation a direct regulatory activity or a secondary consequence of stabilising nascent MT-CO1 within the MITRAC intermediate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y2R0" data-a="Q: Is COA3&#39;s positive effect on MT-CO1 translation a ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise structural role of the single transmembrane helix and C-terminal coiled coil of COA3 in organising the COX1-COA3-COX14 assembly intermediate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y2R0" data-a="Q: What is the precise structural role of the single ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structural determination (cryo-EM) of the human COX1-COA3-COX14 (MITRAC) assembly intermediate to define COA3&#39;s contacts with MT-CO1 and COX14.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y2R0" data-a="EXPERIMENT: Structural determination (cryo-EM) of the human CO..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Pulse-chase labelling of mitochondrial translation products in COA3-null versus rescued cells to distinguish effects on MT-CO1 synthesis rate from effects on nascent MT-CO1 stability.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y2R0" data-a="EXPERIMENT: Pulse-chase labelling of mitochondrial translation..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COA3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y2R0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="coa3-ccdc56-mitrac12-review-notes">COA3 (CCDC56 / MITRAC12) — review notes</h1>
+<p>UniProtKB: Q9Y2R0. HGNC:24990. Human, 106 aa, mitochondrial inner membrane, single-pass<br />
+membrane protein. Synonyms: CCDC56 (coiled-coil domain-containing 56), MITRAC12<br />
+(mitochondrial translation regulation assembly intermediate of cytochrome c oxidase, 12 kDa).</p>
+<h2 id="function-verified">Function (verified)</h2>
+<p>COA3 is a small mitochondrial inner-membrane assembly factor for <strong>respiratory chain<br />
+complex IV (cytochrome c oxidase)</strong>. It is <strong>non-catalytic</strong>.</p>
+<ul>
+<li>Along with <strong>COX14</strong>, it is a <strong>core component of the MITRAC complex</strong> (mitochondrial<br />
+  translation regulation assembly intermediate of cytochrome c oxidase), which receives<br />
+  imported nuclear-encoded CIV subunits and couples them to newly mitochondria-synthesised<br />
+  MT-CO1 [UniProt FUNCTION/SUBUNIT; PMID:23260140].</li>
+<li>MITRAC <strong>couples MT-CO1 (COX1) translation to complex IV assembly</strong>: it stabilises<br />
+  newly synthesised MT-CO1 and coordinates its progression into the assembly pathway<br />
+  [PMID:23260140; PMID:26321642 "regulates mitochondrial translation of COX1 mRNA"].</li>
+<li>COA3 sits in an <strong>early CIV assembly intermediate (COX1–COA3–COX14)</strong> together with the<br />
+  IMS twin-CX9C protein CMC1 [PMID:28082314, "the cardiomyopathy proteins COA3 and COX14";<br />
+  "CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation of COX4"].</li>
+<li>UniProt curation of PMID:23260140: "Required for efficient translation of MT-CO1 and<br />
+  mitochondrial respiratory chain complex IV assembly." → supports both<br />
+  GO:0033617 (CIV assembly) and GO:0070131 (positive regulation of mitochondrial translation).</li>
+</ul>
+<p>Caveat on translation regulation: Bourens &amp; Barrientos (PMID:28082314) note "whereas<br />
+human COX14 and COA3 have been proposed to affect COX1 mRNA translation" — i.e. the<br />
+translation-regulation role is supported (IMP in PMID:23260140) but framed as a proposal<br />
+in later work; the primary, most robust role is <strong>CIV assembly / MT-CO1 stabilisation</strong>.</p>
+<h2 id="localisation-verified">Localisation (verified)</h2>
+<p>Mitochondrial inner membrane (GO:0005743), single-pass membrane protein<br />
+[UniProt SUBCELLULAR LOCATION, PMID:23260140]. Topology: matrix (2–57), TM helix (58–78),<br />
+IMS (79–106). Also captured as "mitochondrion" (GO:0005739) by HPA IDA and by the MitoCoP<br />
+high-confidence proteome (PMID:34800366).</p>
+<p>Complex IV membership term: current <strong>GO:0045277</strong> (respiratory chain complex IV);<br />
+GO:0005751 is OBSOLETE. COA3 is a MITRAC assembly-factor, not a stable subunit of the<br />
+mature holoenzyme, so I did not assert holo-CIV membership in core_functions.</p>
+<h2 id="disease">Disease</h2>
+<p>Biallelic COA3 variants → <strong>mitochondrial complex IV deficiency, nuclear type 14<br />
+(MC4DN14, MIM:619058)</strong>: developmental delay, sensorimotor demyelinating polyneuropathy,<br />
+exercise intolerance, obesity, short stature; decreased CIV levels/activity<br />
+[PMID:25604084, variant Y72C].</p>
+<h2 id="mf-assessment">MF assessment</h2>
+<p>No catalytic MF. Existing MF annotations:<br />
+- GO:0005515 protein binding (IPI, x3 rows): uninformative bare protein-binding →<br />
+  MARK_AS_OVER_ANNOTATED (do not REMOVE per policy).<br />
+- GO:0044183 protein folding chaperone (IDA, PMID:28082314, FlyBase): a binding-type<br />
+  MF consistent with COA3 stabilising/chaperoning newly synthesised MT-CO1. Keep, but<br />
+  the gene's <em>core</em> evolved role is assembly-factor, and the primary MC4DN14 evidence<br />
+  frames COA3 as an assembly factor rather than a general chaperone. Retained as<br />
+  non-core MF; core_functions omits an MF (assembly factor with only binding-type MF).</p>
+<h2 id="core-functions-authored">Core functions (authored)</h2>
+<ul>
+<li>directly_involved_in GO:0033617 (mitochondrial respiratory chain complex IV assembly)</li>
+<li>directly_involved_in GO:0070131 (positive regulation of mitochondrial translation)</li>
+<li>located_in GO:0005743 (mitochondrial inner membrane)<br />
+No molecular_function asserted (non-catalytic; only binding/chaperone-type MF).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y2R0
+gene_symbol: COA3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: COA3 (also known as CCDC56 and MITRAC12) is a small (106 aa) single-pass
+  mitochondrial inner-membrane protein that acts as a non-catalytic assembly factor
+  for respiratory chain complex IV (cytochrome c oxidase). Together with COX14 it is
+  a core component of the MITRAC (mitochondrial translation regulation assembly intermediate
+  of cytochrome c oxidase) complex, which couples translation of the mitochondrially
+  encoded catalytic subunit MT-CO1 (COX1) to complex IV assembly. COA3 associates with
+  newly synthesised MT-CO1 within an early COX1-COA3-COX14 assembly intermediate,
+  stabilises it, and coordinates the incorporation of nuclear-encoded subunits. It
+  has no catalytic activity of its own. Biallelic loss-of-function variants cause
+  mitochondrial complex IV deficiency (nuclear type 14, MC4DN14), presenting with
+  neuropathy, encephalopathy, exercise intolerance, obesity, and short stature.
+existing_annotations:
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) annotation to complex IV assembly, the central and
+      best-supported biological role of COA3 as a MITRAC assembly factor.
+    action: ACCEPT
+    reason: This is the core evolved function of COA3, supported by experimental evidence
+      in human cells (MITRAC characterisation and the early COX1-COA3-COX14 assembly
+      intermediate) and consistent across the COA3 family.
+    supported_by:
+    - reference_id: PMID:28082314
+      supporting_text: CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation
+        of COX4
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Required for efficient translation of MT-CO1 and mitochondrial
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) annotation placing COA3 at the mitochondrial inner
+      membrane, where it functions as a single-pass membrane assembly factor.
+    action: ACCEPT
+    reason: Directly matches the experimentally determined subcellular localisation
+      and membrane topology of COA3; is_active_in correctly conveys that COA3 carries
+      out its assembly-factor role at this location.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic annotation to mitochondrial inner membrane derived from the
+      UniProt Subcellular Location vocabulary mapping.
+    action: ACCEPT
+    reason: Consistent with the experimentally curated inner-membrane localisation;
+      this IEA mapping is correct and appropriately specific.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: Electronic inter-ontology inference of the biological process &#39;protein
+      folding&#39; from the &#39;protein folding chaperone&#39; molecular function annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: COA3 is best described as a complex IV assembly factor that stabilises
+      newly synthesised MT-CO1 rather than a bona fide protein-folding catalyst; the
+      generic &#39;protein folding&#39; BP over-states this and is redundant with the more
+      informative complex IV assembly process. The chaperone-type activity is captured
+      by the GO:0044183 molecular-function annotation.
+    supported_by:
+    - reference_id: PMID:28082314
+      supporting_text: CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation
+        of COX4
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO electronic annotation mapping the Coa3 domain (IPR041752)
+      to complex IV assembly.
+    action: ACCEPT
+    reason: The InterPro-to-GO mapping is correct and corresponds to the experimentally
+      supported core function of COA3.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Required for efficient translation of MT-CO1 and mitochondrial
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23260140
+  qualifier: enables
+  review:
+    summary: IntAct binary interaction annotations (MT-CO1/P00395 and SURF1/Q15526)
+      recorded as the uninformative &#39;protein binding&#39; molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The underlying interactions with MT-CO1 and SURF1 are real and biologically
+      meaningful (they underpin COA3&#39;s role in the MITRAC assembly intermediate), but
+      the bare &#39;protein binding&#39; term is uninformative about molecular function. Not
+      removed per curation policy for experimental IPI annotations; the interaction
+      partners are better represented in the assembly-factor core function.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: &#39;Along with COX14, core component of the MITRAC (mitochondrial&#39;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence-based direct assay localising COA3 to the mitochondrion.
+    action: ACCEPT
+    reason: Correct but less specific than the inner-membrane localisation; retained
+      as a valid direct-assay observation of mitochondrial localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IMP
+  original_reference_id: PMID:28082314
+  qualifier: involved_in
+  review:
+    summary: Mutant-phenotype (IMP) evidence that COA3 participates in complex IV
+      assembly, from the CMC1-knockout study defining the early COX1-COA3-COX14
+      intermediate.
+    action: ACCEPT
+    reason: Direct experimental support that COA3 acts in complex IV biogenesis as
+      part of an early COX1-containing assembly intermediate; this is the core function.
+    supported_by:
+    - reference_id: PMID:28082314
+      supporting_text: &#39;factors, the cardiomyopathy proteins COA3 and COX14.&#39;
+    - reference_id: PMID:28082314
+      supporting_text: CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation
+        of COX4
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: IDA
+  original_reference_id: PMID:28082314
+  qualifier: enables
+  review:
+    summary: Direct-assay molecular-function annotation describing COA3 as a chaperone
+      that stabilises newly synthesised MT-CO1.
+    action: KEEP_AS_NON_CORE
+    reason: COA3 does bind and stabilise nascent MT-CO1 within the COX1-COA3-COX14
+      intermediate, consistent with a chaperone-type binding activity. However, the
+      protein has no catalytic activity and its defining evolved role is as a complex
+      IV assembly factor rather than a general protein-folding chaperone; retained as
+      a non-core molecular function.
+    supported_by:
+    - reference_id: PMID:28082314
+      supporting_text: CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation
+        of COX4
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomics (MitoCoP high-confidence mitochondrial proteome)
+      assignment of COA3 to the mitochondrion.
+    action: ACCEPT
+    reason: Supports mitochondrial localisation with high-confidence proteomic evidence;
+      less specific than the inner-membrane annotation but correct.
+    supported_by:
+    - reference_id: PMID:34800366
+      supporting_text: high-confidence proteome (MitoCoP) of 1,134 protein-coding genes
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865350
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing COA3 at the mitochondrial
+      inner membrane within the complex IV assembly pathway.
+    action: ACCEPT
+    reason: Consistent with the experimentally determined inner-membrane localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865412
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing COA3 at the mitochondrial
+      inner membrane within the complex IV assembly pathway.
+    action: ACCEPT
+    reason: Consistent with the experimentally determined inner-membrane localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865449
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing COA3 at the mitochondrial
+      inner membrane within the complex IV assembly pathway.
+    action: ACCEPT
+    reason: Consistent with the experimentally determined inner-membrane localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865579
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing COA3 at the mitochondrial
+      inner membrane within the complex IV assembly pathway.
+    action: ACCEPT
+    reason: Consistent with the experimentally determined inner-membrane localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865630
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing COA3 at the mitochondrial
+      inner membrane within the complex IV assembly pathway.
+    action: ACCEPT
+    reason: Consistent with the experimentally determined inner-membrane localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865663
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing COA3 at the mitochondrial
+      inner membrane within the complex IV assembly pathway.
+    action: ACCEPT
+    reason: Consistent with the experimentally determined inner-membrane localisation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26321642
+  qualifier: enables
+  review:
+    summary: IPI interaction annotations recording COA3 binding partners (MT-CO1,
+      SURF1, TIMM21, SMIM20/MITRAC7) as the uninformative &#39;protein binding&#39; term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The interactions are experimentally supported and biologically relevant
+      to MITRAC/complex IV assembly, but the bare &#39;protein binding&#39; molecular function
+      is uninformative. Not removed per curation policy for experimental IPI; the
+      functional context is captured by the assembly-factor core function.
+    supported_by:
+    - reference_id: PMID:26321642
+      supporting_text: The MITRAC complex represents
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:23260140
+  qualifier: located_in
+  review:
+    summary: Direct-assay localisation of COA3 to the mitochondrial inner membrane
+      from the MITRAC characterisation study.
+    action: ACCEPT
+    reason: Primary experimental evidence for the inner-membrane localisation and
+      single-pass membrane topology of COA3; this is the most authoritative CC annotation.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Mitochondrion inner membrane
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IMP
+  original_reference_id: PMID:23260140
+  qualifier: involved_in
+  review:
+    summary: Mutant-phenotype (IMP) evidence from the MITRAC study that COA3 is
+      required for complex IV assembly.
+    action: ACCEPT
+    reason: Core experimentally supported function; COA3 as a core MITRAC component
+      is required for efficient MT-CO1 translation and complex IV assembly.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Required for efficient translation of MT-CO1 and mitochondrial
+- term:
+    id: GO:0070131
+    label: positive regulation of mitochondrial translation
+  evidence_type: IMP
+  original_reference_id: PMID:23260140
+  qualifier: involved_in
+  review:
+    summary: Mutant-phenotype (IMP) evidence that COA3 positively regulates mitochondrial
+      translation, specifically of MT-CO1, coupling translation to complex IV assembly.
+    action: ACCEPT
+    reason: Supported by the MITRAC study (COA3 required for efficient MT-CO1 translation);
+      this is a genuine secondary function reflecting MITRAC-mediated translational
+      coupling. Later work (PMID:28082314) frames the translation-regulation role as
+      proposed rather than fully established, but the primary IMP evidence justifies
+      retaining it.
+    supported_by:
+    - reference_id: file:human/COA3/COA3-uniprot.txt
+      supporting_text: Required for efficient translation of MT-CO1 and mitochondrial
+    - reference_id: PMID:26321642
+      supporting_text: regulates mitochondrial translation of COX1 mRNA
+core_functions:
+- description: Non-catalytic complex IV (cytochrome c oxidase) assembly factor that,
+    as a core component of the MITRAC complex with COX14, associates with and stabilises
+    newly synthesised MT-CO1 in an early COX1-COA3-COX14 assembly intermediate and
+    coordinates its progression into complex IV assembly. As a MITRAC component it
+    also couples MT-CO1 translation to assembly (positive regulation of mitochondrial
+    translation). No molecular function is asserted because COA3 has no catalytic
+    activity and only binding/chaperone-type molecular functions.
+  directly_involved_in:
+  - id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  - id: GO:0070131
+    label: positive regulation of mitochondrial translation
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: PMID:28082314
+    supporting_text: CMC1 stabilizes a COX1-COA3-COX14 complex before the incorporation
+      of COX4
+  - reference_id: file:human/COA3/COA3-uniprot.txt
+    supporting_text: Required for efficient translation of MT-CO1 and mitochondrial
+  - reference_id: file:human/COA3/COA3-uniprot.txt
+    supporting_text: Mitochondrion inner membrane
+proposed_new_terms: []
+suggested_questions:
+- question: Is COA3&#39;s positive effect on MT-CO1 translation a direct regulatory activity
+    or a secondary consequence of stabilising nascent MT-CO1 within the MITRAC intermediate?
+- question: What is the precise structural role of the single transmembrane helix and
+    C-terminal coiled coil of COA3 in organising the COX1-COA3-COX14 assembly intermediate?
+suggested_experiments:
+- description: Structural determination (cryo-EM) of the human COX1-COA3-COX14 (MITRAC)
+    assembly intermediate to define COA3&#39;s contacts with MT-CO1 and COX14.
+- description: Pulse-chase labelling of mitochondrial translation products in COA3-null
+    versus rescued cells to distinguish effects on MT-CO1 synthesis rate from effects
+    on nascent MT-CO1 stability.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:23260140
+  title: MITRAC links mitochondrial protein translocation to respiratory-chain assembly
+    and translational regulation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary MITRAC characterisation; UniProt curates FUNCTION, SUBUNIT,
+      and inner-membrane localisation of COA3 from this paper (RN 9). Cache is
+      abstract-only; claims cross-checked against curated UniProt text.
+- id: PMID:26321642
+  title: MITRAC7 Acts as a COX1-Specific Chaperone and Reveals a Checkpoint during
+    Cytochrome c Oxidase Assembly.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes COA3 interactions with MT-CO1, SMIM20, SURF1, TIMM21
+      (UniProt RN 11) and describes MITRAC regulating COX1 mRNA translation.
+- id: PMID:28082314
+  title: A CMC1-knockout reveals translation-independent control of human mitochondrial
+    complex IV biogenesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract explicitly names COA3 as a cardiomyopathy assembly factor
+      in the early COX1-COA3-COX14 intermediate; also notes the COA3 translation role
+      is &#39;proposed&#39;, which tempers the GO:0070131 annotation.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: MitoCoP high-confidence mitochondrial proteome; supports mitochondrial
+      localisation of COA3 by high-throughput proteomics.
+- id: file:human/COA3/COA3-uniprot.txt
+  title: UniProtKB Q9Y2R0 (COA3_HUMAN) curated entry
+  findings: []
+- id: Reactome:R-HSA-9865350
+  title: Nascent MT-CO1 binds to MITRAC, Mg2+, PE, CL
+  findings: []
+- id: Reactome:R-HSA-9865412
+  title: TIMM21 carries COX4, COX5A, COX6C to MT-CO1:MITRAC
+  findings: []
+- id: Reactome:R-HSA-9865449
+  title: Metallochaperone inserts Cu2+ into MT-CO1
+  findings: []
+- id: Reactome:R-HSA-9865579
+  title: MT-CO1 and MT-CO2 complexes associate, installing heme moieties
+  findings: []
+- id: Reactome:R-HSA-9865630
+  title: Metallochaperone inserts 2Cu2+ into MT-CO2
+  findings: []
+- id: Reactome:R-HSA-9865663
+  title: MT-CO3, COX6A,B,7A and NDUFA4 bind to holo-MT-CO1,2 complex
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

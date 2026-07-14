@@ -1,0 +1,3597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMRK1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NMRK1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NWW6" target="_blank" class="term-link">
+                        Q9NWW6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NMRK1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NWW6" data-a="DESCRIPTION: NMRK1 (nicotinamide riboside kinase 1) is a small ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NMRK1 (nicotinamide riboside kinase 1) is a small cytosolic enzyme of the NAD+ salvage pathway. It catalyzes the ATP-dependent phosphorylation of the NAD+ precursor nicotinamide riboside (NR) to nicotinamide mononucleotide (NMN), and of nicotinic acid riboside (NaR) to nicotinic acid mononucleotide (NaMN); these mononucleotides are subsequently adenylylated by NMN adenylyltransferases (NMNATs) to complete NAD+/NaAD synthesis. This activity defines a Preiss-Handler-independent route to NAD+ that is conserved from yeast to humans. NMRK1 is a monomeric member of the uridine kinase family (NRK subfamily) with a P-loop-containing nucleotide triphosphate hydrolase fold; magnesium is required for catalysis. Beyond endogenous ribosides, NMRK1 phosphorylates and thereby activates several nucleoside prodrugs, including the antitumor agents tiazofurin and 3-deazaguanosine. Because it converts dietary NR into NAD+, NMRK1 is a key determinant of the cellular response to NR supplementation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NMRK1 is a soluble cytosolic enzyme; the phylogenetically inferred cytoplasmic localization is consistent with Reactome (cytosolic NMRK1) and with the ARBA cytosol annotation. Correct but generic (cytosol is more specific); keep as supporting localization rather than a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization for a soluble salvage-pathway kinase, but the cellular component is not itself a core function and cytosol is the more precise term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050262" target="_blank" class="term-link">
+                                    GO:0050262
+                                </a>
+                            </span>
+                            <span class="term-label">ribosylnicotinamide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0050262" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ribosylnicotinamide (nicotinamide riboside) kinase activity is the defining molecular function of NMRK1 (EC 2.7.1.22; Rhea:14017). Phylogenetic inference agrees with direct experimental evidence for the human enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061769" target="_blank" class="term-link">
+                                    GO:0061769
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate riboside kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0061769" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NMRK1 also phosphorylates nicotinic acid riboside to nicotinic acid mononucleotide (EC 2.7.1.173; Rhea:25568). Phylogenetic inference agrees with the experimentally demonstrated dual substrate specificity of the human enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005829" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the well-supported subcellular localization of NMRK1, matching the Reactome TAS annotations (&#34;Cytosolic NMRK1&#34;). Accept as the correct, specific localization term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050262" target="_blank" class="term-link">
+                                    GO:0050262
+                                </a>
+                            </span>
+                            <span class="term-label">ribosylnicotinamide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0050262" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/Rhea/EC) mapping of the EC 2.7.1.22 reaction to this term is correct and redundant with the experimental (EXP) and phylogenetic (IBA) annotations of the same core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061769" target="_blank" class="term-link">
+                                    GO:0061769
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate riboside kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0061769" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/Rhea/EC) mapping of the EC 2.7.1.173 reaction to this term is correct and redundant with the experimental (EXP) and phylogenetic (IBA) annotations of the same core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901847" target="_blank" class="term-link">
+                                    GO:1901847
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:1901847" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NMRK1 acts on nicotinic acid riboside, so participation in nicotinate metabolism is correct. However this is a broad process term; the NR/NaR salvage role is better captured by the NAD+ biosynthesis/salvage terms. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but generic; NAD+ biosynthetic process via the salvage pathway is the more informative biological-process term for this enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale binary interactome screen (Rolland et al. 2014, yeast two-hybrid; interactor TAX1BP1). No functional consequence is characterized, and the interaction is not part of NMRK1&#39;s known catalytic role. Uninformative; retain as over-annotated per policy (not removed).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput Y2H hit providing no specific molecular-function information beyond generic binding.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the human reference binary interactome map (Luck et al. 2020, yeast two-hybrid; interactors REL, INCA1, KCTD21, TAX1BP1). No functional consequence characterized; not part of NMRK1&#39;s known enzymatic function. Uninformative; retain as over-annotated per policy (not removed).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput Y2H hits providing no specific molecular-function information beyond generic binding.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901847" target="_blank" class="term-link">
+                                    GO:1901847
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196807
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:1901847" data-r="Reactome:R-HSA-196807" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome curator-authored (TAS) placement of NMRK1 in nicotinate metabolism is correct: NMRK1 phosphorylates nicotinic acid riboside within the nicotinate branch of NAD+ salvage. Broad process term; keep as non-core supporting context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway membership but generic; NAD+ salvage-pathway biosynthesis is the more specific core process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0009435" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NMRK1 is a committed step of NAD+ biosynthesis (UniPathway UPA00253; UniProt PATHWAY &#34;Cofactor biosynthesis; NAD(+) biosynthesis&#34;). This is correct. It is the generic parent of the more specific salvage-pathway term; keep as core process, and note GO:0034355 (via the salvage pathway) as the preferred specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but is the general parent of GO:0034355 (NAD+ biosynthetic process via the salvage pathway), which more precisely describes NMRK1&#39;s role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NMRK1/NMRK1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050262" target="_blank" class="term-link">
+                                    GO:0050262
+                                </a>
+                            </span>
+                            <span class="term-label">ribosylnicotinamide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15137942
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Discoveries of nicotinamide riboside as a nutrient and conse...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0050262" data-r="PMID:15137942" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Discovery paper (Bieganowski &amp; Brenner 2004) identifying the conserved NRK genes and demonstrating that human NRK1 phosphorylates nicotinamide riboside, establishing the Preiss-Handler-independent NAD+ route. Directly supports the core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link">
+                                        PMID:15137942
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nicotinamide riboside kinases from yeast</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050262" target="_blank" class="term-link">
+                                    GO:0050262
+                                </a>
+                            </span>
+                            <span class="term-label">ribosylnicotinamide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17914902
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nicotinamide riboside kinase structures reveal new pathways ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0050262" data-r="PMID:17914902" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tempel et al. 2007 solved human NRK1 crystal structures with ATP and substrates and characterized substrate specificity and kinetics, providing experimental support (EC 2.7.1.22) for the core nicotinamide riboside kinase activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link">
+                                        PMID:17914902
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nicotinamide riboside kinase structures reveal new pathways to NAD+.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061769" target="_blank" class="term-link">
+                                    GO:0061769
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate riboside kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15137942
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Discoveries of nicotinamide riboside as a nutrient and conse...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0061769" data-r="PMID:15137942" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bieganowski &amp; Brenner 2004 established the NRK-based salvage route to NAD+; NMRK1 also acts on nicotinic acid riboside (EC 2.7.1.173). Experimental support for the second core catalytic activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link">
+                                        PMID:15137942
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nicotinamide riboside kinases from yeast</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061769" target="_blank" class="term-link">
+                                    GO:0061769
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate riboside kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17914902
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nicotinamide riboside kinase structures reveal new pathways ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0061769" data-r="PMID:17914902" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tempel et al. 2007 structurally and kinetically characterized NRK1 acting on nicotinic acid riboside (EC 2.7.1.173), supporting this core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link">
+                                        PMID:17914902
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nicotinamide riboside kinase structures reveal new pathways to NAD+.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050262" target="_blank" class="term-link">
+                                    GO:0050262
+                                </a>
+                            </span>
+                            <span class="term-label">ribosylnicotinamide kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8809081" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8809081
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and properties of a human nicotinamide ribonucl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0050262" data-r="PMID:8809081" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sasiak &amp; Saunders 1996 purified the human nicotinamide ribonucleoside kinase to near-homogeneity from placenta and showed ATP-dependent phosphorylation of nicotinamide ribonucleoside (and prodrugs tiazofurin, 3-deazaguanosine). Direct biochemical support for the core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8809081" target="_blank" class="term-link">
+                                        PMID:8809081
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NRK phosphorylated several substrates including nicotinamide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061769" target="_blank" class="term-link">
+                                    GO:0061769
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate riboside kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8809081" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8809081
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and properties of a human nicotinamide ribonucl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0061769" data-r="PMID:8809081" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The human NRK purified by Sasiak &amp; Saunders 1996 phosphorylates the ribosides; combined with later structural work this supports nicotinate riboside kinase activity (EC 2.7.1.173). Accept as experimental support for a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8809081" target="_blank" class="term-link">
+                                        PMID:8809081
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The reaction requires ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8869606
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005829" data-r="Reactome:R-HSA-8869606" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction &#34;NMRK1 phosphorylates NAR to yield NAMN&#34; is annotated as cytosolic; correct localization for this soluble enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8869633
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005829" data-r="Reactome:R-HSA-8869633" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction &#34;NMRK1 phosphorylates NR to yield NMN&#34; is annotated as cytosolic; correct localization for this soluble enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                    GO:0034355
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process via the salvage pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15137942
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Discoveries of nicotinamide riboside as a nutrient and conse...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0034355" data-r="PMID:15137942" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed as the specific biological-process term for NMRK1, replacing the generic GO:0009435 (NAD+ biosynthetic process) and GO:1901847 (nicotinate metabolic process). NMRK1 phosphorylates NR/NaR to NMN/NaMN in the salvage route to NAD+, matching this term&#39;s definition (formation of NAD+ from NR/NAR without de novo synthesis).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link">
+                                        PMID:15137942
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">nicotinamide riboside is an unanticipated NAD+ precursor in yeast</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17914902
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nicotinamide riboside kinase structures reveal new pathways ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWW6" data-a="GO:0005524" data-r="PMID:17914902" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP is the phosphate-donor cosubstrate for both riboside kinase reactions; crystal structures show the P-loop (residues 10-18) binds ATP and Mg2+ (PubMed:17914902, PubMed:17698003). Present in UniProt as the ATP-binding keyword but dropped from the current GOA TSV; retained here as a genuine molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NMRK1/NMRK1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">beta-nicotinamide D-riboside + ATP = beta-nicotinamide D-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent phosphorylation of nicotinamide riboside (NR) to nicotinamide mononucleotide (NMN), the committed salvage step feeding NAD+ biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q9NWW6" data-a="FUNCTION: ATP-dependent phosphorylation of nicotinamide ribo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050262" target="_blank" class="term-link">
+                            ribosylnicotinamide kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                NAD+ biosynthetic process via the salvage pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link">
+                                PMID:17914902
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Nicotinamide riboside kinase structures reveal new pathways to NAD+.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NMRK1/NMRK1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the phosphorylation of nicotinamide riboside (NR)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent phosphorylation of nicotinic acid riboside (NaR) to nicotinic acid mononucleotide (NaMN), contributing to NAD+/NaAD synthesis via the salvage route.</h3>
+                <span class="vote-buttons" data-g="Q9NWW6" data-a="FUNCTION: ATP-dependent phosphorylation of nicotinic acid ri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061769" target="_blank" class="term-link">
+                            nicotinate riboside kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                NAD+ biosynthetic process via the salvage pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link">
+                                PMID:15137942
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Nicotinamide riboside kinases from yeast</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NMRK1/NMRK1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">and nicotinic acid riboside (NaR) to form nicotinamide mononucleotide</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds ATP as the phosphate donor cosubstrate for both riboside kinase reactions; the P-loop (residues 10-18) coordinates ATP and Mg2+.</h3>
+                <span class="vote-buttons" data-g="Q9NWW6" data-a="FUNCTION: Binds ATP as the phosphate donor cosubstrate for b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NMRK1/NMRK1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">beta-nicotinamide D-riboside + ATP = beta-nicotinamide D-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" target="_blank" class="term-link">
+                            PMID:15137942
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Discoveries of nicotinamide riboside as a nutrient and conserved NRK genes establish a Preiss-Handler independent route to NAD+ in fungi and humans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified conserved yeast and human NRK genes encoding nicotinamide riboside kinases that establish a Preiss-Handler-independent route to NAD+; the enzymes are highly specific for nicotinamide riboside and the cancer drug tiazofurin.</div>
+
+                        <div class="finding-text">"found to be highly specific for phosphorylation of nicotinamide riboside and the cancer drug tiazofurin"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17914902" target="_blank" class="term-link">
+                            PMID:17914902
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nicotinamide riboside kinase structures reveal new pathways to NAD+.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human NRK1 crystal structures with ATP and substrates define substrate specificity and catalytic residues (Asp-36, Glu-98), supporting both EC 2.7.1.22 and EC 2.7.1.173 activities.</div>
+
+                        <div class="finding-text">"Nicotinamide riboside kinase structures reveal new pathways to NAD+."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Proteome-scale yeast two-hybrid interactome map; source of a bare &#34;protein binding&#34; IPI for NMRK1 (TAX1BP1) with no functional characterization.</div>
+
+                        <div class="finding-text">"A proteome-scale map of the human interactome network."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human reference binary interactome map; source of bare &#34;protein binding&#34; IPIs for NMRK1 (REL, INCA1, KCTD21, TAX1BP1) with no functional characterization.</div>
+
+                        <div class="finding-text">"A reference map of the human binary protein interactome."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8809081" target="_blank" class="term-link">
+                            PMID:8809081
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and properties of a human nicotinamide ribonucleoside kinase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human nicotinamide ribonucleoside kinase purified to near-homogeneity from placenta; monomeric, ATP-dependent, pH optimum 6.5-9.0, phosphorylates nicotinamide ribonucleoside, tiazofurin and 3-deazaguanosine.</div>
+
+                        <div class="finding-text">"NRK phosphorylated several substrates including nicotinamide"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196807
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nicotinate metabolism</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8869606
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NMRK1 phosphorylates NAR to yield NAMN</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8869633
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NMRK1 phosphorylates NR to yield NMN</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NMRK1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NWW6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nmrk1-nicotinamide-riboside-kinase-1-review-notes">NMRK1 (Nicotinamide riboside kinase 1) — review notes</h1>
+<p>UniProt: Q9NWW6 (NRK1_HUMAN). Gene synonyms C9orf95, NRK1. Chromosome 9. HGNC:26057.<br />
+199 aa monomer; belongs to the uridine kinase family, NRK subfamily.</p>
+<h2 id="function-authoritative-uniprot-summary">Function (authoritative UniProt summary)</h2>
+<p>NMRK1 is a small-molecule kinase of the NAD+ salvage pathway. It phosphorylates the NAD+<br />
+precursor nicotinamide riboside (NR) and nicotinic acid riboside (NaR), using ATP, to give<br />
+nicotinamide mononucleotide (NMN) and nicotinic acid mononucleotide (NaMN) respectively;<br />
+these feed the NMNAT step of NAD+ biosynthesis.</p>
+<ul>
+<li>[file:human/NMRK1/NMRK1-uniprot.txt "Catalyzes the phosphorylation of nicotinamide riboside (NR)"] / "and nicotinic acid riboside (NaR) to form nicotinamide mononucleotide" / "(NMN) and nicotinic acid mononucleotide (NaMN). The enzyme also" / "phosphorylates the antitumor drugs tiazofurin and 3-deazaguanosine." (FUNCTION, ECO:0000269|PubMed:15137942)</li>
+<li>EC 2.7.1.22 (nicotinamide riboside → NMN) and EC 2.7.1.173 (nicotinic acid riboside → NaMN); both experimentally supported by PubMed:17914902 and PubMed:8809081 [file:human/NMRK1/NMRK1-uniprot.txt "EC=2.7.1.22 {ECO:0000269|PubMed:17914902, ECO:0000269|PubMed:8809081};"].</li>
+<li>Catalytic reactions (Rhea): RHEA:14017 (beta-nicotinamide D-riboside + ATP = beta-nicotinamide D-ribonucleotide + ADP + H+); RHEA:25568 (beta-D-ribosylnicotinate + ATP = nicotinate beta-D-ribonucleotide + ADP + H+).</li>
+<li>PATHWAY: "Cofactor biosynthesis; NAD(+) biosynthesis." [file:human/NMRK1/NMRK1-uniprot.txt "PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis."] (ECO:0000305|PubMed:17914902); UniPathway UPA00253.</li>
+<li>SUBUNIT: Monomer (PubMed:8809081) [file:human/NMRK1/NMRK1-uniprot.txt "SUBUNIT: Monomer. {ECO:0000269|PubMed:8809081}."].</li>
+</ul>
+<h2 id="discovery-key-literature">Discovery / key literature</h2>
+<ul>
+<li>PMID:15137942 (Bieganowski &amp; Brenner, Cell 2004). Discovery paper: identified conserved NRK<br />
+  genes (yeast + human) establishing a Preiss-Handler-independent route to NAD+ via nicotinamide<br />
+  riboside; NRKs "found to be highly specific for phosphorylation of nicotinamide riboside and the<br />
+  cancer drug tiazofurin" <a href="https://pubmed.ncbi.nlm.nih.gov/15137942" title="found to be highly \nspecific for phosphorylation of nicotinamide riboside and the cancer drug \ntiazofurin">PMID:15137942</a>. Abstract-only in cache (full_text_available: false); curator (Reactome EXP) read full text.</li>
+<li>PMID:8809081 (Sasiak &amp; Saunders, Arch Biochem Biophys 1996). Purified the human enzyme<br />
+  ("nicotinamide ribonucleoside kinase") to near-homogeneity from placenta; monomer ~29-32 kDa,<br />
+  pI 5.6, requires ATP, pH optimum 6.5-9.0. "NRK phosphorylated several substrates including<br />
+  nicotinamide ribonucleoside, guanosine, tiazofurin, and 3-deazaguanosine" <a href="https://pubmed.ncbi.nlm.nih.gov/8809081" title="NRK phosphorylated several substrates including \nnicotinamide ribonucleoside, guanosine, tiazofurin, and 3-deazaguanosine">PMID:8809081</a>. Abstract-only in cache.</li>
+<li>PMID:17914902 (Tempel et al., PLoS Biol 2007). "Nicotinamide riboside kinase structures reveal<br />
+  new pathways to NAD+." X-ray structures (1.32 Å) of human NRK1 in complex with ATP and substrates;<br />
+  substrate specificity, kinetics, mutagenesis of catalytic Asp-36 and Glu-98. Establishes both<br />
+  EC 2.7.1.22 and EC 2.7.1.173 activities. Full text in cache.</li>
+<li>PMID:17698003 (Khan et al., Structure 2007). Crystal structure; mutagenesis K16A/D36A/D56A/D138A<br />
+  (not in GOA, but corroborates catalytic residues). Not separately reviewed here.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>UniProt gives no subcellular-location CC block. Reactome places catalysis in the cytosol<br />
+  (R-HSA-8869606, R-HSA-8869633; both "Cytosolic NMRK1"). GOA has cytoplasm (IBA), cytosol<br />
+  (Reactome TAS, ARBA IEA). Cytosol/cytoplasm is well supported. (Some literature reports<br />
+  nuclear NRK1 pools, but not in the local files; not asserted here.)</li>
+</ul>
+<h2 id="protein-interactions-bare-protein-binding-ipi">Protein interactions (bare "protein binding" IPI)</h2>
+<p>Two large high-throughput binary-interactome maps, no functional characterization of the<br />
+interactions:<br />
+- PMID:25416956 (Rolland et al. 2014, "A proteome-scale map of the human interactome network") — Y2H; TAX1BP1 (Q86VP1).<br />
+- PMID:32296183 (Luck et al. 2020, "A reference map of the human binary protein interactome") — Y2H;<br />
+  REL (Q04864-2), INCA1 (Q0VD86), KCTD21 (Q4G0X4), TAX1BP1 (Q86VP1).<br />
+These match the UniProt INTERACTION block (INCA1, KCTD21, REL, TAX1BP1). No evidence these<br />
+interactions are part of NMRK1's core catalytic function; treated as uninformative<br />
+"protein binding" and marked over-annotated (per policy, not removed).</p>
+<h2 id="review-decisions-summary">Review decisions summary</h2>
+<ul>
+<li>Core MF: GO:0050262 ribosylnicotinamide kinase activity (EC 2.7.1.22) and GO:0061769 nicotinate<br />
+  riboside kinase activity (EC 2.7.1.173) — both experimentally verified (EXP), ACCEPT. IBA and IEA<br />
+  duplicates ACCEPT/KEEP as redundant support.</li>
+<li>Core MF adjunct: ATP binding (GO:0005524) — substrate cosubstrate; captured in core_functions.</li>
+<li>Core BP: NAD+ salvage / NAD+ biosynthesis. GO:0034355 (NAD+ biosynthetic process via the salvage<br />
+  pathway, IEA/Ensembl) is the best-fitting BP. GO:0009435 (NAD+ biosynthetic process) is the generic<br />
+  parent (KEEP). GO:1901847 (nicotinate metabolic process) is correct but generic (KEEP_AS_NON_CORE).</li>
+<li>Location: cytosol/cytoplasm ACCEPT / KEEP.</li>
+<li>metal ion binding (GO:0046872, IEA-KW): Mg2+ is a genuine cofactor (BINDING His-17/Asp-36 to Mg2+);<br />
+  this annotation is NOT in the GOA TSV (only appears in the UniProt DR block, dropped by GOA), so it<br />
+  is not a reviewed existing_annotation. Noted for completeness.</li>
+<li>protein binding (GO:0005515) IPI x2 (Rolland, Luck): uninformative; MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NWW6
+gene_symbol: NMRK1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NMRK1 (nicotinamide riboside kinase 1) is a small cytosolic enzyme of the NAD+
+  salvage pathway. It catalyzes the ATP-dependent phosphorylation of the NAD+
+  precursor nicotinamide riboside (NR) to nicotinamide mononucleotide (NMN), and
+  of nicotinic acid riboside (NaR) to nicotinic acid mononucleotide (NaMN); these
+  mononucleotides are subsequently adenylylated by NMN adenylyltransferases (NMNATs)
+  to complete NAD+/NaAD synthesis. This activity defines a Preiss-Handler-independent
+  route to NAD+ that is conserved from yeast to humans. NMRK1 is a monomeric member
+  of the uridine kinase family (NRK subfamily) with a P-loop-containing nucleotide
+  triphosphate hydrolase fold; magnesium is required for catalysis. Beyond endogenous
+  ribosides, NMRK1 phosphorylates and thereby activates several nucleoside prodrugs,
+  including the antitumor agents tiazofurin and 3-deazaguanosine. Because it converts
+  dietary NR into NAD+, NMRK1 is a key determinant of the cellular response to NR
+  supplementation.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9NWW6-1
+- name: &#39;2&#39;
+  id: Q9NWW6-2
+  sequence_note: VSP_012676
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      NMRK1 is a soluble cytosolic enzyme; the phylogenetically inferred cytoplasmic
+      localization is consistent with Reactome (cytosolic NMRK1) and with the ARBA
+      cytosol annotation. Correct but generic (cytosol is more specific); keep as
+      supporting localization rather than a core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct localization for a soluble salvage-pathway kinase, but the cellular
+      component is not itself a core function and cytosol is the more precise term.
+- term:
+    id: GO:0050262
+    label: ribosylnicotinamide kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Ribosylnicotinamide (nicotinamide riboside) kinase activity is the defining
+      molecular function of NMRK1 (EC 2.7.1.22; Rhea:14017). Phylogenetic inference
+      agrees with direct experimental evidence for the human enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0061769
+    label: nicotinate riboside kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NMRK1 also phosphorylates nicotinic acid riboside to nicotinic acid
+      mononucleotide (EC 2.7.1.173; Rhea:25568). Phylogenetic inference agrees with
+      the experimentally demonstrated dual substrate specificity of the human enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol is the well-supported subcellular localization of NMRK1, matching the
+      Reactome TAS annotations (&#34;Cytosolic NMRK1&#34;). Accept as the correct, specific
+      localization term.
+    action: ACCEPT
+- term:
+    id: GO:0050262
+    label: ribosylnicotinamide kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/Rhea/EC) mapping of the EC 2.7.1.22 reaction to this term is
+      correct and redundant with the experimental (EXP) and phylogenetic (IBA)
+      annotations of the same core function.
+    action: ACCEPT
+- term:
+    id: GO:0061769
+    label: nicotinate riboside kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/Rhea/EC) mapping of the EC 2.7.1.173 reaction to this term is
+      correct and redundant with the experimental (EXP) and phylogenetic (IBA)
+      annotations of the same core function.
+    action: ACCEPT
+- term:
+    id: GO:1901847
+    label: nicotinate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NMRK1 acts on nicotinic acid riboside, so participation in nicotinate metabolism
+      is correct. However this is a broad process term; the NR/NaR salvage role is
+      better captured by the NAD+ biosynthesis/salvage terms. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but generic; NAD+ biosynthetic process via the salvage pathway is the
+      more informative biological-process term for this enzyme.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale binary interactome screen (Rolland
+      et al. 2014, yeast two-hybrid; interactor TAX1BP1). No functional consequence
+      is characterized, and the interaction is not part of NMRK1&#39;s known catalytic
+      role. Uninformative; retain as over-annotated per policy (not removed).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput Y2H hit providing no specific molecular-function information
+      beyond generic binding.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the human reference binary interactome map (Luck
+      et al. 2020, yeast two-hybrid; interactors REL, INCA1, KCTD21, TAX1BP1). No
+      functional consequence characterized; not part of NMRK1&#39;s known enzymatic
+      function. Uninformative; retain as over-annotated per policy (not removed).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput Y2H hits providing no specific molecular-function information
+      beyond generic binding.
+- term:
+    id: GO:1901847
+    label: nicotinate metabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196807
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome curator-authored (TAS) placement of NMRK1 in nicotinate metabolism is
+      correct: NMRK1 phosphorylates nicotinic acid riboside within the nicotinate
+      branch of NAD+ salvage. Broad process term; keep as non-core supporting context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct pathway membership but generic; NAD+ salvage-pathway biosynthesis is
+      the more specific core process.
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NMRK1 is a committed step of NAD+ biosynthesis (UniPathway UPA00253; UniProt
+      PATHWAY &#34;Cofactor biosynthesis; NAD(+) biosynthesis&#34;). This is correct. It is
+      the generic parent of the more specific salvage-pathway term; keep as core
+      process, and note GO:0034355 (via the salvage pathway) as the preferred
+      specific term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but is the general parent of GO:0034355 (NAD+ biosynthetic process via
+      the salvage pathway), which more precisely describes NMRK1&#39;s role.
+    supported_by:
+    - reference_id: file:human/NMRK1/NMRK1-uniprot.txt
+      supporting_text: &gt;-
+        PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis.
+- term:
+    id: GO:0050262
+    label: ribosylnicotinamide kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:15137942
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Discovery paper (Bieganowski &amp; Brenner 2004) identifying the conserved NRK
+      genes and demonstrating that human NRK1 phosphorylates nicotinamide riboside,
+      establishing the Preiss-Handler-independent NAD+ route. Directly supports the
+      core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15137942
+      supporting_text: &gt;-
+        Nicotinamide riboside kinases from yeast
+- term:
+    id: GO:0050262
+    label: ribosylnicotinamide kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17914902
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Tempel et al. 2007 solved human NRK1 crystal structures with ATP and substrates
+      and characterized substrate specificity and kinetics, providing experimental
+      support (EC 2.7.1.22) for the core nicotinamide riboside kinase activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17914902
+      supporting_text: &gt;-
+        Nicotinamide riboside kinase structures reveal new pathways to NAD+.
+- term:
+    id: GO:0061769
+    label: nicotinate riboside kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:15137942
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bieganowski &amp; Brenner 2004 established the NRK-based salvage route to NAD+;
+      NMRK1 also acts on nicotinic acid riboside (EC 2.7.1.173). Experimental support
+      for the second core catalytic activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15137942
+      supporting_text: &gt;-
+        Nicotinamide riboside kinases from yeast
+- term:
+    id: GO:0061769
+    label: nicotinate riboside kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17914902
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Tempel et al. 2007 structurally and kinetically characterized NRK1 acting on
+      nicotinic acid riboside (EC 2.7.1.173), supporting this core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17914902
+      supporting_text: &gt;-
+        Nicotinamide riboside kinase structures reveal new pathways to NAD+.
+- term:
+    id: GO:0050262
+    label: ribosylnicotinamide kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:8809081
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sasiak &amp; Saunders 1996 purified the human nicotinamide ribonucleoside kinase
+      to near-homogeneity from placenta and showed ATP-dependent phosphorylation of
+      nicotinamide ribonucleoside (and prodrugs tiazofurin, 3-deazaguanosine).
+      Direct biochemical support for the core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8809081
+      supporting_text: &gt;-
+        NRK phosphorylated several substrates including nicotinamide
+- term:
+    id: GO:0061769
+    label: nicotinate riboside kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:8809081
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The human NRK purified by Sasiak &amp; Saunders 1996 phosphorylates the ribosides;
+      combined with later structural work this supports nicotinate riboside kinase
+      activity (EC 2.7.1.173). Accept as experimental support for a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8809081
+      supporting_text: &gt;-
+        The reaction
+        requires ATP
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8869606
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome reaction &#34;NMRK1 phosphorylates NAR to yield NAMN&#34; is annotated as
+      cytosolic; correct localization for this soluble enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8869633
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome reaction &#34;NMRK1 phosphorylates NR to yield NMN&#34; is annotated as
+      cytosolic; correct localization for this soluble enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  evidence_type: EXP
+  original_reference_id: PMID:15137942
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed as the specific biological-process term for NMRK1, replacing the
+      generic GO:0009435 (NAD+ biosynthetic process) and GO:1901847 (nicotinate
+      metabolic process). NMRK1 phosphorylates NR/NaR to NMN/NaMN in the salvage
+      route to NAD+, matching this term&#39;s definition (formation of NAD+ from
+      NR/NAR without de novo synthesis).
+    action: NEW
+    supported_by:
+    - reference_id: PMID:15137942
+      supporting_text: &gt;-
+        nicotinamide riboside is an
+        unanticipated NAD+ precursor in yeast
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: EXP
+  original_reference_id: PMID:17914902
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ATP is the phosphate-donor cosubstrate for both riboside kinase reactions;
+      crystal structures show the P-loop (residues 10-18) binds ATP and Mg2+
+      (PubMed:17914902, PubMed:17698003). Present in UniProt as the ATP-binding
+      keyword but dropped from the current GOA TSV; retained here as a genuine
+      molecular function.
+    action: NEW
+    supported_by:
+    - reference_id: file:human/NMRK1/NMRK1-uniprot.txt
+      supporting_text: &gt;-
+        beta-nicotinamide D-riboside + ATP = beta-nicotinamide D-
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15137942
+  title: Discoveries of nicotinamide riboside as a nutrient and conserved NRK genes
+    establish a Preiss-Handler independent route to NAD+ in fungi and humans.
+  findings:
+  - statement: &gt;-
+      Identified conserved yeast and human NRK genes encoding nicotinamide riboside
+      kinases that establish a Preiss-Handler-independent route to NAD+; the enzymes
+      are highly specific for nicotinamide riboside and the cancer drug tiazofurin.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      found to be highly
+      specific for phosphorylation of nicotinamide riboside and the cancer drug
+      tiazofurin
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified discovery paper for human NMRK1/NRK1; underpins the core NR
+      kinase function and the Preiss-Handler-independent NAD+ pathway. Cache is
+      abstract-only; Reactome EXP annotations derive from the full text.
+- id: PMID:17914902
+  title: Nicotinamide riboside kinase structures reveal new pathways to NAD+.
+  findings:
+  - statement: &gt;-
+      Human NRK1 crystal structures with ATP and substrates define substrate
+      specificity and catalytic residues (Asp-36, Glu-98), supporting both EC 2.7.1.22
+      and EC 2.7.1.173 activities.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      Nicotinamide riboside kinase structures reveal new pathways to NAD+.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Structural and kinetic characterization of human NRK1; the EC assignments in
+      UniProt cite this paper. Full text available in cache.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      Proteome-scale yeast two-hybrid interactome map; source of a bare &#34;protein
+      binding&#34; IPI for NMRK1 (TAX1BP1) with no functional characterization.
+    reference_section_type: METHODS
+    supporting_text: &gt;-
+      A proteome-scale map of the human interactome network.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary interactome (Rolland et al. 2014); provides only generic
+      protein-binding evidence, not informative for NMRK1&#39;s molecular function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      Human reference binary interactome map; source of bare &#34;protein binding&#34; IPIs
+      for NMRK1 (REL, INCA1, KCTD21, TAX1BP1) with no functional characterization.
+    reference_section_type: METHODS
+    supporting_text: &gt;-
+      A reference map of the human binary protein interactome.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary interactome (Luck et al. 2020, HuRI); provides only
+      generic protein-binding evidence, not informative for NMRK1&#39;s molecular function.
+- id: PMID:8809081
+  title: Purification and properties of a human nicotinamide ribonucleoside kinase.
+  findings:
+  - statement: &gt;-
+      Human nicotinamide ribonucleoside kinase purified to near-homogeneity from
+      placenta; monomeric, ATP-dependent, pH optimum 6.5-9.0, phosphorylates
+      nicotinamide ribonucleoside, tiazofurin and 3-deazaguanosine.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      NRK phosphorylated several substrates including nicotinamide
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified biochemical characterization of the human enzyme; supports the
+      EXP molecular-function annotations and the monomeric subunit assignment. Cache
+      is abstract-only.
+- id: Reactome:R-HSA-196807
+  title: Nicotinate metabolism
+  findings: []
+- id: Reactome:R-HSA-8869606
+  title: NMRK1 phosphorylates NAR to yield NAMN
+  findings: []
+- id: Reactome:R-HSA-8869633
+  title: NMRK1 phosphorylates NR to yield NMN
+  findings: []
+core_functions:
+- description: &gt;-
+    ATP-dependent phosphorylation of nicotinamide riboside (NR) to nicotinamide
+    mononucleotide (NMN), the committed salvage step feeding NAD+ biosynthesis.
+  molecular_function:
+    id: GO:0050262
+    label: ribosylnicotinamide kinase activity
+  supported_by:
+  - reference_id: PMID:17914902
+    supporting_text: &gt;-
+      Nicotinamide riboside kinase structures reveal new pathways to NAD+.
+  - reference_id: file:human/NMRK1/NMRK1-uniprot.txt
+    supporting_text: &gt;-
+      Catalyzes the phosphorylation of nicotinamide riboside (NR)
+  directly_involved_in:
+  - id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    ATP-dependent phosphorylation of nicotinic acid riboside (NaR) to nicotinic acid
+    mononucleotide (NaMN), contributing to NAD+/NaAD synthesis via the salvage route.
+  molecular_function:
+    id: GO:0061769
+    label: nicotinate riboside kinase activity
+  supported_by:
+  - reference_id: PMID:15137942
+    supporting_text: &gt;-
+      Nicotinamide riboside kinases from yeast
+  - reference_id: file:human/NMRK1/NMRK1-uniprot.txt
+    supporting_text: &gt;-
+      and nicotinic acid riboside (NaR) to form nicotinamide mononucleotide
+  directly_involved_in:
+  - id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Binds ATP as the phosphate donor cosubstrate for both riboside kinase reactions;
+    the P-loop (residues 10-18) coordinates ATP and Mg2+.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  supported_by:
+  - reference_id: file:human/NMRK1/NMRK1-uniprot.txt
+    supporting_text: &gt;-
+      beta-nicotinamide D-riboside + ATP = beta-nicotinamide D-
+proposed_new_terms: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

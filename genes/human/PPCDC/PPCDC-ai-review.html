@@ -1,0 +1,3946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPCDC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PPCDC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96CD2" target="_blank" class="term-link">
+                        Q96CD2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PPCDC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96CD2" data-a="DESCRIPTION: PPCDC (phosphopantothenoylcysteine decarboxylase; ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PPCDC (phosphopantothenoylcysteine decarboxylase; EC 4.1.1.36) catalyzes the third of the five steps of coenzyme A (CoA) biosynthesis from pantothenate. It is an FMN-dependent decarboxylase that removes the carboxyl group from the cysteine moiety of N-[(R)-4-phosphopantothenoyl]-L-cysteine to yield (R)-4&#39;-phosphopantetheine and CO2. The bound flavin mononucleotide (FMN) acts as a catalytic cofactor, transiently oxidizing the substrate thiol to a thioaldehyde to delocalize the developing charge during decarboxylation, after which the enethiol intermediate is re-reduced. The enzyme is a cytosolic homotrimer that binds one FMN per subunit, and belongs to the HFCD (homooligomeric flavin-containing Cys decarboxylase) superfamily. Cys-173 serves as the active-site proton donor. In humans PPCDC is a monofunctional homotrimer, whereas in Saccharomyces the corresponding decarboxylase is a heterotrimer built from the moonlighting proteins Cab3, Hal3 and Vhs3.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    GO:0004633
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0004633" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion of the enzyme&#39;s defining catalytic activity. This is the correct core molecular function and is independently confirmed experimentally for the human protein (EXP/IDA, PMID:11923312 and PMID:15581364).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=4.1.1.36 {ECO:0000269|PubMed:11923312, ECO:0000269|PubMed:15581364};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071513" target="_blank" class="term-link">
+                                    GO:0071513
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0071513" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The active enzyme is an oligomeric complex; in human this is the homotrimer. The IBA part_of assignment to the phosphopantothenoylcysteine decarboxylase complex is consistent with the experimentally determined homotrimeric quaternary structure.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homotrimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0010181" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPCDC binds one FMN per subunit as its catalytic cofactor. The IBA FMN-binding assertion is corroborated by the crystal structure of the human enzyme in complex with FMN (IDA, PMID:14501115).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FMN per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0015937" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPCDC carries out step 3 of the five-step CoA biosynthetic pathway. Correct core biological process, independently supported experimentally (IDA, PMID:11923312).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cofactor biosynthesis; coenzyme A biosynthesis; CoA from (R)-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro2GO catalytic-activity term. Not wrong, but uninformative: the specific activity (phosphopantothenoylcysteine decarboxylase, GO:0004633) is established experimentally, so this should be replaced by the specific child term.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    phosphopantothenoylcysteine decarboxylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=4.1.1.36 {ECO:0000269|PubMed:11923312, ECO:0000269|PubMed:15581364};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    GO:0004633
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0004633" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated RHEA/EC-based (GO_REF:0000120) assignment of the specific decarboxylase activity via EC 4.1.1.36 / RHEA:16793. Consistent with experimental evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Xref=Rhea:RHEA:16793, ChEBI:CHEBI:15378,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput binary-interactome screen. The IntAct partners recorded here (e.g. PPIG, FOXR1, ZNF232, TXN2) are not established biological interactors of this cytosolic CoA-biosynthesis enzyme, and the term is uninformative about function. Retained as an experimental IPI annotation but marked as over-annotated per curation policy.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a variant-effect binary-interactome screen. Non-specific and not indicative of a biologically characterized interaction for PPCDC. Retained (experimental IPI) but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI reference-interactome screen. Uninformative; recorded partners are screen-level hits, not validated biology for a CoA-pathway enzyme. Retained (experimental IPI) but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0042802" data-r="PMID:25416956" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction (PPCDC-PPCDC) detected in a binary-interactome screen. This is consistent with the true biology, since the active enzyme is a homotrimer, so the self-association is meaningful even though detected in a high-throughput assay.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homotrimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26514574" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26514574
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complex stability and dynamic subunit interchange modulates ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0042802" data-r="PMID:26514574" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association annotation citing a study of the yeast heterotrimeric PPCDC (Hal3/Vhs3/Cab3). The paper is about S. cerevisiae, not a direct human self-interaction assay, but the family-level oligomerization concept is consistent with the human homotrimer. Kept (experimental IPI); the citation concern is recorded in the reference review, and the human quaternary structure (PMID:14501115 homotrimer) is the primary support for this term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homotrimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0042802" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction detected in the HuRI reference-interactome screen, consistent with the homotrimeric quaternary structure of PPCDC.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homotrimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196783
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0015937" data-r="Reactome:R-HSA-196783" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion placing PPCDC in the CoA biosynthesis pathway. Correct core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-196840
+
+                                </span>
+
+                                <div class="support-text">The decarboxylation of phosphopantothenoylcysteine (PPC) to 4&#39;-phosphopantetheine (PPANT) is carried out by phosphopantothenoylcysteine decarboxylase (PPCDC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0015937" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-based (UPA00241) electronic mapping to CoA biosynthesis. Redundant with, and consistent with, the experimental IDA/TAS annotations for this process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">UniPathway; UPA00241; UER00354.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    GO:0004633
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15581364
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanistic studies on phosphopantothenoylcysteine decarboxy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0004633" data-r="PMID:15581364" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental characterization of human PPC-DC catalysis: the enzyme decarboxylates the cysteine moiety of 4&#39;-phosphopantothenoylcysteine to 4&#39;-phosphopantetheine, with Cys-173 identified as the active-site acid via a trapped enethiolate intermediate. Directly supports the core catalytic activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link">
+                                        PMID:15581364
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphopantothenoylcysteine decarboxylase (PPC-DC) catalyzes the decarboxylation of the cysteine moiety of 4&#39;-phosphopantothenoylcysteine (PPC) to form 4&#39;-phosphopantetheine (PPantSH)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14501115" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14501115
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Unusual space-group pseudosymmetry in crystals of human phos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0015937" data-r="PMID:14501115" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable statement (ComplexPortal) that PPC decarboxylase functions in CoA biosynthesis, consistent with the structural paper describing it as an essential CoA biosynthesis enzyme. Correct process; core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14501115" target="_blank" class="term-link">
+                                        PMID:14501115
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphopantothenoylcysteine (PPC) decarboxylase is an essential enzyme in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071513" target="_blank" class="term-link">
+                                    GO:0071513
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14501115" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14501115
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Unusual space-group pseudosymmetry in crystals of human phos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0071513" data-r="PMID:14501115" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (CPX-26563) part_of the phosphopantothenoylcysteine decarboxylase complex, supported by the structural determination of the human homotrimer in complex with FMN. Correct: the functional unit is the oligomeric complex.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homotrimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    GO:0004633
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15581364
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanistic studies on phosphopantothenoylcysteine decarboxy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0004633" data-r="PMID:15581364" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of the human enzyme&#39;s decarboxylase activity in the mechanistic study. Core molecular function, experimentally demonstrated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link">
+                                        PMID:15581364
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In this paper, we describe the characterization of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14501115" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14501115
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Unusual space-group pseudosymmetry in crystals of human phos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0010181" data-r="PMID:14501115" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FMN binding demonstrated directly by co-crystallization of human PPC-DC with FMN (PDB 1QZU). Core cofactor-binding function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FMN per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14501115" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14501115
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Unusual space-group pseudosymmetry in crystals of human phos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0042802" data-r="PMID:14501115" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-association (homotrimer) demonstrated by the crystal structure of human PPC-DC. This is the biologically meaningful identical-protein-binding event and reflects the native quaternary structure.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPCDC/PPCDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homotrimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                                    GO:0004633
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopantothenoylcysteine decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0004633" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human PPCDC was identified by comparative genomics and its decarboxylase activity verified experimentally (E. coli complementation, overexpression/purification, and in-vitro pathway reconstitution). Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                        PMID:11923312
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified human genes encoding the last four enzymatic steps in CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0015937" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Demonstrated role in CoA biosynthesis: the human enzyme&#39;s activity was verified and the entire pathway from phosphopantothenate to CoA was reconstituted in vitro with the purified recombinant enzymes. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                        PMID:11923312
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phosphopantothenate to CoA was successfully reconstituted in vitro using a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196840
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96CD2" data-a="GO:0005829" data-r="Reactome:R-HSA-196840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization (Reactome). Consistent with the CoA biosynthesis pathway occurring in the cytosol and with the absence of any signal peptide or transmembrane region in the UniProt feature table. Correct core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-196840
+
+                                </span>
+
+                                <div class="support-text">PPCDC is cytosolic and exists as a homotrimer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphopantothenoylcysteine decarboxylase activity: FMN-dependent decarboxylation of the cysteine moiety of N-[(R)-4-phosphopantothenoyl]-L-cysteine to yield (R)-4&#39;-phosphopantetheine and CO2, the third step of coenzyme A biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q96CD2" data-a="FUNCTION: Phosphopantothenoylcysteine decarboxylase activity..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004633" target="_blank" class="term-link">
+                            phosphopantothenoylcysteine decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071513" target="_blank" class="term-link">
+                            phosphopantothenoylcysteine decarboxylase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                PMID:11923312
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">identified human genes encoding the last four enzymatic steps in CoA</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link">
+                                PMID:15581364
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Phosphopantothenoylcysteine decarboxylase (PPC-DC) catalyzes the decarboxylation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FMN binding: PPCDC binds one flavin mononucleotide per subunit as its catalytic cofactor, which transiently oxidizes the substrate thiol during decarboxylation.</h3>
+                <span class="vote-buttons" data-g="Q96CD2" data-a="FUNCTION: FMN binding: PPCDC binds one flavin mononucleotide..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                            FMN binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PPCDC/PPCDC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Note=Binds 1 FMN per subunit.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link">
+                                PMID:15581364
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">all of which use a tightly bound flavin cofactor to oxidize the thiol moiety of the substrate to a thioaldehyde</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PPCDC/PPCDC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q96CD2 (COAC_HUMAN), phosphopantothenoylcysteine decarboxylase</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Catalyzes the decarboxylation of the cysteine moiety of 4-phosphopantothenoylcysteine to form 4&#39;-phosphopantotheine, part of the biosynthesis of coenzyme A (EC 4.1.1.36); binds 1 FMN per subunit; homotrimer; CoA pathway step 3/5; HFCD superfamily.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                            PMID:11923312
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete reconstitution of the human coenzyme A biosynthetic pathway via comparative genomics.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified human phosphopantothenoylcysteine decarboxylase (among the last four CoA-pathway enzymes), verified its activity by E. coli complementation and overexpression/purification, and reconstituted the whole pathway in vitro.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14501115" target="_blank" class="term-link">
+                            PMID:14501115
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Unusual space-group pseudosymmetry in crystals of human phosphopantothenoylcysteine decarboxylase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of human PPC-DC (PDB 1QZU) in complex with FMN; establishes the enzyme as an essential CoA-biosynthesis enzyme and characterizes the oligomeric quaternary structure.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15581364" target="_blank" class="term-link">
+                            PMID:15581364
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mechanistic studies on phosphopantothenoylcysteine decarboxylase: trapping of an enethiolate intermediate with a mechanism-based inactivating agent.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human PPC-DC decarboxylates the cysteine moiety of 4&#39;-phosphopantothenoylcysteine to 4&#39;-phosphopantetheine using a tightly bound flavin cofactor; Cys-173 is the active-site acid (trapped enethiolate intermediate; C173S loses activity).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26514574" target="_blank" class="term-link">
+                            PMID:26514574
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complex stability and dynamic subunit interchange modulates the disparate activities of the yeast moonlighting proteins Hal3 and Vhs3.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In S. cerevisiae the PPCDC enzyme is a heterotrimer built from the moonlighting proteins Hal3, Vhs3 and Cab3; establishes the family-level oligomerization behavior of PPCDC-domain proteins.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196783
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Coenzyme A biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CoA is synthesized from pantothenate in a sequence of five cytosolic reactions; PPCDC catalyzes one of these steps.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196840
+
+                    </span>
+                </div>
+
+                <div class="reference-title">3xPPCDC:3FMN decarboxylates PPC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PPCDC decarboxylates phosphopantothenoylcysteine to 4&#39;-phosphopantetheine; it is cytosolic and exists as a homotrimer binding one FMN per subunit.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PPCDC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96CD2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ppcdc-q96cd2-review-notes">PPCDC (Q96CD2) review notes</h1>
+<p>Human <strong>PPCDC</strong> = phosphopantothenoylcysteine decarboxylase (gene synonym COAC; ORF names MDS018,<br />
+UNQ9365/PRO34154). UniProt entry <code>COAC_HUMAN</code>, 204 aa, chromosome 15, HGNC:28107, EC 4.1.1.36.<br />
+Source of record: <code>genes/human/PPCDC/PPCDC-uniprot.txt</code> (authoritative).</p>
+<h2 id="core-biology-all-grounded-in-the-uniprot-record-unless-noted">Core biology (all grounded in the UniProt record unless noted)</h2>
+<ul>
+<li><strong>Function / catalytic activity.</strong> "Catalyzes the decarboxylation of the cysteine moiety of 4-<br />
+  phosphopantothenoylcysteine to form 4'-phosphopantotheine and this reaction forms part of the<br />
+  biosynthesis of coenzyme A." [file:human/PPCDC/PPCDC-uniprot.txt, CC FUNCTION;<br />
+  ECO:0000269|PubMed:11923312, ECO:0000269|PubMed:15581364]. Reaction: <code>N-[(R)-4-phosphopantothenoyl]-
+  L-cysteine + H(+) = (R)-4'-phosphopantetheine + CO2</code> (RHEA:16793, EC=4.1.1.36).</li>
+<li><strong>Pathway.</strong> "Cofactor biosynthesis; coenzyme A biosynthesis; CoA from (R)-pantothenate: step 3/5."<br />
+  [file:human/PPCDC/PPCDC-uniprot.txt, CC PATHWAY; ECO:0000269|PubMed:11923312]. UniPathway<br />
+  UPA00241/UER00354. This is the <strong>third</strong> step of the five-step CoA pathway (pantothenate → CoA).</li>
+<li><strong>Cofactor.</strong> FMN — "Binds 1 FMN per subunit." [file:human/PPCDC/PPCDC-uniprot.txt, CC COFACTOR;<br />
+  ECO:0000269|PubMed:14501115]. FMN-binding residues: pos 59 and 104–107 (BINDING features).<br />
+  Member of the <strong>HFCD (homooligomeric flavin containing Cys decarboxylase) superfamily</strong><br />
+  [CC SIMILARITY]. Note: PPCDC/CoaC-type flavoproteins use a bound FMN as a <em>catalytic</em> cofactor<br />
+  (thiol → thioaldehyde oxidation to delocalize charge during decarboxylation), then re-reduce the<br />
+  enethiol; see mechanism paper below.</li>
+<li><strong>Subunit / complex.</strong> "Homotrimer." [file:human/PPCDC/PPCDC-uniprot.txt, CC SUBUNIT;<br />
+  ECO:0000269|PubMed:14501115]. Crystallized in complex with FMN (PDB 1QZU). The<br />
+  "phosphopantothenoylcysteine decarboxylase complex" (GO:0071513) in human is the homotrimer; in<br />
+<em>Saccharomyces</em> it is a heterotrimer (Cab3/Hal3/Vhs3) — see GO:0071513 definition and PMID:26514574.</li>
+<li><strong>Active site.</strong> Cys-173 is the proton donor / active-site acid [ACT_SITE 173,<br />
+  ECO:0000305|PubMed:15581364]; C173S abolishes activity [MUTAGEN 173: "C-&gt;S: Loss of activity."].</li>
+<li><strong>Location.</strong> Cytosolic (Reactome R-HSA-196840: "PPCDC is cytosolic and exists as a homotrimer,<br />
+  binding one FMN cofactor per subunit"). No signal peptide / TM in the UniProt feature table despite<br />
+  historical annotation as a "secreted/transmembrane" candidate in the SPDI cDNA screen (PubMed:12975309).</li>
+<li><strong>Expression.</strong> HPA: low tissue specificity; expressed broadly (Bgee: blood + 145 other tissues).</li>
+</ul>
+<h2 id="key-primary-references">Key primary references</h2>
+<ul>
+<li><strong>PMID:11923312</strong> (Daugherty et al. 2002, J Biol Chem) — comparative-genomics identification and<br />
+  reconstitution of the human CoA pathway; identified human PPCDC, verified activity by E. coli<br />
+  complementation and in-vitro reconstitution. RP line: "IDENTIFICATION, FUNCTION, CATALYTIC ACTIVITY,<br />
+  AND PATHWAY." Abstract-only in cache (<code>full_text_available: false</code>) but the abstract explicitly names<br />
+  "phosphopantothenoylcysteine decarboxylase" among the four human enzymes identified and verified.<br />
+  Basis for the EXP/IDA <code>phosphopantothenoylcysteine decarboxylase activity</code> and IDA<br />
+<code>coenzyme A biosynthetic process</code> annotations.</li>
+<li><strong>PMID:15581364</strong> (Strauss et al. 2004, Biochemistry) — mechanistic study on human PPC-DC; trapped<br />
+  a covalently bound enethiolate intermediate via a mechanism-based inhibitor; established Cys-173 as<br />
+  active-site acid (C173S mutant). RP line: "FUNCTION, IDENTIFICATION BY MASS SPECTROMETRY, CATALYTIC<br />
+  ACTIVITY, AND MUTAGENESIS OF CYS-173." Abstract-only in cache but abstract states enzyme "catalyzes<br />
+  the decarboxylation of the cysteine moiety of 4'-phosphopantothenoylcysteine (PPC) to form<br />
+  4'-phosphopantetheine (PPantSH)" and uses "a tightly bound flavin cofactor." Basis for the EXP/IDA<br />
+  catalytic-activity annotations.</li>
+<li><strong>PMID:14501115</strong> (Manoj &amp; Ealick 2003, Acta Cryst D) — crystallization/structure of human PPC-DC<br />
+  (PDB 1QZU), in complex with FMN. RP line: "X-RAY CRYSTALLOGRAPHY (2.91 ANGSTROMS) IN COMPLEX WITH FMN,<br />
+  SUBUNIT, AND COFACTOR." Abstract confirms "essential enzyme in the biosynthesis of coenzyme A" and<br />
+  the R3 crystal with four monomers/asymmetric unit. Basis (via UniProt/ComplexPortal) for FMN binding<br />
+  (IDA), the decarboxylase complex (part_of), identical-protein-binding (homotrimer), and NAS CoA-process.</li>
+</ul>
+<h2 id="interaction-annotations-ipi-intact-high-throughput-screens">Interaction annotations (IPI / IntAct high-throughput screens)</h2>
+<p><code>protein binding</code> (GO:0005515) IPI annotations derive from three large binary-interactome / proteomics<br />
+screens: <strong>PMID:25416956</strong> (Rolland et al., human interactome map), <strong>PMID:31515488</strong> (variant-effect<br />
+interactome), <strong>PMID:32296183</strong> (HuRI reference interactome). These cached full texts are high-throughput<br />
+screen reports that do not name PPCDC/Q96CD2 in prose; the interactions are recorded in IntAct<br />
+(with/from partners include PPIG/Q13427, FOXR1/Q6PIV2, TXN2/Q99757, ZNF232/Q9UNY5, RNF8/O76064, UBE2I,<br />
+NAA80, NTAQ1, PLEKHF2, TGM7, SREK1IP1, DDIT4L, and PPCDC self). None of these partners is an established<br />
+biological (as opposed to screen-level) interactor of a cytosolic CoA-biosynthesis enzyme; treated as<br />
+non-informative <code>protein binding</code> and marked over-annotated (per policy: not removed).</p>
+<p><code>identical protein binding</code> (GO:0042802): the biologically meaningful self-association is the<br />
+<strong>homotrimer</strong> (UniProt SUBUNIT, PMID:14501115; PDB 1QZU). PMID:26514574 (Ríos et al. 2015, yeast<br />
+Hal3/Vhs3) is a <em>S. cerevisiae</em> study on the heterotrimeric yeast PPCDC and its moonlighting Hal3/Vhs3<br />
+subunits; its citation for the human GO:0042802 IDA/IPI (self) is tangential — it supports the<br />
+family-level oligomerization concept but is not a human self-interaction assay. Kept (IPI experimental,<br />
+not removed) but flagged low-relevance in reference_review.</p>
+<h2 id="isoform-note">Isoform note</h2>
+<p>Two isoforms. Isoform 2 (Q96CD2-2, VSP_044802) deletes residues 1–78, removing part of the FMN-binding<br />
+region; Reactome R-HSA-196840 notes it "lacks the protein's FMN-binding domain and would thus appear to<br />
+be nonfunctional if it is expressed." Its Met-1 is also affected by a polymorphism (rs2304899) replacing<br />
+the initiation ATG. No annotations are isoform-specific in GOA.</p>
+<h2 id="curation-summary">Curation summary</h2>
+<p>Core = the FMN-dependent decarboxylase catalyzing CoA-pathway step 3, in the cytosol, as a homotrimer.<br />
+- ACCEPT experimental / well-supported: EXP &amp; IDA GO:0004633 (decarboxylase activity), IDA GO:0010181<br />
+  (FMN binding), IDA GO:0015937 (CoA biosynthesis, PMID:11923312), IBA equivalents, TAS Reactome CoA<br />
+  process &amp; cytosol, IPI part_of decarboxylase complex (ComplexPortal/PMID:14501115).<br />
+- ACCEPT <code>identical protein binding</code> IDA (PMID:14501115, homotrimer) as it reflects the real quaternary<br />
+  structure; keep the IPI/screen versions but note lower specificity.<br />
+- MARK_AS_OVER_ANNOTATED the three bare <code>protein binding</code> (GO:0005515) IPI screen annotations (policy:<br />
+  never REMOVE IPI protein binding).<br />
+- MODIFY the generic IEA <code>catalytic activity</code> (GO:0003824, GO_REF:0000002/InterPro) → specific<br />
+  GO:0004633 (the specific activity is already independently supported).<br />
+- KEEP the IEA/IBA <code>phosphopantothenoylcysteine decarboxylase activity</code> and CoA-process as ACCEPT<br />
+  (they agree with experiment).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96CD2
+gene_symbol: PPCDC
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PPCDC (phosphopantothenoylcysteine decarboxylase; EC 4.1.1.36) catalyzes the third
+  of the five steps of coenzyme A (CoA) biosynthesis from pantothenate. It is an
+  FMN-dependent decarboxylase that removes the carboxyl group from the cysteine moiety
+  of N-[(R)-4-phosphopantothenoyl]-L-cysteine to yield (R)-4&#39;-phosphopantetheine and
+  CO2. The bound flavin mononucleotide (FMN) acts as a catalytic cofactor, transiently
+  oxidizing the substrate thiol to a thioaldehyde to delocalize the developing charge
+  during decarboxylation, after which the enethiol intermediate is re-reduced. The
+  enzyme is a cytosolic homotrimer that binds one FMN per subunit, and belongs to the
+  HFCD (homooligomeric flavin-containing Cys decarboxylase) superfamily. Cys-173 serves
+  as the active-site proton donor. In humans PPCDC is a monofunctional homotrimer,
+  whereas in Saccharomyces the corresponding decarboxylase is a heterotrimer built from
+  the moonlighting proteins Cab3, Hal3 and Vhs3.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q96CD2-1
+- name: &#39;2&#39;
+  id: Q96CD2-2
+  sequence_note: VSP_044802
+existing_annotations:
+- term:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assertion of the enzyme&#39;s defining catalytic activity. This is
+      the correct core molecular function and is independently confirmed experimentally
+      for the human protein (EXP/IDA, PMID:11923312 and PMID:15581364).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &gt;-
+        EC=4.1.1.36 {ECO:0000269|PubMed:11923312, ECO:0000269|PubMed:15581364};
+- term:
+    id: GO:0071513
+    label: phosphopantothenoylcysteine decarboxylase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      The active enzyme is an oligomeric complex; in human this is the homotrimer. The
+      IBA part_of assignment to the phosphopantothenoylcysteine decarboxylase complex is
+      consistent with the experimentally determined homotrimeric quaternary structure.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotrimer.&#39;
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PPCDC binds one FMN per subunit as its catalytic cofactor. The IBA FMN-binding
+      assertion is corroborated by the crystal structure of the human enzyme in complex
+      with FMN (IDA, PMID:14501115).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: Note=Binds 1 FMN per subunit.
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      PPCDC carries out step 3 of the five-step CoA biosynthetic pathway. Correct core
+      biological process, independently supported experimentally (IDA, PMID:11923312).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &gt;-
+        Cofactor biosynthesis; coenzyme A biosynthesis; CoA from (R)-
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic InterPro2GO catalytic-activity term. Not wrong, but uninformative: the
+      specific activity (phosphopantothenoylcysteine decarboxylase, GO:0004633) is
+      established experimentally, so this should be replaced by the specific child term.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0004633
+      label: phosphopantothenoylcysteine decarboxylase activity
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &gt;-
+        EC=4.1.1.36 {ECO:0000269|PubMed:11923312, ECO:0000269|PubMed:15581364};
+- term:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated RHEA/EC-based (GO_REF:0000120) assignment of the specific decarboxylase
+      activity via EC 4.1.1.36 / RHEA:16793. Consistent with experimental evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;Xref=Rhea:RHEA:16793, ChEBI:CHEBI:15378,&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput binary-interactome screen. The
+      IntAct partners recorded here (e.g. PPIG, FOXR1, ZNF232, TXN2) are not established
+      biological interactors of this cytosolic CoA-biosynthesis enzyme, and the term is
+      uninformative about function. Retained as an experimental IPI annotation but marked
+      as over-annotated per curation policy.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a variant-effect binary-interactome screen. Non-specific
+      and not indicative of a biologically characterized interaction for PPCDC. Retained
+      (experimental IPI) but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI reference-interactome screen. Uninformative;
+      recorded partners are screen-level hits, not validated biology for a CoA-pathway
+      enzyme. Retained (experimental IPI) but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-interaction (PPCDC-PPCDC) detected in a binary-interactome screen. This is
+      consistent with the true biology, since the active enzyme is a homotrimer, so the
+      self-association is meaningful even though detected in a high-throughput assay.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotrimer.&#39;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26514574
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-association annotation citing a study of the yeast heterotrimeric PPCDC
+      (Hal3/Vhs3/Cab3). The paper is about S. cerevisiae, not a direct human
+      self-interaction assay, but the family-level oligomerization concept is consistent
+      with the human homotrimer. Kept (experimental IPI); the citation concern is recorded
+      in the reference review, and the human quaternary structure (PMID:14501115 homotrimer)
+      is the primary support for this term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotrimer.&#39;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-interaction detected in the HuRI reference-interactome screen, consistent with
+      the homotrimeric quaternary structure of PPCDC.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotrimer.&#39;
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196783
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion placing PPCDC in the CoA biosynthesis pathway. Correct
+      core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-196840
+      supporting_text: &gt;-
+        The decarboxylation of phosphopantothenoylcysteine (PPC) to 4&#39;-phosphopantetheine
+        (PPANT) is carried out by phosphopantothenoylcysteine decarboxylase (PPCDC)
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway-based (UPA00241) electronic mapping to CoA biosynthesis. Redundant with,
+      and consistent with, the experimental IDA/TAS annotations for this process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;UniPathway; UPA00241; UER00354.&#39;
+- term:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:15581364
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental characterization of human PPC-DC catalysis: the enzyme decarboxylates
+      the cysteine moiety of 4&#39;-phosphopantothenoylcysteine to 4&#39;-phosphopantetheine, with
+      Cys-173 identified as the active-site acid via a trapped enethiolate intermediate.
+      Directly supports the core catalytic activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15581364
+      supporting_text: &gt;-
+        Phosphopantothenoylcysteine decarboxylase (PPC-DC) catalyzes the decarboxylation
+        of the cysteine moiety of 4&#39;-phosphopantothenoylcysteine (PPC) to form
+        4&#39;-phosphopantetheine (PPantSH)
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:14501115
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Non-traceable statement (ComplexPortal) that PPC decarboxylase functions in CoA
+      biosynthesis, consistent with the structural paper describing it as an essential CoA
+      biosynthesis enzyme. Correct process; core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:14501115
+      supporting_text: &gt;-
+        Phosphopantothenoylcysteine (PPC) decarboxylase is an essential enzyme in the
+- term:
+    id: GO:0071513
+    label: phosphopantothenoylcysteine decarboxylase complex
+  evidence_type: IPI
+  original_reference_id: PMID:14501115
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal (CPX-26563) part_of the phosphopantothenoylcysteine decarboxylase
+      complex, supported by the structural determination of the human homotrimer in
+      complex with FMN. Correct: the functional unit is the oligomeric complex.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotrimer.&#39;
+- term:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15581364
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of the human enzyme&#39;s decarboxylase activity in the mechanistic study.
+      Core molecular function, experimentally demonstrated.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15581364
+      supporting_text: &gt;-
+        In this paper, we describe the characterization of the
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IDA
+  original_reference_id: PMID:14501115
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FMN binding demonstrated directly by co-crystallization of human PPC-DC with FMN
+      (PDB 1QZU). Core cofactor-binding function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: Note=Binds 1 FMN per subunit.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:14501115
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-association (homotrimer) demonstrated by the crystal structure of human PPC-DC.
+      This is the biologically meaningful identical-protein-binding event and reflects the
+      native quaternary structure.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homotrimer.&#39;
+- term:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Human PPCDC was identified by comparative genomics and its decarboxylase activity
+      verified experimentally (E. coli complementation, overexpression/purification, and
+      in-vitro pathway reconstitution). Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11923312
+      supporting_text: &gt;-
+        identified human genes encoding the last four enzymatic steps in CoA
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Demonstrated role in CoA biosynthesis: the human enzyme&#39;s activity was verified and
+      the entire pathway from phosphopantothenate to CoA was reconstituted in vitro with
+      the purified recombinant enzymes. Core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11923312
+      supporting_text: &gt;-
+        phosphopantothenate to CoA was successfully reconstituted in vitro using a
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196840
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization (Reactome). Consistent with the CoA biosynthesis pathway
+      occurring in the cytosol and with the absence of any signal peptide or transmembrane
+      region in the UniProt feature table. Correct core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-196840
+      supporting_text: PPCDC is cytosolic and exists as a homotrimer
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/PPCDC/PPCDC-uniprot.txt
+  title: UniProt entry Q96CD2 (COAC_HUMAN), phosphopantothenoylcysteine decarboxylase
+  findings:
+  - statement: &gt;-
+      Catalyzes the decarboxylation of the cysteine moiety of
+      4-phosphopantothenoylcysteine to form 4&#39;-phosphopantotheine, part of the
+      biosynthesis of coenzyme A (EC 4.1.1.36); binds 1 FMN per subunit; homotrimer;
+      CoA pathway step 3/5; HFCD superfamily.
+- id: PMID:11923312
+  title: Complete reconstitution of the human coenzyme A biosynthetic pathway via
+    comparative genomics.
+  findings:
+  - statement: &gt;-
+      Identified human phosphopantothenoylcysteine decarboxylase (among the last four
+      CoA-pathway enzymes), verified its activity by E. coli complementation and
+      overexpression/purification, and reconstituted the whole pathway in vitro.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary identification/characterization of human PPCDC; abstract
+      explicitly names phosphopantothenoylcysteine decarboxylase. Abstract-only in cache.
+- id: PMID:14501115
+  title: Unusual space-group pseudosymmetry in crystals of human phosphopantothenoylcysteine
+    decarboxylase.
+  findings:
+  - statement: &gt;-
+      Crystal structure of human PPC-DC (PDB 1QZU) in complex with FMN; establishes the
+      enzyme as an essential CoA-biosynthesis enzyme and characterizes the oligomeric
+      quaternary structure.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified structural paper; supports FMN binding, the decarboxylase complex,
+      and homotrimeric self-association. Abstract-only in cache.
+- id: PMID:15581364
+  title: &#39;Mechanistic studies on phosphopantothenoylcysteine decarboxylase: trapping
+    of an enethiolate intermediate with a mechanism-based inactivating agent.&#39;
+  findings:
+  - statement: &gt;-
+      Human PPC-DC decarboxylates the cysteine moiety of 4&#39;-phosphopantothenoylcysteine
+      to 4&#39;-phosphopantetheine using a tightly bound flavin cofactor; Cys-173 is the
+      active-site acid (trapped enethiolate intermediate; C173S loses activity).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified mechanistic study of the human enzyme; supports catalytic activity
+      and the FMN-dependent mechanism. Abstract-only in cache.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary-interactome screen; source of IntAct protein-binding and
+      PPCDC self-interaction hits. Does not name PPCDC in prose; interactions recorded in
+      IntAct. Supports only non-specific/self protein binding.
+- id: PMID:26514574
+  title: Complex stability and dynamic subunit interchange modulates the disparate
+    activities of the yeast moonlighting proteins Hal3 and Vhs3.
+  findings:
+  - statement: &gt;-
+      In S. cerevisiae the PPCDC enzyme is a heterotrimer built from the moonlighting
+      proteins Hal3, Vhs3 and Cab3; establishes the family-level oligomerization behavior
+      of PPCDC-domain proteins.
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      PubMed-verified, but this is a yeast (S. cerevisiae) study of the heterotrimeric
+      Hal3/Vhs3/Cab3 PPCDC, not a direct assay of human PPCDC self-interaction. It informs
+      the family-level oligomerization concept only; the human homotrimer (PMID:14501115)
+      is the appropriate support for GO:0042802.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Variant-effect binary-interactome screen; source of an IntAct protein-binding hit.
+      Non-specific; does not characterize PPCDC function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI reference-interactome screen; source of IntAct protein-binding and PPCDC
+      self-interaction hits. Self-interaction is consistent with the homotrimer; the bare
+      protein-binding hits are non-informative.
+- id: Reactome:R-HSA-196783
+  title: Coenzyme A biosynthesis
+  findings:
+  - statement: &gt;-
+      CoA is synthesized from pantothenate in a sequence of five cytosolic reactions;
+      PPCDC catalyzes one of these steps.
+- id: Reactome:R-HSA-196840
+  title: 3xPPCDC:3FMN decarboxylates PPC
+  findings:
+  - statement: &gt;-
+      PPCDC decarboxylates phosphopantothenoylcysteine to 4&#39;-phosphopantetheine; it is
+      cytosolic and exists as a homotrimer binding one FMN per subunit.
+core_functions:
+- description: &gt;-
+    Phosphopantothenoylcysteine decarboxylase activity: FMN-dependent decarboxylation of
+    the cysteine moiety of N-[(R)-4-phosphopantothenoyl]-L-cysteine to yield
+    (R)-4&#39;-phosphopantetheine and CO2, the third step of coenzyme A biosynthesis.
+  molecular_function:
+    id: GO:0004633
+    label: phosphopantothenoylcysteine decarboxylase activity
+  supported_by:
+  - reference_id: PMID:11923312
+    supporting_text: &gt;-
+      identified human genes encoding the last four enzymatic steps in CoA
+  - reference_id: PMID:15581364
+    supporting_text: &gt;-
+      Phosphopantothenoylcysteine decarboxylase (PPC-DC) catalyzes the decarboxylation
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  in_complex:
+    id: GO:0071513
+    label: phosphopantothenoylcysteine decarboxylase complex
+- description: &gt;-
+    FMN binding: PPCDC binds one flavin mononucleotide per subunit as its catalytic
+    cofactor, which transiently oxidizes the substrate thiol during decarboxylation.
+  molecular_function:
+    id: GO:0010181
+    label: FMN binding
+  supported_by:
+  - reference_id: file:human/PPCDC/PPCDC-uniprot.txt
+    supporting_text: Note=Binds 1 FMN per subunit.
+  - reference_id: PMID:15581364
+    supporting_text: &gt;-
+      all of which use a tightly bound flavin cofactor to oxidize the thiol moiety of
+      the substrate to a thioaldehyde
+  locations:
+  - id: GO:0005829
+    label: cytosol
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

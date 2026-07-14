@@ -1,0 +1,3465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NADK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NADK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95544" target="_blank" class="term-link">
+                        O95544
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NADK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95544" data-a="DESCRIPTION: NADK is the human cytosolic NAD kinase (EC 2.7.1.2..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NADK is the human cytosolic NAD kinase (EC 2.7.1.23), the enzyme that phosphorylates NAD(+) using ATP to produce NADP(+) (NAD+ + ATP -&gt; NADP+ + ADP + H+). It is the de novo, committed source of the cellular NADP(H) pool that supplies reducing equivalents for reductive biosynthesis (e.g. fatty acid and nucleotide synthesis) and for antioxidant defense through regeneration of reduced glutathione and thioredoxin. The active enzyme is a homotetramer and requires a divalent metal cation per subunit; it is highly selective for NAD and ATP and does not phosphorylate the nicotinic acid analog NAAD, so it does not generate NAADP. NADK is widely expressed across human tissues (not detected in skeletal muscle) and acts in the cytosol. A separate gene product, NADK2 (mitochondrial NAD kinase), supplies the mitochondrial NADP(H) pool. NADK carries an N-terminal serine phosphocluster and its activity is subject to signaling and redox regulation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006741" target="_blank" class="term-link">
+                                    GO:0006741
+                                </a>
+                            </span>
+                            <span class="term-label">NADP+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0006741" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADP+ biosynthesis is the core biological role of NADK: it is the committed, de novo route to NADP(+). Well supported experimentally (PMID:11594753) and phylogenetically conserved across the NAD kinase family. Core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link">
+                                        PMID:11594753
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NADP is essential for biosynthetic pathways, energy, and signal transduction. Its synthesis is catalyzed by NAD kinase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADK is the cytosolic NAD kinase; is_active_in cytosol is correct. Consistent with the Reactome model (&#34;Cytosolic NAD+ kinase&#34;) and the independent TAS cytosol annotations. The distinct mitochondrial NAD kinase activity is provided by NADK2, a different gene. Core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                                    GO:0003951
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0003951" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ kinase activity is the defining molecular function of NADK, supported both experimentally (IDA, PMID:11594753) and by phylogenetic inference across the family. Core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                                    GO:0003951
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0003951" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core NAD+ kinase activity via ARBA/RHEA/EC:2.7.1.23, concordant with the experimental IDA and the RecName EC number. Correct; duplicate of the experimentally supported core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK/NADK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006741" target="_blank" class="term-link">
+                                    GO:0006741
+                                </a>
+                            </span>
+                            <span class="term-label">NADP+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0006741" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic ortholog/InterPro-based assignment of NADP+ biosynthetic process, concordant with the experimentally supported IBA. Correct; represents the core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                    GO:0019674
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0019674" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ is the substrate consumed by NADK, so participation in NAD+ metabolic process is accurate (this InterPro/IEA term is the substrate-side companion to NADP+ biosynthesis). Correct but more general than the specific reaction; retained as a valid non-core process term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000043
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005524" data-r="GO_REF:0000043" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP is the phosphate-donor substrate of the NAD kinase reaction, so ATP binding is a correct and expected molecular function (UniProt keyword-derived). Included here as a NEW annotation because it is present in the UniProt cross-reference (GO:0005524; F:ATP binding; IEA:UniProtKB-KW) but not in the GOA TSV. Supporting molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NADK/NADK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15161933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15161933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic analysis of interphase and mitotic 1...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:15161933" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a global 14-3-3(zeta)-binding proteomics screen (partner YWHAZ). The interaction is real and consistent with the N-terminal Ser phosphocluster / 14-3-3 regulation model, but GO:0005515 conveys no specific molecular function. Over-annotation; retained (experimental IPI) but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid interactome map (CCSB-HI1; partner LNX1). Uninformative as to molecular function. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale binary interactome map (partner SDCBP). No specific functional interpretation for NADK. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale AP-MS interactome study (BioPlex; partner YWHAZ). Uninformative molecular-function term. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29892012
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An interactome perturbation framework prioritizes damaging m...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:29892012" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from an interactome-perturbation screen (partner LNX1). No specific molecular function conveyed. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a variant-based PPI-disruption interactome screen (partner SDCBP). Uninformative as to function. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI reference binary interactome (partners include SDCBP, CRY2, LNX1, FAM124B). Multiple binding events but no specific molecular function. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a dual proteome-scale AP-MS network (BioPlex 3.0; partner YWHAZ). Uninformative molecular-function term. Over-annotation; retained but not core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035774" target="_blank" class="term-link">
+                                    GO:0035774
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of insulin secretion involved in cellular response to glucose stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0035774" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from a rat ortholog via Ensembl Compara. This is an indirect, organism-level physiological process, not a direct molecular function of the cytosolic NAD kinase, and there is no direct human experimental support for NADK acting in glucose-stimulated insulin secretion. Not a core function; retained as a plausible but non-core downstream role.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-197198
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005829" data-r="Reactome:R-HSA-197198" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization from the Reactome NADP-synthesis reaction, which explicitly describes NADK as the &#34;Cytosolic NAD+ kinase&#34;. Correct core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11594753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional characterization of human NAD kina...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0005829" data-r="PMID:11594753" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization traceable to the primary characterization paper. Consistent with the Reactome and IBA cytosol annotations. Correct core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                                    GO:0003951
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11594753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional characterization of human NAD kina...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0003951" data-r="PMID:11594753" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of NAD+ kinase activity: the recombinant human enzyme is a catalytically active homotetramer highly selective for NAD and ATP, and does not phosphorylate NAAD (so it does not make NAADP). This is the definitive core molecular function of NADK.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link">
+                                        PMID:11594753
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The catalytically active homotetramer is highly selective for its substrates, NAD and ATP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016310" target="_blank" class="term-link">
+                                    GO:0016310
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11594753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional characterization of human NAD kina...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0016310" data-r="PMID:11594753" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> &#34;Phosphorylation&#34; is a high-level parent term describing the transfer of a phosphate to NAD+. The specific, informative process is NADP+ biosynthesis (GO:0006741), which is already annotated. This generic term over-annotates the reaction and is better represented by the specific NADP-biosynthesis / NAD+ kinase terms.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046034" target="_blank" class="term-link">
+                                    GO:0046034
+                                </a>
+                            </span>
+                            <span class="term-label">ATP metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11594753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and functional characterization of human NAD kina...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95544" data-a="GO:0046034" data-r="PMID:11594753" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADK consumes ATP as the phosphate donor, so it touches ATP metabolism, but &#34;ATP metabolic process&#34; is a very general term that does not capture NADK&#39;s specific role. The informative process annotation is NADP+ biosynthesis. Over-annotation; the ATP role is better captured as ATP binding (substrate) in molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD+ kinase activity: transfers the gamma-phosphate of ATP to NAD(+) to form NADP(+) (NAD+ + ATP -&gt; NADP+ + ADP + H+; EC 2.7.1.23). The active enzyme is a homotetramer highly selective for NAD and ATP and requires a divalent metal cation; it does not phosphorylate NAAD (does not make NAADP). This is the de novo, committed source of the cellular NADP(H) pool.</h3>
+                <span class="vote-buttons" data-g="O95544" data-a="FUNCTION: NAD+ kinase activity: transfers the gamma-phosphat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003951" target="_blank" class="term-link">
+                            NAD+ kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006741" target="_blank" class="term-link">
+                                NADP+ biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019674" target="_blank" class="term-link">
+                                NAD+ metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link">
+                                PMID:11594753
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The catalytically active homotetramer is highly selective for its substrates, NAD and ATP.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NADK/NADK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP binding: ATP is the obligate phosphate-donor substrate of the NAD kinase reaction, bound in the enzyme active site along with the divalent metal cation cofactor.</h3>
+                <span class="vote-buttons" data-g="O95544" data-a="FUNCTION: ATP binding: ATP is the obligate phosphate-donor s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NADK/NADK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11594753" target="_blank" class="term-link">
+                            PMID:11594753
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural and functional characterization of human NAD kinase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human NAD kinase was cloned and functionally overexpressed; the catalytically active homotetramer is highly selective for NAD and ATP and synthesizes NADP.</div>
+
+                        <div class="finding-text">"The catalytically active homotetramer is highly selective for its substrates, NAD and ATP."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The enzyme does not phosphorylate the nicotinic acid analog NAAD, indicating NAADP is made by an alternative route.</div>
+
+                        <div class="finding-text">"It did not phosphorylate the nicotinic acid derivative of NAD (NAAD) suggesting that the potent calcium-mobilizing pyridine nucleotide NAADP is synthesized by an alternative route."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15161933" target="_blank" class="term-link">
+                            PMID:15161933
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comprehensive proteomic analysis of interphase and mitotic 14-3-3-binding proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link">
+                            PMID:29892012
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An interactome perturbation framework prioritizes damaging missense mutations for developmental disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-197198
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NADK:Zn2+ tetramer phosphorylates NAD+ to NADP+</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosolic NADK is a tetramer requiring a divalent metal per subunit and is the sole route to NADP+.</div>
+
+                        <div class="finding-text">"Cytosolic NAD+ kinase (NADK) catalyses the transfer of a phosphate group from ATP to NAD+, forming NADP+. This is the only way to generate NADP+ in all living organisms."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NADK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95544" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nadk-human-review-notes">NADK (human) — review notes</h1>
+<p>UniProt: O95544 (NADK_HUMAN), gene symbol NADK, HGNC:29831, GeneID 65220, chromosome 1p36.33.<br />
+446 aa, ~49 kDa. EC 2.7.1.23. Evidence at protein level (PE 1).</p>
+<h2 id="core-identity-and-function">Core identity and function</h2>
+<p>NADK is the human <strong>cytosolic NAD kinase</strong> — the enzyme that phosphorylates NAD(+)<br />
+using ATP to make NADP(+). This is the committed, de novo route to the cellular<br />
+NADP(H) pool.</p>
+<ul>
+<li>UniProt RecName: <code>Full=NAD kinase; EC=2.7.1.23; AltName: Full=Poly(P)/ATP NAD kinase</code><br />
+  [file:human/NADK/NADK-uniprot.txt].</li>
+<li>Catalytic activity (UniProt, from PubMed:11594753):<br />
+<code>Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)</code> (Rhea:RHEA:18629; EC 2.7.1.23)<br />
+  [file:human/NADK/NADK-uniprot.txt].</li>
+<li>Cofactor: <code>Name=a divalent metal cation</code> (ChEBI:60240) — a divalent metal cation is<br />
+  required per subunit [file:human/NADK/NADK-uniprot.txt]. Reactome models this as Zn2+:<br />
+  "NADK is tetrameric and requires one divalent metal such as Zn2+ per subunit to<br />
+  function correctly" [Reactome:R-HSA-197198].</li>
+<li>Reactome physiological framing: "Cytosolic NAD+ kinase (NADK) catalyses the transfer<br />
+  of a phosphate group from ATP to NAD+, forming NADP+. This is the only way to generate<br />
+  NADP+ in all living organisms." [Reactome:R-HSA-197198].</li>
+</ul>
+<h2 id="primary-experimental-characterization-pmid11594753-lerner-et-al-2001">Primary experimental characterization — PMID:11594753 (Lerner et al. 2001)</h2>
+<p>This is the cloning + biochemical characterization paper, and is the source of the IDA<br />
+NAD+ kinase activity annotation, the TAS cytosol annotation, and the NAS phosphorylation /<br />
+ATP-metabolic-process annotations. Cache is <strong>abstract-only</strong> (<code>full_text_available: false</code>).</p>
+<ul>
+<li>"NADP is essential for biosynthetic pathways, energy, and signal transduction. Its<br />
+  synthesis is catalyzed by NAD kinase." <a href="https://pubmed.ncbi.nlm.nih.gov/11594753">PMID:11594753</a>.</li>
+<li>Human cDNA identified, amplified from a fibroblast cDNA library, functionally<br />
+  overexpressed in <em>E. coli</em>; encodes a ~49 kDa protein <a href="https://pubmed.ncbi.nlm.nih.gov/11594753">PMID:11594753</a>.</li>
+<li>"The catalytically active homotetramer is highly selective for its substrates, NAD and<br />
+  ATP." <a href="https://pubmed.ncbi.nlm.nih.gov/11594753">PMID:11594753</a> — establishes the tetrameric, substrate-specific enzyme; supports<br />
+  IDA GO:0003951 NAD+ kinase activity.</li>
+<li>Substrate specificity: "It did not phosphorylate the nicotinic acid derivative of NAD<br />
+  (NAAD) suggesting that the potent calcium-mobilizing pyridine nucleotide NAADP is<br />
+  synthesized by an alternative route." <a href="https://pubmed.ncbi.nlm.nih.gov/11594753">PMID:11594753</a>. So human NADK makes NADP(+) but<br />
+  NOT NAADP.</li>
+<li>Tissue distribution: "The gene is expressed in most human tissues, but not in skeletal<br />
+  muscle." <a href="https://pubmed.ncbi.nlm.nih.gov/11594753">PMID:11594753</a>; UniProt: "Widely expressed but not detected in skeletal<br />
+  muscle." [file:human/NADK/NADK-uniprot.txt]. Kinetics (UniProt, from PubMed:11594753):<br />
+  KM 3.3 mM ATP, KM 0.54 mM NAD, Vmax 6.7 µmol/min/mg [file:human/NADK/NADK-uniprot.txt].</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<p>Cytosolic. GOA carries: IBA is_active_in cytosol (GO:0005829, GO_REF:0000033), TAS<br />
+located_in cytosol from Reactome (R-HSA-197198), and TAS located_in cytosol from<br />
+UniProt/PMID:11594753. Reactome explicitly calls it "Cytosolic NAD+ kinase"<br />
+[Reactome:R-HSA-197198]. (The mitochondrial NAD kinase in humans is a separate gene,<br />
+NADK2/MNADK, not this locus.)</p>
+<h2 id="structure-family">Structure / family</h2>
+<ul>
+<li>SIMILARITY: "Belongs to the NAD kinase family." [file:human/NADK/NADK-uniprot.txt].</li>
+<li>InterPro NADK signatures: IPR002504 (NADK), IPR017437 (ATP-NAD_kinase PpnK-type C),<br />
+  IPR017438 (ATP-NAD_kinase N); Pfam PF01513, PF20143; PANTHER PTHR20275 NAD KINASE.<br />
+  [file:human/NADK/NADK-uniprot.txt]. Basis of the InterPro IEA (GO:0019674) and PANTHER<br />
+  IBA annotations.</li>
+<li>Crystal / cryo-EM structures: PDB 3PFN (2.7 Å), 8KGC, 9CR3/9CR4/9CRA<br />
+  [file:human/NADK/NADK-uniprot.txt].</li>
+</ul>
+<h2 id="regulation">Regulation</h2>
+<p>N-terminal serine phosphocluster (Ser46, Ser48, Ser50, Ser55, Ser64) documented by<br />
+large-scale phosphoproteomics [file:human/NADK/NADK-uniprot.txt, MOD_RES entries citing<br />
+PubMed:18669648, 19690332, 23186163, 24275569]. NADK activity is known from the broader<br />
+literature to be under signaling control (e.g. S6K1 phosphorylation, oxidative stress),<br />
+consistent with this phosphocluster, though the specific regulatory kinase is not<br />
+annotated in this UniProt record.</p>
+<h2 id="protein-interactions-basis-of-the-go0005515-ipi-annotations">Protein interactions (basis of the GO:0005515 IPI annotations)</h2>
+<p>All GO:0005515 "protein binding" IPI annotations derive from high-throughput<br />
+interaction/proteomics screens, not from studies of NADK's enzymatic mechanism:</p>
+<ul>
+<li>PMID:15161933 — global 14-3-3(zeta)-binding proteome (14-3-3 affinity column + MS);<br />
+  partner YWHAZ (P63104). Abstract-only. Consistent with the Ser phosphocluster / 14-3-3<br />
+  regulation model but the screen itself only reports a binding event.</li>
+<li>PMID:16189514 (Rual 2005, CCSB-HI1 Y2H) — partner Q8TBB1 (LNX1); high-throughput Y2H.</li>
+<li>PMID:25416956 (Rolland 2014 interactome map) — partner O00560 (SDCBP).</li>
+<li>PMID:28514442 (Huttlin 2017, BioPlex 2.0 AP-MS) — partner P63104 (YWHAZ).</li>
+<li>PMID:29892012 (interactome perturbation framework) — partner Q8TBB1 (LNX1).</li>
+<li>PMID:31515488 (variant PPI disruption screen) — partner O00560 (SDCBP).</li>
+<li>PMID:32296183 (HuRI, Luck 2020) — partners O00560 (SDCBP), Q49AN0 (CRY2), Q8TBB1<br />
+  (LNX1), Q9H5Z6-2 (FAM124B).</li>
+<li>PMID:33961781 (Huttlin 2021, BioPlex 3.0 AP-MS) — partner P63104 (YWHAZ).</li>
+</ul>
+<p>UniProt INTERACTION block lists CRY2, FAM124B, LNX1, SDCBP, YWHAZ<br />
+[file:human/NADK/NADK-uniprot.txt]. None of these establishes a specific,<br />
+biologically-interpretable molecular function for NADK beyond the catalytic activity, so<br />
+the bare GO:0005515 annotations are over-annotations (kept per policy — experimental IPI,<br />
+not removed).</p>
+<h2 id="curation-summary">Curation summary</h2>
+<ul>
+<li>Core MF: <strong>GO:0003951 NAD+ kinase activity</strong> (IDA, PMID:11594753) + <strong>GO:0005524 ATP<br />
+  binding</strong> (substrate; UniProt KW). Metal-ion binding (GO:0046872, divalent cation<br />
+  cofactor) is real but a supporting KW.</li>
+<li>Core BP: <strong>GO:0006741 NADP+ biosynthetic process</strong>; also NAD+ metabolic process<br />
+  (GO:0019674) as the upstream substrate side.</li>
+<li>Core CC: <strong>GO:0005829 cytosol</strong>.</li>
+<li>Over-annotations: the 8 bare GO:0005515 "protein binding" IPIs (MARK_AS_OVER_ANNOTATED);<br />
+  GO:0035774 positive regulation of insulin secretion (IEA/Ensembl ortholog transfer,<br />
+  KEEP_AS_NON_CORE — indirect/organismal, not NADK's direct molecular function);<br />
+  GO:0016310 phosphorylation and GO:0046034 ATP metabolic process (NAS, generic parents of<br />
+  the specific NAD-kinase reaction — MARK_AS_OVER_ANNOTATED / generalized).<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95544
+gene_symbol: NADK
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NADK is the human cytosolic NAD kinase (EC 2.7.1.23), the enzyme that phosphorylates
+  NAD(+) using ATP to produce NADP(+) (NAD+ + ATP -&gt; NADP+ + ADP + H+). It is the de novo,
+  committed source of the cellular NADP(H) pool that supplies reducing equivalents for
+  reductive biosynthesis (e.g. fatty acid and nucleotide synthesis) and for antioxidant
+  defense through regeneration of reduced glutathione and thioredoxin. The active enzyme is
+  a homotetramer and requires a divalent metal cation per subunit; it is highly selective
+  for NAD and ATP and does not phosphorylate the nicotinic acid analog NAAD, so it does not
+  generate NAADP. NADK is widely expressed across human tissues (not detected in skeletal
+  muscle) and acts in the cytosol. A separate gene product, NADK2 (mitochondrial NAD
+  kinase), supplies the mitochondrial NADP(H) pool. NADK carries an N-terminal serine
+  phosphocluster and its activity is subject to signaling and redox regulation.
+alternative_products:
+- name: &#39;1&#39;
+  id: O95544-1
+- name: &#39;2&#39;
+  id: O95544-2
+  sequence_note: VSP_047313, VSP_047314
+- name: &#39;3&#39;
+  id: O95544-3
+  sequence_note: VSP_047312
+existing_annotations:
+- term:
+    id: GO:0006741
+    label: NADP+ biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NADP+ biosynthesis is the core biological role of NADK: it is the committed, de novo
+      route to NADP(+). Well supported experimentally (PMID:11594753) and phylogenetically
+      conserved across the NAD kinase family. Core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11594753
+      supporting_text: &gt;-
+        NADP is essential for biosynthetic pathways, energy, and signal transduction. Its
+        synthesis is catalyzed by NAD kinase.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      NADK is the cytosolic NAD kinase; is_active_in cytosol is correct. Consistent with
+      the Reactome model (&#34;Cytosolic NAD+ kinase&#34;) and the independent TAS cytosol
+      annotations. The distinct mitochondrial NAD kinase activity is provided by NADK2, a
+      different gene. Core localization.
+    action: ACCEPT
+- term:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NAD+ kinase activity is the defining molecular function of NADK, supported both
+      experimentally (IDA, PMID:11594753) and by phylogenetic inference across the family.
+      Core function.
+    action: ACCEPT
+- term:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core NAD+ kinase activity via ARBA/RHEA/EC:2.7.1.23,
+      concordant with the experimental IDA and the RecName EC number. Correct; duplicate of
+      the experimentally supported core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NADK/NADK-uniprot.txt
+      supporting_text: &#34;Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)&#34;
+- term:
+    id: GO:0006741
+    label: NADP+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic ortholog/InterPro-based assignment of NADP+ biosynthetic process,
+      concordant with the experimentally supported IBA. Correct; represents the core
+      biological process.
+    action: ACCEPT
+- term:
+    id: GO:0019674
+    label: NAD+ metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAD+ is the substrate consumed by NADK, so participation in NAD+ metabolic process is
+      accurate (this InterPro/IEA term is the substrate-side companion to NADP+
+      biosynthesis). Correct but more general than the specific reaction; retained as a
+      valid non-core process term.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ATP is the phosphate-donor substrate of the NAD kinase reaction, so ATP binding is a
+      correct and expected molecular function (UniProt keyword-derived). Included here as a
+      NEW annotation because it is present in the UniProt cross-reference (GO:0005524; F:ATP
+      binding; IEA:UniProtKB-KW) but not in the GOA TSV. Supporting molecular function.
+    action: NEW
+    supported_by:
+    - reference_id: file:human/NADK/NADK-uniprot.txt
+      supporting_text: &#34;Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15161933
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a global 14-3-3(zeta)-binding proteomics screen (partner
+      YWHAZ). The interaction is real and consistent with the N-terminal Ser phosphocluster
+      / 14-3-3 regulation model, but GO:0005515 conveys no specific molecular function.
+      Over-annotation; retained (experimental IPI) but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid interactome map
+      (CCSB-HI1; partner LNX1). Uninformative as to molecular function. Over-annotation;
+      retained but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale binary interactome map (partner SDCBP).
+      No specific functional interpretation for NADK. Over-annotation; retained but not
+      core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale AP-MS interactome study (BioPlex; partner
+      YWHAZ). Uninformative molecular-function term. Over-annotation; retained but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29892012
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from an interactome-perturbation screen (partner LNX1). No
+      specific molecular function conveyed. Over-annotation; retained but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a variant-based PPI-disruption interactome screen
+      (partner SDCBP). Uninformative as to function. Over-annotation; retained but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI reference binary interactome (partners include
+      SDCBP, CRY2, LNX1, FAM124B). Multiple binding events but no specific molecular
+      function. Over-annotation; retained but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a dual proteome-scale AP-MS network (BioPlex 3.0; partner
+      YWHAZ). Uninformative molecular-function term. Over-annotation; retained but not core.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0035774
+    label: positive regulation of insulin secretion involved in cellular response
+      to glucose stimulus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from a rat ortholog via Ensembl Compara. This is an indirect,
+      organism-level physiological process, not a direct molecular function of the cytosolic
+      NAD kinase, and there is no direct human experimental support for NADK acting in
+      glucose-stimulated insulin secretion. Not a core function; retained as a plausible but
+      non-core downstream role.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-197198
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization from the Reactome NADP-synthesis reaction, which explicitly
+      describes NADK as the &#34;Cytosolic NAD+ kinase&#34;. Correct core localization.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: PMID:11594753
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization traceable to the primary characterization paper. Consistent
+      with the Reactome and IBA cytosol annotations. Correct core localization.
+    action: ACCEPT
+- term:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11594753
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration of NAD+ kinase activity: the recombinant human
+      enzyme is a catalytically active homotetramer highly selective for NAD and ATP, and
+      does not phosphorylate NAAD (so it does not make NAADP). This is the definitive core
+      molecular function of NADK.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11594753
+      supporting_text: &gt;-
+        The catalytically active homotetramer is highly selective for its substrates, NAD
+        and ATP.
+- term:
+    id: GO:0016310
+    label: phosphorylation
+  evidence_type: NAS
+  original_reference_id: PMID:11594753
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      &#34;Phosphorylation&#34; is a high-level parent term describing the transfer of a phosphate
+      to NAD+. The specific, informative process is NADP+ biosynthesis (GO:0006741), which
+      is already annotated. This generic term over-annotates the reaction and is better
+      represented by the specific NADP-biosynthesis / NAD+ kinase terms.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0046034
+    label: ATP metabolic process
+  evidence_type: NAS
+  original_reference_id: PMID:11594753
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NADK consumes ATP as the phosphate donor, so it touches ATP metabolism, but &#34;ATP
+      metabolic process&#34; is a very general term that does not capture NADK&#39;s specific role.
+      The informative process annotation is NADP+ biosynthesis. Over-annotation; the ATP
+      role is better captured as ATP binding (substrate) in molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+core_functions:
+- description: &gt;-
+    NAD+ kinase activity: transfers the gamma-phosphate of ATP to NAD(+) to form NADP(+)
+    (NAD+ + ATP -&gt; NADP+ + ADP + H+; EC 2.7.1.23). The active enzyme is a homotetramer
+    highly selective for NAD and ATP and requires a divalent metal cation; it does not
+    phosphorylate NAAD (does not make NAADP). This is the de novo, committed source of the
+    cellular NADP(H) pool.
+  molecular_function:
+    id: GO:0003951
+    label: NAD+ kinase activity
+  supported_by:
+  - reference_id: PMID:11594753
+    supporting_text: &gt;-
+      The catalytically active homotetramer is highly selective for its substrates, NAD and
+      ATP.
+  - reference_id: file:human/NADK/NADK-uniprot.txt
+    supporting_text: &#34;Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)&#34;
+  directly_involved_in:
+  - id: GO:0006741
+    label: NADP+ biosynthetic process
+  - id: GO:0019674
+    label: NAD+ metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    ATP binding: ATP is the obligate phosphate-donor substrate of the NAD kinase reaction,
+    bound in the enzyme active site along with the divalent metal cation cofactor.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  supported_by:
+  - reference_id: file:human/NADK/NADK-uniprot.txt
+    supporting_text: &#34;Reaction=NAD(+) + ATP = ADP + NADP(+) + H(+)&#34;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11594753
+  title: Structural and functional characterization of human NAD kinase.
+  findings:
+  - statement: &gt;-
+      Human NAD kinase was cloned and functionally overexpressed; the catalytically active
+      homotetramer is highly selective for NAD and ATP and synthesizes NADP.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      The catalytically active homotetramer is highly selective for its substrates, NAD and
+      ATP.
+  - statement: &gt;-
+      The enzyme does not phosphorylate the nicotinic acid analog NAAD, indicating NAADP is
+      made by an alternative route.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      It did not phosphorylate the nicotinic acid derivative of NAD (NAAD) suggesting that
+      the potent calcium-mobilizing pyridine nucleotide NAADP is synthesized by an
+      alternative route.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary characterization of human NADK; cache is abstract-only
+      (full_text_available false). Directly establishes the core NAD+ kinase activity (IDA),
+      substrate selectivity, tetrameric assembly, and tissue distribution.
+- id: PMID:15161933
+  title: Comprehensive proteomic analysis of interphase and mitotic 14-3-3-binding
+    proteins.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Global 14-3-3-binding proteomics screen; supports only a bare protein-binding
+      (YWHAZ) annotation, not a specific NADK molecular function.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput Y2H interactome; basis of a bare protein-binding IPI only.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale binary interactome; supports a bare protein-binding IPI only.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale AP-MS interactome (BioPlex); bare protein-binding IPI only.
+- id: PMID:29892012
+  title: An interactome perturbation framework prioritizes damaging missense mutations
+    for developmental disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Interactome-perturbation screen; supports a bare protein-binding IPI only.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Variant PPI-disruption interactome; supports a bare protein-binding IPI only.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI reference binary interactome; multiple partners (SDCBP, CRY2, LNX1, FAM124B) but
+      only bare protein-binding IPIs.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Dual proteome-scale AP-MS (BioPlex 3.0); bare protein-binding IPI only.
+- id: Reactome:R-HSA-197198
+  title: NADK:Zn2+ tetramer phosphorylates NAD+ to NADP+
+  findings:
+  - statement: &gt;-
+      Cytosolic NADK is a tetramer requiring a divalent metal per subunit and is the sole
+      route to NADP+.
+    reference_section_type: DATABASE_ENTRY
+    supporting_text: &gt;-
+      Cytosolic NAD+ kinase (NADK) catalyses the transfer of a phosphate group from ATP to
+      NAD+, forming NADP+. This is the only way to generate NADP+ in all living organisms.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for NADP+ synthesis; source of the TAS cytosol annotation and
+      confirms cytosolic localization, tetrameric assembly, and divalent-metal requirement.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAZ1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OAZ1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P54368" target="_blank" class="term-link">
+                        P54368
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "OAZ1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P54368" data-a="DESCRIPTION: OAZ1 encodes ornithine decarboxylase antizyme 1 (A..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OAZ1 encodes ornithine decarboxylase antizyme 1 (AZ1), a small non-catalytic regulatory protein that is the central negative-feedback controller of polyamine (putrescine, spermidine, spermine) homeostasis. It is not itself an enzyme; instead it binds a monomer of ornithine decarboxylase (ODC1) - the rate-limiting enzyme of polyamine biosynthesis - thereby sterically occluding assembly of the catalytically active ODC homodimer and disrupting its substrate-binding site, so that ODC activity is inhibited. Antizyme binding additionally induces a conformational change that exposes the ODC C-terminus and targets ODC for ubiquitin-independent degradation by the 26S proteasome, and it suppresses cellular polyamine uptake while promoting polyamine excretion. Its own synthesis is a polyamine sensor: antizyme mRNA is decoded via a programmed +1 ribosomal frameshift whose efficiency increases with intracellular polyamine concentration, closing an autoregulatory circuit. Antizyme activity is in turn antagonized by antizyme inhibitors (AZIN1 and the catalytically dead ODC paralogue AZIN2/ODCp), which bind antizyme and release active ODC. OAZ1 acts principally in the cytosol, with reported nuclear localization.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA/PAN-GO) nuclear localization. Antizyme has documented nuclear pools in addition to its principal cytosolic site of action; plausible but not the primary site where it regulates ODC and the 26S proteasome. Keep as a non-core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA/PAN-GO) cytoplasmic localization, consistent with antizyme acting in the cytosol where ODC and the 26S proteasome operate. Correct but general; the more specific cytosol annotation captures the same information.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                                    GO:0008073
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0008073" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred ornithine decarboxylase inhibitor activity. This is the defining molecular function of the antizyme family and is directly supported by experimental annotations for human OAZ1. Accept as a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006576" target="_blank" class="term-link">
+                                    GO:0006576
+                                </a>
+                            </span>
+                            <span class="term-label">biogenic amine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0006576" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic ARBA annotation to the broad parent &#39;biogenic amine metabolic process&#39;. Polyamine metabolism is a subclass of biogenic amine metabolism, so this is not wrong, but it is far too general and adds no information beyond the specific polyamine-regulation annotations. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                                    GO:0008073
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0008073" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/ARBA) annotation of the family-defining ornithine decarboxylase inhibitor activity. Redundant with the experimental IDA/EXP annotations to the same term; accept as it correctly captures the core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28298427" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28298427
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic protein-protein interaction mapping for clinicall...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005515" data-r="PMID:28298427" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from a high-throughput GPCR interactome screen (IntAct), recording OAZ1 as a MaMTH prey of the angiotensin II receptor AGTR1 (P30556). The paper does not discuss OAZ1 function and this uninformative term does not capture antizyme biology; the biologically meaningful binding of OAZ1 is to ODC1 and is modelled as ornithine decarboxylase inhibitor activity. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045732" target="_blank" class="term-link">
+                                    GO:0045732
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0045732" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic Ensembl orthology transfer of &#39;positive regulation of protein catabolic process&#39;, reflecting antizyme&#39;s role in targeting ODC for proteasomal degradation. Correct and supported experimentally (see the IDA to the same term). Accept.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901800" target="_blank" class="term-link">
+                                    positive regulation of proteasomal protein catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090316" target="_blank" class="term-link">
+                                    GO:0090316
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0090316" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic Ensembl orthology transfer. Antizyme has been implicated in translocation of AZIN2 from the ER-Golgi intermediate compartment to the cytosol, but this is a peripheral, indirectly-supported role for the human protein and not a core antizyme function. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902268" target="_blank" class="term-link">
+                                    GO:1902268
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of polyamine transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:1902268" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic Ensembl orthology transfer capturing antizyme&#39;s inhibition of cellular polyamine uptake. This is a well-established antizyme function and a core aspect of its control of polyamine homeostasis. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006596" target="_blank" class="term-link">
+                                    GO:0006596
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-350562
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0006596" data-r="Reactome:R-HSA-350562" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway annotation placing antizyme within polyamine metabolism. OAZ1 participates in polyamine metabolism, but as a NEGATIVE regulator of polyamine synthesis the &#39;biosynthetic process&#39; framing with an &#39;involved_in&#39; qualifier is misleading. The antizyme role is better captured by the polyamine-homeostasis and negative-regulation terms. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                                    GO:0008073
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26443277
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of Ornithine Decarboxylase inactivation and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0008073" data-r="PMID:26443277" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of ornithine decarboxylase inhibitor activity. The crystal structure of human ODC bound to N-terminally truncated AZ1 shows AZ1 occluding formation of the active ODC homodimer and disrupting the substrate site, providing structural evidence for direct ODC inhibition. Core molecular function; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                        PMID:26443277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form the active homodimer</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                        PMID:26443277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the binding of AZ1 disrupts the substrate binding site of ODC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-350567
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005829" data-r="Reactome:R-HSA-350567" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome cytosol localization. The cytosol is the principal site where antizyme binds ODC monomers and delivers them to the 26S proteasome. Accept as the core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-353125
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005829" data-r="Reactome:R-HSA-353125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate Reactome cytosol localization (different Reactome reaction). Same well-supported core location as the annotation above. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30312582" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30312582
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Astroprincin (FAM171A1, C10orf38): A Regulator of Human Cell...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005515" data-r="PMID:30312582" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; IPI recording the yeast-two-hybrid / co-IP interaction of OAZ1 with astroprincin (FAM171A1, Q5VUB5). A real physical interaction, but the uninformative &#39;protein binding&#39; term does not describe antizyme function; the defining OAZ1 binding is to ODC1, modelled as ornithine decarboxylase inhibitor activity. Over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30312582" target="_blank" class="term-link">
+                                        PMID:30312582
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ornithine decarboxylase antizyme-1, NEEP21 (NSG1), and ADAM10 were validated by</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090316" target="_blank" class="term-link">
+                                    GO:0090316
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0090316" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer from mouse ortholog of &#39;positive regulation of intracellular protein transport&#39; (antizyme-mediated AZIN2 translocation from ERGIC to cytosol). Peripheral to the core antizyme role in the human protein. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17900240
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human ornithine decarboxylase paralogue (ODCp) is an antizym...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0005515" data-r="PMID:17900240" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; IPI capturing the OAZ1-AZIN2/ODCp (Q96A70) interaction. This interaction is biologically important - AZIN2 binding disrupts the antizyme-ODC1 complex and releases active ODC - but the generic &#39;protein binding&#39; term is uninformative and does not describe antizyme&#39;s molecular function. Over-annotated; the mechanistic significance is noted in the description and notes.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link">
+                                        PMID:17900240
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we show that ODCp binds AZ1-3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                                    GO:0008073
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0008073" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer from mouse ortholog of the family-defining ornithine decarboxylase inhibitor activity. Redundant with the human experimental IDA/EXP annotations to the same term; accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                                    GO:0008073
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17900240
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human ornithine decarboxylase paralogue (ODCp) is an antizym...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0008073" data-r="PMID:17900240" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation of ornithine decarboxylase inhibitor activity. Kanerva et al. assay AZ1 function through ODC activity and ODC degradation readouts (as the readout for AZIN2/ODCp inhibition of AZ1), confirming AZ1 inhibits ODC. Core molecular function; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link">
+                                        PMID:17900240
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ODCp inhibits AZ1 function as efficiently as AZI</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045732" target="_blank" class="term-link">
+                                    GO:0045732
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0045732" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer from mouse ortholog of &#39;positive regulation of protein catabolic process&#39;, reflecting antizyme targeting ODC for proteasomal degradation. Supported experimentally in human (see IDA below); accept as core.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901800" target="_blank" class="term-link">
+                                    positive regulation of proteasomal protein catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045732" target="_blank" class="term-link">
+                                    GO:0045732
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17900240
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human ornithine decarboxylase paralogue (ODCp) is an antizym...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0045732" data-r="PMID:17900240" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation of antizyme&#39;s positive regulation of protein catabolism, via ODC degradation assays. Antizyme is essential for and greatly accelerates ubiquitin-independent 26S-proteasomal degradation of ODC. Core biological process; accept. A more specific term (positive regulation of proteasomal protein catabolic process) is available.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901800" target="_blank" class="term-link">
+                                    positive regulation of proteasomal protein catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                        PMID:26443277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AZ1 is not only essential for the degradation of ODC</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                        PMID:26443277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ODC is degraded by the 26S proteasome in an ubiquitin-independent manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006596" target="_blank" class="term-link">
+                                    GO:0006596
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7813017" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7813017
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Autoregulatory frameshifting in decoding mammalian ornithine...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0006596" data-r="PMID:7813017" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Legacy author-statement (TAS) annotation to &#39;polyamine biosynthetic process&#39;. The cited paper describes autoregulatory frameshifting and antizyme&#39;s destabilization of ODC - antizyme is a NEGATIVE regulator of polyamine synthesis, so &#39;involved_in polyamine biosynthetic process&#39; mis-frames its role. Over-annotated; better captured by polyamine-homeostasis / negative-regulation terms.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                                    GO:0008073
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine decarboxylase inhibitor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7813017" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7813017
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Autoregulatory frameshifting in decoding mammalian ornithine...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54368" data-a="GO:0008073" data-r="PMID:7813017" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation of ornithine decarboxylase inhibitor activity. Matsufuji et al. state that antizyme binds and destabilizes ODC, consistent with the family-defining inhibitor function. Redundant with the experimental annotations; accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7813017" target="_blank" class="term-link">
+                                        PMID:7813017
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Antizyme binds to, and destabilizes,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ornithine decarboxylase inhibitor activity. OAZ1 binds a monomer of ornithine decarboxylase (ODC1), sterically occluding assembly of the catalytically active ODC homodimer and disrupting its substrate-binding site, thereby inhibiting ODC activity. This ODC-directed binding is the defining molecular function of antizyme and is modelled with the specific inhibitor-activity term rather than bare protein binding.</h3>
+                <span class="vote-buttons" data-g="P54368" data-a="FUNCTION: Ornithine decarboxylase inhibitor activity. OAZ1 b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                            ornithine decarboxylase inhibitor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901800" target="_blank" class="term-link">
+                                positive regulation of proteasomal protein catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010509" target="_blank" class="term-link">
+                                intracellular polyamine homeostasis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                PMID:26443277
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form the active homodimer</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                PMID:26443277
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the binding of AZ1 disrupts the substrate binding site of ODC</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/OAZ1/OAZ1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds to ODC monomers, inhibiting the assembly of the</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Antizyme-driven targeting of ODC for degradation. By binding ODC, OAZ1 induces a conformational change that exposes the ODC C-terminus and delivers ODC to the 26S proteasome for ubiquitin-independent proteolysis, positively regulating proteasomal protein catabolism and lowering ODC levels.</h3>
+                <span class="vote-buttons" data-g="P54368" data-a="FUNCTION: Antizyme-driven targeting of ODC for degradation. ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                            ornithine decarboxylase inhibitor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901800" target="_blank" class="term-link">
+                                positive regulation of proteasomal protein catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                PMID:26443277
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">AZ1 is not only essential for the degradation of ODC</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                PMID:26443277
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ODC is degraded by the 26S proteasome in an ubiquitin-independent manner</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/OAZ1/OAZ1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">targets the monomers for ubiquitin-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Negative regulation of polyamine transport. In addition to controlling polyamine synthesis via ODC, OAZ1 inhibits cellular uptake of polyamines (and promotes their excretion), contributing to intracellular polyamine homeostasis.</h3>
+                <span class="vote-buttons" data-g="P54368" data-a="FUNCTION: Negative regulation of polyamine transport. In add..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008073" target="_blank" class="term-link">
+                            ornithine decarboxylase inhibitor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902268" target="_blank" class="term-link">
+                                negative regulation of polyamine transmembrane transport
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010509" target="_blank" class="term-link">
+                                intracellular polyamine homeostasis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/OAZ1/OAZ1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">cellular uptake of polyamines by inactivating the polyamine uptake</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                                PMID:26443277
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">AZ1 inhibits polyamine uptake into the cells and stimulates excretion of polyamine out of the cell</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17900240" target="_blank" class="term-link">
+                            PMID:17900240
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human ornithine decarboxylase paralogue (ODCp) is an antizyme inhibitor but not an arginine decarboxylase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ODCp (AZIN2) binds antizymes AZ1-3 and inhibits AZ1 function as efficiently as the canonical antizyme inhibitor, using ODC activity and ODC degradation as readouts - confirming that AZ1 inhibits ODC and promotes its degradation.</div>
+
+                        <div class="finding-text">"ODCp inhibits AZ1 function as efficiently as AZI"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26443277" target="_blank" class="term-link">
+                            PMID:26443277
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of Ornithine Decarboxylase inactivation and accelerated degradation by polyamine sensor Antizyme1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The crystal structure of human ODC bound to N-terminally truncated AZ1 shows AZ1 occluding formation of the active ODC homodimer and disrupting the substrate-binding site, explaining ODC inhibition.</div>
+
+                        <div class="finding-text">"the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form the active homodimer"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AZ1 is essential for and accelerates ubiquitin-independent 26S-proteasomal degradation of ODC by inducing a conformational change that exposes the ODC C-terminus.</div>
+
+                        <div class="finding-text">"AZ1 is not only essential for the degradation of ODC"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28298427" target="_blank" class="term-link">
+                            PMID:28298427
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic protein-protein interaction mapping for clinically relevant human GPCRs.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30312582" target="_blank" class="term-link">
+                            PMID:30312582
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Astroprincin (FAM171A1, C10orf38): A Regulator of Human Cell Shape and Invasive Growth.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OAZ1 (ornithine decarboxylase antizyme-1) was recovered as a yeast-two-hybrid partner of astroprincin (FAM171A1) and validated by co-immunoprecipitation.</div>
+
+                        <div class="finding-text">"ornithine decarboxylase antizyme-1, NEEP21 (NSG1), and ADAM10 were validated by"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7813017" target="_blank" class="term-link">
+                            PMID:7813017
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Autoregulatory frameshifting in decoding mammalian ornithine decarboxylase antizyme.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Antizyme expression requires a programmed +1 ribosomal frameshift whose efficiency is modulated by cellular polyamine concentration; antizyme binds and destabilizes ODC, completing an autoregulatory circuit.</div>
+
+                        <div class="finding-text">"Antizyme binds to, and destabilizes,"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-350562
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of ornithine decarboxylase (ODC)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-350567
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Antizyme OAZ binds to Ornithine decarboxylase</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-353125
+
+                    </span>
+                </div>
+
+                <div class="reference-title">26S proteosome degrades ODC holoenzyme complex</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(OAZ1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54368" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="oaz1-ornithine-decarboxylase-antizyme-1-review-notes">OAZ1 (Ornithine decarboxylase antizyme 1) — review notes</h1>
+<p>UniProt: P54368 (OAZ1_HUMAN). Gene: OAZ1 (syn. OAZ). HGNC:8095. 228 aa. Chromosome 19.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>OAZ1 is <strong>ornithine decarboxylase antizyme 1 (AZ1)</strong>, a small non-catalytic regulatory<br />
+protein that is the master negative-feedback controller of polyamine (putrescine,<br />
+spermidine, spermine) homeostasis. It is NOT an enzyme itself — it works entirely by<br />
+binding and regulating ornithine decarboxylase (ODC1), the rate-limiting enzyme of<br />
+polyamine biosynthesis.</p>
+<p>Key mechanistic facts (all grounded in local files below):</p>
+<ol>
+<li><strong>Its own synthesis is a polyamine sensor.</strong> OAZ1 expression requires a programmed +1<br />
+   ribosomal frameshift whose efficiency rises with intracellular polyamine concentration,<br />
+   closing an autoregulatory circuit.</li>
+<li>[file:human/OAZ1/OAZ1-uniprot.txt "A ribosomal frameshift occurs between the codons for Ser-68 and Asp-69. An autoregulatory mechanism enables modulation of frameshifting according to the cellular concentration of polyamines."]</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/7813017" title="A novel autoregulatory mechanism enables modulation of frameshifting according to the cellular concentration of polyamines.">PMID:7813017</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/7813017" title="The frameshift is +1 and occurs at the codon just preceding the terminator of the initiating frame.">PMID:7813017</a></li>
+<li>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="The expression of AZ1 is induced by a unique ribosomal frameshifting mechanism in response to increased levels of intracellular polyamines">PMID:26443277</a></p>
+</li>
+<li>
+<p><strong>It binds ODC monomers and inhibits ODC activity.</strong> AZ1 binds one ODC monomer,<br />
+   sterically occluding formation of the catalytically active ODC homodimer and disrupting<br />
+   the substrate-binding site. This is the "ornithine decarboxylase inhibitor activity"<br />
+   molecular function.</p>
+</li>
+<li>[file:human/OAZ1/OAZ1-uniprot.txt "Binds to ODC monomers, inhibiting the assembly of the"] (continues: "functional ODC homodimer")</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form the active homodimer">PMID:26443277</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="the binding of AZ1 disrupts the substrate binding site of ODC">PMID:26443277</a></li>
+<li>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/17900240" title="Measurements of the ODC activity and ODC degradation assay reveal that ODCp inhibits AZ1 function as efficiently as AZI both in vitro and in vivo.">PMID:17900240</a> (this paper assays AZ1 function directly via ODC activity/degradation readouts)</p>
+</li>
+<li>
+<p><strong>It targets ODC for ubiquitin-independent 26S-proteasomal degradation.</strong> AZ1 binding<br />
+   induces a conformational change in ODC that exposes its C-terminus for recognition by<br />
+   the 26S proteasome; degradation is ubiquitin-independent.</p>
+</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="AZ1 is not only essential for the degradation of ODC, it also shortens the half-life of ODC from the basal level of 1.5 hours to approximately 15 minutes">PMID:26443277</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="ODC is degraded by the 26S proteasome in an ubiquitin-independent manner">PMID:26443277</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="the binding of AZ1 to ODC causes a global conformational change of ODC and renders its C-terminal region flexible, therefore exposing this region for degradation by the 26S proteasome">PMID:26443277</a></li>
+<li>
+<p>[file:human/OAZ1/OAZ1-uniprot.txt "targets the monomers for ubiquitin-"] (continues: "independent proteolytic destruction by the 26S proteasome")</p>
+</li>
+<li>
+<p><strong>It inhibits cellular polyamine uptake/transport.</strong> Beyond regulating synthesis, AZ1<br />
+   downregulates polyamine import and stimulates excretion.</p>
+</li>
+<li>[file:human/OAZ1/OAZ1-uniprot.txt "Also inhibits cellular uptake of polyamines by inactivating the polyamine uptake transporter."]</li>
+<li>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/26443277" title="AZ1 inhibits polyamine uptake into the cells and stimulates excretion of polyamine out of the cell">PMID:26443277</a></p>
+</li>
+<li>
+<p><strong>It is itself antagonized by antizyme inhibitors (AZIN1/AZIN2).</strong> Antizyme inhibitors<br />
+   bind AZ1, disrupt the AZ1–ODC interaction, and release active ODC. AZIN2 (ODCp) is a<br />
+   catalytically dead ODC paralogue that acts as an antizyme inhibitor.</p>
+</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17900240" title="we report that human ODCp is a novel AZI (AZIN2)">PMID:17900240</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17900240" title="we show that ODCp binds AZ1-3">PMID:17900240</a></li>
+<li>[file:human/OAZ1/OAZ1-uniprot.txt "Interacts with AZIN2; this interaction disrupts the interaction between the antizyme and ODC1"]</li>
+</ol>
+<h2 id="localization">Localization</h2>
+<p>Cytosol (primary site of action, where ODC and the 26S proteasome operate); also nucleus<br />
+per PAN-GO/IBA. Reactome places the ODC-regulation reactions in the cytosol.<br />
+- [file:human/OAZ1/OAZ1-uniprot.txt] DR lines: GO:0005829 cytosol (TAS:Reactome), GO:0005634 nucleus (IBA), GO:0005737 cytoplasm (IBA).</p>
+<h2 id="other-interactions-peripheral-non-core">Other interactions (peripheral / non-core)</h2>
+<ul>
+<li><strong>FAM171A1 (astroprincin, C10orf38)</strong>: OAZ1 was recovered as a yeast-two-hybrid partner<br />
+  of astroprincin and validated by co-IP. This is the basis of the GO:0005515 IPI from<br />
+  PMID:30312582. It reflects a physical interaction, not a distinct catalytic/regulatory<br />
+  function of OAZ1.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30312582" title="Yeast two-hybrid screening revealed several interactive partners, of which ornithine decarboxylase antizyme-1, NEEP21 (NSG1), and ADAM10 were validated by coimmunoprecipitation.">PMID:30312582</a></li>
+<li><strong>AGTR1 (angiotensin II receptor type 1, P30556)</strong>: OAZ1 appears as a prey in a<br />
+  systematic GPCR interactome (MaMTH) screen; basis of the IntAct GO:0005515 IPI from<br />
+  PMID:28298427. High-throughput physical interaction; the paper does not discuss OAZ1<br />
+  function. Over-annotated bare "protein binding".</li>
+<li><strong>SMAD1/OAZ1/PSMB4 complex</strong> (PMID:12097147, cited in UniProt but not in GOA): links AZ1<br />
+  to proteasome-mediated degradation of the SNIP1 repressor and BMP signalling. Not among<br />
+  the seeded GOA annotations; noted for completeness.</li>
+</ul>
+<h2 id="curation-reasoning-highlights">Curation reasoning highlights</h2>
+<ul>
+<li>Core molecular function = <strong>ornithine decarboxylase inhibitor activity (GO:0008073)</strong>.<br />
+  OAZ1's biologically defining "binding" (to ODC1) should be modelled with this specific<br />
+  functional term, NOT bare "protein binding".</li>
+<li>OAZ1 has <strong>no catalytic activity</strong> — do not assign decarboxylase/enzyme MF terms.</li>
+<li>Multiple redundant GO:0008073 annotations exist (IDA, EXP, IBA, ISS, TAS, IEA). The IDA<br />
+  (PMID:17900240) and EXP (PMID:26443277) are experimental and are the anchors; the rest<br />
+  are supporting/redundant and are accepted or kept as non-core.</li>
+<li>BP roles to retain: positive regulation of proteasomal protein catabolic process<br />
+  (targeting ODC for degradation), negative regulation of polyamine transmembrane<br />
+  transport, intracellular polyamine homeostasis.</li>
+<li><code>GO:0006596 polyamine biosynthetic process</code> (involved_in) is arguably mis-directed for a<br />
+<em>negative</em> regulator of polyamine synthesis; it is a legacy TAS/Reactome annotation. AZ1<br />
+  is involved in polyamine metabolism/homeostasis but as a down-regulator, so I mark these<br />
+  as over-annotated rather than accept them as core "biosynthetic" involvement.</li>
+<li><code>GO:0006576 biogenic amine metabolic process</code> (ARBA IEA) is an over-general parent of<br />
+  polyamine metabolism; over-annotated.</li>
+<li><code>GO:0090316 positive regulation of intracellular protein transport</code> and<br />
+<code>GO:0075523 viral translational frameshifting</code> are electronic/ISS transfers of limited<br />
+  direct relevance to the human protein's core role; kept as non-core / over-annotated.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P54368
+gene_symbol: OAZ1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  OAZ1 encodes ornithine decarboxylase antizyme 1 (AZ1), a small non-catalytic
+  regulatory protein that is the central negative-feedback controller of polyamine
+  (putrescine, spermidine, spermine) homeostasis. It is not itself an enzyme; instead it
+  binds a monomer of ornithine decarboxylase (ODC1) - the rate-limiting enzyme of
+  polyamine biosynthesis - thereby sterically occluding assembly of the catalytically
+  active ODC homodimer and disrupting its substrate-binding site, so that ODC activity is
+  inhibited. Antizyme binding additionally induces a conformational change that exposes
+  the ODC C-terminus and targets ODC for ubiquitin-independent degradation by the 26S
+  proteasome, and it suppresses cellular polyamine uptake while promoting polyamine
+  excretion. Its own synthesis is a polyamine sensor: antizyme mRNA is decoded via a
+  programmed +1 ribosomal frameshift whose efficiency increases with intracellular
+  polyamine concentration, closing an autoregulatory circuit. Antizyme activity is in turn
+  antagonized by antizyme inhibitors (AZIN1 and the catalytically dead ODC paralogue
+  AZIN2/ODCp), which bind antizyme and release active ODC. OAZ1 acts principally in the
+  cytosol, with reported nuclear localization.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA/PAN-GO) nuclear localization. Antizyme has documented nuclear
+      pools in addition to its principal cytosolic site of action; plausible but not the
+      primary site where it regulates ODC and the 26S proteasome. Keep as a non-core
+      location.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA/PAN-GO) cytoplasmic localization, consistent with antizyme acting
+      in the cytosol where ODC and the 26S proteasome operate. Correct but general; the
+      more specific cytosol annotation captures the same information.
+    action: ACCEPT
+- term:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred ornithine decarboxylase inhibitor activity. This is the
+      defining molecular function of the antizyme family and is directly supported by
+      experimental annotations for human OAZ1. Accept as a core function.
+    action: ACCEPT
+- term:
+    id: GO:0006576
+    label: biogenic amine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic ARBA annotation to the broad parent &#39;biogenic amine metabolic process&#39;.
+      Polyamine metabolism is a subclass of biogenic amine metabolism, so this is not
+      wrong, but it is far too general and adds no information beyond the specific
+      polyamine-regulation annotations. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro/ARBA) annotation of the family-defining ornithine
+      decarboxylase inhibitor activity. Redundant with the experimental IDA/EXP
+      annotations to the same term; accept as it correctly captures the core function.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28298427
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from a high-throughput GPCR interactome screen (IntAct),
+      recording OAZ1 as a MaMTH prey of the angiotensin II receptor AGTR1 (P30556). The
+      paper does not discuss OAZ1 function and this uninformative term does not capture
+      antizyme biology; the biologically meaningful binding of OAZ1 is to ODC1 and is
+      modelled as ornithine decarboxylase inhibitor activity. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0045732
+    label: positive regulation of protein catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic Ensembl orthology transfer of &#39;positive regulation of protein catabolic
+      process&#39;, reflecting antizyme&#39;s role in targeting ODC for proteasomal degradation.
+      Correct and supported experimentally (see the IDA to the same term). Accept.
+    action: ACCEPT
+    proposed_replacement_terms:
+    - id: GO:1901800
+      label: positive regulation of proteasomal protein catabolic process
+- term:
+    id: GO:0090316
+    label: positive regulation of intracellular protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic Ensembl orthology transfer. Antizyme has been implicated in
+      translocation of AZIN2 from the ER-Golgi intermediate compartment to the cytosol,
+      but this is a peripheral, indirectly-supported role for the human protein and not a
+      core antizyme function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:1902268
+    label: negative regulation of polyamine transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic Ensembl orthology transfer capturing antizyme&#39;s inhibition of cellular
+      polyamine uptake. This is a well-established antizyme function and a core aspect of
+      its control of polyamine homeostasis. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0006596
+    label: polyamine biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-350562
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome pathway annotation placing antizyme within polyamine metabolism. OAZ1
+      participates in polyamine metabolism, but as a NEGATIVE regulator of polyamine
+      synthesis the &#39;biosynthetic process&#39; framing with an &#39;involved_in&#39; qualifier is
+      misleading. The antizyme role is better captured by the polyamine-homeostasis and
+      negative-regulation terms. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  evidence_type: EXP
+  original_reference_id: PMID:26443277
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of ornithine decarboxylase inhibitor activity. The
+      crystal structure of human ODC bound to N-terminally truncated AZ1 shows AZ1
+      occluding formation of the active ODC homodimer and disrupting the substrate site,
+      providing structural evidence for direct ODC inhibition. Core molecular function;
+      accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26443277
+      supporting_text: &gt;-
+        the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form
+        the active homodimer
+    - reference_id: PMID:26443277
+      supporting_text: the binding of AZ1 disrupts the substrate binding site of ODC
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-350567
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome cytosol localization. The cytosol is the principal site where antizyme
+      binds ODC monomers and delivers them to the 26S proteasome. Accept as the core
+      location.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-353125
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Duplicate Reactome cytosol localization (different Reactome reaction). Same
+      well-supported core location as the annotation above. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:30312582
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; IPI recording the yeast-two-hybrid / co-IP interaction of
+      OAZ1 with astroprincin (FAM171A1, Q5VUB5). A real physical interaction, but the
+      uninformative &#39;protein binding&#39; term does not describe antizyme function; the
+      defining OAZ1 binding is to ODC1, modelled as ornithine decarboxylase inhibitor
+      activity. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:30312582
+      supporting_text: &gt;-
+        ornithine decarboxylase antizyme-1, NEEP21 (NSG1), and ADAM10 were validated by
+- term:
+    id: GO:0090316
+    label: positive regulation of intracellular protein transport
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS transfer from mouse ortholog of &#39;positive regulation of intracellular protein
+      transport&#39; (antizyme-mediated AZIN2 translocation from ERGIC to cytosol). Peripheral
+      to the core antizyme role in the human protein. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17900240
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; IPI capturing the OAZ1-AZIN2/ODCp (Q96A70) interaction. This
+      interaction is biologically important - AZIN2 binding disrupts the antizyme-ODC1
+      complex and releases active ODC - but the generic &#39;protein binding&#39; term is
+      uninformative and does not describe antizyme&#39;s molecular function. Over-annotated;
+      the mechanistic significance is noted in the description and notes.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:17900240
+      supporting_text: we show that ODCp binds AZ1-3
+- term:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS transfer from mouse ortholog of the family-defining ornithine decarboxylase
+      inhibitor activity. Redundant with the human experimental IDA/EXP annotations to
+      the same term; accept as core.
+    action: ACCEPT
+- term:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  evidence_type: IDA
+  original_reference_id: PMID:17900240
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation of ornithine decarboxylase inhibitor activity.
+      Kanerva et al. assay AZ1 function through ODC activity and ODC degradation readouts
+      (as the readout for AZIN2/ODCp inhibition of AZ1), confirming AZ1 inhibits ODC. Core
+      molecular function; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17900240
+      supporting_text: ODCp inhibits AZ1 function as efficiently as AZI
+- term:
+    id: GO:0045732
+    label: positive regulation of protein catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS transfer from mouse ortholog of &#39;positive regulation of protein catabolic
+      process&#39;, reflecting antizyme targeting ODC for proteasomal degradation. Supported
+      experimentally in human (see IDA below); accept as core.
+    action: ACCEPT
+    proposed_replacement_terms:
+    - id: GO:1901800
+      label: positive regulation of proteasomal protein catabolic process
+- term:
+    id: GO:0045732
+    label: positive regulation of protein catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:17900240
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation of antizyme&#39;s positive regulation of protein
+      catabolism, via ODC degradation assays. Antizyme is essential for and greatly
+      accelerates ubiquitin-independent 26S-proteasomal degradation of ODC. Core
+      biological process; accept. A more specific term (positive regulation of proteasomal
+      protein catabolic process) is available.
+    action: ACCEPT
+    proposed_replacement_terms:
+    - id: GO:1901800
+      label: positive regulation of proteasomal protein catabolic process
+    supported_by:
+    - reference_id: PMID:26443277
+      supporting_text: AZ1 is not only essential for the degradation of ODC
+    - reference_id: PMID:26443277
+      supporting_text: ODC is degraded by the 26S proteasome in an ubiquitin-independent manner
+- term:
+    id: GO:0006596
+    label: polyamine biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:7813017
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Legacy author-statement (TAS) annotation to &#39;polyamine biosynthetic process&#39;. The
+      cited paper describes autoregulatory frameshifting and antizyme&#39;s destabilization of
+      ODC - antizyme is a NEGATIVE regulator of polyamine synthesis, so &#39;involved_in
+      polyamine biosynthetic process&#39; mis-frames its role. Over-annotated; better captured
+      by polyamine-homeostasis / negative-regulation terms.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  evidence_type: TAS
+  original_reference_id: PMID:7813017
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-statement (TAS) annotation of ornithine decarboxylase inhibitor activity.
+      Matsufuji et al. state that antizyme binds and destabilizes ODC, consistent with the
+      family-defining inhibitor function. Redundant with the experimental annotations;
+      accept as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7813017
+      supporting_text: Antizyme binds to, and destabilizes,
+core_functions:
+- description: &gt;-
+    Ornithine decarboxylase inhibitor activity. OAZ1 binds a monomer of ornithine
+    decarboxylase (ODC1), sterically occluding assembly of the catalytically active ODC
+    homodimer and disrupting its substrate-binding site, thereby inhibiting ODC activity.
+    This ODC-directed binding is the defining molecular function of antizyme and is
+    modelled with the specific inhibitor-activity term rather than bare protein binding.
+  molecular_function:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  supported_by:
+  - reference_id: PMID:26443277
+    supporting_text: &gt;-
+      the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form
+      the active homodimer
+  - reference_id: PMID:26443277
+    supporting_text: the binding of AZ1 disrupts the substrate binding site of ODC
+  - reference_id: file:human/OAZ1/OAZ1-uniprot.txt
+    supporting_text: Binds to ODC monomers, inhibiting the assembly of the
+  directly_involved_in:
+  - id: GO:1901800
+    label: positive regulation of proteasomal protein catabolic process
+  - id: GO:0010509
+    label: intracellular polyamine homeostasis
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Antizyme-driven targeting of ODC for degradation. By binding ODC, OAZ1 induces a
+    conformational change that exposes the ODC C-terminus and delivers ODC to the 26S
+    proteasome for ubiquitin-independent proteolysis, positively regulating proteasomal
+    protein catabolism and lowering ODC levels.
+  molecular_function:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  supported_by:
+  - reference_id: PMID:26443277
+    supporting_text: AZ1 is not only essential for the degradation of ODC
+  - reference_id: PMID:26443277
+    supporting_text: ODC is degraded by the 26S proteasome in an ubiquitin-independent manner
+  - reference_id: file:human/OAZ1/OAZ1-uniprot.txt
+    supporting_text: targets the monomers for ubiquitin-
+  directly_involved_in:
+  - id: GO:1901800
+    label: positive regulation of proteasomal protein catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Negative regulation of polyamine transport. In addition to controlling polyamine
+    synthesis via ODC, OAZ1 inhibits cellular uptake of polyamines (and promotes their
+    excretion), contributing to intracellular polyamine homeostasis.
+  molecular_function:
+    id: GO:0008073
+    label: ornithine decarboxylase inhibitor activity
+  supported_by:
+  - reference_id: file:human/OAZ1/OAZ1-uniprot.txt
+    supporting_text: cellular uptake of polyamines by inactivating the polyamine uptake
+  - reference_id: PMID:26443277
+    supporting_text: AZ1 inhibits polyamine uptake into the cells and stimulates excretion of polyamine out of the cell
+  directly_involved_in:
+  - id: GO:1902268
+    label: negative regulation of polyamine transmembrane transport
+  - id: GO:0010509
+    label: intracellular polyamine homeostasis
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17900240
+  title: Human ornithine decarboxylase paralogue (ODCp) is an antizyme inhibitor but
+    not an arginine decarboxylase.
+  findings:
+  - statement: &gt;-
+      ODCp (AZIN2) binds antizymes AZ1-3 and inhibits AZ1 function as efficiently as the
+      canonical antizyme inhibitor, using ODC activity and ODC degradation as readouts -
+      confirming that AZ1 inhibits ODC and promotes its degradation.
+    reference_section_type: ABSTRACT
+    supporting_text: ODCp inhibits AZ1 function as efficiently as AZI
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. Directly assays AZ1 function via ODC activity/degradation; also
+      the source of the OAZ1-AZIN2 physical-interaction annotation.
+- id: PMID:26443277
+  title: Structural basis of Ornithine Decarboxylase inactivation and accelerated
+    degradation by polyamine sensor Antizyme1.
+  findings:
+  - statement: &gt;-
+      The crystal structure of human ODC bound to N-terminally truncated AZ1 shows AZ1
+      occluding formation of the active ODC homodimer and disrupting the substrate-binding
+      site, explaining ODC inhibition.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      the binding of AZ1 to ODC occludes the binding of a second molecule of ODC to form
+      the active homodimer
+  - statement: &gt;-
+      AZ1 is essential for and accelerates ubiquitin-independent 26S-proteasomal
+      degradation of ODC by inducing a conformational change that exposes the ODC
+      C-terminus.
+    reference_section_type: DISCUSSION
+    supporting_text: AZ1 is not only essential for the degradation of ODC
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available (PMC4595762). Provides the structural and mechanistic basis for
+      ODC inhibitor activity and antizyme-driven ODC degradation.
+- id: PMID:28298427
+  title: Systematic protein-protein interaction mapping for clinically relevant human
+    GPCRs.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput GPCR interactome (MaMTH) screen; source of the IntAct bare
+      protein-binding annotation to AGTR1. OAZ1 function is not discussed.
+- id: PMID:30312582
+  title: &#39;Astroprincin (FAM171A1, C10orf38): A Regulator of Human Cell Shape and Invasive
+    Growth.&#39;
+  findings:
+  - statement: &gt;-
+      OAZ1 (ornithine decarboxylase antizyme-1) was recovered as a yeast-two-hybrid
+      partner of astroprincin (FAM171A1) and validated by co-immunoprecipitation.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      ornithine decarboxylase antizyme-1, NEEP21 (NSG1), and ADAM10 were validated by
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. Source of the OAZ1-FAM171A1 physical-interaction annotation; a
+      peripheral interaction, not a distinct antizyme function.
+- id: PMID:7813017
+  title: Autoregulatory frameshifting in decoding mammalian ornithine decarboxylase
+    antizyme.
+  findings:
+  - statement: &gt;-
+      Antizyme expression requires a programmed +1 ribosomal frameshift whose efficiency
+      is modulated by cellular polyamine concentration; antizyme binds and destabilizes
+      ODC, completing an autoregulatory circuit.
+    reference_section_type: ABSTRACT
+    supporting_text: Antizyme binds to, and destabilizes,
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. Foundational antizyme paper establishing polyamine-modulated
+      autoregulatory frameshifting and ODC destabilization.
+- id: Reactome:R-HSA-350562
+  title: Regulation of ornithine decarboxylase (ODC)
+  findings: []
+- id: Reactome:R-HSA-350567
+  title: Antizyme OAZ binds to Ornithine decarboxylase
+  findings: []
+- id: Reactome:R-HSA-353125
+  title: 26S proteosome degrades ODC holoenzyme complex
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
