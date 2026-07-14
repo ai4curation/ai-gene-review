@@ -185,7 +185,7 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
         set_error_type=True,
     ),
     # Generic protein binding plus FREQUENCY_BIAS is a REP call, not a CNN call.
-    ("DROME", "git", "GO:0005515"): ManualOverride(
+    ("DROME", "Git", "GO:0005515"): ManualOverride(
         assessment="REP",
         error_type="FREQUENCY_BIAS",
         set_error_type=True,

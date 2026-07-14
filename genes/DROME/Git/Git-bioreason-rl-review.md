@@ -1,6 +1,6 @@
-# BioReason-Pro RL Review: git (DROME)
+# BioReason-Pro RL Review: Git (DROME)
 
-Source: git-bioreason-rl-predictions.md
+Source: Git-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5
