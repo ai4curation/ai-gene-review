@@ -150,7 +150,7 @@ cofactor/active-site pocket is actually present. **Two distinct cases (don't con
 | HEN1 | ARATH | peptidyl-prolyl cis-trans isomerase | REMOVE | **SAH** (→ methyltransferase) | PMID:19812675 |
 | CASP3 | human | aspartic-type endopeptidase | REMOVE | (cysteine protease) | — |
 | mcrA | METAC | transferase activity (generic) | REMOVE | F430,SAM,Fe-S | PMID:39772843 |
-| HAP1 | human | deoxyribonuclease (pyrimidine dimer) | REMOVE | Mn (AP endonuclease) | PMID:25251148 |
+| APEX1 | human | deoxyribonuclease (pyrimidine dimer) | REMOVE | Mn (AP endonuclease) | PMID:25251148 |
 | BRCA2 | human | histone acetyltransferase | REMOVE | ATP | PMID:40441151 |
 | DOT1 | yeast | methyltransferase activity (generic) | over-annotated | SAM/SAH | PMID:33479126 |
 | SIRT2 | human | transferase activity (generic) | over-annotated | NAD,Zn | PMID:28286128 |
