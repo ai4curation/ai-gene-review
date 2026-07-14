@@ -24,7 +24,7 @@ ARGO139 uses agent-adjudicated local AIGR references, not independently expert-s
 | `supplement_sft_narrative_hf` | 45 | - | SFT narrative cross-check |
 | `supplement_sft_terms_hf_catalogue_all` | 154 | 1,358 | Full HF catalogue view |
 | `supplement_sft_terms_union_all` | 198 | 11,100 | ARGO139 plus 59 HF-only genes |
-| `supplement_gogpt_overlap_300` | 300 | 8,910 | Separate GO-GPT overlap review |
+| `supplement_gogpt_overlap_300` | 299 | 8,871 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
 
 The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue` SFT download contained 95/139 ARGO139 genes. The remaining 44 ARGO139 genes were not present in that download. We do **not** fill those 44 into the primary SFT analysis, because the BioReason-Pro SFT web exports expose a much larger ancestor-rich term panel and are not comparable to the HF catalogue source.
 
@@ -112,19 +112,19 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 129 exact rejected/over-annotated matches (`NPI`), and 3,894 unresolved terms (`UNC`). Accordingly, 138 documents are `DRAFT` and only the fully deterministic `BACSU/ftsZ` file is `COMPLETE`.
 
-A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,910 GO-GPT predictions across 300 genes. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
+A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
-**Table S8.** GO-GPT prediction overlap at three reference levels (300 genes).
+**Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
 
-| Reference level | Terms in reference | Predictions overlapping | % of 8,910 predictions |
+| Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
-| Raw GOA | 2,967 | 1,046 | 11.7 |
-| Retained/replacement AIGR annotations | 2,712 | 852 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,199 | 343 | 3.8 |
+| Raw GOA | 2,960 | 1,040 | 11.7 |
+| Retained/replacement AIGR annotations | 2,705 | 847 | 9.5 |
+| All GO-valued AIGR core-function slots | 1,196 | 341 | 3.8 |
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,910 predictions across 300 genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.8%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.8%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 
@@ -140,6 +140,6 @@ GO-GPT emitted 8,910 predictions across 300 genes (mean 29.7 per gene). Raw GOA 
 - `../cafa-style/argo139_cafa_style_summary.csv`: propagated and exact precision/recall/F1 summary.
 - `../cafa-style/argo139_cafa_style_per_gene_aspect.csv`: per-gene/per-aspect score components.
 - `../cafa-style/argo139_prediction_goa_overlap.csv`: per-prediction exact and propagated GOA-overlap diagnostics.
-- `../../../scripts/gogpt_compare_levels.py`: deterministic 300-gene GO-GPT overlap scorer across raw GOA, retained/replacement annotations, and all GO-valued AIGR core-function slots.
-- `../../../reports/gogpt-comparison-levels.json`: per-gene output and aggregates from the 300-gene GO-GPT overlap scorer.
+- `../../../scripts/gogpt_compare_levels.py`: deterministic canonical-gene GO-GPT overlap scorer across raw GOA, retained/replacement annotations, and all GO-valued AIGR core-function slots.
+- `../../../reports/gogpt-comparison-levels.json`: per-gene output and aggregates from the canonicalized GO-GPT overlap scorer.
 - `../notebooks/02_prediction_assessments.ipynb`: executable SFT term-assessment notebook.

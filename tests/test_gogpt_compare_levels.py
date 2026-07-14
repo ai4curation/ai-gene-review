@@ -1,4 +1,4 @@
-"""Regression tests for the three-level GO-GPT comparison."""
+"""Regression tests for the canonicalized three-level GO-GPT comparison."""
 
 from __future__ import annotations
 
@@ -44,11 +44,11 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     )
 
     assert committed == details
-    assert len(details) == 300
+    assert len(details) == 299
     assert stats == {
-        "goa": {"overlap": 1046, "total": 2967, "pred": 8910},
-        "post_review": {"overlap": 852, "total": 2712, "pred": 8910},
-        "core": {"overlap": 343, "total": 1199, "pred": 8910},
+        "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
+        "post_review": {"overlap": 847, "total": 2705, "pred": 8871},
+        "core": {"overlap": 341, "total": 1196, "pred": 8871},
     }
 
 
