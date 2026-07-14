@@ -86,8 +86,8 @@ downstream process (non-core).
 ## Regulation / induction
 
 SGPP2 is an NF-kB-dependent, inflammation-inducible gene (distinguishing it from
-the more constitutive SGPP1). Not cached in publications/, so no verbatim
-supported_text is used from it; title verified via PubMed.
+the more constitutive SGPP1). Cached in publications/ (abstract-only,
+PMID_17113265.md); title verified via PubMed.
 
 - "expression and activity of S1P phosphatase 2 (SPP2) was found to be highly
   upregulated by inflammatory stimuli in a variety of cells (e.g., neutrophils,
