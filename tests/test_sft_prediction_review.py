@@ -8,6 +8,7 @@ import yaml
 
 from scripts.auto_review_sft_predictions import (
     EXPECTED_CONFIDENCE,
+    MANUAL_OVERRIDES,
     LabelCheck,
     RepairStats,
     apply_label_note,
@@ -67,6 +68,11 @@ def test_deterministic_reclassification_uses_only_exact_contradictions():
         )
         is None
     )
+
+
+def test_drome_git_override_uses_canonical_symbol():
+    assert ("DROME", "Git", "GO:0005515") in MANUAL_OVERRIDES
+    assert ("DROME", "git", "GO:0005515") not in MANUAL_OVERRIDES
 
 
 def test_auto_assess_emits_only_schema_categories():
