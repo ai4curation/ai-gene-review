@@ -369,7 +369,7 @@ def assessment_summary(
 
 
 def gogpt_overlap_summary() -> dict[str, Any]:
-    """Summarize the reproducible 300-gene GO-GPT reference-layer comparison."""
+    """Summarize the reproducible canonical GO-GPT reference-layer comparison."""
     records = json.loads(
         (REPORTS_DIR / "gogpt-comparison-levels.json").read_text(encoding="utf-8")
     )

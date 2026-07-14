@@ -168,7 +168,9 @@ def build_comparison(repo_root: Path) -> tuple[list[dict[str, Any]], dict[str, d
     return details, stats
 
 
-def write_figure(path: Path, stats: dict[str, dict[str, int]]) -> None:
+def write_figure(
+    path: Path, stats: dict[str, dict[str, int]], *, n_genes: int
+) -> None:
     """Render the three-level overlap figure from the computed aggregates."""
     import matplotlib.pyplot as plt
 
@@ -190,7 +192,9 @@ def write_figure(path: Path, stats: dict[str, dict[str, int]]) -> None:
     fig, axis = plt.subplots(figsize=(14, 8))
     bars = axis.barh(labels, values, color=colors)
     axis.invert_yaxis()
-    axis.set_xlabel("Number of GO-GPT predictions (300 genes)", fontsize=17)
+    axis.set_xlabel(
+        f"Number of GO-GPT predictions ({n_genes} genes)", fontsize=17
+    )
     axis.set_title(
         "GO-GPT prediction overlap narrows at each adjudication level",
         fontsize=20,
@@ -244,7 +248,7 @@ def main() -> None:
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(details, indent=2) + "\n", encoding="utf-8")
-    write_figure(figure, stats)
+    write_figure(figure, stats, n_genes=len(details))
 
     print(f"Genes analyzed: {len(details)}")
     print(f"{'Level':<24} {'Overlap':>8} {'Reference':>10} {'Recall':>8} {'Precision':>10}")
