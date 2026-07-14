@@ -24,7 +24,8 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate gene review; standalone module retired/deferred.
-- [ ] Open one PR for this module/pathway.
+- [x] Fold this step into the combined bacterial lipoprotein maturation module.
+- [ ] Open one PR for the combined bacterial lipoprotein maturation module.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -60,6 +61,10 @@ Curator notes, 2026-07-11:
 - Boundary call: UPA00664 is the Lgt diacylglyceryl transfer step. Downstream
   LspA cleavage, Lnt N-acylation, and Lol sorting remain adjacent biology
   outside this single-gene UniPathway member set.
+- Follow-up, 2026-07-14: UPA00664 is now used as the Lgt substep provenance in
+  `modules/bacterial_lipoprotein_maturation.yaml` and
+  `projects/P_PUTIDA/batches/bacterial_lipoprotein_maturation.md`, rather than
+  as a standalone one-part module.
 - Curation caveat: OpenScientist flagged PP_4236/Q88F63 as a possible
   over-propagated Lgt-like annotation; it should not be counted as a second
   UPA00664 member without a separate gene review.

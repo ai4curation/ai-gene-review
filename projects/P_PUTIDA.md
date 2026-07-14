@@ -62,23 +62,24 @@ Lightweight data products:
 - `projects/P_PUTIDA/build_pathway_worklist.py` builds the PR-oriented pathway
   queue from the bucket table.
 - `projects/P_PUTIDA/data/psepk_pathway_worklist.tsv` tracks module mapping,
-  Falcon research status, gene review coverage, Asta coverage, and PR status
+  deep-research status, gene review coverage, provider coverage, and PR status
   per pathway/module bucket.
 - `projects/P_PUTIDA/extract_pathway_batch.py` extracts a per-pathway gene
   checklist from KEGG/UniPathway membership.
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md` is the first
   pilot pathway checklist.
 
-For gene-level first-pass research, use Asta as the default provider:
+For gene-level first-pass research, use OpenScientist as the default provider
+while Edison/Falcon is unavailable:
 
 ```bash
-just deep-research-asta PSEPK <gene>
+just deep-research-openscientist PSEPK <gene> --timeout 2400
 ```
 
-For module-level research, use Falcon by default:
+For module-level research, use OpenScientist by default:
 
 ```bash
-just module-deep-research-falcon <module>
+just module-deep-research-openscientist <module> --timeout 2400
 ```
 
 For PSEPK-specific pathway/module satisfiability research, use the taxon-aware
@@ -86,13 +87,14 @@ wrapper so the prompt includes the species constraint and local candidate genes
 from the pathway partition:
 
 ```bash
-just module-pathway-deep-research-falcon "<module or module title>" <pathway-or-bucket> PSEPK
+just module-pathway-deep-research openscientist "<module or module title>" <pathway-or-bucket> PSEPK --timeout 2400
 ```
 
 PaperBLAST can still be used opportunistically for protein-specific literature
 lookup, but it is not the main workflow because the current wrapper is
 Cloudflare-sensitive in this environment. Use `perplexity-lite` only as a
-secondary fallback when Asta is unavailable or provider comparison is useful.
+secondary fallback when OpenScientist is unavailable or provider comparison is
+useful.
 
 ## Completed Reviews
 
