@@ -730,8 +730,8 @@ class AnnotationExporter:
     def _gene_dir_from_source_path(source_path: Optional[Path]) -> Optional[Path]:
         """Derive the gene directory from a source YAML file path.
 
-        Expects paths like ``genes/SCHPO/Tim10/Tim10-ai-review.yaml``
-        and returns ``genes/SCHPO/Tim10``.
+        Expects paths like ``genes/SCHPO/tim10/tim10-ai-review.yaml``
+        and returns ``genes/SCHPO/tim10``.
 
         >>> AnnotationExporter._gene_dir_from_source_path(Path("genes/human/TP53/TP53-ai-review.yaml"))
         PosixPath('genes/human/TP53')
