@@ -17,15 +17,16 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [ ] Curate or update the species-neutral module.
-- [ ] Run module-level Falcon deep research.
-- [ ] Run module + pathway + PSEPK Falcon deep research.
+- [x] Curate or update the species-neutral module.
+- [x] Run module-level Falcon deep research.
+- [x] Run module + pathway + PSEPK Falcon deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run Asta deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [x] Open one PR for this module/pathway: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Open pilot PR for initial gene-level batch: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874) (merged).
+- [ ] Open follow-up PR for module grounding and batch boundary cleanup.
+- [ ] Shepherd follow-up PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
@@ -63,3 +64,21 @@ autolink_gene_symbols: false
 ## Notes
 
 Generated UTC: 2026-07-06T03:48:55.229299+00:00
+
+2026-07-15 follow-up: the species-neutral `tryptophan_biosynthesis` module is
+curated as the narrow chorismate-to-L-tryptophan pathway, not the full broad KEGG
+ppu00400 aromatic-amino-acid map. PSEPK satisfiability is covered by seven core
+genes: `trpE`, `pabA`/PP_0420 as the TrpG-like anthranilate-synthase
+amidotransferase component, `trpD`, `trpF`, `trpC`, `trpA`, and `trpB`.
+
+The broad ppu00400 spillover genes are intentionally outside this module:
+upstream shikimate and chorismate-supply enzymes, phenylalanine/tyrosine branch
+enzymes, quinate-catabolic genes, and general aminotransferases. These should be
+handled by separate upstream chorismate/aromatic-amino-acid modules rather than
+folded into the tryptophan core.
+
+Remaining curation question: PP_0420 is named `pabA` in local source data and
+has a pABA/folate-associated protein name, but the PSEPK pathway-level review
+and gene review support using it as the TrpG-like glutamine amidotransferase for
+anthranilate synthase in this module. A possible dual folate role remains
+unresolved and should not be inferred from this module alone.
