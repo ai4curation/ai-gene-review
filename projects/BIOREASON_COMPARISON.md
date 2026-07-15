@@ -26,6 +26,7 @@ Systematic evaluation of BioReason-Pro functional summaries and reasoning traces
 **Explore the evaluations interactively:**
 - [BioReason-Pro SFT evaluation](BIOREASON_COMPARISON/sft-eval.html) — ARGO95 primary cohort: 95 genes, 955 predictions; the browser also includes supplemental source cohorts
 - [GO-GPT leaf evaluation](BIOREASON_COMPARISON/gogpt-eval.html) — ARGO139 collected cohort; unresolved terms are explicitly pending
+- [GO-GPT leaf adjudication (OpenScientist)](BIOREASON_COMPARISON/gogpt-leaf-adjudication.md) — expert overlay: 7 specific-MF calls blind-tested; **0/7 novel-correct** — GO-GPT mirrors GOA
 - [DeepECTF evaluation (ESR-ECOLI-DET-Mini)](BIOREASON_COMPARISON/deepectf-eval.html) — 7 E. coli genes
 
 <details>
@@ -378,6 +379,20 @@ The web app shows "GO GPT" and "GO Leaf" panels regardless of SFT/RL selection. 
 The HF catalogue's structured GO section (at the end of the `generation` column) substantially overlaps the GO-GPT input, but provenance follows the official catalogue description: it is model-generated SFT output, not an imported GO-GPT panel. Approximately 97% of entries have this structured section; approximately 3% are truncated.
 
 **RL model GO predictions are not accessible anywhere.** The web app shows GO-GPT (input), the HF catalogue is SFT only, and the RL reasoning trace does not emit its own GO terms.
+
+**How accurate are GO-GPT's specific leaf calls?** Because every downstream GO term originates here, we
+blind-tested 7 of GO-GPT's most informative specific-MF predictions (one per gene, across
+kinase/protease/transferase/lipid-transfer/adaptor/chaperone functions in 5 organisms) with an
+independent OpenScientist agent — an **expert-adjudication overlay** on the deterministic ARGO139
+benchmark, not a rewrite of it. **0/7 were novel-correct.** GO-GPT *mirrors GOA*: its 4 correct calls
+all re-derive an annotation GOA already has (2 `CNN` exactly; 2 `LSP` as a coarse parent of an existing
+curated child), and its 3 wrong calls (`NPI`) either reproduce an *anomalous* existing GOA annotation
+(Akt1 inverted kinase-inhibitor; Prkaa2 a lone rat adaptor IDA that is really the β subunit's function)
+or, in the single case that ventures beyond GOA (gaa1), commit a **subunit-level misattribution**
+(assigning Gpi8's catalytic cysteine-protease chemistry to the non-catalytic gaa1). Where the benchmark's
+deterministic action-matching already resolves a term, the overlay agrees; for the terms it leaves
+`UNC`, the overlay supplies an expert verdict — details in the
+[GO-GPT leaf adjudication](BIOREASON_COMPARISON/gogpt-leaf-adjudication.md).
 
 | Source | GO-GPT (input) | BioReason SFT GO | BioReason RL GO |
 |--------|----------------|------------------|-----------------|
