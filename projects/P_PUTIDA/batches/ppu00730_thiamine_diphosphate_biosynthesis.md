@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [ ] Run OpenScientist deep research for selected genes selected for full review.
 - [ ] Curate selected gene reviews.
 - [x] Validate module and touched gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -71,5 +71,7 @@ OpenScientist findings:
 - Move TenA/PP_3185/PP_3186 and PP_1762 to a future thiamine-salvage module; do not model them as required de novo ThDP biosynthesis steps.
 
 This PR is a module-first pass with module and species/pathway OpenScientist grounding. It does not create PENDING gene-review stubs for all 13 KEGG members. Full gene reviews should prioritize `moeB`, `PP_5105`, `thiL`, `thiC`, `thiD`, `thiE`, `thiG`, and the `iscS`/`iscS-II` sulfur-donor question.
+
+PR: https://github.com/ai4curation/ai-gene-review/pull/2139
 
 Generated UTC: 2026-07-15T12:21:56.455521+00:00
