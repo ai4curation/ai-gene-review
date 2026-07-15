@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [ ] Run OpenScientist deep research for selected genes selected for full review.
 - [ ] Curate selected gene reviews.
 - [x] Validate module and touched gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [#2137](https://github.com/ai4curation/ai-gene-review/pull/2137).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
