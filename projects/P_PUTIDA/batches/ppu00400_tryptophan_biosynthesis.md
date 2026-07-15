@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open pilot PR for initial gene-level batch: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874) (merged).
-- [ ] Open follow-up PR for module grounding and batch boundary cleanup.
+- [x] Open follow-up PR for module grounding and batch boundary cleanup: [PR #2140](https://github.com/ai4curation/ai-gene-review/pull/2140).
 - [ ] Shepherd follow-up PR through review, CI, and merge readiness.
 
 ## Candidate Genes
