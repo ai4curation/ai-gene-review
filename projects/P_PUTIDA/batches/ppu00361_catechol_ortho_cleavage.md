@@ -15,6 +15,7 @@ autolink_gene_symbols: false
 - Existing review files: 4
 - Curated review files: 4
 - Deep-research files: 3 gene-level Falcon, 1 gene-level OpenScientist, 2 module-level OpenScientist
+- Pull request: [#2141](https://github.com/ai4curation/ai-gene-review/pull/2141)
 
 ## Required Workflow
 
@@ -25,7 +26,7 @@ autolink_gene_symbols: false
 - [x] Complete OpenScientist deep research for newly fetched CatA-II; retain existing Falcon reports for catA-I, catB, and catC.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
