@@ -290,7 +290,7 @@ Main curation conclusions from the current batch:
   oxidation. These reviews are useful first-pass curation, but not every member
   is a core ED/gluconeogenesis module component.
 
-## Current batch: ppu00622 / benzoate_upper_pathway
+## Previous batch: ppu00622 / benzoate_upper_pathway
 
 Batch files:
 
@@ -324,6 +324,44 @@ Main curation conclusions from this batch:
   benzoate degradation.
 - Catechol ortho-cleavage, catechol meta-cleavage, and CoA-dependent benzoate
   routes are separate modules, not parts of this upper-pathway module.
+
+## Current batch: ppu00361 / catechol_ortho_cleavage
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00361_catechol_ortho_cleavage.tsv`
+- `projects/P_PUTIDA/batches/ppu00361_catechol_ortho_cleavage.md`
+
+Status as of 2026-07-15:
+
+- 3 KEGG `ppu00361` membership candidates extracted for first-pass review:
+  `catA-II`, `catA-I`, and `catB`.
+- `catC`/PP_3714 added from neighboring `ppu00362` because it is the required
+  muconolactone delta-isomerase step that completes the catechol branch.
+- 4/4 selected review folders present and curated; `catA-II` was fetched and
+  curated in this batch.
+- OpenScientist generic module research complete:
+  `modules/catechol_ortho_cleavage-deep-research-openscientist.md`.
+- OpenScientist PSEPK module+pathway research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__catechol_ortho_cleavage__ppu00361-deep-research-openscientist.md`.
+- Module YAML seeded:
+  `modules/catechol_ortho_cleavage.yaml`.
+
+Main curation conclusions from this batch:
+
+- The reusable module is the three-step catechol ortho-cleavage branch:
+  CatA catechol 1,2-dioxygenase, CatB muconate cycloisomerase, and CatC
+  muconolactone delta-isomerase.
+- KT2440 satisfies the module once CatC/PP_3714 is included. The original
+  three-gene candidate list omitted CatC because KEGG partitions PP_3714 into
+  neighboring `ppu00362`; this is a map-membership artifact, not a biological
+  gap.
+- The KEGG `ppu00361` "chlorocyclohexane and chlorobenzene degradation" label
+  is over-broad for KT2440; the native module is non-chlorinated catechol
+  ortho-cleavage feeding the beta-ketoadipate pathway.
+- CatA-I/PP_3713 and CatA-II/PP_3166 should be represented as distinct
+  catechol 1,2-dioxygenase exemplars, with unresolved physiology around their
+  relative contributions under benzoate and catechol flux.
 
 ## First batch proposal
 
