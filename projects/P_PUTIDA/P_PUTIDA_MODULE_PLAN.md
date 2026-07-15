@@ -290,7 +290,7 @@ Main curation conclusions from the current batch:
   oxidation. These reviews are useful first-pass curation, but not every member
   is a core ED/gluconeogenesis module component.
 
-## Current batch: ppu00622 / benzoate_upper_pathway
+## Previous batch: ppu00622 / benzoate_upper_pathway
 
 Batch files:
 
@@ -324,6 +324,41 @@ Main curation conclusions from this batch:
   benzoate degradation.
 - Catechol ortho-cleavage, catechol meta-cleavage, and CoA-dependent benzoate
   routes are separate modules, not parts of this upper-pathway module.
+
+## Current batch: ppu00740 / riboflavin_biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00740_riboflavin_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00740_riboflavin_biosynthesis.md`
+
+Status as of 2026-07-15:
+
+- 15 KEGG `ppu00740` membership candidates extracted for first-pass review.
+- Module-first light pass started without creating PENDING review stubs for all
+  KEGG members.
+- Species-neutral module YAML seeded:
+  `modules/riboflavin_biosynthesis.yaml`.
+- OpenScientist generic module research complete:
+  `modules/riboflavin_biosynthesis-deep-research-openscientist.md`.
+- OpenScientist PSEPK module+pathway research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__riboflavin_biosynthesis__ppu00740-deep-research-openscientist.md`.
+
+Main first-pass boundary decisions:
+
+- Core riboflavin-ring synthesis is the RibA, RibD, RibB/RibBX, RibH, and
+  RibE/RibC reaction chain from GTP and ribulose 5-phosphate to riboflavin.
+- RibF is modeled as the connected bacterial FMN/FAD activation step because it
+  converts riboflavin to the active flavin cofactors and is often bifunctional.
+- `ssuE`, `msuE`, `ubiX`, `bluB`, `nudF`, and `had` are KEGG-map neighbors or
+  spillover candidates, not required steps in de novo riboflavin biosynthesis.
+- The PSEPK report supports full module satisfiability but flags `ribAB-I` and
+  `ribAB-II` as likely RibBX-like DHBP synthase proteins with degenerate
+  C-terminal GTP-CHII-fold domains; treat `ribA` as the only GTP cyclohydrolase
+  II exemplar until targeted gene reviews confirm otherwise.
+- Full gene reviews should prioritize `ribAB-I` and `ribAB-II`, then `ribC` and
+  `ribF`; lower-priority checks include `ribD`, `ribE`, and any non-core
+  candidates whose current pathway annotations appear misleading.
 
 ## First batch proposal
 
