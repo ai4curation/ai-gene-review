@@ -31,13 +31,15 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `rmlC` | PP_0265 | Q88R69 | kegg:ppu00523 | PRESENT | CURATED | RUNNING | dTDP-4-dehydrorhamnose 3,5-epimerase (EC 5.1.3.13) (Thymidine diphospho-4-keto-rhamnose 3,5-epimerase) |
+| [x] | `rmlC` | PP_0265 | Q88R69 | kegg:ppu00523 | PRESENT | CURATED | FAILED_TIMEOUT | dTDP-4-dehydrorhamnose 3,5-epimerase (EC 5.1.3.13) (Thymidine diphospho-4-keto-rhamnose 3,5-epimerase) |
 | [x] | `PP_0500` | PP_0500 | Q88QJ2 | kegg:ppu00523 | PRESENT | CURATED | PRESENT | dTDP-4-dehydrorhamnose reductase (EC 1.1.1.133) |
 | [x] | `rfbC` | PP_1782 | Q88LZ4 | kegg:ppu00523 | PRESENT | CURATED | PRESENT | dTDP-4-dehydrorhamnose 3,5-epimerase (EC 5.1.3.13) (Thymidine diphospho-4-keto-rhamnose 3,5-epimerase) |
-| [x] | `rfbA` | PP_1783 | Q88LZ3 | kegg:ppu00525 | PRESENT | CURATED | RUNNING | Glucose-1-phosphate thymidylyltransferase (EC 2.7.7.24) |
-| [x] | `rfbD` | PP_1784 | Q88LZ2 | kegg:ppu00523 | PRESENT | CURATED | RUNNING | dTDP-4-dehydrorhamnose reductase (EC 1.1.1.133) |
+| [x] | `rfbA` | PP_1783 | Q88LZ3 | kegg:ppu00525 | PRESENT | CURATED | FAILED_TIMEOUT | Glucose-1-phosphate thymidylyltransferase (EC 2.7.7.24) |
+| [x] | `rfbD` | PP_1784 | Q88LZ2 | kegg:ppu00523 | PRESENT | CURATED | FAILED_TIMEOUT | dTDP-4-dehydrorhamnose reductase (EC 1.1.1.133) |
 | [x] | `rffG` | PP_1785 | Q88LZ1 | kegg:ppu00525 | PRESENT | CURATED | PRESENT | dTDP-glucose 4,6-dehydratase (EC 4.2.1.46) |
 
 ## Notes
 
 Generated UTC: 2026-07-16T17:37:22.097822+00:00
+
+2026-07-16: OpenScientist timed out after 7200s for `rfbA`, `rmlC`, and `rfbD`; no report files were produced for those runs.

@@ -31,9 +31,11 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `rfbA` | PP_1783 | Q88LZ3 | kegg:ppu00525 | PRESENT | CURATED | RUNNING | Glucose-1-phosphate thymidylyltransferase (EC 2.7.7.24) |
+| [x] | `rfbA` | PP_1783 | Q88LZ3 | kegg:ppu00525 | PRESENT | CURATED | FAILED_TIMEOUT | Glucose-1-phosphate thymidylyltransferase (EC 2.7.7.24) |
 | [x] | `rffG` | PP_1785 | Q88LZ1 | kegg:ppu00525 | PRESENT | CURATED | PRESENT | dTDP-glucose 4,6-dehydratase (EC 4.2.1.46) |
 
 ## Notes
 
 Generated UTC: 2026-07-16T17:37:25.843932+00:00
+
+2026-07-16: OpenScientist timed out after 7200s for `rfbA`; no report file was produced for that run.
