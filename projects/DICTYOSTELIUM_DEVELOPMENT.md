@@ -252,6 +252,33 @@ Behavior of the multicellular slug and tip organizer.
 | 13 | Transcriptional GRN | gbfA, gtaC, statA, statC, srfA, dimA, dimB, cudA |
 | 14 | Morphogenesis / tip organizer | tipA |
 
+### Registered ModuleReview documents
+
+Eight of the developmental modules above are now authored as formal
+[`ModuleReview`](../modules/README.md) KB documents in `modules/` (each validates
+`-C ModuleReview`, grounds its leaves in the completed DICDI reviews via `file:`
+evidence + PANTHER-family selectors with DICDI representatives, and is named to
+signal *Dictyostelium* scope so it does not collide with generic reusable
+modules). The QC panel on each rendered module page auto-joins these gene reviews.
+
+| Module document | Realizes module(s) | Shape |
+|-----------------|--------------------|-------|
+| `dicty_starvation_initiation` | 1 | CMF gate + YakA ⊣ PufA ⊣ pkaC |
+| `dicty_extracellular_camp_relay` | 2 | aggregation oscillator (relay + adaptation) |
+| `dicty_allorecognition_adhesion` | 4 | staged ddCAD-1 → csA → TgrB1/TgrC1 |
+| `dicty_dif1_biosynthesis` | 5 | StlB → ChlA → DmtA (multistep) |
+| `dicty_dif1_response_prestalk_patterning` | 6 | DIF-1 → DimA/DimB → ecmA/ecmB |
+| `dicty_sdf2_encapsulation_relay` | 8/9 | AcbA → TagC → SDF-2 → DhkA ⊣ RegA ⊣ PKA |
+| `dicty_counting_factor_size_control` | 11 | SmlA ⊣ counting factor (Countin) |
+| `dicty_cgmp_chemotaxis_arm` | 12 | GCA/sGC → cGMP → GbpC → myosin II |
+
+**Deliberately NOT registered as dd modules** (they would collide with generic,
+taxonomically-broad reusable modules): autophagy (Module 10 — kept as the atg1
+representative), general chemotaxis/actin motility (Module 3), and the general
+transcription GRN (Module 13; its dd TFs are grounded inside the patterning,
+relay and starvation modules instead). Stalk death (7) and tip morphogenesis (14)
+are left unregistered pending more experimental grounding.
+
 ## Protein families & paralog coverage
 
 Most reviewed genes are **single members of larger *Dictyostelium* paralog
