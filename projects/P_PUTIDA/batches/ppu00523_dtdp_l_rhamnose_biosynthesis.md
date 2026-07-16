@@ -13,12 +13,12 @@ autolink_gene_symbols: false
 - Primary bucket genes: 4
 - Existing review files: 0
 - Curated review files: 0
-- Existing OpenScientist research files: 2
+- Existing OpenScientist research files: 3
 
 ## Required Workflow
 
 - [x] Curate or update the species-neutral module.
-- [ ] Run module-level OpenScientist deep research.
+- [x] Run module-level OpenScientist deep research.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [ ] Run OpenScientist deep research for selected genes.
