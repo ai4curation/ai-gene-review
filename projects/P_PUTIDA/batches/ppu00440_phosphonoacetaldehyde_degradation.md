@@ -31,9 +31,11 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `phnX` | PP_2208 | Q88KT1 | kegg:ppu00440 | PRESENT | CURATED | RUNNING | Phosphonoacetaldehyde hydrolase (Phosphonatase) (EC 3.11.1.1) (Phosphonoacetaldehyde phosphonohydrolase) |
-| [x] | `phnW` | PP_2209 | Q88KT0 | kegg:ppu00440 | PRESENT | CURATED | RUNNING | 2-aminoethylphosphonate--pyruvate transaminase (EC 2.6.1.37) (2-aminoethylphosphonate aminotransferase) (AEP transaminas |
+| [x] | `phnX` | PP_2208 | Q88KT1 | kegg:ppu00440 | PRESENT | CURATED | FAILED_TIMEOUT | Phosphonoacetaldehyde hydrolase (Phosphonatase) (EC 3.11.1.1) (Phosphonoacetaldehyde phosphonohydrolase) |
+| [x] | `phnW` | PP_2209 | Q88KT0 | kegg:ppu00440 | PRESENT | CURATED | FAILED_TIMEOUT | 2-aminoethylphosphonate--pyruvate transaminase (EC 2.6.1.37) (2-aminoethylphosphonate aminotransferase) (AEP transaminas |
 
 ## Notes
 
 Generated UTC: 2026-07-16T17:37:22.048250+00:00
+
+2026-07-16: OpenScientist timed out after 7200s for `phnX` and `phnW`; no gene-level report files were produced for those runs.
