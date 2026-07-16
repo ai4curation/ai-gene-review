@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_1907 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_1907</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LM3" target="_blank" class="term-link">
+                        Q88LM3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_1907";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LM3" data-a="DESCRIPTION: PP_1907 encodes a small soluble HAD-superfamily ph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_1907 encodes a small soluble HAD-superfamily phosphatase in Pseudomonas putida KT2440. Automated orthology, PANTHER, KEGG, and OpenScientist evidence support phosphoglycolate phosphatase activity, but the assignment is inferential and PP_0416 is the stronger candidate for the principal KT2440 2-phosphoglycolate phosphatase. PP_1907 is therefore curated as a predicted cytosolic phosphoglycolate/small-phosphometabolite cleanup enzyme that may act redundantly with other HAD-family paralogs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM3" data-a="GO:0003824" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic catalytic activity annotation is compatible with PP_1907 but less informative than the specific predicted phosphoglycolate phosphatase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt identifies PP_1907 as a HAD-like hydrolase, and the OpenScientist report supports a Mg(2+)-dependent phosphatase mechanism with a more specific phosphoglycolate phosphatase prediction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Hydrolase, haloacid dehalogenase-like family</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_1907 encodes a **small, soluble, cytoplasmic enzyme of the haloacid dehalogenase (HAD) hydrolase superfamily</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM3" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A cytosolic location is plausible for this soluble HAD-family phosphatase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is small and soluble, and OpenScientist found no signal peptide or transmembrane evidence; localization is supporting context rather than the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88LM3	PP_1907	located_in	GO:0005829	cytosol</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_1907 is predicted **cytoplasmic** (**GO:0005829 cytosol**).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM3" data-a="GO:0006281" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The DNA-repair annotation is plausible as upstream source context for 2-phosphoglycolate cleanup, but it should not be treated as PP_1907&#39;s direct core role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The inferred role is hydrolysis of 2-phosphoglycolate, a metabolite that can arise during repair of oxidatively damaged 3&#39;-phosphoglycolate DNA ends. PP_1907 is not itself a DNA repair enzyme, so the process annotation is retained only as non-core context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88LM3	PP_1907	involved_in	GO:0006281	DNA repair</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">the enzyme is not a DNA-repair protein itself but processes a **by-product** of DNA-end repair</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008967" target="_blank" class="term-link">
+                                    GO:0008967
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycolate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM3" data-a="GO:0008967" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_1907 is a predicted phosphoglycolate phosphatase, although direct substrate assays are lacking and PP_0416 is the stronger principal paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TreeGrafter, PANTHER, KEGG, and OpenScientist all converge on 2-phosphoglycolate phosphatase activity; the caveat is paralog ambiguity rather than evidence against the annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88LM3	PP_1907	enables	GO:0008967	phosphoglycolate phosphatase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Multiple independent resources converge on **2-phosphoglycolate phosphatase (EC 3.1.3.18)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046487" target="_blank" class="term-link">
+                                    GO:0046487
+                                </a>
+                            </span>
+                            <span class="term-label">glyoxylate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM3" data-a="GO:0046487" data-r="file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_1907 is predicted to feed glycolate/glyoxylate metabolism by converting 2-phosphoglycolate to glycolate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The pathway placement is inferred from the predicted phosphoglycolate phosphatase reaction, KEGG ppu00630 context, and the local downstream glycolate/glyoxylate route; it should be read as predicted pathway participation rather than direct experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">placing it in **glyoxylate and dicarboxylate metabolism** (KEGG pathway ppu00630)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted HAD-family phosphoglycolate phosphatase or closely related small-phosphometabolite phosphatase activity.</h3>
+                <span class="vote-buttons" data-g="Q88LM3" data-a="FUNCTION: Predicted HAD-family phosphoglycolate phosphatase ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008967" target="_blank" class="term-link">
+                            phosphoglycolate phosphatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046487" target="_blank" class="term-link">
+                                glyoxylate metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Its default/primary predicted activity is 2-phosphoglycolate phosphatase (EC 3.1.3.18)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_1907/PP_1907-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88LM3	PP_1907	enables	GO:0008967	phosphoglycolate phosphatase activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter supplies cytosol, DNA repair, and phosphoglycolate phosphatase annotations for PP_1907.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_1907/PP_1907-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_1907</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records PP_1907 as a HAD-like hydrolase with HAD/PGP-like domain support.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_1907/PP_1907-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GOA annotations for PP_1907</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA includes catalytic activity, cytosol, DNA repair, and phosphoglycolate phosphatase annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for PP_1907</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supported a predicted phosphoglycolate phosphatase role while noting lack of direct PP_1907 biochemical assays and paralog ambiguity with PP_0416 and PP_0094.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_1907, PP_0416, and PP_0094 and compare kinetic activity against 2-phosphoglycolate and related small phosphometabolites to resolve paralog specificity and redundancy.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LM3" data-a="EXPERIMENT: Purify PP_1907, PP_0416, and PP_0094 and compare k..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_1907-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LM3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_1907 (UniProt Q88LM3) — *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T17:02:42.905960</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_1907-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_1907-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_1907-uniprot-q88lm3-pseudomonas-putida-kt2440">Functional Annotation of PP_1907 (UniProt Q88LM3) — <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> PP_1907 (OrderedLocusName) · <strong>UniProt:</strong> Q88LM3 · <strong>RefSeq:</strong> WP_010952931.1 · <strong>Protein length:</strong> 224 aa<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / <strong>KT2440</strong>) · <strong>Genome position:</strong> NC_002947.4, 2,152,277–2,152,951 (+ strand)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>PP_1907 encodes a <strong>small, soluble, cytoplasmic enzyme of the haloacid dehalogenase (HAD) hydrolase superfamily, subfamily IA</strong> — a <strong>Mg²⁺-dependent phosphomonoesterase (phosphatase)</strong>. Its aspartate-nucleophile catalytic machinery is fully intact, so it is confidently a functional phosphatase that hydrolyses a phosphomonoester substrate via a phospho-aspartyl enzyme intermediate. Every automated functional-classification resource (KEGG ortholog <strong>K01091</strong>, PANTHER PTHR43434, UniProt/TreeGrafter) assigns it the specific activity <strong>2-phosphoglycolate phosphatase (Gph; EC 3.1.3.18)</strong>, catalysing:</p>
+<blockquote>
+<p><strong>2-phosphoglycolate + H₂O → glycolate + inorganic phosphate (Pᵢ)</strong></p>
+</blockquote>
+<p>placing it in <strong>glyoxylate and dicarboxylate metabolism</strong> (KEGG pathway ppu00630). By analogy to the biochemically characterised <em>Escherichia coli</em> Gph, the physiological role is a <strong>cytoplasmic housekeeping "salvage" reaction</strong> that disposes of 2-phosphoglycolate — most notably the 2-phosphoglycolate liberated during repair of oxidatively damaged 3′-phosphoglycolate DNA ends — recovering the two-carbon unit as glycolate for central metabolism.</p>
+<p><strong>Important caveat:</strong> This assignment is <strong>inferential (bioinformatic / structural / evolutionary), not experimental.</strong> PP_1907 itself has never been biochemically characterised, and it is <strong>one of three paralogous HAD-IA phosphatases</strong> in <em>P. putida</em> that carry the K01091 annotation. A closer paralog (<strong>PP_0416</strong>, 43% identical to <em>E. coli</em> Gph) is the more likely <em>principal</em> 2-phosphoglycolate phosphatase, so PP_1907's precise physiological substrate should be regarded as a well-motivated prediction that may include 2-phosphoglycolate and/or related small phosphometabolites, potentially with partial functional redundancy.</p>
+<hr />
+<h2 id="2-identity-verification">2. Identity Verification</h2>
+<p>The requested identifiers are internally consistent and unambiguous:<br />
+- Gene symbol <strong>PP_1907</strong> ↔ protein description "Hydrolase, haloacid dehalogenase-like family" ↔ organism <em>P. putida</em> KT2440 — all match across UniProt (Q88LM3), NCBI (AAN67525.1 / WP_010952931.1), KEGG (ppu:PP_1907) and STRING (160488.PP_1907).<br />
+- The listed InterPro domains (HAD-SF_hydro_IA IPR006439; HAD_2 IPR041492; HAD-like_sf IPR036412; HAD_sf IPR023214) exactly match what is found for this accession.<br />
+- No conflicting literature for a different gene of the same symbol exists (PP_ locus tags are unique to the <em>P. putida</em> KT2440 genome).</p>
+<p>There is <strong>no ambiguity of identity</strong>; the only uncertainty concerns the <em>precise substrate</em>, discussed below.</p>
+<hr />
+<h2 id="3-molecular-function-what-reaction-is-catalysed-and-substrate-specificity">3. Molecular Function — What Reaction Is Catalysed, and Substrate Specificity</h2>
+<h3 id="31-enzyme-superfamily-and-catalytic-mechanism">3.1 Enzyme superfamily and catalytic mechanism</h3>
+<p>PP_1907 belongs to the <strong>HAD superfamily</strong> (eggNOG <strong>COG0546</strong>; Pfam <strong>PF13419</strong> HAD_2; SUPFAM SSF56784; NCBIfam TIGR01509/TIGR01549 "HAD-SF-IA"). HAD-superfamily enzymes are overwhelmingly <strong>phosphotransferases/phosphohydrolases</strong> that use an <strong>aspartate nucleophile</strong> to form a covalent phospho-aspartyl intermediate, with an essential <strong>Mg²⁺</strong> cofactor. All four diagnostic HAD sequence motifs are present in PP_1907:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Sequence in PP_1907</th>
+<th>Residue(s)</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I (DxDxT/V)</td>
+<td>¹⁰F-<strong>D11</strong>-W-<strong>D13</strong>-G-<strong>T15</strong>-L</td>
+<td>Asp11 (nucleophile), Asp13 (general acid/base), Thr15</td>
+<td>Nucleophilic attack; proton shuttle; phosphate binding</td>
+</tr>
+<tr>
+<td>II (S/T)</td>
+<td>cap/core loop</td>
+<td>conserved Ser/Thr</td>
+<td>H-bonds transferring phosphoryl group</td>
+</tr>
+<tr>
+<td>III (K)</td>
+<td>¹¹⁰LAVA-T-G-<strong>K113</strong></td>
+<td>Lys113</td>
+<td>Neutralises phosphate negative charge</td>
+</tr>
+<tr>
+<td>IV (GDxxxD / DD)</td>
+<td>¹⁶⁷<strong>G-D168</strong>-S-A-F-<strong>D172</strong></td>
+<td>Asp168, Asp172</td>
+<td>Coordinate catalytic Mg²⁺</td>
+</tr>
+</tbody>
+</table>
+<p>UniProt lists <strong>Mg²⁺ (ChEBI:18420)</strong> as the cofactor (ARBA rule), consistent with this mechanism. This constitutes strong structural/bioinformatic evidence that PP_1907 is a <em>bona fide</em> Mg²⁺-dependent phosphatase, independent of any substrate assignment.</p>
+<p><strong>Residue-level conservation with a characterized enzyme.</strong> A pairwise global alignment of PP_1907 against the biochemically characterised <em>E. coli</em> Gph (P32662) shows that <strong>all six catalytic residues align one-to-one to identical residues</strong> (Asp11, Asp13, Thr15, Lys113, Asp168, Asp172 — every position invariant), even though overall identity is only ~29%. Because 2-phosphoglycolate phosphatases of diverse origins share highly conserved catalytic features implying a common mechanism (Pellicer et al., 2003, PMID 13129953), this invariance is strong evolutionary evidence that PP_1907 is a <strong>catalytically competent phosphatase using the same aspartyl-phosphotransferase mechanism</strong>.</p>
+<h3 id="32-structural-architecture-and-substrate-size-class">3.2 Structural architecture and substrate-size class</h3>
+<p>The protein has the canonical <strong>two-domain HAD-IA fold</strong>: a Rossmann-like α/β core (<strong>Gene3D 3.40.50.1000</strong>) plus a small α-helical <strong>"C1 cap"</strong> inserted immediately after Motif I (<strong>Gene3D 1.10.150.240</strong> "putative phosphatase domain 2"; <strong>IPR023198</strong> "phosphoglycolate-phosphatase-like domain 2"; cap region ≈ residues 17–95). In the HAD superfamily the <strong>cap domain is the principal determinant of substrate specificity and catalytic efficiency</strong> (Daughtry et al., 2013, PMID 23848398; Biswas et al., 2009, PMID 19726684). A <strong>small C1 cap of this type is characteristic of subfamily-IA phosphatases that act on small, mono-anionic phosphometabolites</strong> — precisely the class that includes 2-phosphoglycolate phosphatase.</p>
+<h3 id="33-specific-substrate-assignment-and-its-confidence">3.3 Specific substrate assignment and its confidence</h3>
+<p>Multiple independent resources converge on <strong>2-phosphoglycolate phosphatase (EC 3.1.3.18)</strong>:<br />
+- <strong>KEGG</strong>: ppu:PP_1907 → <strong>K01091</strong> (phosphoglycolate phosphatase), pathway ppu00630 (glyoxylate/dicarboxylate metabolism).<br />
+- <strong>PANTHER</strong>: family <strong>PTHR43434 = PHOSPHOGLYCOLATE PHOSPHATASE</strong>.<br />
+- <strong>UniProt/TreeGrafter GO</strong>: molecular function <strong>GO:0008967 phosphoglycolate phosphatase activity</strong>.<br />
+- <strong>Sequence homology</strong>: among characterised HAD-IA enzymes, PP_1907 is <strong>closest to the experimentally validated <em>E. coli</em> Gph</strong> (2-phosphoglycolate phosphatase, P32662; 29.0% global identity) — above <em>E. coli</em> YniC (23.6%), YidA sugar-phosphatase (20.4%), NagD (17.6%), and human PGP (24.6%). The <em>E. coli</em> Gph enzyme is <strong>highly specific for 2-phosphoglycolate with high catalytic efficiency</strong> (Pellicer et al., 2003, PMID 13129953).</p>
+<p><strong>Tempering evidence (see §5):</strong> <em>P. putida</em> KT2440 contains <strong>three</strong> K01091-annotated paralogs (PP_0094, PP_0416, PP_1907). <strong>PP_0416</strong> is 43.1% identical to <em>E. coli</em> Gph and is explicitly named "Phosphoglycolate phosphatase", making it the strongest candidate for the organism's principal 2-phosphoglycolate phosphatase; PP_0094 (25% identity) is annotated "5′-nucleotidase". The three paralogs share only 25–28% pairwise identity (ancient divergence). Because HAD-IA phosphatases frequently display <strong>broad, overlapping substrate spectra</strong> (Kuznetsova et al., 2006, PMID 16990279), PP_1907 may act on 2-phosphoglycolate and/or additional small phosphorylated metabolites; the single-substrate label is a prediction, not a measurement.</p>
+<hr />
+<h2 id="4-localization-and-biological-process-pathway">4. Localization and Biological Process / Pathway</h2>
+<h3 id="41-subcellular-localization">4.1 Subcellular localization</h3>
+<p>PP_1907 is predicted <strong>cytoplasmic</strong> (<strong>GO:0005829 cytosol</strong>). It is a 224-residue soluble protein with <strong>no signal peptide and no transmembrane segments</strong>, consistent with the soluble, cytoplasmic nature of HAD-IA small-molecule phosphatases. Its function is therefore carried out <strong>intracellularly, in the cytosol</strong>.</p>
+<h3 id="42-pathway-context-and-physiological-role">4.2 Pathway context and physiological role</h3>
+<p>The reaction sits at the entry of <strong>glyoxylate/dicarboxylate metabolism</strong>. 2-Phosphoglycolate is a two-carbon phospho-metabolite; its dephosphorylation yields <strong>glycolate</strong>, which <em>P. putida</em> KT2440 can further oxidise and assimilate — the organism encodes a complete downstream route: <strong>glycolate oxidase GlcDEF</strong> (PP_3744/PP_3746/PP_3747; glycolate → glyoxylate), <strong>glyoxylate carboligase Gcl</strong> (PP_4297), and <strong>malate synthase</strong> (PP_0356), feeding carbon into central metabolism.</p>
+<p>The <strong>biological rationale</strong> comes from the characterised <em>E. coli</em> ortholog: Gph is a <strong>constitutively expressed housekeeping enzyme</strong> that performs the <strong>dissimilation/salvage of intracellular 2-phosphoglycolate formed during DNA repair of 3′-phosphoglycolate ends</strong> — DNA lesions generated by oxidative and radiomimetic damage (e.g., bleomycin) — converting it to glycolate that re-enters general metabolism (Pellicer et al., 2003, PMID 13129953). This directly explains the <strong>GO:0006281 (DNA repair)</strong> annotation attached to PP_1907: the enzyme is not a DNA-repair protein itself but processes a <strong>by-product</strong> of DNA-end repair. (In photosynthetic/autotrophic organisms 2-phosphoglycolate arises mainly from RuBisCO oxygenase activity; <em>P. putida</em> is a heterotroph, so the DNA-repair/oxidative source is the physiologically relevant one.)</p>
+<h3 id="43-genomic-context">4.3 Genomic context</h3>
+<p>PP_1907's neighbours (PP_1904 <em>murB</em>, PP_1905 <em>rne</em>/RNase E, PP_1906 <em>rluC</em>, PP_1908 protease IV, PP_1909 pyrophosphatase) are <strong>unrelated housekeeping genes</strong>; the gene is <strong>not part of a substrate-specific operon</strong>, consistent with the constitutive housekeeping expression pattern reported for <em>E. coli gph</em>. STRING functional-partner networks link PP_1907 to the glycolate-oxidation machinery (GlcDEF) and glyoxylate reductases (GhrB, HprA), but these associations are <strong>near-identical for all three paralogs</strong> and therefore reflect <strong>family-level co-annotation rather than PP_1907-specific evidence</strong>.</p>
+<hr />
+<h2 id="5-hypotheses-supported-and-refuted-tempered">5. Hypotheses: Supported and Refuted / Tempered</h2>
+<p><strong>Supported</strong><br />
+1. <em>PP_1907 is a Mg²⁺-dependent HAD-superfamily subfamily-IA phosphomonoesterase.</em> — Strongly supported by domain signatures, intact catalytic motifs (Asp11/Asp13/Thr15/Lys113/Asp168/Asp172), Mg²⁺ cofactor, and the two-domain C1-capped fold.<br />
+2. <em>Its default/primary predicted activity is 2-phosphoglycolate phosphatase (EC 3.1.3.18), acting in cytosolic glyoxylate/dicarboxylate metabolism as a 2-phosphoglycolate salvage enzyme.</em> — Supported by convergent KEGG/PANTHER/GO annotation, top homology to characterised <em>E. coli</em> Gph, and the intact downstream glycolate-utilisation pathway.<br />
+3. <em>The enzyme functions intracellularly (cytosol).</em> — Supported by GO and absence of signal/TM features.</p>
+<p><strong>Tempered / partially refuted</strong><br />
+4. <em>PP_1907 is THE 2-phosphoglycolate phosphatase of P. putida.</em> — <strong>Tempered.</strong> PP_1907 is one of three paralogs; <strong>PP_0416</strong> (43% identity to Gph; explicitly named phosphoglycolate phosphatase) is a better candidate for the principal enzyme. PP_1907's exact substrate is unconfirmed and may be broader.<br />
+5. <em>STRING network proves PP_1907 acts in glycolate metabolism.</em> — <strong>Refuted as specific evidence.</strong> The network is a paralog/co-annotation artifact shared identically by all three K01091 genes.</p>
+<hr />
+<h2 id="6-evidence-quality-and-limitations">6. Evidence Quality and Limitations</h2>
+<ul>
+<li><strong>No experimental (ECO:0000269) data exist for PP_1907</strong>; all annotations are imported (ECO:0000313) or automatic (ECO:0000256/ARBA). The functional picture is built entirely from <strong>structure, evolution and bioinformatics</strong>.</li>
+<li>The strongest <em>experimental anchor</em> is the characterisation of the orthologous <strong>E. coli Gph</strong> (Pellicer et al., 2003, PMID 13129953), transferred by homology.</li>
+<li><strong>Paralog ambiguity</strong> (three K01091 genes) means enzyme-specific substrate and physiological roles cannot be assigned with certainty from sequence alone.</li>
+<li>The AlphaFold model for Q88LM3 could not be retrieved during this study, so active-site geometry was inferred from InterPro/Gene3D domain assignments and motif analysis rather than direct 3D inspection.</li>
+</ul>
+<h3 id="future-directions">Future directions</h3>
+<ul>
+<li><strong>Direct biochemistry</strong>: recombinant expression of PP_1907 (and PP_0416, PP_0094) and phosphatase substrate profiling (e.g., against 2-phosphoglycolate, sugar phosphates, nucleotide monophosphates, phosphoglycerate) with kinetic constants — the definitive test of substrate specificity, following the HAD substrate-screening approach of Kuznetsova et al. (2006, PMID 16990279).</li>
+<li><strong>Genetics</strong>: single and combinatorial deletions of the three paralogs, testing bleomycin/oxidative-stress sensitivity and growth on glycolate, to resolve which paralog performs the physiological 2-phosphoglycolate salvage and whether they are redundant.</li>
+<li><strong>Structure</strong>: experimental structure or validated AlphaFold model with docked 2-phosphoglycolate to examine cap-domain substrate-recognition residues.</li>
+</ul>
+<hr />
+<h2 id="7-key-references">7. Key References</h2>
+<ul>
+<li>Pellicer MT, Nuñez F, Aguilar J, Badia J, Baldoma L. <em>Role of 2-phosphoglycolate phosphatase of Escherichia coli in metabolism of the 2-phosphoglycolate formed in DNA repair.</em> J Bacteriol. 2003. <strong>PMID 13129953</strong>.</li>
+<li>Kuznetsova E, et al. <em>Genome-wide analysis of substrate specificities of the Escherichia coli haloacid dehalogenase-like phosphatase family.</em> J Biol Chem. 2006. <strong>PMID 16990279</strong>.</li>
+<li>Daughtry KD, et al. <em>Structural basis for the divergence of substrate specificity and biological function within HAD phosphatases…</em> Biochemistry. 2013. <strong>PMID 23848398</strong>.</li>
+<li>Biswas T, et al. <em>The tail of KdsC: conformational changes control the activity of a HAD superfamily phosphatase.</em> 2009. <strong>PMID 19726684</strong>.</li>
+<li>Dos Santos VAPM, Heim S, Moore ERB, Strätz M, Timmis KN. <em>Insights into the genomic basis of niche specificity of Pseudomonas putida KT2440.</em> Environ Microbiol. 2004. <strong>PMID 15560824</strong>.</li>
+</ul>
+<p><em>Database resources consulted:</em> UniProt (Q88LM3), NCBI (AAN67525.1/WP_010952931.1), KEGG (ppu:PP_1907; K01091), InterPro/Pfam/Gene3D/PANTHER/SUPFAM, eggNOG (COG0546), STRING (160488.PP_1907), BioCyc.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_1907-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_1907-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LM3
+gene_symbol: PP_1907
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_1907 encodes a small soluble HAD-superfamily phosphatase in Pseudomonas
+  putida KT2440. Automated orthology, PANTHER, KEGG, and OpenScientist evidence
+  support phosphoglycolate phosphatase activity, but the assignment is
+  inferential and PP_0416 is the stronger candidate for the principal KT2440
+  2-phosphoglycolate phosphatase. PP_1907 is therefore curated as a predicted
+  cytosolic phosphoglycolate/small-phosphometabolite cleanup enzyme that may act
+  redundantly with other HAD-family paralogs.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: The generic catalytic activity annotation is compatible with PP_1907 but less informative than the specific predicted phosphoglycolate phosphatase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: UniProt identifies PP_1907 as a HAD-like hydrolase, and the OpenScientist report supports a Mg(2+)-dependent phosphatase mechanism with a more specific phosphoglycolate phosphatase prediction.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1907/PP_1907-uniprot.txt
+      supporting_text: &#34;DE   SubName: Full=Hydrolase, haloacid dehalogenase-like family&#34;
+    - reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+      supporting_text: &#34;PP_1907 encodes a **small, soluble, cytoplasmic enzyme of the haloacid dehalogenase (HAD) hydrolase superfamily&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: A cytosolic location is plausible for this soluble HAD-family phosphatase.
+    action: KEEP_AS_NON_CORE
+    reason: The protein is small and soluble, and OpenScientist found no signal peptide or transmembrane evidence; localization is supporting context rather than the core molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1907/PP_1907-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88LM3\tPP_1907\tlocated_in\tGO:0005829\tcytosol&#34;
+    - reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+      supporting_text: &#34;PP_1907 is predicted **cytoplasmic** (**GO:0005829 cytosol**).&#34;
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: The DNA-repair annotation is plausible as upstream source context for 2-phosphoglycolate cleanup, but it should not be treated as PP_1907&#39;s direct core role.
+    action: KEEP_AS_NON_CORE
+    reason: The inferred role is hydrolysis of 2-phosphoglycolate, a metabolite that can arise during repair of oxidatively damaged 3&#39;-phosphoglycolate DNA ends. PP_1907 is not itself a DNA repair enzyme, so the process annotation is retained only as non-core context.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1907/PP_1907-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88LM3\tPP_1907\tinvolved_in\tGO:0006281\tDNA repair&#34;
+    - reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+      supporting_text: &#34;the enzyme is not a DNA-repair protein itself but processes a **by-product** of DNA-end repair&#34;
+- term:
+    id: GO:0008967
+    label: phosphoglycolate phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: PP_1907 is a predicted phosphoglycolate phosphatase, although direct substrate assays are lacking and PP_0416 is the stronger principal paralog.
+    action: ACCEPT
+    reason: TreeGrafter, PANTHER, KEGG, and OpenScientist all converge on 2-phosphoglycolate phosphatase activity; the caveat is paralog ambiguity rather than evidence against the annotation.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1907/PP_1907-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88LM3\tPP_1907\tenables\tGO:0008967\tphosphoglycolate phosphatase activity&#34;
+    - reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+      supporting_text: &#34;Multiple independent resources converge on **2-phosphoglycolate phosphatase (EC 3.1.3.18)**&#34;
+- term:
+    id: GO:0046487
+    label: glyoxylate metabolic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+  qualifier: involved_in
+  review:
+    summary: PP_1907 is predicted to feed glycolate/glyoxylate metabolism by converting 2-phosphoglycolate to glycolate.
+    action: NEW
+    reason: The pathway placement is inferred from the predicted phosphoglycolate phosphatase reaction, KEGG ppu00630 context, and the local downstream glycolate/glyoxylate route; it should be read as predicted pathway participation rather than direct experimental evidence.
+    supported_by:
+    - reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+      supporting_text: &#34;placing it in **glyoxylate and dicarboxylate metabolism** (KEGG pathway ppu00630)&#34;
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter supplies cytosol, DNA repair, and phosphoglycolate phosphatase annotations for PP_1907.
+- id: file:PSEPK/PP_1907/PP_1907-uniprot.txt
+  title: UniProtKB entry for PP_1907
+  findings:
+  - statement: UniProt records PP_1907 as a HAD-like hydrolase with HAD/PGP-like domain support.
+- id: file:PSEPK/PP_1907/PP_1907-goa.tsv
+  title: GOA annotations for PP_1907
+  findings:
+  - statement: GOA includes catalytic activity, cytosol, DNA repair, and phosphoglycolate phosphatase annotations.
+- id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+  title: OpenScientist deep research report for PP_1907
+  findings:
+  - statement: OpenScientist supported a predicted phosphoglycolate phosphatase role while noting lack of direct PP_1907 biochemical assays and paralog ambiguity with PP_0416 and PP_0094.
+core_functions:
+- description: Predicted HAD-family phosphoglycolate phosphatase or closely related small-phosphometabolite phosphatase activity.
+  molecular_function:
+    id: GO:0008967
+    label: phosphoglycolate phosphatase activity
+  directly_involved_in:
+  - id: GO:0046487
+    label: glyoxylate metabolic process
+  supported_by:
+  - reference_id: file:PSEPK/PP_1907/PP_1907-deep-research-openscientist.md
+    supporting_text: &#34;Its default/primary predicted activity is 2-phosphoglycolate phosphatase (EC 3.1.3.18)&#34;
+  - reference_id: file:PSEPK/PP_1907/PP_1907-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88LM3\tPP_1907\tenables\tGO:0008967\tphosphoglycolate phosphatase activity&#34;
+suggested_experiments:
+- description: &gt;-
+    Purify PP_1907, PP_0416, and PP_0094 and compare kinetic activity against
+    2-phosphoglycolate and related small phosphometabolites to resolve paralog
+    specificity and redundancy.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
