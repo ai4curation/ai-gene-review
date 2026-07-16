@@ -31,9 +31,11 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `ku` | PP_3255 | Q88HU8 | kegg:ppu03450 | PRESENT | CURATED | RUNNING | Non-homologous end joining protein Ku |
-| [x] | `ligD` | PP_3260 | Q88HU3 | kegg:ppu03450 | PRESENT | CURATED | RUNNING | DNA ligase (ATP) (EC 6.5.1.1) (NHEJ DNA polymerase) |
+| [x] | `ku` | PP_3255 | Q88HU8 | kegg:ppu03450 | PRESENT | CURATED | FAILED_TIMEOUT | Non-homologous end joining protein Ku |
+| [x] | `ligD` | PP_3260 | Q88HU3 | kegg:ppu03450 | PRESENT | CURATED | FAILED_TIMEOUT | DNA ligase (ATP) (EC 6.5.1.1) (NHEJ DNA polymerase) |
 
 ## Notes
 
 Generated UTC: 2026-07-16T17:23:50.275098+00:00
+
+2026-07-16: OpenScientist timed out after 7200s for the module + pathway + PSEPK report, `ku`, and `ligD`; no report files were produced for those runs.
