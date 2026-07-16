@@ -13,7 +13,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 2
 - Existing review files: 0
 - Curated review files: 0
-- Existing OpenScientist research files: 0
+- Existing OpenScientist research files: 1
 
 ## Required Workflow
 
@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [ ] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -32,7 +32,7 @@ autolink_gene_symbols: false
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [x] | `rfbA` | PP_1783 | Q88LZ3 | kegg:ppu00525 | PRESENT | CURATED | RUNNING | Glucose-1-phosphate thymidylyltransferase (EC 2.7.7.24) |
-| [x] | `rffG` | PP_1785 | Q88LZ1 | kegg:ppu00525 | PRESENT | CURATED | RUNNING | dTDP-glucose 4,6-dehydratase (EC 4.2.1.46) |
+| [x] | `rffG` | PP_1785 | Q88LZ1 | kegg:ppu00525 | PRESENT | CURATED | PRESENT | dTDP-glucose 4,6-dehydratase (EC 4.2.1.46) |
 
 ## Notes
 
