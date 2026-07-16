@@ -31,11 +31,13 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `rpoB` | PP_0447 | Q88QP2 | kegg:ppu03020 | PRESENT | CURATED | RUNNING | DNA-directed RNA polymerase subunit beta (RNAP subunit beta) (EC 2.7.7.6) (RNA polymerase subunit beta) (Transcriptase s |
+| [x] | `rpoB` | PP_0447 | Q88QP2 | kegg:ppu03020 | PRESENT | CURATED | FAILED_TIMEOUT | DNA-directed RNA polymerase subunit beta (RNAP subunit beta) (EC 2.7.7.6) (RNA polymerase subunit beta) (Transcriptase s |
 | [x] | `rpoC` | PP_0448 | Q88QP1 | kegg:ppu03020 | PRESENT | CURATED | PRESENT | DNA-directed RNA polymerase subunit beta' (RNAP subunit beta') (EC 2.7.7.6) (RNA polymerase subunit beta') (Transcriptas |
 | [x] | `rpoA` | PP_0479 | Q88QL1 | kegg:ppu03020 | PRESENT | CURATED | PRESENT | DNA-directed RNA polymerase subunit alpha (RNAP subunit alpha) (EC 2.7.7.6) (RNA polymerase subunit alpha) (Transcriptas |
-| [x] | `rpoZ` | PP_5301 | Q88C82 | kegg:ppu03020 | PRESENT | CURATED | RUNNING | DNA-directed RNA polymerase subunit omega (RNAP omega subunit) (EC 2.7.7.6) (RNA polymerase omega subunit) (Transcriptas |
+| [x] | `rpoZ` | PP_5301 | Q88C82 | kegg:ppu03020 | PRESENT | CURATED | FAILED_TIMEOUT | DNA-directed RNA polymerase subunit omega (RNAP omega subunit) (EC 2.7.7.6) (RNA polymerase omega subunit) (Transcriptas |
 
 ## Notes
 
 Generated UTC: 2026-07-16T17:08:08.373869+00:00
+
+2026-07-16: OpenScientist timed out after 7200s for the module + pathway + PSEPK report, `rpoB`, and `rpoZ`; no report files were produced for those runs.
