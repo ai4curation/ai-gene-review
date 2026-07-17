@@ -106,5 +106,8 @@ terminal transamination for all three products.
 
 ## Validation
 
-Initial LinkML, module-validator, and all 11 selected gene-review validations
-pass. Final validation will be rerun after OpenScientist evidence integration.
+Final LinkML, ontology-aware module-validator, and all 11 selected gene-review
+validations pass after research integration. A full `just validate-all` run
+also passed with 3693/3693 gene reviews valid, zero invalid files, zero errors,
+and all 53 pathway markdown files with PMID references valid. Repository-wide
+advisory warnings remain non-blocking and are unrelated to this batch.
