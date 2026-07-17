@@ -10,11 +10,19 @@ status: DESIGN
 
 # Conidiation regulatory cascade — module design proposal
 
-**Status:** design only. This page records *how* to build a `modules/*.yaml`
-`ModuleReview` for conidium formation. No identifiers are grounded yet — every
-UniProt accession, PANTHER `PTHR`/`PTN`, and GO id below is a **placeholder to
-resolve** (via UniProt, the local `interpro/panther/` cache, and the OLS MCP)
-during the build, per the module-curation rule *never guess identifiers*.
+**Status:** first module implemented. A concrete *Aspergillus nidulans*
+`ModuleReview` now exists at `modules/conidiation_regulatory_cascade.yaml`
+(rendered: `pages/modules/conidiation_regulatory_cascade.html`), grounding all 21
+participants in verified UniProtKB accessions and passing `linkml-validate` +
+`module_validator`. This page remains the design rationale and the source for the
+two-axis ontology analysis and the annotation-inconsistency caveat.
+
+**Implemented so far:** the six-tier cascade (FluG/Flb → BrlA → AbaA →
+WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual
+top-level concepts GO:0048315 + GO:0070787, per-annoton molecular functions, and
+typed connections. **Tracked follow-ups:** member gene reviews (0/21 done),
+module deep research, and the *Neurospora* macroconidiation variant (would make
+the module ABSTRACT with taxon `variant_sets`).
 
 ## 1. What the module is
 

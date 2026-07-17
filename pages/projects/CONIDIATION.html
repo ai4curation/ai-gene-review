@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conidiation regulatory cascade — module design proposal - AI Gene Review Projects</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-primary: #3498db;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Gene symbol links */
+        .content a[href*="/genes/"] {
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .content a[href*="/genes/"]:hover {
+            background-color: #bfdbfe;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875em;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--color-primary);
+            margin-left: 0;
+            padding-left: 1.5rem;
+            color: #4b5563;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Mermaid diagrams */
+        .mermaid {
+            text-align: center;
+            margin: 2rem 0;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Warnings section */
+        .warnings {
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .warnings h3 {
+            color: #92400e;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .warnings ul {
+            margin-bottom: 0;
+            color: #78350f;
+        }
+
+        /* Task lists (checkboxes) */
+        li input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Project meta: maturity + tag badges */
+        .project-meta { margin-bottom: 0.5rem; }
+        .project-meta .badge { margin: 0 0.25rem 0.25rem 0; }
+        .gene-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+        }
+        .gene-list a,
+        .gene-list span {
+            background-color: #dbeafe;
+            border-radius: 0.25rem;
+            color: #1e40af;
+            display: inline-block;
+            font-weight: 500;
+            padding: 0.125rem 0.375rem;
+        }
+        .gene-list a:hover {
+            background-color: #bfdbfe;
+            text-decoration: none;
+        }
+        .m-SCOPING     { background: #fef3c7; color: #92400e; }
+        .m-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+        .m-MATURE      { background: #dcfce7; color: #166534; }
+        .m-COMPLETE    { background: #d1fae5; color: #065f46; }
+        .m-ARCHIVED    { background: #f3f4f6; color: #6b7280; }
+        .badge.tag { text-transform: none; }
+        .t-FLAGSHIP       { background: #fae8ff; color: #86198f; }
+        .t-BIOLOGY_DOMAIN { background: #e0f2fe; color: #075985; }
+        .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
+        .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
+
+        /* Manual reviews */
+        .manual-reviews {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .manual-reviews h3 { margin-top: 0; margin-bottom: 0.75rem; font-size: 1rem; }
+        .manual-reviews .review { padding: 0.5rem 0; }
+        .manual-reviews .review + .review { border-top: 1px dashed var(--border-color); }
+        .manual-reviews .review-head { margin-bottom: 0.25rem; }
+        .manual-reviews .review-head .badge { margin-right: 0.5rem; }
+        .manual-reviews .review-head .who { font-weight: 600; }
+        .manual-reviews .review-head .when { color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem; }
+        .manual-reviews .review-notes { margin: 0.25rem 0; }
+        .manual-reviews .review-todos { margin: 0.25rem 0 0.5rem; }
+        .badge.r-READY             { background: #dcfce7; color: #166534; }
+        .badge.r-CHANGES_REQUESTED { background: #fee2e2; color: #991b1b; }
+
+        /* Content wrapper */
+        .content {
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        footer small {
+            display: block;
+        }
+    </style>
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#2c3e50',
+                lineColor: '#333',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#f39c12'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="breadcrumb">
+        <a href="../index.html">Home</a> &raquo;
+        <a href="index.html">Projects</a> &raquo;
+        Conidiation regulatory cascade — module design proposal
+    </nav>
+
+    <header class="header">
+        <h1>Conidiation regulatory cascade — module design proposal</h1>
+
+
+
+    </header>
+
+
+
+
+
+    <div class="content">
+        <h1 id="conidiation-regulatory-cascade-module-design-proposal">Conidiation regulatory cascade — module design proposal</h1>
+<p><strong>Status:</strong> first module implemented. A concrete <em>Aspergillus nidulans</em><br />
+<code>ModuleReview</code> now exists at <code>modules/conidiation_regulatory_cascade.yaml</code><br />
+(rendered: <code>pages/modules/conidiation_regulatory_cascade.html</code>), grounding all 21<br />
+participants in verified UniProtKB accessions and passing <code>linkml-validate</code> +<br />
+<code>module_validator</code>. This page remains the design rationale and the source for the<br />
+two-axis ontology analysis and the annotation-inconsistency caveat.</p>
+<p><strong>Implemented so far:</strong> the six-tier cascade (FluG/Flb → BrlA → AbaA →<br />
+WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual<br />
+top-level concepts <a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a> + <a href="http://amigo.geneontology.org/amigo/term/GO:0070787">GO:0070787</a>, per-annoton molecular functions, and<br />
+typed connections. <strong>Tracked follow-ups:</strong> member gene reviews (0/21 done),<br />
+module deep research, and the <em>Neurospora</em> macroconidiation variant (would make<br />
+the module ABSTRACT with taxon <code>variant_sets</code>).</p>
+<h2 id="1-what-the-module-is">1. What the module is</h2>
+<p>Conidiation (conidiogenesis) is the developmental program that produces<br />
+<strong>conidia</strong> — asexual, mitotically-derived spores borne on specialized aerial<br />
+structures (conidiophores) in filamentous ascomycetes. It is one of the<br />
+best-dissected fungal developmental programs, worked out chiefly in <em>Aspergillus<br />
+nidulans</em> and <em>Neurospora crassa</em>.</p>
+<p>The reusable, defensible module is the <strong>central regulatory cascade</strong> — the<br />
+transcription-factor relay that commits vegetative hyphae to sporulation and<br />
+drives spore maturation — together with the signaling that gates it and the<br />
+structural genes it ultimately switches on.</p>
+<h2 id="2-module-boundary">2. Module boundary</h2>
+<table>
+<thead>
+<tr>
+<th>Candidate scope</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Conidiation regulatory cascade</strong> (upstream activation → BrlA → AbaA → WetA/velvet → structural output)</td>
+<td><strong>Core module</strong></td>
+<td>Clean multi-tier regulatory chain; maps directly onto <code>parts</code> + typed <code>connections</code>; clears the ≥2-substantive-parts rule (6 tiers).</td>
+</tr>
+<tr>
+<td>Conidiophore morphogenesis (stalk → vesicle → metulae → phialides → conidia)</td>
+<td><strong>Second in-module concept / context</strong> (see §3a)</td>
+<td>A <em>distinct</em> GO branch — <a href="http://amigo.geneontology.org/amigo/term/GO:0070787">GO:0070787</a> <em>conidiophore development</em>, on the reproductive-structure axis, <strong>not</strong> under conidium formation. The cascade spans both axes (BrlA/AbaA build the conidiophore; WetA/velvet mature the spore), so it is not cleanly separable.</td>
+</tr>
+<tr>
+<td>Conidial dispersal / dormancy physiology</td>
+<td>Out of scope</td>
+<td>Downstream physiology; touched only via velvet/dormancy node.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Type:</strong> <code>module_type: DEVELOPMENTAL_PROCESS</code>.</p>
+<p>The four confirmed inclusions beyond the BrlA→AbaA→WetA spine — <strong>upstream<br />
+activation (FluG/Flb)</strong>, <strong>repressive gating (FlbA / G-protein–PKA)</strong>, <strong>velvet<br />
+maturation (VosA/VelB)</strong>, and <strong>structural output (hydrophobins / pigment)</strong> —<br />
+are all modeled as first-class tiers rather than prose context.</p>
+<h2 id="3-top-level-grounding">3. Top-level grounding</h2>
+<p><strong>Resolved.</strong> Give <code>module.concepts</code> <strong>two</strong> terms (see §3a for why): the<br />
+spore-cell axis <strong><a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a> "conidium formation"</strong> (primary) and the structural<br />
+axis <strong><a href="http://amigo.geneontology.org/amigo/term/GO:0070787">GO:0070787</a> "conidiophore development"</strong>. The cascade drives both.</p>
+<blockquote>
+<p>⚠️ <strong>Do not use <code>GO:0061794</code> "conidium development".</strong> It is being obsoleted<br />
+as an <em>unnecessary grouping term</em> (0 direct annotations, single child<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a>) — GO tracker<br />
+<a href="https://github.com/geneontology/go-ontology/issues/32315">geneontology/go-ontology#32315</a><br />
+(opened 2026-07-15, label <code>obsoletion</code>; still <code>isObsolete:false</code> in the<br />
+released ontology as of this writing, i.e. an in-flight change). <a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a><br />
+is the surviving specific term.</p>
+</blockquote>
+<p>Related terms to use where appropriate rather than at the top:</p>
+<ul>
+<li><strong><a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a></strong> <em>conidium formation</em> — top-level module concept (the whole<br />
+  program, formation → mature spore).</li>
+<li><strong><a href="http://amigo.geneontology.org/amigo/term/GO:0075306">GO:0075306</a></strong> <em>regulation of conidium formation</em> — for the regulatory-cascade<br />
+  framing / the FluG–Flb–BrlA–AbaA–WetA relay as regulators.</li>
+<li><strong><a href="http://amigo.geneontology.org/amigo/term/GO:0030436">GO:0030436</a></strong> <em>asexual sporulation</em> — broader parent (context only).</li>
+</ul>
+<p>Per-tier MF/BP terms (TF activity, RGS activity, PKS activity, etc.) still go on<br />
+the leaf annotons and are resolved via OLS during grounding.<br />
+- <code>module.context</code>:<br />
+  - <code>taxa</code>: Pezizomycotina / Ascomycota (species-neutral at the top; species<br />
+    pinned inside <code>variant_sets</code>). Resolve NCBITaxon id.<br />
+  - <code>cellular_components</code>: nucleus (the TF relay), plasma membrane / hyphal tip<br />
+    (signal sensing), extracellular region (FluG signal, rodlet layer). Avoid<br />
+    asserting both a parent and child compartment without a recorded reason.</p>
+<h2 id="3a-ontology-landscape-scouted-two-orthogonal-axes">3a. Ontology landscape (scouted) — two orthogonal axes</h2>
+<p>Conidiation splits into <strong>two GO branches that are not parent/child</strong>. Both<br />
+belong in the module — spore-cell formation as the primary concept, conidiophore<br />
+development as a co-equal structural concept/context.</p>
+<table>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Term</th>
+<th>Role in module</th>
+<th>Ann. count*</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Spore-cell formation</strong> (asexual sporulation → cell differentiation branch)</td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0030436">GO:0030436</a> asexual sporulation</td>
+<td>broad parent / context</td>
+<td>9283</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0043936">GO:0043936</a> …formation of a cellular spore</td>
+<td>broad parent</td>
+<td>1133</td>
+</tr>
+<tr>
+<td></td>
+<td><strong><a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a> conidium formation</strong></td>
+<td><strong>primary module concept</strong></td>
+<td>551</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0075306">GO:0075306</a> regulation of conidium formation (+ <a href="http://amigo.geneontology.org/amigo/term/GO:0075307">GO:0075307</a> pos / <a href="http://amigo.geneontology.org/amigo/term/GO:0075308">GO:0075308</a> neg)</td>
+<td>regulatory-tier framing</td>
+<td>379</td>
+</tr>
+<tr>
+<td><strong>Conidiophore structure</strong> (reproductive-structure development branch)</td>
+<td><strong><a href="http://amigo.geneontology.org/amigo/term/GO:0070787">GO:0070787</a> conidiophore development</strong></td>
+<td><strong>second module concept</strong> (BrlA/AbaA morphogenesis)</td>
+<td>19</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0070788">GO:0070788</a> conidiophore stalk development</td>
+<td>tier-specific (stalk)</td>
+<td>0</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0070793">GO:0070793</a> regulation of conidiophore development (+ <a href="http://amigo.geneontology.org/amigo/term/GO:0070795">GO:0070795</a> pos / <a href="http://amigo.geneontology.org/amigo/term/GO:0070794">GO:0070794</a> neg)</td>
+<td>regulatory framing</td>
+<td>1</td>
+</tr>
+<tr>
+<td>—</td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0000905">GO:0000905</a> sporocarp development involved in asexual reproduction</td>
+<td>parallel structure term (rarely used)</td>
+<td>10</td>
+</tr>
+<tr>
+<td>✗</td>
+<td><a href="http://amigo.geneontology.org/amigo/term/GO:0061794">GO:0061794</a> conidium development</td>
+<td><strong>do not use — being obsoleted (#32315)</strong></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>* Indicative QuickGO <code>goUsage=exact</code> counts — <strong>not</strong> a basis for term choice<br />
+(see caveat below).</p>
+<p><strong>⚠️ Annotation is inconsistent — do not infer structure from GOA.</strong> 9283<br />
+annotations sit on the vague grouping term <em>asexual sporulation</em> while the<br />
+precise <em>conidium formation</em> (551) and <em>conidiophore development</em> (19 / 0 / 1)<br />
+terms are sparsely populated. The same regulators (<code>brlA</code>, <code>abaA</code>, <code>wetA</code>, …)<br />
+are annotated to a scatter of broad and specific terms depending on the<br />
+MOD/curator. Consequences for the build:</p>
+<ul>
+<li>Choose each annoton's term <strong>by biology</strong>, not by copying where the gene<br />
+  currently sits in GOA.</li>
+<li>Expect many existing broad-term annotations (e.g. to <a href="http://amigo.geneontology.org/amigo/term/GO:0030436">GO:0030436</a>) to be<br />
+<code>MODIFY</code> candidates toward the specific conidium/conidiophore terms when the<br />
+  member gene reviews are done.</li>
+<li>Use regulation sub-terms (<a href="http://amigo.geneontology.org/amigo/term/GO:0075306">GO:0075306</a> / <a href="http://amigo.geneontology.org/amigo/term/GO:0070793">GO:0070793</a> and their pos/neg children)<br />
+  for the TF-cascade tiers where the biology is <em>regulatory</em>, and the formation/<br />
+  development terms where it is <em>executive</em>.</li>
+</ul>
+<h2 id="4-part-decomposition">4. Part decomposition</h2>
+<p>Ordered <code>parts</code>, each a <code>ModuleNode</code> (<code>REGULATORY_STEP</code>, except the output tier)<br />
+holding leaf <code>annotons</code> for the member proteins.</p>
+<table>
+<thead>
+<tr>
+<th>order</th>
+<th>role (node)</th>
+<th>key members (gene symbols)</th>
+<th>node type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Developmental competence / upstream activation</td>
+<td>FluG (signal synthesis), FlbB, FlbC, FlbD, FlbE</td>
+<td>REGULATORY_STEP</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Master-switch induction</td>
+<td>BrlA (C2H2 TF)</td>
+<td>REGULATORY_STEP</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Phialide differentiation (mid-development)</td>
+<td>AbaA (TEA/ATTS TF)</td>
+<td>REGULATORY_STEP</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Spore maturation &amp; dormancy</td>
+<td>WetA, VosA, VelB (velvet)</td>
+<td>REGULATORY_STEP</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Structural output</td>
+<td>RodA/DewA (hydrophobins), WA/YA (DHN-melanin PKS/laccase), con genes</td>
+<td>BIOLOGICAL_PROCESS</td>
+</tr>
+<tr>
+<td>R</td>
+<td>Repressive gating (modifies tier 1)</td>
+<td>FlbA (RGS) ⊣ FadA (Gα)/SfaD/GpgA → cAMP–PKA</td>
+<td>REGULATORY_STEP</td>
+</tr>
+</tbody>
+</table>
+<p>Molecular-function terms (TF activity, RGS/GTPase-regulator activity, PKS<br />
+activity, structural constituent) go on the <strong>leaf annotons</strong>, never on the<br />
+process module concept — the standard process-module modeling rule.</p>
+<h2 id="5-cascade-diagram">5. Cascade diagram</h2>
+<div class="mermaid">
+flowchart TD
+    subgraph gating["Repressive gating"]
+        Gprot["FadA/SfaD/GpgA G-protein → cAMP–PKA<br/>(pro-proliferation)"]
+        FlbA["FlbA (RGS)"]
+    end
+    FluG["Tier 1: FluG signal + FlbB/C/D/E TFs<br/>(developmental competence)"]
+    BrlA["Tier 2: BrlA<br/>(master switch)"]
+    AbaA["Tier 3: AbaA<br/>(phialide differentiation)"]
+    WetA["Tier 4: WetA + VosA/VelB velvet<br/>(spore maturation, dormancy)"]
+    Struct["Tier 5: hydrophobins (RodA/DewA),<br/>DHN-melanin (WA/YA), con genes"]
+
+    FlbA -.->|NEGATIVELY_REGULATES| Gprot
+    Gprot -.->|NEGATIVELY_REGULATES| FluG
+    FluG -->|POSITIVELY_REGULATES| BrlA
+    BrlA -->|CAUSES| AbaA
+    AbaA -->|CAUSES| WetA
+    WetA -->|POSITIVELY_REGULATES| Struct
+    AbaA -.->|feedback| BrlA
+    WetA -.->|feedback: reinforces| BrlA
+</div>
+
+<h2 id="6-connections-typed-edges">6. Connections (typed edges)</h2>
+<p>Using <code>ModuleConnectionTypeEnum</code>:</p>
+<table>
+<thead>
+<tr>
+<th>source → target</th>
+<th>connection_type</th>
+<th>note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>upstream_activation → brla_induction</td>
+<td>POSITIVELY_REGULATES</td>
+<td>FluG/Flb induce <em>brlA</em></td>
+</tr>
+<tr>
+<td>brla_induction → abaa_step</td>
+<td>CAUSES</td>
+<td>BrlA activates <em>abaA</em></td>
+</tr>
+<tr>
+<td>abaa_step → weta_maturation</td>
+<td>CAUSES</td>
+<td>AbaA activates <em>wetA</em></td>
+</tr>
+<tr>
+<td>weta_maturation → structural_output</td>
+<td>POSITIVELY_REGULATES</td>
+<td>velvet/WetA switch on spore-wall genes</td>
+</tr>
+<tr>
+<td>flba_gating → g_protein_signaling</td>
+<td>NEGATIVELY_REGULATES</td>
+<td>FlbA-RGS damps FadA</td>
+</tr>
+<tr>
+<td>g_protein_signaling → upstream_activation</td>
+<td>NEGATIVELY_REGULATES</td>
+<td>active PKA signaling blocks sporulation</td>
+</tr>
+</tbody>
+</table>
+<p>Regulatory/developmental edges take <code>chaining_status: NOT_APPLICABLE</code> if the<br />
+advisory reaction-continuity check ever flags them (this is not a metabolic<br />
+chain).</p>
+<h2 id="7-species-variation-variant_sets">7. Species variation — <code>variant_sets</code></h2>
+<p>The <em>Aspergillus</em> and <em>Neurospora</em> programs are alternative implementations of<br />
+the same developmental logic. Model tiers 1–4 with a <code>variant_set</code> on the<br />
+<strong>taxon/lineage axis</strong> (<code>EXACTLY_ONE</code>) so the module stays reusable:</p>
+<ul>
+<li><strong>Variant A — Aspergillus paradigm:</strong> BrlA → AbaA → WetA, with FluG/FlbA–E<br />
+  upstream and velvet (VosA/VelB/VeA/LaeA) maturation.</li>
+<li><strong>Variant B — Neurospora macroconidiation:</strong> FL (Gal4-type Zn₂Cys₆ TF),<br />
+  ACON-2/ACON-3, with White-Collar-Complex (WC-1/WC-2) + <code>frq</code> circadian<br />
+  gating; EAS hydrophobin and con-6/con-10 as structural output.</li>
+</ul>
+<p>Ground each variant with its own <code>representative_members</code>; do <strong>not</strong> inflate the<br />
+member list to every species named in deep research.</p>
+<h2 id="8-member-roster-grounding-todo">8. Member roster &amp; grounding TODO</h2>
+<p>Resolve each of these during the build (UniProt accession; PANTHER family/PTN<br />
+where the local cache has one; per-annoton GO MF/BP term). <strong>Reference organism<br />
+dirs:</strong> likely <code>EMENI</code> (<em>A. nidulans</em>) and <code>NEUCR</code> (<em>N. crassa</em>).</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Role</th>
+<th>Grounding to fetch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BrlA</td>
+<td>master switch, C2H2 TF</td>
+<td>UniProtKB (EMENI), GO DNA-binding TF activity</td>
+</tr>
+<tr>
+<td>AbaA</td>
+<td>phialide TF (TEA/ATTS)</td>
+<td>UniProtKB, PANTHER TEA-domain family</td>
+</tr>
+<tr>
+<td>WetA</td>
+<td>maturation regulator</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>FluG</td>
+<td>extracellular signal synthesis</td>
+<td>UniProtKB; note GS-I-like domain</td>
+</tr>
+<tr>
+<td>FlbA</td>
+<td>RGS, damps FadA</td>
+<td>UniProtKB; GO GTPase-regulator/RGS activity</td>
+</tr>
+<tr>
+<td>FlbB/C/D/E</td>
+<td>upstream TFs (bZIP/cMyb/C2H2)</td>
+<td>UniProtKB each</td>
+</tr>
+<tr>
+<td>VosA / VelB / VeA / LaeA</td>
+<td>velvet complex</td>
+<td>UniProtKB; PANTHER velvet family; GO-CAM if present</td>
+</tr>
+<tr>
+<td>FadA / SfaD / GpgA</td>
+<td>heterotrimeric G-protein</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>RodA / DewA</td>
+<td>rodlet hydrophobins</td>
+<td>UniProtKB; GO structural constituent</td>
+</tr>
+<tr>
+<td>WA / YA</td>
+<td>DHN-melanin PKS / laccase</td>
+<td>UniProtKB; Rhea/EC for PKS</td>
+</tr>
+<tr>
+<td>FL, ACON-2/3, WC-1/2</td>
+<td>Neurospora variant</td>
+<td>UniProtKB (NEUCR)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-anti-patterns-to-avoid-from-the-module-curation-skill">9. Anti-patterns to avoid (from the module-curation skill)</h2>
+<ul>
+<li>Putting a member's MF term on the process module concept instead of its leaf<br />
+  annoton.</li>
+<li>Letting the module collapse to a species-specific <em>A. nidulans</em> member list —<br />
+  keep it reusable via <code>variant_sets</code> + <code>representative_members</code>.</li>
+<li>Asserting parent+child compartments (e.g. cytoplasm and cytosol) without a<br />
+  recorded reason.</li>
+<li>Treating deep-research prose as an identifier source — every id resolved<br />
+  against UniProt / PANTHER / OLS / GO-CAM.</li>
+</ul>
+<h2 id="10-build-workflow-when-approved">10. Build workflow (when approved)</h2>
+<ol>
+<li><code>just fetch-gene EMENI brlA</code> (and each core member) → seeds gene reviews +<br />
+   UniProt/GOA; repeat for <code>NEUCR</code> variant members.</li>
+<li><code>just module-deep-research-perplexity conidiation_regulatory_cascade</code> →<br />
+   cited <code>modules/conidiation_regulatory_cascade-deep-research-*.md</code>.</li>
+<li>Author <code>modules/conidiation_regulatory_cascade.yaml</code> per the skeleton above.</li>
+<li>Validate + render:</li>
+<li><code>uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleReview modules/conidiation_regulatory_cascade.yaml</code></li>
+<li><code>uv run python -m ai_gene_review.validation.module_validator modules/conidiation_regulatory_cascade.yaml</code></li>
+<li><code>just render-module modules/conidiation_regulatory_cascade.yaml</code></li>
+<li>If this project page is kept, add a <code>project-card</code> entry to<br />
+<code>pages/projects/index.html</code> (the index is manually maintained).</li>
+</ol>
+<h2 id="11-open-questions">11. Open questions</h2>
+<ul>
+<li><strong>Single reusable module vs. two concrete instances?</strong> Recommendation:<br />
+  one reusable module with taxon <code>variant_sets</code> (Aspergillus + Neurospora).</li>
+<li>~~Which top GO term best spans the whole cascade?~~ <strong>Resolved:</strong><br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0048315">GO:0048315</a> <em>conidium formation</em> (see §3; <a href="http://amigo.geneontology.org/amigo/term/GO:0061794">GO:0061794</a> is being obsoleted).</li>
+<li><strong>Structural output — in-core vs. sibling module?</strong> Currently in-core as<br />
+  tier 5; could be spun out to a <code>conidial_wall_assembly</code> module if it grows.</li>
+<li><strong>GO-CAM coverage:</strong> check <code>gocams/index.tsv</code> for any existing conidiation<br />
+  models to attach via <code>gocam_associations</code>.</li>
+</ul>
+    </div>
+
+    <footer>
+        <small>Generated from CONIDIATION.md</small>
+        <small>AI Gene Review Project</small>
+    </footer>
+</body>
+</html>
