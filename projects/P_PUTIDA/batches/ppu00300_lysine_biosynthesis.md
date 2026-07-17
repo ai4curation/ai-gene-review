@@ -22,10 +22,11 @@ autolink_gene_symbols: false
 - [x] Define a seven-part succinylated-diaminopimelate module.
 - [x] Separate shared aspartate-semialdehyde supply from the dedicated route.
 - [x] Separate meso-diaminopimelate use in peptidoglycan from L-lysine formation.
-- [ ] Finish fetching and reviewing the ten selected PSEPK proteins.
-- [ ] Complete OpenScientist module and gene reports.
+- [x] Finish fetching and reviewing the ten selected PSEPK proteins.
+- [x] Attempt OpenScientist research for the module and all ten genes; eight
+  gene reports completed and two provider timeouts are documented in notes.
 - [x] Complete initial module validation.
-- [ ] Validate and render module, gene, and project pages after evidence integration.
+- [x] Validate and render module, gene, and project pages after evidence integration.
 - [x] Open one draft PR for this module/pathway: [PR #2177](https://github.com/ai4curation/ai-gene-review/pull/2177).
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
@@ -98,12 +99,27 @@ pathway holes.
   canonical paired-cysteine Q88CF3 DapF-CC copy (Cys75/Cys219). PMID:40774471
   establishes the DapF-SS class, but neither KT2440 paralog has a direct assay;
   activity partitioning and gene-specific essentiality remain open.
+- Eight gene-level OpenScientist reports completed and were integrated
+  conservatively. The DapA-II (`dapA__Q88JL0`) and DapB runs timed out; their
+  failed retrievals are recorded in the corresponding notes files rather than
+  represented as provider reports.
+- Both LysA reports support EC 4.1.1.20, but neither establishes the relative
+  in-vivo contribution of Q88L58 and Q88CF4. The LysA-II report's inference
+  from adjacency to `dapF` is retained as context, not as evidence that Q88CF4
+  is the dominant or dedicated copy.
 - PP_1588 has DapC-specific InterPro/NCBIfam signatures and remains the selected
   step-4 enzyme. The possible contribution of the broader ArgD/AruC family is a
   physiological flux question rather than a pathway hole.
 
 ## Validation
 
-The initial LinkML and module-validator checks pass. Gene validations and final
-rendering will be completed after the accession-disambiguated fetch and
-OpenScientist evidence pass.
+All ten targeted `just validate PSEPK <gene>` checks pass after evidence
+integration. The module passes LinkML and the dedicated module validator, with
+only the expected advisory warnings for unconfigured InterPro and NCBIfam
+prefixes, and the module and project pages render successfully.
+
+The settled-tree `just validate-all` run passes: 3,692/3,692 reviews are valid,
+with zero invalid files and zero errors. Term validation has no errors (four
+repository-wide files retain advisory label warnings), reference validation
+has no blocking errors (29 files retain advisory warnings), and all 53 pathway
+files with PMID references pass.
