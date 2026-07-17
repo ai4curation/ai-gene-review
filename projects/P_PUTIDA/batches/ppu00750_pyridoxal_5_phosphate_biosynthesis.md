@@ -56,6 +56,12 @@ upstream input, not as an extra vitamin-B6-specific module part.
   PdxB, PdxA, PdxJ, and PdxH.
 - SerC retains both its serine-biosynthesis and vitamin-B6-biosynthesis roles;
   its dual use is real shared metabolism rather than pathway overreach.
+  GO:0004648 represents only the phosphoserine reaction, so the distinct PdxF
+  reaction is recorded as an explicit molecular-function ontology gap rather
+  than being assigned the wrong GO term.
+- PdxH's pyridoxine-biosynthesis annotation is changed to PLP biosynthesis
+  because PdxH consumes PNP/PMP; specific de novo PLP and PLP-salvage process
+  annotations are proposed.
 - Generic oxidoreductase, nitrogenous-group transferase, metal-binding, and
   dimerization terms were marked non-core or over-annotated when a specific
   reaction term was already present.
@@ -67,6 +73,8 @@ upstream input, not as an extra vitamin-B6-specific module part.
 - The reusable module contains six ordered reaction parts and is not a wrapper
   around a single protein.
 - Molecular functions are attached only to leaf annotons.
+- The SerC/PdxF leaf is intentionally ungrounded at GO MF level pending a term
+  for RHEA:16573; GO:0004648 is not reused for that distinct reaction.
 - Every leaf has a concrete PSEPK UniProt exemplar; no PTN was asserted without
   exact PAINT ancestry.
 - No module-level cytoplasm/cytosol context is used.
