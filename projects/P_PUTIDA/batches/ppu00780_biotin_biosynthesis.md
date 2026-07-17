@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist module and gene research; record provider timeouts.
 - [x] Complete initial module and gene validation.
 - [x] Render module, gene, and project pages after research integration.
-- [ ] Open one draft PR for this module/pathway.
+- [x] Open one draft PR for this module/pathway: [#2175](https://github.com/ai4curation/ai-gene-review/pull/2175).
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
@@ -92,4 +92,6 @@ provider report was created.
 All six gene reviews pass targeted validation. The module passes LinkML and
 module-specific validation, with only the expected advisory that NCBIfam is
 not configured for label lookup. All six gene pages, the module page, and this
-project page render successfully after research integration.
+project page render successfully after research integration. Repository-wide
+validation passes with 3,689/3,689 gene reviews valid, zero errors, and all 53
+pathway files containing PMID references valid.
