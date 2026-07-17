@@ -21,7 +21,7 @@ autolink_gene_symbols: false
 - [x] Separate de novo synthesis from salvage and PLP-enzyme map spillover.
 - [x] Fetch the six selected PSEPK genes.
 - [x] Review every GOA annotation for the selected genes.
-- [ ] Complete OpenScientist module and gene reports.
+- [x] Run OpenScientist module and gene research; record provider timeouts.
 - [x] Validate the initial module and gene-review curation.
 - [ ] Render module, gene, and project pages.
 - [ ] Open one draft PR for this module/pathway.
@@ -91,7 +91,14 @@ is incorporated into pyridoxine in *P. putida* (PMID:10885790), supporting the
 DXP-dependent route. This is organism-level pathway evidence, not a direct
 KT2440 assay of any individual enzyme.
 
+Gene-level OpenScientist reports were integrated for Epd, PdxB, SerC, PdxA,
+and PdxH. The PdxJ request reached OpenScientist's 3600-second service ceiling
+and returned no report, so its review remains grounded in the exact UniProt
+reaction/family record and the successful module-level pathway report. The
+failed run is recorded in `genes/PSEPK/pdxJ/pdxJ-notes.md`; no synthetic
+provider output was created.
+
 ## Validation
 
 Initial LinkML, module-validator, and per-gene validation passed. Final
-validation and rendering will be repeated after provider-report integration.
+validation and rendering are repeated before publication of this batch PR.
