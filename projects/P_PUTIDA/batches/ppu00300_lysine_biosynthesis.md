@@ -82,8 +82,8 @@ pathway holes.
   ArgE/arginine propagation.
 - Molecular functions occur only on leaf annotons, and no module-level
   cytoplasm/cytosol pair is asserted.
-- The obsolete GO:0009089 DAP-route process term is not authored as a new core
-  term. Gene reviews use current GO:0009085 for L-lysine biosynthesis while
+- The UniProt GO:0009089 cross-reference is not authored as a new core term.
+  Gene reviews consistently use GO:0009085 for L-lysine biosynthesis while
   preserving machine-sourced existing IDs for review.
 
 ## Research Interpretation
