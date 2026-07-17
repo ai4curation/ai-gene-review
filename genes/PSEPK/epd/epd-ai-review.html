@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>epd - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>epd</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D63" target="_blank" class="term-link">
+                        Q88D63
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "epd";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D63" data-a="DESCRIPTION: Epd is an NAD-dependent erythrose-4-phosphate dehy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Epd is an NAD-dependent erythrose-4-phosphate dehydrogenase (EC 1.2.1.72) that oxidizes D-erythrose 4-phosphate to 4-phospho-D-erythronate. This is the first reaction of the erythrose-derived branch of the DXP-dependent bacterial pathway that supplies pyridoxine 5&#39;-phosphate for de novo pyridoxal 5&#39;-phosphate biosynthesis. The PSEPK protein is a soluble bacterial Epd-family enzyme.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D63" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Epd is a soluble cytoplasmic metabolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Localization is useful context but does not define the reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008615" target="_blank" class="term-link">
+                                    GO:0008615
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D63" data-a="GO:0008615" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Epd initiates the erythrose-derived branch of pyridoxine phosphate synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Epd-specific NCBIfam assignment and ppu00750 pathway context support its role in the DXP-dependent vitamin-B6 pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016620" target="_blank" class="term-link">
+                                    GO:0016620
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D63" data-a="GO:0016620" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent oxidoreductase term is redundant with the exact Epd activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0048001 identifies the substrate and reaction directly.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                    GO:0042823
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal 5&#39;-phosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D63" data-a="GO:0042823" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Epd contributes to de novo PLP formation through the PNP precursor branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Epd supplies 4-phospho-D-erythronate for the ordered Epd-PdxB-SerC-PdxA-PdxJ-PdxH pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048001" target="_blank" class="term-link">
+                                    GO:0048001
+                                </a>
+                            </span>
+                            <span class="term-label">erythrose-4-phosphate dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D63" data-a="GO:0048001" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining catalytic activity of PSEPK Epd.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term matches EC 1.2.1.72, the UniProt product name, and the Epd-specific NCBIfam family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/epd/epd-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">encodes a **non-phosphorylating D-erythrose-4-phosphate dehydrogenase (E4PDH; EC 1.2.1.72)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D63" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD is the electron acceptor for the Epd reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cofactor binding is valid but secondary to the exact catalytic term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Oxidizes D-erythrose 4-phosphate to 4-phospho-D-erythronate, initiating the erythrose-derived branch of DXP-dependent de novo PLP biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88D63" data-a="FUNCTION: Oxidizes D-erythrose 4-phosphate to 4-phospho-D-er..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048001" target="_blank" class="term-link">
+                            erythrose-4-phosphate dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                pyridoxal 5&#39;-phosphate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/epd/epd-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Erythrose-4-phosphate dehydrogenase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/epd/epd-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No *P. putida*-specific experimental biochemical study of PP_4964 exists in the literature</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/epd/epd-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK Epd</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88D63 to the bacterial Epd family as erythrose-4-phosphate dehydrogenase EC 1.2.1.72.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/epd/epd-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK Epd</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the six existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/epd/epd-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional report for PSEPK Epd</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports the exact non-phosphorylating E4P dehydrogenase reaction by transfer from experimentally characterized E. coli Epd, together with conserved sequence and pathway context. No direct biochemical, structural, or genetic characterization of PSEPK PP_4964 was found; inferred oligomeric state, residue numbering, and localization are not treated as organism-specific experimental facts here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(epd-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D63" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *epd* (PP_4964, UniProt Q88D63) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T06:18:04.185685</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="epd-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="epd-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-epd-pp_4964-uniprot-q88d63-in-pseudomonas-putida-kt2440">Functional Annotation of <em>epd</em> (PP_4964, UniProt Q88D63) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>epd</strong> (ordered locus <strong>PP_4964</strong>; UniProt <strong>Q88D63</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes a <strong>non-phosphorylating D-erythrose-4-phosphate dehydrogenase (E4PDH; EC 1.2.1.72)</strong>, a 352-residue member of the glyceraldehyde-3-phosphate dehydrogenase (GAPDH) structural superfamily. Its primary catalytic function is the NAD⁺-dependent oxidation of <strong>D-erythrose 4-phosphate (E4P)</strong> to <strong>4-phosphoerythronate</strong>, producing NADH and, unlike a classical phosphorylating GAPDH, the free carboxylic acid rather than an acyl-phosphate. This reaction is the <strong>first committed step of the deoxyxylulose-5-phosphate (DXP)-dependent <em>de novo</em> biosynthesis of pyridoxal 5′-phosphate (PLP; vitamin B6)</strong>.</p>
+<p>The identity of the target protein is confirmed and unambiguous. Gene symbol, EC number, protein family, and conserved domains from UniProt all align with the E4PDH/GAPDH-family assignment, and independent sequence analysis performed during this investigation places Q88D63 as a clear ortholog (53.4% amino-acid identity) of the well-characterized <em>Escherichia coli</em> Epd/GapB protein, with a fully conserved catalytic cysteine and NAD⁺-specific cofactor fingerprint. No <em>P. putida</em>-specific experimental biochemical study of PP_4964 exists in the literature; the functional annotation therefore rests on a strong chain of orthology-based inference supported by <em>E. coli</em> biochemistry and genetics, genome context, and conserved sequence determinants.</p>
+<p>Mechanistically, the enzyme acts as a soluble cytoplasmic <strong>homotetramer</strong> that catalyzes oxidation through a <strong>two-step covalent mechanism</strong> involving a thioacyl-enzyme intermediate on an active-site cysteine (Cys160 in the <em>P. putida</em> numbering; motif SNASCTTNC). It has strong substrate preference for E4P over glyceraldehyde-3-phosphate and strong cofactor preference for NAD⁺ over NADP⁺. Genomically, <em>epd</em> sits in a conserved central-carbon-metabolism gene cluster next to <em>pgk</em> (phosphoglycerate kinase) and <em>tktA</em> (transketolase) — the very enzyme of the pentose phosphate pathway that produces its E4P substrate — recapitulating the conserved <em>epd</em>–<em>pgk</em> arrangement of <em>E. coli</em>. The complete downstream vitamin-B6 pathway (<em>pdxB</em>, <em>serC</em>, <em>pdxA</em>, <em>pdxJ</em>, <em>pdxH</em>) is encoded in the KT2440 genome, closing the physiological loop.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-epd-is-a-non-phosphorylating-d-erythrose-4-phosphate-dehydrogenase-ec-12172">F001 — Epd is a non-phosphorylating D-erythrose-4-phosphate dehydrogenase (EC 1.2.1.72)</h3>
+<p>UniProt Q88D63 annotates PP_4964 as an erythrose-4-phosphate dehydrogenase, EC 1.2.1.72, a 352-amino-acid protein belonging to the GAPDH structural family (InterPro E4P_DH_bac IPR006422 / TIGRFAM TIGR01532). The founding biochemistry, performed on the orthologous <em>E. coli</em> enzyme (encoded by <em>gapB</em>, subsequently renamed <em>epd</em>), established that this enzyme oxidizes:</p>
+<blockquote>
+<p><strong>D-erythrose 4-phosphate + NAD⁺ + H₂O → 4-phosphoerythronate + NADH + 2 H⁺</strong></p>
+</blockquote>
+<p>Critically, Zhao and colleagues demonstrated experimentally that the <em>gapB</em>-encoded protein is a genuine E4P dehydrogenase and not merely a second glyceraldehyde-3-phosphate dehydrogenase: <em>"We found that the gapB-encoded enzyme is indeed an E4PDH and not a second GA3PDH, whereas gapA-encoded GA3PDH used E4P poorly, if at all, as a substrate under the in vitro reaction conditions used in this study"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7751290/">PMID: 7751290</a>). Boschi-Muller and colleagues further defined the reaction as <strong>non-phosphorylating</strong> — the enzyme produces the free acid (4-phosphoerythronate) rather than an acyl-phosphate — noting that <em>"This enzyme shows an efficient non-phosphorylating erythrose-4-phosphate dehydrogenase activity"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9182530/">PMID: 9182530</a>). This distinguishes Epd mechanistically from the classical phosphorylating GAPDH (GapA), even though the two share a common fold and evolutionary origin.</p>
+<h3 id="f002-epd-catalyzes-the-first-committed-step-of-dxp-dependent-vitamin-b6-plp-biosynthesis">F002 — Epd catalyzes the first committed step of DXP-dependent vitamin B6 (PLP) biosynthesis</h3>
+<p>The physiological role of Epd is to supply the first dedicated intermediate of the <strong>DXP-dependent pyridoxal 5′-phosphate biosynthetic pathway</strong>, the route used by γ-proteobacteria such as <em>E. coli</em> and <em>Pseudomonas</em>. Genetic evidence in <em>E. coli</em> directly links the enzyme to vitamin B6 biosynthesis: <em>"We show that epd (gapB) mutants lacking an erythrose 4-phosphate (E4P) dehydrogenase are impaired for growth on some media and contain less pyridoxal 5'-phosphate (PLP) and pyridoxamine 5'-phosphate (PMP) than their epd+ parent"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9696782/">PMID: 9696782</a>). The same study showed that <em>"gapA epd double mutants lacking the glyceraldehyde 3-phosphate and E4P dehydrogenases are auxotrophic for pyridoxine"</em>, demonstrating both the role of Epd and the partial redundancy provided by GapA (which can generate the required 4-phosphoerythronate at reduced efficiency).</p>
+<p>The product of the Epd reaction, 4-phosphoerythronate, is the substrate of PdxB (4-phosphoerythronate dehydrogenase), and the pathway then proceeds through SerC, PdxA, PdxJ, and PdxH to PLP. Fitzpatrick and colleagues describe the DXP-dependent route that Epd feeds: <em>"it is synthesized from the condensation of deoxyxylulose 5-phosphate and 4-phosphohydroxy-L-threonine catalysed by the concerted action of PdxA and PdxJ"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17822383/">PMID: 17822383</a>). A UniProt survey performed during this investigation confirmed that <em>P. putida</em> KT2440 encodes the <strong>entire downstream pathway</strong>, matching the <em>E. coli</em> route:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Enzyme</th>
+<th>Gene</th>
+<th>Locus</th>
+<th>EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Erythrose-4-phosphate dehydrogenase</td>
+<td><em>epd</em></td>
+<td>PP_4964</td>
+<td>1.2.1.72</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4-phosphoerythronate dehydrogenase</td>
+<td><em>pdxB</em></td>
+<td>PP_2117</td>
+<td>1.1.1.290</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Phosphoserine aminotransferase</td>
+<td><em>serC</em></td>
+<td>PP_1768</td>
+<td>2.6.1.52</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4-hydroxythreonine-4-phosphate dehydrogenase</td>
+<td><em>pdxA</em></td>
+<td>PP_0402</td>
+<td>1.1.1.262</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Pyridoxine-5′-phosphate synthase</td>
+<td><em>pdxJ</em></td>
+<td>PP_1436</td>
+<td>2.6.99.2</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Pyridoxamine/pyridoxine-5′-phosphate oxidase</td>
+<td><em>pdxH</em></td>
+<td>PP_1129</td>
+<td>1.4.3.5</td>
+</tr>
+</tbody>
+</table>
+<p>The presence of the complete downstream pathway in the KT2440 genome strongly supports the inference that Epd performs the same first-committed-step function in <em>P. putida</em> as it does in <em>E. coli</em>.</p>
+<h3 id="f003-homotetramer-using-a-two-step-covalent-cys-mechanism-with-strong-preference-for-e4p-and-nad">F003 — Homotetramer using a two-step covalent (Cys) mechanism, with strong preference for E4P and NAD⁺</h3>
+<p>The <em>E. coli</em> E4PDH is a heat-stable homotetramer (native mass ~132 kDa; ~35 kDa per subunit; the <em>P. putida</em> subunit is 352 residues). Steady-state kinetics gave Km(E4P) = 0.96 mM, kcat(E4P) = 200 s⁻¹, and Km(NAD⁺) = 0.074 mM (Zhao et al.). Boschi-Muller and colleagues elucidated the catalytic mechanism, showing it proceeds through a covalent acyl-enzyme intermediate on an active-site cysteine, with acylation and deacylation rates of 280 s⁻¹ and 20 s⁻¹ respectively: <em>"The chemical mechanism of erythrose 4-phosphate oxidation by GapB-encoded protein is shown to proceed through a two-step mechanism involving covalent intermediates with Cys-149"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9182530/">PMID: 9182530</a>). The quaternary structure is captured by <em>"Purified E4PDH was a heat-stable tetramer with a native molecular mass of 132 kDa"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7751290/">PMID: 7751290</a>).</p>
+<p>The enzyme's specificity is doubly distinct from GAPDH: it binds NAD⁺ ~800-fold more weakly than GAPDH does — <em>"The KD constant of GapB-encoded protein for NAD is 800-fold higher than that of GAPDH"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9182530/">PMID: 9182530</a>) — and it retains only very low (0.12 s⁻¹) phosphorylating GAPDH activity, confirming its commitment to the non-phosphorylating E4P oxidation. All catalytic and cofactor-binding residues (the catalytic Cys, the catalytic His, and the NAD-binding Rossmann motif) are conserved in the GAPDH family to which Q88D63 belongs.</p>
+<h3 id="f004-epd-is-a-soluble-cytoplasmic-metabolic-enzyme">F004 — Epd is a soluble cytoplasmic metabolic enzyme</h3>
+<p>Epd functions in the <strong>cytoplasm</strong> as a soluble enzyme. The purified <em>E. coli</em> E4PDH is recovered as a soluble tetramer from crude extract with no membrane association, no signal peptide, and no transmembrane segments. It acts on soluble, phosphorylated small-molecule metabolites (E4P and NAD⁺). Its GAPDH-family fold is that of a cytosolic, glycolytic-type enzyme, and Q88D63 carries no secretion or membrane-localization signals. This localization is consistent with the enzyme's substrates: E4P is generated by the pentose phosphate pathway/transketolase in the cytosol, and NAD⁺ is abundant there. This finding is an inference from protein biochemistry and sequence features rather than a direct <em>P. putida</em> localization experiment.</p>
+<h3 id="f005-q88d63-is-a-clear-ortholog-of-e-coli-epd-with-a-fully-conserved-catalytic-cysteine">F005 — Q88D63 is a clear ortholog of E. coli Epd with a fully conserved catalytic cysteine</h3>
+<p>A global pairwise alignment performed during this investigation between Q88D63 (352 aa) and <em>E. coli</em> Epd (P0A9B6, 339 aa) yields <strong>53.4% amino-acid identity</strong> (181/339 aligned positions) — well above the threshold that typically indicates conserved function. Crucially, the GAPDH-family active-site signature motif <strong>"SNASCTTNC"</strong> is present in both proteins, placing the catalytic cysteine at position 160 in <em>P. putida</em> (corresponding to Cys155 in <em>E. coli</em> numbering, and Cys-149 in the mature-protein numbering of Boschi-Muller et al.). The surrounding sequence context is near-identical (<em>E. coli</em> SNASCTTNCIIP vs <em>P. putida</em> SNASCTTNCGVP). This is precisely the thioacyl-forming cysteine shown biochemically to be essential for catalysis: <em>"The chemical mechanism of erythrose 4-phosphate oxidation by GapB-encoded protein is shown to proceed through a two-step mechanism involving covalent intermediates with Cys-149"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9182530/">PMID: 9182530</a>). The conservation of both the overall sequence and the specific catalytic residue provides high-confidence structural/evolutionary evidence that the <em>P. putida</em> enzyme catalyzes the same reaction.</p>
+<h3 id="f006-epd-lies-in-a-conserved-central-carbon-metabolism-gene-cluster-next-to-pgk-and-tkta-its-substrate-supplier">F006 — <em>epd</em> lies in a conserved central-carbon-metabolism gene cluster, next to <em>pgk</em> and <em>tktA</em> (its substrate supplier)</h3>
+<p>Gene-neighborhood analysis of the KT2440 genome shows that <em>epd</em> (PP_4964) is flanked by <strong>pgk/phosphoglycerate kinase (PP_4963)</strong> and <strong>tktA/transketolase (PP_4965)</strong>, with <strong>fba/fructose-1,6-bisphosphate aldolase (PP_4960)</strong> a few genes upstream. This recapitulates the conserved <em>E. coli</em> <em>epd</em>–<em>pgk</em>–<em>fbaA</em> glycolytic gene cluster. The genomic adjacency is functionally meaningful: transketolase (TktA) is the pentose-phosphate-pathway enzyme that <strong>produces D-erythrose 4-phosphate</strong>, the immediate substrate of Epd. Thus the gene is physically co-located in the genome with the reaction that supplies its substrate, reinforcing the metabolic-network coherence of the annotation.</p>
+<div class="codehilite"><pre><span></span><code>   PP_4960        PP_4963      PP_4964      PP_4965
+    fba   ...      pgk    ---    epd   ---   tktA
+  (FBP        (phosphoglycerate  (E4P     (transketolase,
+   aldolase)     kinase)         DH)      makes E4P)
+                  |            |
+                  └─substrate──┘
+</code></pre></div>
+
+<h3 id="f007-q88d63-conserves-the-nad-specific-rossmann-cofactor-fingerprint">F007 — Q88D63 conserves the NAD⁺-specific Rossmann cofactor fingerprint</h3>
+<p>The N-terminus of Q88D63 contains the canonical GAPDH-family dinucleotide-binding glycine-rich motif <strong>ALNGYGRIGR</strong> (a GxGxxG element at residues ~12–17), followed by a conserved acidic residue (Asp at position ~40). This exactly mirrors the <em>E. coli</em> enzyme (AINGFGRIGR; …NELAD). In the GAPDH superfamily this conserved acidic residue hydrogen-bonds the 2′/3′-hydroxyls of the adenosine ribose and confers <strong>NAD⁺ (over NADP⁺) specificity</strong>; NADP-preferring members of the fold instead carry a serine or other small residue at this position. This determinant is well established in the cofactor-engineering literature: <em>"the replacement of conserved glutamate or aspartate with serine in the loop region could change the cofactor dependence from NAD(H) to NADP(H)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26254041/">PMID: 26254041</a>). The presence of the acidic residue in <em>P. putida</em> Epd matches the experimentally measured NAD⁺ dependence of <em>E. coli</em> Epd (Km(NAD⁺) = 0.074 mM), confirming by sequence analysis that the <em>P. putida</em> enzyme is NAD⁺-specific.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the seven findings produces a coherent and well-supported model of Epd's role in <em>P. putida</em> KT2440.</p>
+<p><strong>The reaction and its place in metabolism.</strong> The pentose phosphate pathway and transketolase (TktA, encoded by the immediately adjacent PP_4965) generate D-erythrose 4-phosphate in the cytosol. Epd, a soluble homotetramer, oxidizes E4P using NAD⁺:</p>
+<div class="codehilite"><pre><span></span><code>   Pentose phosphate pathway / Transketolase (TktA, PP_4965)
+          │
+          ▼
+      D-erythrose 4-phosphate (E4P)
+          │   + NAD⁺ + H₂O
+ ┌────────┴──────────┐
+ │  Epd (PP_4964)    │  EC 1.2.1.72
+ │  E4P dehydrogenase│  (non-phosphorylating)
+ │  Cys160 thioacyl  │
+ └────────┬──────────┘
+          │   + NADH
+          ▼
+4-phosphoerythronate
+          │  PdxB (PP_2117)
+          ▼
+      2-oxo-3-hydroxy-4-phosphobutanoate
+          │  SerC (PP_1768)
+          ▼
+      4-phosphohydroxy-L-threonine
+          │  PdxA (PP_0402)
+          ▼
+      condensation with DXP  │  PdxJ (PP_1436)
+          ▼
+      pyridoxine 5&#39;-phosphate (PNP)
+          │  PdxH (PP_1129)
+          ▼
+      ★ pyridoxal 5&#39;-phosphate (PLP) — active vitamin B6
+</code></pre></div>
+
+<p><strong>Catalytic mechanism.</strong> Catalysis follows the two-step covalent mechanism characteristic of the GAPDH superfamily. The catalytic cysteine (Cys160, in the conserved SNASCTTNC motif) attacks the aldehyde carbon of E4P to form a hemithioacetal; hydride transfer to NAD⁺ yields a covalent thioacyl-enzyme intermediate and NADH. Because Epd is non-phosphorylating, the acyl-enzyme is resolved by <strong>water</strong> (not inorganic phosphate), releasing the free acid 4-phosphoerythronate rather than an acyl-phosphate. This mechanistic switch — nucleophilic water rather than phosphate at the deacylation step — is the defining distinction between Epd and the phosphorylating GapA, and it is what routes the carbon toward vitamin B6 biosynthesis rather than glycolysis.</p>
+<p><strong>Specificity determinants.</strong> Two conserved sequence features lock in the enzyme's specificity. (1) The NAD⁺-specific Rossmann fingerprint (GxGxxG followed by an acidic Asp) makes NAD⁺, not NADP⁺, the physiological cofactor. (2) Active-site architecture around Cys160 confers preference for the four-carbon E4P over the three-carbon glyceraldehyde-3-phosphate. Together they ensure Epd operates as a dedicated biosynthetic enzyme.</p>
+<p><strong>Why the inference is strong despite the absence of a <em>P. putida</em> study.</strong> Five independent lines of evidence converge: (i) direct <em>E. coli</em> ortholog biochemistry and genetics defining reaction, mechanism, kinetics, and the vitamin-B6 phenotype; (ii) the complete downstream <em>pdxB–serC–pdxA–pdxJ–pdxH</em> pathway encoded in KT2440; (iii) 53.4% sequence identity with a fully conserved catalytic cysteine; (iv) a conserved NAD⁺-specific cofactor fingerprint; and (v) genomic synteny placing <em>epd</em> next to its substrate-supplying transketolase and next to <em>pgk</em>. This is a textbook case of high-confidence functional transfer by orthology reinforced by genome context.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7751290/">7751290</a></td>
+<td><em>Biochemical characterization of gapB-encoded E4PDH of E. coli K-12 and its possible role in PLP biosynthesis</em></td>
+<td>Establishes that the <em>gapB</em>/epd product is a genuine E4P dehydrogenase (not a second GAPDH) and a heat-stable 132-kDa tetramer; provides kinetic parameters. Defines the reaction and quaternary structure for the ortholog.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9182530/">9182530</a></td>
+<td><em>Comparative enzymatic properties of GapB-encoded E4PDH and phosphorylating GAPDH</em></td>
+<td>Defines the non-phosphorylating activity, the two-step covalent mechanism via Cys-149, and the ~800-fold weaker NAD binding vs GAPDH. Underpins mechanism, catalytic residue, and cofactor findings.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9696782/">9696782</a></td>
+<td><em>Involvement of gapA- and epd (gapB)-encoded dehydrogenases in PLP biosynthesis in E. coli K-12</em></td>
+<td>Direct genetic evidence: <em>epd</em> mutants have less PLP/PMP; <em>gapA epd</em> double mutants are pyridoxine auxotrophs. Links Epd to <em>de novo</em> vitamin B6 biosynthesis and shows GapA redundancy.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17822383/">17822383</a></td>
+<td><em>Two independent routes of de novo vitamin B6 biosynthesis</em></td>
+<td>Describes the DXP-dependent route (PdxA/PdxJ) that Epd feeds, contextualizing the pathway downstream of 4-phosphoerythronate.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26254041/">26254041</a></td>
+<td><em>In silico cofactor engineering strategies for NADP(H) turnover</em></td>
+<td>Establishes that the conserved Asp/Glu residue determines NAD(H) vs NADP(H) specificity in this fold — the basis for concluding Q88D63 is NAD⁺-specific.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9260967/">9260967</a></td>
+<td><em>Characterization of E. coli strains with gapA and gapB deleted</em></td>
+<td>Context/caveat: reports <em>gapB</em> is expressed at very low level and is dispensable for glycolysis and pyridoxal biosynthesis under the conditions tested — highlighting condition-dependence and GapA redundancy.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10491162/">10491162</a></td>
+<td><em>Functional characterization of archaeal GAPDH by modelling and mutagenesis</em></td>
+<td>Supports the family-wide conservation of the catalytic Cys149 and Rossmann-fold cofactor determinants, corroborating the residue-level inferences for Q88D63.</td>
+</tr>
+</tbody>
+</table>
+<p>Several additional <em>P. putida</em> papers surfaced during literature searches (e.g., on L-methionine γ-lyase and ω-transaminases, PMIDs 10965031, 27796875, 34953671, 40436318, 30725412) are <strong>PLP-dependent enzymes</strong> — they are downstream <em>users</em> of the vitamin B6 product, not studies of Epd itself. They are noted here only to document that the literature was screened and that no direct experimental study of PP_4964 was found; they do not provide evidence about Epd's own function and are not cited as support for the findings.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental study of PP_4964.</strong> There is no published biochemical, structural, or genetic characterization of the <em>P. putida</em> KT2440 Epd protein itself. All functional claims are transferred from the <em>E. coli</em> ortholog and supported by bioinformatic and genome-context evidence. Kinetic parameters (Km, kcat), the exact quaternary state, and the precise catalytic residue numbering are inferred, not measured, for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Condition-dependent physiological importance.</strong> In <em>E. coli</em>, <em>gapB</em>/<em>epd</em> is expressed at low levels and is dispensable for both glycolysis and pyridoxal biosynthesis under some conditions, because GapA can supply 4-phosphoerythronate (<a href="https://pubmed.ncbi.nlm.nih.gov/9260967/">PMID: 9260967</a>). The relative contributions of Epd versus GapA to PLP biosynthesis in <em>P. putida</em>, and any growth-condition dependence, are unknown.</p>
+</li>
+<li>
+<p><strong>Localization is inferred, not demonstrated.</strong> Cytoplasmic localization is deduced from the soluble GAPDH-fold, the nature of the substrates, and the absence of targeting signals in Q88D63 — no experimental localization data for PP_4964 exist.</p>
+</li>
+<li>
+<p><strong>Cofactor specificity is predicted from sequence.</strong> The NAD⁺ preference is inferred from the conserved acidic Rossmann-loop residue and <em>E. coli</em> kinetics; it has not been measured for the <em>P. putida</em> enzyme, and dual-cofactor behavior (as seen in some archaeal family members) cannot be formally excluded.</p>
+</li>
+<li>
+<p><strong>Residue numbering caveat.</strong> Alignment-based numbering (Cys160) depends on the reference sequence and gap placement; the mature-protein numbering used in the mechanistic literature (Cys-149) differs, so cross-referencing should be done carefully.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and enzyme assay.</strong> Clone PP_4964, express and purify the protein, and measure E4P-dependent NAD⁺ reduction spectrophotometrically. Determine Km/kcat for E4P and NAD⁺, and test NADP⁺ and glyceraldehyde-3-phosphate to confirm substrate and cofactor specificity directly in the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Active-site cysteine mutagenesis.</strong> Generate a Cys160→Ser/Ala variant and confirm loss of activity, validating the predicted catalytic residue and the covalent mechanism.</p>
+</li>
+<li>
+<p><strong>Genetic knockout and auxotrophy test.</strong> Construct a clean <em>epd</em> deletion in KT2440 and test for reduced PLP/PMP content and pyridoxine auxotrophy, alone and in combination with a <em>gapA</em> knockout, to establish the physiological contribution to vitamin B6 biosynthesis and the degree of GapA redundancy.</p>
+</li>
+<li>
+<p><strong>Metabolomic verification.</strong> Use LC-MS to confirm accumulation/depletion of 4-phosphoerythronate and downstream PLP-pathway intermediates in wild-type versus <em>epd</em> mutant strains.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure (or generate a validated AlphaFold model with confidence metrics) to confirm the Rossmann fold, the tetrameric assembly, and the geometry of the NAD⁺- and E4P-binding sites, directly testing the cofactor-specificity determinant.</p>
+</li>
+<li>
+<p><strong>Expression/condition profiling.</strong> Measure <em>epd</em> transcript and protein levels across growth conditions (carbon sources, oxidative stress, B6 availability) to determine when the enzyme is physiologically important in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <strong>epd</strong> (PP_4964, UniProt Q88D63) in <em>Pseudomonas putida</em> KT2440 encodes a soluble, cytoplasmic, homotetrameric, <strong>NAD⁺-dependent, non-phosphorylating D-erythrose-4-phosphate dehydrogenase (EC 1.2.1.72)</strong> of the GAPDH superfamily. It catalyzes the oxidation of D-erythrose 4-phosphate to 4-phosphoerythronate via a two-step covalent mechanism at an active-site cysteine (conserved motif SNASCTTNC), and this reaction is the <strong>first committed step of the DXP-dependent de novo biosynthesis of pyridoxal 5′-phosphate (vitamin B6)</strong>. The annotation is strongly supported for <em>P. putida</em> by <em>E. coli</em> ortholog biochemistry and genetics, the presence of the complete downstream <em>pdxB–serC–pdxA–pdxJ–pdxH</em> pathway in the KT2440 genome, 53% sequence identity with a conserved catalytic cysteine, a conserved NAD⁺-specific cofactor fingerprint, and genomic synteny placing <em>epd</em> next to <em>pgk</em> and next to <em>tktA</em>, the transketolase that supplies its substrate. No <em>P. putida</em>-specific experimental study of this gene currently exists, so the annotation rests on orthology plus bioinformatic and genome-context evidence.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="epd-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="epd-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:7751290</li>
+<li>PMID:9182530</li>
+<li>PMID:9696782</li>
+<li>PMID:17822383</li>
+<li>PMID:26254041</li>
+<li>PMID:9260967</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D63
+gene_symbol: epd
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: &gt;-
+    Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 /
+    NCIMB 11950 / KT2440)
+description: &gt;-
+  Epd is an NAD-dependent erythrose-4-phosphate dehydrogenase (EC 1.2.1.72)
+  that oxidizes D-erythrose 4-phosphate to 4-phospho-D-erythronate. This is the
+  first reaction of the erythrose-derived branch of the DXP-dependent bacterial
+  pathway that supplies pyridoxine 5&#39;-phosphate for de novo pyridoxal
+  5&#39;-phosphate biosynthesis. The PSEPK protein is a soluble bacterial Epd-family
+  enzyme.
+existing_annotations:
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: located_in
+    review:
+      summary: Epd is a soluble cytoplasmic metabolic enzyme.
+      action: KEEP_AS_NON_CORE
+      reason: Localization is useful context but does not define the reaction.
+  - term:
+      id: GO:0008615
+      label: pyridoxine biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: Epd initiates the erythrose-derived branch of pyridoxine phosphate synthesis.
+      action: ACCEPT
+      reason: &gt;-
+        The Epd-specific NCBIfam assignment and ppu00750 pathway context support
+        its role in the DXP-dependent vitamin-B6 pathway.
+  - term:
+      id: GO:0016620
+      label: &gt;-
+        oxidoreductase activity, acting on the aldehyde or oxo group of donors,
+        NAD or NADP as acceptor
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: This parent oxidoreductase term is redundant with the exact Epd activity.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: GO:0048001 identifies the substrate and reaction directly.
+  - term:
+      id: GO:0042823
+      label: pyridoxal 5&#39;-phosphate biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Epd contributes to de novo PLP formation through the PNP precursor branch.
+      action: ACCEPT
+      reason: &gt;-
+        Epd supplies 4-phospho-D-erythronate for the ordered
+        Epd-PdxB-SerC-PdxA-PdxJ-PdxH pathway.
+  - term:
+      id: GO:0048001
+      label: erythrose-4-phosphate dehydrogenase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This is the defining catalytic activity of PSEPK Epd.
+      action: ACCEPT
+      reason: &gt;-
+        The term matches EC 1.2.1.72, the UniProt product name, and the
+        Epd-specific NCBIfam family.
+      supported_by:
+        - reference_id: file:PSEPK/epd/epd-deep-research-openscientist.md
+          supporting_text: &gt;-
+            encodes a **non-phosphorylating D-erythrose-4-phosphate
+            dehydrogenase (E4PDH; EC 1.2.1.72)**
+  - term:
+      id: GO:0051287
+      label: NAD binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: NAD is the electron acceptor for the Epd reaction.
+      action: KEEP_AS_NON_CORE
+      reason: Cofactor binding is valid but secondary to the exact catalytic term.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000104
+    title: &gt;-
+      Electronic Gene Ontology annotations created by transferring manual GO
+      annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/epd/epd-uniprot.txt
+    title: UniProtKB entry for PSEPK Epd
+    findings:
+      - statement: &gt;-
+          Assigns Q88D63 to the bacterial Epd family as
+          erythrose-4-phosphate dehydrogenase EC 1.2.1.72.
+  - id: file:PSEPK/epd/epd-goa.tsv
+    title: QuickGO annotation snapshot for PSEPK Epd
+    findings:
+      - statement: Contains the six existing annotations reviewed above.
+  - id: file:PSEPK/epd/epd-deep-research-openscientist.md
+    title: OpenScientist functional report for PSEPK Epd
+    findings:
+      - statement: &gt;-
+          Supports the exact non-phosphorylating E4P dehydrogenase reaction by
+          transfer from experimentally characterized E. coli Epd, together with
+          conserved sequence and pathway context. No direct biochemical,
+          structural, or genetic characterization of PSEPK PP_4964 was found;
+          inferred oligomeric state, residue numbering, and localization are not
+          treated as organism-specific experimental facts here.
+core_functions:
+  - description: &gt;-
+      Oxidizes D-erythrose 4-phosphate to 4-phospho-D-erythronate, initiating
+      the erythrose-derived branch of DXP-dependent de novo PLP biosynthesis.
+    molecular_function:
+      id: GO:0048001
+      label: erythrose-4-phosphate dehydrogenase activity
+    directly_involved_in:
+      - id: GO:0042823
+        label: pyridoxal 5&#39;-phosphate biosynthetic process
+    supported_by:
+      - reference_id: file:PSEPK/epd/epd-uniprot.txt
+        supporting_text: Full=Erythrose-4-phosphate dehydrogenase
+      - reference_id: file:PSEPK/epd/epd-deep-research-openscientist.md
+        supporting_text: &gt;-
+          No *P. putida*-specific experimental biochemical study of PP_4964
+          exists in the literature
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
