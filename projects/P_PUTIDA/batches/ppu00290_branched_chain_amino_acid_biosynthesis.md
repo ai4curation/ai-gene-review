@@ -90,8 +90,10 @@ terminal transamination for all three products.
   thiolase-family annotation is removed while 2-isopropylmalate synthase is
   retained.
 - The exact Q88CQ2 IlvD record assigns a 2Fe-2S cluster plus magnesium, so the
-  module does not import the 4Fe-4S cofactor often described for other IlvD
-  family members.
+  reusable module records the required iron-sulfur cofactor generically rather
+  than importing either that target-specific nuclearity or the 4Fe-4S cluster
+  often described for other IlvD family members. Direct Q88CQ2 cofactor
+  characterization remains a knowledge gap.
 - For both IlvA paralogs, TreeGrafter serine/threonine-catabolic process calls
   are marked over-annotated rather than removed: threonine is broken down by
   the reaction, but the supported core physiological role is 2-oxobutanoate
