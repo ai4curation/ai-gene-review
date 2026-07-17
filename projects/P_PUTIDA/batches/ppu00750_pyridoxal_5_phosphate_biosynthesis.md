@@ -23,7 +23,7 @@ autolink_gene_symbols: false
 - [x] Review every GOA annotation for the selected genes.
 - [x] Run OpenScientist module and gene research; record provider timeouts.
 - [x] Validate the initial module and gene-review curation.
-- [ ] Render module, gene, and project pages.
+- [x] Render module, gene, and project pages.
 - [ ] Open one draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
@@ -100,5 +100,7 @@ provider output was created.
 
 ## Validation
 
-Initial LinkML, module-validator, and per-gene validation passed. Final
-validation and rendering are repeated before publication of this batch PR.
+Final strict validation passed for all six gene reviews with zero warnings.
+The LinkML ModuleReview check and module term validator also passed; only the
+expected unconfigured NCBIfam/InterPro prefix warnings were reported. All six
+gene pages, the module page, and this project page rendered successfully.
