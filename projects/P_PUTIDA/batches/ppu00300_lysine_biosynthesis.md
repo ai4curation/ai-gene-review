@@ -81,6 +81,18 @@ pathway holes.
   term. Gene reviews use current GO:0009085 for L-lysine biosynthesis while
   preserving machine-sourced existing IDs for review.
 
+## Research Interpretation
+
+- The OpenScientist module/pathway/taxon report independently recovered all
+  seven reactions and the diagnostic DapD/DapE succinylase-route boundary.
+- The report found no direct KT2440 enzyme assays for the dedicated steps. Its
+  sequence-identity-based rankings of DapA, DapF, and LysA copies are therefore
+  retained as hypotheses, not used to exclude exact UniProt-supported
+  paralogs from this first-pass reusable module.
+- PP_1588 has DapC-specific InterPro/NCBIfam signatures and remains the selected
+  step-4 enzyme. The possible contribution of the broader ArgD/AruC family is a
+  physiological flux question rather than a pathway hole.
+
 ## Validation
 
 The initial LinkML and module-validator checks pass. Gene validations and final
