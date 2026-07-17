@@ -22,9 +22,9 @@ autolink_gene_symbols: false
 - [x] Separate de novo synthesis from biotin attachment and BirA regulation.
 - [x] Fetch the six pathway-specific PSEPK genes.
 - [x] Review every GOA annotation for the selected genes.
-- [ ] Complete OpenScientist module and gene reports.
+- [x] Run OpenScientist module and gene research; record provider timeouts.
 - [x] Complete initial module and gene validation.
-- [ ] Render module, gene, and project pages after research integration.
+- [x] Render module, gene, and project pages after research integration.
 - [ ] Open one draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
@@ -71,7 +71,25 @@ ppu00780 Fab candidate to this module.
 - GO:0102130 is accepted for BioC because its definition and Rhea grounding
   specify malonyl-ACP, while its current label misleadingly says malonyl-CoA.
 
+## Research Status
+
+The module/pathway/taxon OpenScientist report supports all six dedicated
+BioC-BioH-route reactions, the external shared-fatty-acid-synthesis handoff,
+and exclusion of BirA and generic Fab proteins from dedicated module
+membership. It found no direct biochemical characterization of the individual
+KT2440 proteins, so those assignments remain grounded primarily in exact
+UniProt families, reactions, genomic context, and orthology.
+
+Gene-level OpenScientist reports were integrated for BioC, BioH, BioF, BioD,
+and BioB. The BioA request reached OpenScientist's 3600-second service ceiling
+and returned no report, so its review remains grounded in the exact UniProt
+reaction/family record and the successful module-level pathway report. The
+failed run is recorded in `genes/PSEPK/bioA/bioA-notes.md`; no synthetic
+provider report was created.
+
 ## Validation
 
-Initial LinkML, module-validator, and six gene-review validations pass. Final
-validation will be rerun after OpenScientist evidence integration.
+All six gene reviews pass targeted validation. The module passes LinkML and
+module-specific validation, with only the expected advisory that NCBIfam is
+not configured for label lookup. All six gene pages, the module page, and this
+project page render successfully after research integration.
