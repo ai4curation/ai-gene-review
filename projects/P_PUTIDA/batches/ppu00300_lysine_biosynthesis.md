@@ -75,6 +75,10 @@ pathway holes.
   does not establish their relative in-vivo flux.
 - DapD, DapC, and DapE explicitly model the succinylated route rather than
   collapsing all taxonomic DAP-pathway variants into one ambiguous step.
+- No PAINT ancestral node is asserted. PTN tokens in the selected local GOA
+  rows occur in combined-IEA or TreeGrafter evidence rather than canonical
+  `GO_REF:0000033` IBD seeds; the DapE-associated PTN also carries the rejected
+  ArgE/arginine propagation.
 - Molecular functions occur only on leaf annotons, and no module-level
   cytoplasm/cytosol pair is asserted.
 - The obsolete GO:0009089 DAP-route process term is not authored as a new core
