@@ -22,9 +22,9 @@ autolink_gene_symbols: false
 - [x] Distinguish catalytic and regulatory subunits of acetohydroxy-acid synthase.
 - [x] Fetch and review the 11 selected PSEPK proteins.
 - [x] Review every GOA annotation for the selected genes.
-- [ ] Complete OpenScientist module and gene reports.
+- [x] Complete the OpenScientist module and gene research pass.
 - [x] Complete initial module and gene validation.
-- [ ] Render module, gene, and project pages after research integration.
+- [x] Render module, gene, and project pages after research integration.
 - [ ] Open one draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
@@ -98,6 +98,11 @@ terminal transamination for all three products.
   are marked over-annotated rather than removed: threonine is broken down by
   the reaction, but the supported core physiological role is 2-oxobutanoate
   supply for isoleucine synthesis rather than a dedicated catabolic pathway.
+- The module report and eight gene reports completed successfully. Requests for
+  `ilvA-II`, `ilvD`, and `leuA` reached OpenScientist's 3600-second service
+  ceiling and were cancelled without output. Their notes record the failures;
+  no provider-named report was fabricated, and their reviews remain grounded
+  in exact UniProt/family evidence plus the successful module report.
 
 ## Validation
 
