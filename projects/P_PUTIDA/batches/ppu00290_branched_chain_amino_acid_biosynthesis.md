@@ -11,7 +11,7 @@ autolink_gene_symbols: false
 - Reusable module: `modules/branched_chain_amino_acid_biosynthesis.yaml`
 - KEGG ppu00290 candidates inspected: 18
 - Selected pathway proteins reviewed: 11
-- Biochemical activities covered: 8, including two obligate two-subunit steps
+- Biochemical activities covered: 8, including two heteromeric enzyme assemblies
 - Excluded broad-map, catabolic-family, or unsupported paralog candidates: 7
 - Gene-level provider: OpenScientist
 - Module and PSEPK satisfiability provider: OpenScientist
@@ -63,9 +63,13 @@ terminal transamination for all three products.
   it is not a single-enzyme wrapper.
 - IlvI and IlvH are separate annotons in one protein-complex step. Catalytic
   acetolactate synthase activity is assigned only to IlvI, while IlvH carries
-  acetolactate synthase regulator activity.
+  acetolactate synthase regulator activity. The complex node carries
+  GO:0005948, while both molecular functions remain on the leaf annotons.
 - LeuC and LeuD are separate annotons in the heteromeric isopropylmalate
-  dehydratase step.
+  dehydratase step. Its complex node carries GO:0009316. Both gene reviews use
+  `contributes_to_molecular_function` because the complete activity requires
+  the LeuC-LeuD assembly; complex membership is accepted for LeuD and proposed
+  for LeuC.
 - IlvA-I and IlvA-II are exact PSEPK exemplars of InterPro:IPR005787. Either can
   satisfy the reaction at first-pass resolution; direct genetics or expression
   data are needed to partition their physiological roles.
@@ -85,9 +89,13 @@ terminal transamination for all three products.
 - `leuA` does not perform acetyl-CoA C-acetyltransferase chemistry; that
   thiolase-family annotation is removed while 2-isopropylmalate synthase is
   retained.
+- The exact Q88CQ2 IlvD record assigns a 2Fe-2S cluster plus magnesium, so the
+  module does not import the 4Fe-4S cofactor often described for other IlvD
+  family members.
 - For both IlvA paralogs, TreeGrafter serine/threonine-catabolic process calls
-  are not accepted as physiological roles merely because the broader enzyme
-  family can act on those substrates.
+  are marked over-annotated rather than removed: threonine is broken down by
+  the reaction, but the supported core physiological role is 2-oxobutanoate
+  supply for isoleucine synthesis rather than a dedicated catabolic pathway.
 
 ## Validation
 
