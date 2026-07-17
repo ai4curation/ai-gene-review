@@ -8,6 +8,9 @@ sidecars:
   per_gene: AFFINAGE_EVALUATION/results/per-gene.json
   summary_csv: AFFINAGE_EVALUATION/results/summary.csv
   summary_md: AFFINAGE_EVALUATION/results/summary.md
+  batch2_genes: AFFINAGE_EVALUATION/batch2-genes.txt
+  batch2_per_gene: AFFINAGE_EVALUATION/results/batch2/per-gene.json
+  batch2_summary_md: AFFINAGE_EVALUATION/results/batch2/summary.md
 ---
 # Affinage Evaluation Project
 
@@ -30,7 +33,14 @@ sharply for **ADA**, where the synthesized narrative is about *E. coli* Ada
 (an alkyltransferase/transcription factor) while the record is keyed to human
 adenosine deaminase P00813.
 
-This is a **pilot**, not a finished benchmark: n=12, exact-GO-id agreement only,
+A second, independent 13-gene cohort (enzymes, kinases, TFs, a channel)
+**reproduces the pattern exactly**: **0/13** specific core-MF captured, and it
+surfaces a sharper variant — several small-molecule metabolic enzymes are grounded
+to the *wrong* catalytic branch (`catalytic activity, acting on a protein/DNA`).
+Across the **combined 25 genes**, the specific curated primary function is captured
+**0/25** times.
+
+This is still exploratory, not a finished benchmark: exact-GO-id agreement only,
 and the local AIGR references are mixed-maturity, not independently expert-signed
 ground truth.
 
@@ -89,6 +99,7 @@ hard-coded.
 ```bash
 cd projects/AFFINAGE_EVALUATION
 python compare_affinage.py --genes-file pilot-genes.txt   # writes results/
+python compare_affinage.py --genes-file batch2-genes.txt --out-dir results/batch2
 ```
 
 The exact-id metric is deliberately strict and **understates** agreement where
@@ -113,7 +124,29 @@ See the generated [summary](AFFINAGE_EVALUATION/results/summary.md) ·
   membrane matches are common; localization is Affinage's strongest aspect.
 - **MF grounding is systematically less precise** — see taxonomy below.
 
-## Failure-mode taxonomy (pilot, verified by inspection)
+## Extended cohort (batch 2, n=13)
+
+A second cohort ([`batch2-genes.txt`](AFFINAGE_EVALUATION/batch2-genes.txt);
+[results](AFFINAGE_EVALUATION/results/batch2/summary.md)) of well-characterized
+enzymes, kinases, transcription factors and a channel was run to test whether the
+pilot pattern generalizes. It does — **0/13** specific core-MF captured. Every
+gene's defining activity is grounded only to a top-level parent:
+
+| Gene | AIGR core MF | Affinage top MF |
+|------|--------------|-----------------|
+| SOD1 | superoxide dismutase activity | oxidoreductase activity |
+| CASP3 | cysteine-type endopeptidase activity | catalytic activity, acting on a protein |
+| MAPK1 | MAP kinase activity | catalytic activity, acting on a protein |
+| HMOX1 | heme oxygenase (decyclizing) activity | oxidoreductase activity |
+| LDHA | L-lactate dehydrogenase (NAD+) activity | oxidoreductase activity |
+| CFTR | intracellularly ATP-gated chloride channel activity | transporter activity |
+| SIRT1 | NAD-dependent protein lysine deacetylase activity | catalytic activity, acting on a protein |
+
+Across the **combined 25-gene set**, the specific curated primary function is
+captured **0/25** (the two nominal core matches in the pilot, AATF and ABL1, are
+general secondary terms, not the primary activity).
+
+## Failure-mode taxonomy (verified by inspection)
 
 ### 1. General-parent / less-precise MF grounding (dominant)
 
@@ -163,14 +196,27 @@ Tellingly, Affinage's *own* head-to-head `evaluation.pairwise` scores ADA a
 analogous to the BioReason `csr-1` wrong-input case, and precisely what an
 accession-anchored GOA review catches.
 
+### 4. Wrong parent *branch* (metabolic enzymes → acting-on-protein/DNA)
+
+Beyond generic-ancestor grounding (mode 1), several small-molecule metabolic
+enzymes are grounded to the **wrong catalytic branch** entirely: SOD1, LDHA and
+PKM receive `catalytic activity, acting on a protein` (GO:0140096), and FASN and
+GSK3B receive `catalytic activity, acting on DNA` (GO:0140097) — none of which act
+on proteins or DNA in the reaction the curated core function describes. This looks
+like literature co-mention of protein/nucleic-acid partners leaking into the
+substrate-class grounding, and it is worse than mere imprecision: the assigned
+parent is not an ancestor of the true term, so even ontology-aware ancestor
+scoring would (correctly) count it as wrong.
+
 ## Next steps
 
 1. **Ontology-aware scoring.** Replace exact-id match with ancestor/descendant
    distance (using the pinned GO release, as in the BioReason
    [ontology-authority](BIOREASON_COMPARISON/verify_ontology_authority.py)
    approach) to quantify the "general-parent" pattern instead of only counting it.
-2. **Scale the cohort.** Extend from 12 to a stratified sample (enzymes, TFs,
-   transporters, receptors, structural, uncharacterized) and report per-class.
+2. **Scale the cohort.** 25 genes done (pilot + batch 2); extend to a larger
+   stratified sample (enzymes, TFs, transporters, receptors, structural,
+   uncharacterized) and report per-class capture rates.
 3. **Score the narrative, not just the GO layer.** Adopt the BioReason
    correctness/completeness rubric on Affinage's `current_model` text, with a
    blinded second rater.

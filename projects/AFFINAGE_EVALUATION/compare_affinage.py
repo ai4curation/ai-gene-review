@@ -164,7 +164,12 @@ def main() -> None:
     ap.add_argument("genes", nargs="*")
     ap.add_argument("--genes-file")
     ap.add_argument("--refresh", action="store_true")
+    ap.add_argument("--out-dir", help="write results here instead of ./results")
     args = ap.parse_args()
+
+    global RESULTS
+    if args.out_dir:
+        RESULTS = Path(args.out_dir)
 
     genes = list(args.genes)
     if args.genes_file:
