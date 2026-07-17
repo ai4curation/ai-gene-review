@@ -44,13 +44,29 @@ activation (FluG/Flb)**, **repressive gating (FlbA / G-protein–PKA)**, **velve
 maturation (VosA/VelB)**, and **structural output (hydrophobins / pigment)** —
 are all modeled as first-class tiers rather than prose context.
 
-## 3. Top-level grounding (to resolve)
+## 3. Top-level grounding
 
-- `module.concepts`: a GO biological-process term for conidiation. Candidate
-  labels to resolve to ids via OLS: *conidium development*, *asexual
-  sporulation resulting in formation of a cellular spore*, *conidiophore
-  development*. **Pick the most specific term that still spans the whole
-  cascade; keep narrower ones on the relevant tier.**
+**Resolved.** Use **GO:0048315 "conidium formation"** as the top-level
+`module.concepts` term.
+
+> ⚠️ **Do not use `GO:0061794` "conidium development".** It is being obsoleted
+> as an *unnecessary grouping term* (0 direct annotations, single child
+> GO:0048315) — GO tracker
+> [geneontology/go-ontology#32315](https://github.com/geneontology/go-ontology/issues/32315)
+> (opened 2026-07-15, label `obsoletion`; still `isObsolete:false` in the
+> released ontology as of this writing, i.e. an in-flight change). GO:0048315
+> is the surviving specific term.
+
+Related terms to use where appropriate rather than at the top:
+
+- **GO:0048315** *conidium formation* — top-level module concept (the whole
+  program, formation → mature spore).
+- **GO:0075306** *regulation of conidium formation* — for the regulatory-cascade
+  framing / the FluG–Flb–BrlA–AbaA–WetA relay as regulators.
+- **GO:0030436** *asexual sporulation* — broader parent (context only).
+
+Per-tier MF/BP terms (TF activity, RGS activity, PKS activity, etc.) still go on
+the leaf annotons and are resolved via OLS during grounding.
 - `module.context`:
   - `taxa`: Pezizomycotina / Ascomycota (species-neutral at the top; species
     pinned inside `variant_sets`). Resolve NCBITaxon id.
@@ -181,8 +197,8 @@ dirs:** likely `EMENI` (*A. nidulans*) and `NEUCR` (*N. crassa*).
 
 - **Single reusable module vs. two concrete instances?** Recommendation:
   one reusable module with taxon `variant_sets` (Aspergillus + Neurospora).
-- **Which top GO term** best spans the whole cascade without over-narrowing?
-  Resolve candidates in §3 against the ontology.
+- ~~Which top GO term best spans the whole cascade?~~ **Resolved:**
+  GO:0048315 *conidium formation* (see §3; GO:0061794 is being obsoleted).
 - **Structural output — in-core vs. sibling module?** Currently in-core as
   tier 5; could be spun out to a `conidial_wall_assembly` module if it grows.
 - **GO-CAM coverage:** check `gocams/index.tsv` for any existing conidiation
