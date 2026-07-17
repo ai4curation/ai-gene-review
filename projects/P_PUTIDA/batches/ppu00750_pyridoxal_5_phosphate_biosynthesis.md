@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist module and gene research; record provider timeouts.
 - [x] Validate the initial module and gene-review curation.
 - [x] Render module, gene, and project pages.
-- [ ] Open one draft PR for this module/pathway.
+- [x] Open one draft PR for this module/pathway: [#2174](https://github.com/ai4curation/ai-gene-review/pull/2174).
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
