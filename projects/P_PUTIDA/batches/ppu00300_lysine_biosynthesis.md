@@ -93,6 +93,11 @@ pathway holes.
   sequence-identity-based rankings of DapA, DapF, and LysA copies are therefore
   retained as hypotheses, not used to exclude exact UniProt-supported
   paralogs from this first-pass reusable module.
+- The gene-level DapF reports resolve the Q88GD4 UniProt sequence caution as a
+  putative paired-serine DapF-SS signature (Ser70/Ser205), alongside the
+  canonical paired-cysteine Q88CF3 DapF-CC copy (Cys75/Cys219). PMID:40774471
+  establishes the DapF-SS class, but neither KT2440 paralog has a direct assay;
+  activity partitioning and gene-specific essentiality remain open.
 - PP_1588 has DapC-specific InterPro/NCBIfam signatures and remains the selected
   step-4 enzyme. The possible contribution of the broader ArgD/AruC family is a
   physiological flux question rather than a pathway hole.
