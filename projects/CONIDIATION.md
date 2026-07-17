@@ -34,7 +34,7 @@ structural genes it ultimately switches on.
 | Candidate scope | Decision | Rationale |
 |---|---|---|
 | **Conidiation regulatory cascade** (upstream activation → BrlA → AbaA → WetA/velvet → structural output) | **Core module** | Clean multi-tier regulatory chain; maps directly onto `parts` + typed `connections`; clears the ≥2-substantive-parts rule (6 tiers). |
-| Conidiophore morphogenesis (stalk → vesicle → metulae → phialides → conidia) | Sibling module (later) | More morphological than molecular; would ground on the same regulators. |
+| Conidiophore morphogenesis (stalk → vesicle → metulae → phialides → conidia) | **Second in-module concept / context** (see §3a) | A *distinct* GO branch — GO:0070787 *conidiophore development*, on the reproductive-structure axis, **not** under conidium formation. The cascade spans both axes (BrlA/AbaA build the conidiophore; WetA/velvet mature the spore), so it is not cleanly separable. |
 | Conidial dispersal / dormancy physiology | Out of scope | Downstream physiology; touched only via velvet/dormancy node. |
 
 **Type:** `module_type: DEVELOPMENTAL_PROCESS`.
@@ -46,8 +46,9 @@ are all modeled as first-class tiers rather than prose context.
 
 ## 3. Top-level grounding
 
-**Resolved.** Use **GO:0048315 "conidium formation"** as the top-level
-`module.concepts` term.
+**Resolved.** Give `module.concepts` **two** terms (see §3a for why): the
+spore-cell axis **GO:0048315 "conidium formation"** (primary) and the structural
+axis **GO:0070787 "conidiophore development"**. The cascade drives both.
 
 > ⚠️ **Do not use `GO:0061794` "conidium development".** It is being obsoleted
 > as an *unnecessary grouping term* (0 direct annotations, single child
@@ -73,6 +74,43 @@ the leaf annotons and are resolved via OLS during grounding.
   - `cellular_components`: nucleus (the TF relay), plasma membrane / hyphal tip
     (signal sensing), extracellular region (FluG signal, rodlet layer). Avoid
     asserting both a parent and child compartment without a recorded reason.
+
+## 3a. Ontology landscape (scouted) — two orthogonal axes
+
+Conidiation splits into **two GO branches that are not parent/child**. Both
+belong in the module — spore-cell formation as the primary concept, conidiophore
+development as a co-equal structural concept/context.
+
+| Axis | Term | Role in module | Ann. count* |
+|---|---|---|---|
+| **Spore-cell formation** (asexual sporulation → cell differentiation branch) | GO:0030436 asexual sporulation | broad parent / context | 9283 |
+| | GO:0043936 …formation of a cellular spore | broad parent | 1133 |
+| | **GO:0048315 conidium formation** | **primary module concept** | 551 |
+| | GO:0075306 regulation of conidium formation (+ GO:0075307 pos / GO:0075308 neg) | regulatory-tier framing | 379 |
+| **Conidiophore structure** (reproductive-structure development branch) | **GO:0070787 conidiophore development** | **second module concept** (BrlA/AbaA morphogenesis) | 19 |
+| | GO:0070788 conidiophore stalk development | tier-specific (stalk) | 0 |
+| | GO:0070793 regulation of conidiophore development (+ GO:0070795 pos / GO:0070794 neg) | regulatory framing | 1 |
+| — | GO:0000905 sporocarp development involved in asexual reproduction | parallel structure term (rarely used) | 10 |
+| ✗ | GO:0061794 conidium development | **do not use — being obsoleted (#32315)** | 0 |
+
+\* Indicative QuickGO `goUsage=exact` counts — **not** a basis for term choice
+(see caveat below).
+
+**⚠️ Annotation is inconsistent — do not infer structure from GOA.** 9283
+annotations sit on the vague grouping term *asexual sporulation* while the
+precise *conidium formation* (551) and *conidiophore development* (19 / 0 / 1)
+terms are sparsely populated. The same regulators (`brlA`, `abaA`, `wetA`, …)
+are annotated to a scatter of broad and specific terms depending on the
+MOD/curator. Consequences for the build:
+
+- Choose each annoton's term **by biology**, not by copying where the gene
+  currently sits in GOA.
+- Expect many existing broad-term annotations (e.g. to GO:0030436) to be
+  `MODIFY` candidates toward the specific conidium/conidiophore terms when the
+  member gene reviews are done.
+- Use regulation sub-terms (GO:0075306 / GO:0070793 and their pos/neg children)
+  for the TF-cascade tiers where the biology is *regulatory*, and the formation/
+  development terms where it is *executive*.
 
 ## 4. Part decomposition
 
