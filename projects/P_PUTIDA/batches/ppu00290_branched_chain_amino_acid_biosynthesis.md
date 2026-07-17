@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Complete the OpenScientist module and gene research pass.
 - [x] Complete initial module and gene validation.
 - [x] Render module, gene, and project pages after research integration.
-- [ ] Open one draft PR for this module/pathway.
+- [x] Open one draft PR for this module/pathway: [#2176](https://github.com/ai4curation/ai-gene-review/pull/2176).
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
