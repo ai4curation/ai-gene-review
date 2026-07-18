@@ -10,12 +10,22 @@ status: DESIGN
 
 # Conidiation regulatory cascade — module design proposal
 
-**Status:** first module implemented. A concrete *Aspergillus nidulans*
-`ModuleReview` now exists at `modules/conidiation_regulatory_cascade.yaml`
-(rendered: `pages/modules/conidiation_regulatory_cascade.html`), grounding all 21
-participants in verified UniProtKB accessions and passing `linkml-validate` +
-`module_validator`. This page remains the design rationale and the source for the
-two-axis ontology analysis and the annotation-inconsistency caveat.
+**Status:** reusable ABSTRACT module implemented. `modules/conidiation_regulatory_cascade.yaml`
+(rendered: `pages/modules/conidiation_regulatory_cascade.html`) is now an **ABSTRACT**
+module with an `EXACTLY_ONE` taxon `variant_set` holding two paradigms:
+
+- **`aspergillus_paradigm`** — the fully-curated FluG/Flb → BrlA → AbaA → WetA/velvet
+  cascade with G-protein/FlbA gating; **all 21 member genes have validated reviews**
+  under `genes/EMENI/`. Carries the conidiophore-development (GO:0070787) structural concept.
+- **`neurospora_macroconidiation`** — the analogous, largely **non-orthologous** *N. crassa*
+  program, grounded in verified UniProtKB exemplars: the blue-light White Collar Complex
+  (WC-1 `Q01371`, WC-2 `P78714`) + circadian **FRQ** (`P19970`) gating, the fluffy Zn(II)₂Cys₆
+  master TF **FL** (`O13360`), and structural output (EAS/CCG-2 hydrophobin `Q04571`, CON-6
+  `P34762`, CON-10 `P10713`). Full gene reviews for these are a tracked follow-up.
+
+Root concept generalized to conidium formation (GO:0048315); context broadened to
+Pezizomycotina. This page remains the design rationale and the source for the two-axis
+ontology analysis and the annotation-inconsistency caveat.
 
 **Implemented so far:** the six-tier cascade (FluG/Flb → BrlA → AbaA →
 WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual
@@ -54,10 +64,11 @@ gene now has a validated review with core functions:
 module's `GO:0003700` on those annotons holds; WetA (not a velvet protein) had its
 MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
 
-**Tracked follow-ups:** all 21 member gene reviews are **complete** (module Derived
-QC: 21/21 reviewed, 21 complete). Remaining optional work is module deep research
-and the *Neurospora* macroconidiation variant (would make the module ABSTRACT with
-taxon `variant_sets`).
+**Tracked follow-ups:** the Aspergillus paradigm is **complete** (21/21 member
+reviews). The *Neurospora* variant is structurally in place and grounded in verified
+exemplars; its full gene reviews (FL, WC-1/2, FRQ, EAS, CON-6/10, plus acon-2/acon-3)
+remain to be done. Module deep research is in progress
+(`conidiation_regulatory_cascade-deep-research-*.md`).
 
 ## 1. What the module is
 
