@@ -94,6 +94,30 @@ It also illustrates an OpenScientist failure mode worth remembering: **a confide
 single-representative Foldseek call (m4C) over-specified past what the fold can
 resolve** — caught only by the family-wide sequence/annotation check.
 
+**Structural verification of the seed rows (OpenScientist, 2026-07-18).** Four
+high-value rows were sent to OpenScientist as **blinded, structure-scoped hypothesis
+jobs** (Foldseek fold assignment + active-site check on a representative; the mapping
+was withheld from the prompt), each with a **pre-registered holdout prediction**.
+Full reports and blinded comparisons live under
+[`NF0*-hypotheses/`](NCBIFam/NF042963-hypotheses/duf1156_antiphage_mechanism/COMPARISON.md).
+The round was productive in *both* altitude directions:
+
+| Row | Representative | OpenScientist verdict | Effect on the seed |
+|---|---|---|---|
+| **NF042963** DUF1156 (anti-phage) | A0A3B7MFS0 | Intact SAM-dependent **DNA amino-methyltransferase** (DPPY), no nuclease; BREX/DISARM-like defense; DUF1156 accessory | **Adds an MF** the DUF name hid (GO:0009008; base UNDECIDED m6A/m4C) — seed *under*-specified |
+| **NF002326** dGTPase | Q92Q32 ("-like") | Active site **intact**, but SAMHD1-like **broad dNTPase**, strict dGTP not supported | **Over-refinement caught**: keep GO:0008832 for strict members, map "-like" clade to sibling GO:0106375 |
+| **NF033545** IS630 transposase | P16943 ("uncharacterized") | Bona fide **DDE transposase** (RNase-H fold, intact D181/D261/E297 triad) | **Confirms** GO:0004803; grounds the 18,874 headline (add an intact-triad filter for defective IS copies) |
+| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation |
+
+The two enzyme rows are the payoff: DUF1156 shows the seed can **under**-specify (a
+"DUF" concealing a real MF) and dGTPase shows it can **over**-specify (a strict child
+propagated onto a broad-specificity clade) — the same altitude discipline as the FtsX
+case, now demonstrated in both directions and grounded in structure rather than
+annotation. Two operational notes for scaling: a confident **single-representative
+Foldseek call can over-specify** (DUF1156 m4C-vs-m6A; resolved only by a family-wide
+check), and OpenScientist jobs occasionally need a **narrowed, single-analysis prompt**
+to finish under the 7200 s API ceiling (IS630).
+
 **The honest caveat that frames all of the above:** the *bulk* of the gain is in
 unreviewed **TrEMBL**, not Swiss-Prot — which is exactly what we should expect and is
 fine. Over a 60-model `equivalog` sample the totals are **Σ 19 reviewed vs 26,578
