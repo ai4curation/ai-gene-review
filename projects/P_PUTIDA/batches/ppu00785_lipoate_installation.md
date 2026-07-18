@@ -37,7 +37,7 @@ salvage-or-GcvH-relay candidate.
 - [x] Reconcile the reviews and module against the completed research.
 - [x] Validate and render all affected artifacts.
 - [x] Open draft pull request #2181 for this module.
-- [ ] Finish checks and move pull request #2181 out of draft.
+- [x] Finish checks and move pull request #2181 out of draft.
 
 ## Pathway Satisfiability
 
