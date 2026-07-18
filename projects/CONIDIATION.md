@@ -20,9 +20,20 @@ two-axis ontology analysis and the annotation-inconsistency caveat.
 **Implemented so far:** the six-tier cascade (FluG/Flb → BrlA → AbaA →
 WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual
 top-level concepts GO:0048315 + GO:0070787, per-annoton molecular functions, and
-typed connections. **Tracked follow-ups:** member gene reviews (0/21 done),
-module deep research, and the *Neurospora* macroconidiation variant (would make
-the module ABSTRACT with taxon `variant_sets`).
+typed connections.
+
+**Member gene reviews — 3/21 complete** (`genes/EMENI/`):
+
+| Gene | Acc | Annotations reviewed | Notable curation calls |
+|---|---|---|---|
+| brlA | P10069 | 26 | Core C2H2 master TF; GO:0045461 *sterigmatocystin biosynthetic process* flagged **over-annotation** (regulator, not biosynthetic); ST/autolysis/starvation kept non-core |
+| abaA | P20945 | 21 | Core ATTS/TEA TF (binds CATTCY); all ACCEPT — clean phialide/conidiophore regulator |
+| wetA | P22022 | 12 | Core late regulator (spore-wall assembly); GO:0046148 pigment kept non-core; **no MF asserted** (WetA's sequence-specific DNA binding not established) — module annoton corrected to match |
+
+**Tracked follow-ups:** remaining 18 member gene reviews (velvet, Flb, G-protein,
+hydrophobin/pigment genes), module deep research, and the *Neurospora*
+macroconidiation variant (would make the module ABSTRACT with taxon
+`variant_sets`).
 
 ## 1. What the module is
 
