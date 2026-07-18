@@ -46,7 +46,7 @@ gene now has a validated review with core functions:
 | flbA | P38093 | 14 | RGS attenuator of FadA; **GO:0045574 ST catabolic process flagged likely-spurious** (contradicts its ST-positive role) |
 | rodA | P28346 | 8 | Class I rodlet hydrophobin (GO:0005199); spore-wall assembly |
 | dewA | P52750 | 10 | Class I spore-wall hydrophobin (GO:0005199) |
-| wA | Q03149 | 11 | Conidial-pigment PKS. **GO:0052716 laccase activity flagged cross-attribution** (PMID:7050088 is the conidial laccase = yA, not the PKS; `reference_review: WRONG_IDENTIFIER`) |
+| wA | Q03149 | 11 | Conidial-pigment PKS. **GO:0052716 laccase activity REMOVED** — PMID:7050088 (the cited paper) states wA *lacks the laccase substrate* and the laccase is yA's; a genuinely-contradicted cross-attribution (`reference_review: WRONG_IDENTIFIER`) |
 | yA | P17489 | 13 | Conidial laccase (GO:0052716, IDA), downstream of wA |
 
 **Module MF verification (from reviews):** the velvet structural paper
