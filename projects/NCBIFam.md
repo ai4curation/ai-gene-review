@@ -6,6 +6,71 @@ tags: [PIPELINE]
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
 
+## The value question, answered first: yes — and here are the mappings
+
+**Are there `ncbifam2go` mappings (existing NCBI-assigned, or new/refined here) that
+would add high-value annotations we do *not* already get from the InterPro rollup?
+Yes.** "Not from the rollup" has a precise meaning here, because NCBIFAM reaches GOA
+*only* through `interpro2go`: an added annotation is genuinely **net-new** when an
+entry already carries the NCBIFAM signature but the term never propagated — the
+family is unintegrated into InterPro, or its InterPro entry has no `interpro2go` row.
+That net-new count is exactly the closure-aware `gain` measured live by
+[`ncbifam_go_gain.py`](NCBIFam/ncbifam_go_gain.py) (an entry counts as gaining the
+term only if it lacks the term **and every descendant**). The highest-value cases,
+straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
+
+| NCBIFAM family | Proposed GO (→ `ncbifam2go`) | Net-new (all) | …reviewed | Kind | Why it's unique / high-value |
+|---|---|---:|---:|---|---|
+| NF033545 IS630 transposase | GO:0004803 transposase activity | **18,874** | 2 | adopt NCBI | Mobile elements — InterPro integration lags most here; single biggest gap |
+| TIGR03542 LL-DAP aminotransferase | GO:0010285 LL-DAP transaminase | **1,185** | 2 | **refine** | NCBI gave the broad class GO:0008483; specific EC-bridged child unmasks 1,185 |
+| NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation |
+| TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1 | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575 |
+| NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
+| NF002326 dGTPase | GO:0008832 dGTPase activity | **456** | **13** | **refine** | NCBI gave broad GO:0016793; **biggest *reviewed*/Swiss-Prot gap in the set** |
+| TIGR02791 VirB5 (T4SS) | GO:0043684 type IV secretion system complex | **298** | 4 | adopt (broad) | 0/298 entries carry it today; secretion biology, no specific CC term exists |
+| NF042963 anti-phage DUF1156 | GO:0051607 defense response to virus | **151** | 0 | adopt NCBI | Brand-new defense family — **0/151 carry any related term**; pure gap-fill |
+
+**The honest caveat that comes with this answer:** the *bulk* of the gain is in
+unreviewed **TrEMBL**, not Swiss-Prot. Over a 60-model `equivalog` sample the totals
+are **Σ 19 reviewed vs 26,578 all-UniProtKB** — the opposite emphasis from RHEA,
+because NCBIFAM is prokaryote-heavy and Swiss-Prot's curated prokaryotic enzymes
+usually already carry the term. So the value is real and large, but it is mostly
+*automated-annotation depth*; the curation-ready (reviewed) additions are a modest,
+high-quality minority concentrated in **newer microbial biology** (mobile elements,
+CRISPR/anti-phage defense, secretion, sporulation, encapsulins). The clearest
+curation targets are the rows with a nonzero **reviewed** column — dGTPase (13),
+VirB5 (4), LL-DAP aminotransferase (2) — Swiss-Prot entries missing the term today.
+
+**Two things this table also demonstrates about *how* to build `ncbifam2go`:**
+
+- **"Refine" > "adopt" for altitude.** Five of these top rows are cases where NCBI's
+  own `go_terms` gave only a broad parent (up to the near-root GO:0003824); because
+  the gain query is closure-aware, the broad term shows **~0 gain** and looks
+  worthless, while the specific EC-bridged child we propose reveals hundreds of
+  net-new annotations. *Proposing our own specific term is what converts these from
+  invisible to high-value.*
+- **High gain is a flag, not an instruction.** The mirror case, **FtsX (TIGR00439)**,
+  is deliberately **excluded from the high-value list**: mapping to the most specific
+  `GO:0043093 FtsZ-dependent cytokinesis` would show a 3,304 "gain", but curators
+  apply it to only 2/7 reviewed FtsX, so blanket propagation is **over-annotation**.
+  The seed maps FtsX to the safe consensus `GO:0051301 cell division` (gain 22). Every
+  candidate needs this altitude check before it counts as value.
+
+**Scale beyond the hand-picked eight.** The same EC-bridge standard, run over the
+whole collection ([`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)),
+yields **2,455 models (2,503 rows)** where NCBI's `go_terms` and GO's `ec2go`
+independently agree — an automatable, ready-to-add `ncbifam2go` core (AMR-rich:
+β-lactamases, trimethoprim-resistant DHFRs, aminoglycoside acetyltransferases), plus
+**843 "refine"** models where `ec2go` supplies a specific term over NCBI's broad one.
+
+**A second, different sense of "unique."** Separately, NCBIFAM is the **sole**
+integrated signature behind **250** of this repo's existing `interpro2go`
+annotations — including mainstream genes **GAPDH, RPS3, ATP6V1A, HMGCS2**. Those *do*
+come through the rollup today, but they exist **only because** an NCBIFAM/TIGRFAM
+model is the integrating signature; remove NCBIFAM and those GOA rows disappear. That
+is an attribution/robustness argument (detailed [below](#un-masking-member-db-attribution-on-this-repos-annotations)),
+distinct from the net-new gap-fills in the table above.
+
 ## Overview
 
 This project audits the **NCBI protein-family resources — NCBIFAM (the
