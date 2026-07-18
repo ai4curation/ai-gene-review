@@ -11,6 +11,7 @@ sidecars:
   batch2_genes: AFFINAGE_EVALUATION/batch2-genes.txt
   batch2_per_gene: AFFINAGE_EVALUATION/results/batch2/per-gene.json
   batch2_summary_md: AFFINAGE_EVALUATION/results/batch2/summary.md
+  narrative_vs_go: AFFINAGE_EVALUATION/results/narrative-vs-go.md
 ---
 # Affinage Evaluation Project
 
@@ -39,6 +40,14 @@ surfaces a sharper variant — several small-molecule metabolic enzymes are grou
 to the *wrong* catalytic branch (`catalytic activity, acting on a protein/DNA`).
 Across the **combined 25 genes**, the specific curated primary function is captured
 **0/25** times.
+
+**Crucially, this weakness is specific to the GO layer.** Affinage's free-text
+`mechanistic_narrative` — its actual product — is strong and specific, and recovers
+exactly the function the GO grounding drops (GPX4's narrative names "selenocysteine
+glutathione peroxidase reducing esterified phospholipid hydroperoxides… ferroptosis
+defense" with 29 inline PMIDs, where its GO layer says only `oxidoreductase
+activity`). See [The mechanism narrative](#the-mechanism-narrative-the-complement-to-go)
+below and [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
 
 This is still exploratory, not a finished benchmark: exact-GO-id agreement only,
 and the local AIGR references are mixed-maturity, not independently expert-signed
@@ -208,6 +217,37 @@ substrate-class grounding, and it is worse than mere imprecision: the assigned
 parent is not an ancestor of the true term, so even ontology-aware ancestor
 scoring would (correctly) count it as wrong.
 
+## The mechanism narrative (the complement to GO)
+
+Full analysis: [`results/narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
+
+The GO `mechanism_profile` is Affinage's **weakest** output; its actual product is
+the citation-anchored `narrative.mechanistic_narrative` plus the structured
+`timeline.discoveries` (each a typed object: `year`, `finding`, `method`, `journal`,
+`confidence` + rationale, `pmids[]`, `is_preprint`), and a `teleology` track of what
+each advance *explained*. On the sampled genes the narrative **recovers the specific
+mechanism the GO layer drops** — the GO grounding is a lossy down-cast, not a measure
+of what Affinage knows:
+
+| Gene | GO layer (lossy) | Narrative (specific; distinct inline PMIDs) |
+|------|------------------|---------------------------------------------|
+| GPX4 | oxidoreductase activity | selenocysteine glutathione peroxidase reducing membrane phospholipid hydroperoxides; ferroptosis defense (29) |
+| CASP3 | catalytic activity, acting on a protein | executioner cysteine protease; zymogen→p20/p11; DEVD specificity; cleaves PARP (25) |
+| MAPK1 | catalytic activity, acting on a protein | ERK2 Ser/Thr kinase; MEK1 dual phosphorylation (25) |
+| ADRB2 | molecular transducer activity | β2-adrenergic GPCR, catecholamine-responsive (18) |
+
+**But the narrative has two failure modes.** (1) *Recency/novelty bias on canonical
+genes:* the ADRB2 narrative surveys recent specialized papers (HCC drug resistance,
+amyloid-β, CAR-T checkpoint, osteoclastogenesis) but omits the textbook core — no
+cAMP, adenylyl cyclase, Gs, or β-arrestin desensitization. (2) *Symbol collisions
+break the prose too:* ADA's narrative is the three-entity chimera (§3). Usefully,
+Affinage's own `evaluation.pairwise` tracks these tiers — GPX4/CASP3/MAPK1 = `win`,
+ADRB2 = `tie`, ADA = `loss` — a built-in triage flag for which narratives to trust.
+
+**Implication:** the narrative + structured discoveries (not the GO layer) are the
+valuable AIGR deep-research input, gated by the `pairwise` self-signal and an
+accession-vs-narrative entity-collision check.
+
 ## Next steps
 
 1. **Ontology-aware scoring.** Replace exact-id match with ancestor/descendant
@@ -217,9 +257,11 @@ scoring would (correctly) count it as wrong.
 2. **Scale the cohort.** 25 genes done (pilot + batch 2); extend to a larger
    stratified sample (enzymes, TFs, transporters, receptors, structural,
    uncharacterized) and report per-class capture rates.
-3. **Score the narrative, not just the GO layer.** Adopt the BioReason
-   correctness/completeness rubric on Affinage's `current_model` text, with a
-   blinded second rater.
+3. **Score the narrative, not just the GO layer.** Qualitative sampling done (see
+   [narrative-vs-go.md](AFFINAGE_EVALUATION/results/narrative-vs-go.md)); next apply
+   the BioReason correctness/completeness rubric on `mechanistic_narrative` across a
+   scored cohort, with a blinded second rater, and test whether `evaluation.pairwise`
+   predicts the human scores.
 4. **Symbol-collision sweep.** Systematically check `prefetch_data.uniprot.accession`
    vs the organism/protein described in `current_model` to size the ADA-type
    failure across the genome.
