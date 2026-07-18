@@ -19,27 +19,68 @@ That net-new count is exactly the closure-aware `gain` measured live by
 term only if it lacks the term **and every descendant**). The highest-value cases,
 straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
 
-| NCBIFAM family | Proposed GO (→ `ncbifam2go`) | Net-new (all) | …reviewed | Kind | Why it's unique / high-value |
+| NCBIFAM family | Proposed GO (→ `ncbifam2go`) | Net-new (all) | reviewed† | Kind | Why it's unique / high-value |
 |---|---|---:|---:|---|---|
-| NF033545 IS630 transposase | GO:0004803 transposase activity | **18,874** | 2 | adopt NCBI | Mobile elements — InterPro integration lags most here; single biggest gap |
-| TIGR03542 LL-DAP aminotransferase | GO:0010285 LL-DAP transaminase | **1,185** | 2 | **refine** | NCBI gave the broad class GO:0008483; specific EC-bridged child unmasks 1,185 |
+| NF033545 IS630 transposase | GO:0004803 transposase activity | **18,874** | 2 ~ | adopt NCBI | Mobile elements — InterPro integration lags most here; single biggest gap |
+| TIGR03542 LL-DAP aminotransferase | GO:0010285 LL-DAP transaminase | **1,185** | 2→**0** ✗ | **refine** | Large *bacterial* TrEMBL gap is real; but both reviewed "gaps" are plant ALD1 paralogs (see †) |
 | NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation |
-| TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1 | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575 |
+| TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1→**0** ✗ | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575; the 1 reviewed "gap" is tobacco PMT paralog (see †) |
 | NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
-| NF002326 dGTPase | GO:0008832 dGTPase activity | **456** | **13** | **refine** | NCBI gave broad GO:0016793; **biggest *reviewed*/Swiss-Prot gap in the set** |
-| TIGR02791 VirB5 (T4SS) | GO:0043684 type IV secretion system complex | **298** | 4 | adopt (broad) | 0/298 entries carry it today; secretion biology, no specific CC term exists |
-| NF042963 anti-phage DUF1156 | GO:0051607 defense response to virus | **151** | 0 | adopt NCBI | Brand-new defense family — **0/151 carry any related term**; pure gap-fill |
+| NF002326 dGTPase | GO:0008832 dGTPase activity | **456** | 13 ⚠ | **refine** | NCBI gave broad GO:0016793; but all 13 reviewed are cautiously-named "dGTPase-*like*" (see †) |
+| TIGR02791 VirB5 (T4SS) | GO:0043684 type IV secretion system complex | **298** | 4 ✅ | adopt (broad) | 0/298 carry it; **the one clean reviewed gap-fill** — all 4 are *Brucella* VirB5 |
+| NF042963 anti-phage DUF1156 | GO:0051607 defense response to virus | **151** | 0 | adopt NCBI | Anti-phage defense family; but the term is coarse (see ‡) and 0 reviewed entries carry it |
 
-**The honest caveat that comes with this answer:** the *bulk* of the gain is in
-unreviewed **TrEMBL**, not Swiss-Prot. Over a 60-model `equivalog` sample the totals
-are **Σ 19 reviewed vs 26,578 all-UniProtKB** — the opposite emphasis from RHEA,
-because NCBIFAM is prokaryote-heavy and Swiss-Prot's curated prokaryotic enzymes
-usually already carry the term. So the value is real and large, but it is mostly
-*automated-annotation depth*; the curation-ready (reviewed) additions are a modest,
-high-quality minority concentrated in **newer microbial biology** (mobile elements,
-CRISPR/anti-phage defense, secretion, sporulation, encapsulins). The clearest
-curation targets are the rows with a nonzero **reviewed** column — dGTPase (13),
-VirB5 (4), LL-DAP aminotransferase (2) — Swiss-Prot entries missing the term today.
+**† Verification of the reviewed (Swiss-Prot) gains (2026-07-18).** The *reviewed*
+column is the curation-relevant one, so each nonzero value was checked by pulling the
+actual Swiss-Prot entries that lack the term (`ncbifam_go_gain.py` counts reproduced
+live; entries inspected via the UniProtKB REST API). **The check materially changes
+the reviewed story — only VirB5 survives as a clean gap-fill:**
+
+| Row | reviewed gain (all UniProtKB) | …restricted to prokaryotes | What the entries actually are |
+|---|---:|---:|---|
+| VirB5 → GO:0043684 | 4 | 4 | ✅ Genuine — all 4 are *Brucella* VirB5, real T4SS subunits |
+| dGTPase → GO:0008832 | 13 | 13 | ⚠️ All 13 are "dGTPase-**like** protein", **no EC assigned** — curators deliberately withheld the specific activity; propagating GO:0008832 asserts a substrate they declined (the FtsX over-annotation pattern, within Bacteria) |
+| IS630 → GO:0004803 | 2 | 2 | ~ Both are "**uncharacterized**" IS630-element ORFs (Shigella, Sinorhizobium) — plausibly the transposase, but left uncharacterized; weak |
+| LL-DAP → GO:0010285 | 2 | **0** | ✗ Both are **plant ALD1** (Arabidopsis Q9ZQI7, rice Q6VMN7); Q9ZQI7 carries *L-lysine α-aminotransferase* (GO:0062045, pipecolate/defense), **not** DapL — cross-kingdom paralog trap |
+| spermidine synthase → GO:0004766 | 1 | **0** | ✗ Tobacco **PMT1** (Q42963), neofunctionalized to *putrescine N-methyltransferase* (GO:0030750) — paralog trap |
+
+Two lessons fall out. **(1) Scope the gain to the model's lineage.** NCBI's PGAP
+NF/TIGR models are only applied to prokaryotic genomes, yet UniProt runs the HMMs
+cross-kingdom; querying all of UniProtKB inflates the *reviewed* gain with eukaryotic
+paralogs PGAP would never touch. Restricting to Bacteria+Archaea collapses the LL-DAP
+and spermidine reviewed gaps to **0** — the bacterial reviewed enzymes already carry
+the term; only diverged plant paralogs were missing it. **(2) "-like" is a curator
+caution flag.** Even in-scope, the dGTPase "gap" is a clade the curators declined to
+give the specific activity. So the honest reviewed tally among these eight is: **1
+clean (VirB5), 1 over-annotation-risk (dGTPase), 1 weak (IS630), 2 spurious (LL-DAP,
+spermidine).** The **all-UniProtKB (bacterial TrEMBL) gains remain real** — this only
+corrects the small *reviewed* number, which was the fragile part of the claim.
+
+**‡ "defense response to virus" is coarse — and no better GO term exists yet.** The
+user's instinct is right: NF042963 is *phage-specific*, and GO:0051607 (defense
+response to virus) does not say so. But (a) GO has **no** `defense response to
+bacteriophage` term — the only `defense response to X` children are virus, bacterium,
+symbiont, protozoan, insect, nematode, oomycetes, fungus, parasitic plant (QuickGO,
+2026-07-18); and (b) the **mechanism is unknown**: NF042963 traces to Gao et al. 2020
+*Science* (PMID:32855333, "Diverse enzymatic activities mediate antiviral immunity in
+prokaryotes"), which validated the system by **phage-challenge assays**, but DUF1156
+itself is a Pfam "domain of unknown function" (PF06634) with only a *structural
+prediction* of nucleic-acid binding — no established enzymatic activity to ground a
+mechanism-specific MF term. So GO:0051607 is the least-wrong *existing* term (a phage
+is a virus), but the right deliverable here is a **`proposed_new_terms` entry** for a
+phage-specific child (`defense response to bacteriophage`, is_a GO:0051607), not a
+confident `ncbifam2go` exactMatch. This is a BP row whose value is entirely in
+bacterial TrEMBL (0 reviewed), so it does not carry the "high-value reviewed" claim
+regardless.
+
+**The honest caveat that frames all of the above:** the *bulk* of the gain is in
+unreviewed **TrEMBL**, not Swiss-Prot — which is exactly what we should expect and is
+fine. Over a 60-model `equivalog` sample the totals are **Σ 19 reviewed vs 26,578
+all-UniProtKB** — the opposite emphasis from RHEA, because NCBIFAM is prokaryote-heavy
+and Swiss-Prot's curated prokaryotic enzymes usually already carry the term. The value
+is real and large, but it is mostly *automated-annotation depth*; the curation-ready
+(reviewed) additions are a small, high-quality minority — and, as † shows, must be
+inspected per-entry and taxonomically scoped before being trusted.
 
 **Two things this table also demonstrates about *how* to build `ncbifam2go`:**
 
