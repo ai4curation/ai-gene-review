@@ -35,6 +35,15 @@ So the `melatonin binding` and `resveratrol binding` IDA annotations reflect **i
 binding at the active site**, well-evidenced (co-crystals, ITC/kinetics) but pharmacological rather
 than the core catalytic function → KEEP_AS_NON_CORE.
 
+**Provenance of the `resveratrol binding` IDA (GO:1905594 → PMID:18254726):** In the annotated
+paper the direct evidence is a **binding assay, not a structure** — ITC gave a Kd of ~39 nM
+[PMID:18254726 "Resveratrol was found to interact strongly with QR2 with a Kd of 39 nM"], plus IC50
+inhibition assays; resveratrol served as a positive control there. The **crystal structure** of the
+QR2:resveratrol complex is from an earlier paper — **Buryanovskyy et al. 2004 (PDB 1SG0; PMID:15342248)**,
+who also first measured the Kd (~35 nM) by intrinsic tryptophan fluorescence — which Calamini et al.
+reuse for molecular replacement/docking. Buryanovskyy 2004 is a candidate reference to add (it is the
+primary structural + first-binding source but is absent from NQO2's GOA reference set).
+
 ## Annotation review decisions (26 GOA annotations)
 
 ### Molecular function — catalytic
