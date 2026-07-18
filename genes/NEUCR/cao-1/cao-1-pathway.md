@@ -10,13 +10,21 @@ Neurospora does not synthesize [PMID:23893079]. Consistent with this "standalone
 KEGG assigns cao-1 to ortholog **K28521 ("resveratrol cleavage oxygenase", EC 1.13.11.-)** and
 explicitly lists it as *"Not Included in Pathway or Brite"* — i.e. it is mapped to no KEGG pathway.
 
-This is the crux of the long-standing mis-annotation: cao-1's paralog **CAO-2** is a genuine,
-integral step of the **neurosporaxanthin (carotenoid) biosynthetic pathway** (it cleaves the C40
-carotene torulene) [PMID:23893079], and cao-1 was originally assumed to sit in the same carotenoid
+This is the crux of the long-standing mis-annotation: cao-1's paralog **CAO-2 (A7UXI1, NCU11424)** is a
+genuine, integral step of the **neurosporaxanthin (carotenoid) biosynthetic pathway** — a torulene
+dioxygenase (EC 1.13.11.59, KEGG KO **K17842**) mapped by KEGG to pathway **ncr00906 (Carotenoid
+biosynthesis)** [PMID:23893079] — and cao-1 was originally assumed to sit in the same carotenoid
 pathway, supplying retinal by cleaving β-carotene. Direct assays disproved this: heterologously
 expressed CAO-1 converts no carotenoid or apocarotenoid, and GOA carries a curated **NOT carotenoid
 metabolic process** annotation [PMID:23893079]. So cao-1 is *pathway-orphaned* relative to the
 carotenoid pathway it was presumed to serve, and instead performs an isolated stilbenoid-catabolic step.
+
+Tellingly, **both paralogs carry the identical phylogenetic (IBA) carotenoid annotations** —
+carotenoid dioxygenase activity (GO:0010436) and carotene catabolic process (GO:0016121), both from
+GO_REF:0000033 — because they share the carotenoid-oxygenase family (PANTHER PTHR10543). Those terms
+are *correct* for CAO-2 but *wrong* for CAO-1; only target-specific experimental evidence separates the
+two. The pathway membership follows the same split: CAO-2 belongs to `ncr00906`, while CAO-1 (KEGG KO
+K28521) is listed as "Not Included in Pathway or Brite."
 
 ## The catalyzed reaction (a single step, not a cascade)
 
