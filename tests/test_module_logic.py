@@ -196,11 +196,11 @@ def test_methionine_template_structure():
     circuit = compile_module_file(METHIONINE)
     assert [step_id(c) for c in circuit.children] == [
         "acylation", "sulfur_incorporation", "methylation"]
-    assert len(enumerate_routes(circuit)) == 8
+    assert len(enumerate_routes(circuit)) == 12
     # every step is an OR, so no enzyme is universally required
     assert core_atoms(circuit) == []
     assert sorted({a.gene_symbol for a in iter_atoms(circuit)}) == [
-        "metA", "metB", "metC", "metE", "metH", "metX", "metY"]
+        "metA", "metB", "metC", "metE", "metH", "metX", "metY", "metZ"]
 
 
 @pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
@@ -258,7 +258,7 @@ def test_abduction_classification(present, active, classification, gaps):
     if classification == "ABDUCTION_TARGET":
         # the candidate canonical enzymes that were all absent are reported per gap
         assert ab.gap_candidates["acylation"] == ["metA", "metX"]
-        assert ab.gap_candidates["sulfur_incorporation"] == ["metB", "metC", "metY"]
+        assert ab.gap_candidates["sulfur_incorporation"] == ["metB", "metC", "metY", "metZ"]
 
 
 KETOLYSIS = Path("modules/ketone_body_oxidation.yaml")

@@ -2,7 +2,7 @@
 
 Source: sigG-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -11,7 +11,7 @@ The BioReason functional summary reads:
 
 > A soluble bacterial transcription initiation factor that binds core RNA polymerase to confer promoter specificity during transcription initiation. Its modular architecture organizes the recognition and melting surfaces that select -10 and -35 promoter elements, assemble the open complex, and drive start-site commitment. In Bacillus, this factor likely directs developmental and stress-responsive transcription programs characteristic of sporulation-associated regulons and operates in the cytoplasm where it dynamically associates with the transcription machinery.
 
-The core description of sigma factor function is correct: SigG is a sigma-70 family transcription initiation factor that confers promoter specificity (GO:0016987, sigma factor activity) and participates in transcription initiation (GO:0006352). The cytoplasmic localization is reasonable.
+The core description of sigma factor function is correct: SigG is a sigma-70 family transcription initiation factor that confers promoter specificity (GO:0016987, sigma factor activity) and participates in transcription initiation (GO:0006352). The cytoplasmic localization is reasonable. Its hedged sporulation language is nonspecific but not false.
 
 However, the summary is notably vague and generic:
 
@@ -23,7 +23,7 @@ However, the summary is notably vague and generic:
 
 4. **Forespore localization missing**: The curated review proposes endospore-forming forespore (GO:0042601) as the appropriate CC term. BioReason assigns generic cytoplasm.
 
-5. **Erroneous GO predictions**: BioReason's GO terms include nucleus (GO:0005634) and endonuclease complex (GO:1905348) -- both completely wrong for a bacterial sigma factor.
+5. **Diagnostic GO errors (not score-driving)**: BioReason's raw GO terms include nucleus and endonuclease complex, but these are outside the Functional Summary score.
 
 Comparison with interpro2go:
 

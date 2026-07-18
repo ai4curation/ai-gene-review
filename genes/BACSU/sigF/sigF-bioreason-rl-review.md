@@ -2,7 +2,7 @@
 
 Source: sigF-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -11,7 +11,7 @@ The BioReason functional summary reads:
 
 > A cytoplasmic initiation factor that redirects bacterial transcription toward sporulation programs. It binds bacterial RNA polymerase and engages promoter DNA via a modular sigma-70 fold, using distinct recognition and melting elements to assemble open complexes at sporulation promoters. By selecting and activating the appropriate initiation sites, it drives developmental transcription required for the formation and maturation of spores.
 
-The summary correctly identifies SigF as a sigma factor with sigma-70 architecture that drives sporulation-associated transcription. The description of promoter recognition and open complex formation aligns with sigma factor activity (GO:0016987) and DNA-templated transcription initiation (GO:0006352). The sporulation connection is correct (GO:0030435).
+The summary correctly identifies SigF as a sigma factor with sigma-70 architecture that drives sporulation-associated transcription. The description of promoter recognition and open complex formation aligns with sigma factor activity (GO:0016987) and DNA-templated transcription initiation (GO:0006352). The sporulation connection is correct (GO:0030435). All substantive claims in the paragraph are supported.
 
 However, the summary has notable gaps:
 
@@ -19,7 +19,7 @@ However, the summary has notable gaps:
 
 2. **Missing regulatory mechanism**: The partner-switching mechanism (SpoIIAB anti-sigma factor, SpoIIAA anti-anti-sigma factor, SpoIIE phosphatase) is the hallmark of SigF regulation and is completely absent. The curated review identifies the sigma factor antagonist complex (GO:1903865) as a core annotation.
 
-3. **Incorrect GO predictions**: BioReason's predicted GO terms include cell wall (GO:0005618), plasma membrane (GO:0005886), spore wall (GO:0031160), and cell periphery (GO:0071944) as cellular components -- these are all incorrect for a cytoplasmic sigma factor. The curated review notes cytoplasmic localization.
+3. **Diagnostic GO errors (not score-driving)**: BioReason's raw GO terms include cell wall, plasma membrane, spore wall, and cell periphery. These do not alter the Functional Summary score.
 
 4. **Missing specific regulon**: SigF directs transcription of sigG, csfB, and the forespore-specific rho promoter. None of this specificity is captured.
 

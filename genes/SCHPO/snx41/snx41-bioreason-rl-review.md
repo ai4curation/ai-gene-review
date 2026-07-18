@@ -2,7 +2,7 @@
 
 Source: snx41-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -11,7 +11,7 @@ BioReason's functional summary is largely accurate:
 
 > A cytoplasmic membrane-remodeling factor in fission yeast that combines a phosphoinositide-binding module with a membrane-curvature scaffold to coordinate endosomal and autophagy-related trafficking. By docking onto PI3P-enriched membranes and stabilizing high-curvature intermediates, it assembles sorting platforms that generate and traffic membrane carriers feeding autophagic pathways.
 
-This correctly captures the key features of snx41: PX domain-mediated PI3P binding, BAR domain-mediated membrane curvature sensing, endosomal localization, and roles in both retrograde trafficking and autophagy. The curated review describes snx41 as a sorting nexin that functions in retrograde transport from endosomes to the Golgi and promotes selective autophagy processes including pexophagy, reticulophagy, and mitophagy.
+This correctly captures the key features of snx41: PX domain-mediated PI3P binding, BAR domain-mediated membrane curvature sensing, endosomal localization, and roles in both retrograde trafficking and autophagy. The curated review describes snx41 as a sorting nexin that functions in retrograde transport from endosomes to the Golgi and promotes selective autophagy processes including pexophagy, reticulophagy, and mitophagy. No substantive claim in the paragraph is contradicted by the curated review.
 
 The claim about PI3P binding is well-supported:
 

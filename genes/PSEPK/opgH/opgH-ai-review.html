@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>opgH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>opgH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D04" target="_blank" class="term-link">
+                        Q88D04
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "opgH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D04" data-a="DESCRIPTION: opgH encodes a multi-pass inner-membrane GT2/OpgH-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>opgH encodes a multi-pass inner-membrane GT2/OpgH-family glucosyltransferase that uses UDP-glucose to build the osmoregulated periplasmic glucan backbone with the periplasmic OpgG partner.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D04" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane is the appropriate GO cellular-component term for bacterial inner-membrane OpgH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places OpgH in the cell inner membrane and records multiple transmembrane helices; GOA maps this bacterial inner-membrane location to plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   TRANSMEM        141..158</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009250" target="_blank" class="term-link">
+                                    GO:0009250
+                                </a>
+                            </span>
+                            <span class="term-label">glucan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D04" data-a="GO:0009250" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glucan biosynthesis is correct but should be made specific to osmoregulated periplasmic glucan biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt and UniPathway specifically place OpgH in osmoregulated periplasmic glucan biosynthesis, and GO provides a specific process term for this pathway.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900727" target="_blank" class="term-link">
+                                    osmoregulated periplasmic glucan biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Involved in the biosynthesis of osmoregulated periplasmic</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Glycan metabolism; osmoregulated periplasmic glucan (OPG)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0009250	glucan biosynthetic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016758" target="_blank" class="term-link">
+                                    GO:0016758
+                                </a>
+                            </span>
+                            <span class="term-label">hexosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D04" data-a="GO:0016758" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hexosyltransferase activity is correct but less informative than glucosyltransferase activity for OpgH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> OpgH is a glucans biosynthesis glucosyltransferase in the glycosyltransferase 2 family, so the child term glucosyltransferase activity better captures the transferred sugar.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046527" target="_blank" class="term-link">
+                                    glucosyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Glucans biosynthesis glucosyltransferase H</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the glycosyltransferase 2 family. OpgH</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016758	hexosyltransferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/opgH/opgH-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Using cytoplasmic **UDP-glucose** as the sugar donor, OpgH assembles a β-linked polyglucose chain at the cytoplasmic face of the inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UDP-glucose-dependent inner-membrane glucosyltransferase activity that builds the osmoregulated periplasmic glucan backbone.</h3>
+                <span class="vote-buttons" data-g="Q88D04" data-a="FUNCTION: UDP-glucose-dependent inner-membrane glucosyltrans..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046527" target="_blank" class="term-link">
+                            glucosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900727" target="_blank" class="term-link">
+                                osmoregulated periplasmic glucan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/opgH/opgH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Glucans biosynthesis glucosyltransferase H</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/opgH/opgH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Glycan metabolism; osmoregulated periplasmic glucan (OPG)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/opgH/opgH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/opgH/opgH-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">OpgH is the backbone-building enzyme of OPG biosynthesis.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/opgH/opgH-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The annotation is confident but inferential.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/opgH/opgH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for opgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies OpgH as a glucans biosynthesis glucosyltransferase H, places it in osmoregulated periplasmic glucan biosynthesis, and assigns it to the cell inner membrane with multiple transmembrane helices.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/opgH/opgH-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for opgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the three annotations reviewed for opgH.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR43867/PTHR43867-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for opgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places OpgH in a glycosyltransferase 2/OpgH subfamily.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/opgH/opgH-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for opgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supports OpgH as a UDP-glucose-dependent inner-membrane OPG-backbone glucosyltransferase and flags FtsZ moonlighting as untested in KT2440.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 OpgH use ACP as a cofactor and produce the same beta-1,2/beta-1,6 OPG product structure inferred from characterized orthologs?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D04" data-a="Q: Does KT2440 OpgH use ACP as a cofactor and produce..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do OpgH and OpgG interact during KT2440 osmoregulated periplasmic glucan production?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D04" data-a="Q: How do OpgH and OpgG interact during KT2440 osmore..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 OpgH retain the E. coli-like FtsZ-sequestration moonlighting role, or should that function be explicitly excluded for this organism?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D04" data-a="Q: Does KT2440 OpgH retain the E. coli-like FtsZ-sequ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay opgH deletion or depletion strains for osmoregulated periplasmic glucan production under low-osmolarity growth conditions.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted genetics and glucan profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D04" data-a="EXPERIMENT: Assay opgH deletion or depletion strains for osmor..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute OpgH membrane fractions with candidate UDP-glucose donor and OpgG to measure glucan polymer formation.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro glycosyltransferase assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D04" data-a="EXPERIMENT: Reconstitute OpgH membrane fractions with candidat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test OpgH-FtsZ colocalization and cell-size effects across nutrient conditions in KT2440.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: localization and cell-division phenotype assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D04" data-a="EXPERIMENT: Test OpgH-FtsZ colocalization and cell-size effect..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(opgH-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D04" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: OpgH (Q88D04, PP_5025) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T15:32:39.857492</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="opgH-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="opgH-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-opgh-q88d04-pp_5025-in-pseudomonas-putida-kt2440">Functional Annotation Report: OpgH (Q88D04, PP_5025) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>opgH</em> (synonym <em>mdoH</em>; ordered locus PP_5025)<br />
+<strong>Protein:</strong> Glucans biosynthesis glucosyltransferase H<br />
+<strong>UniProt:</strong> Q88D04<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440)<br />
+<strong>EC:</strong> 2.4.1.– | <strong>Family:</strong> Glycosyltransferase family 2 (GT2), OpgH subfamily | <strong>Pfam:</strong> PF00535 (Glycos_transf_2) | <strong>HAMAP:</strong> MF_01072</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>OpgH (Q88D04, encoded by PP_5025) in <em>Pseudomonas putida</em> KT2440 is a <strong>polytopic inner (cytoplasmic) membrane glycosyltransferase of family GT2 (EC 2.4.1.–)</strong> that catalyzes the committed, backbone-polymerizing step of <strong>osmoregulated periplasmic glucan (OPG)</strong> biosynthesis. Using cytoplasmic <strong>UDP-glucose</strong> as the sugar donor, OpgH assembles a β-linked polyglucose chain at the cytoplasmic face of the inner membrane and is topologically positioned to translocate the nascent glucan into the periplasm. There, its operon partner <strong>OpgG</strong> — recently defined as a β-1,2-glucanase of the new glycoside hydrolase family GH186 — processes and shapes the polymer. In <em>Pseudomonas</em>, the mature OPGs are neutral, highly branched glucans of 6–13 glucose units linked by <strong>β-1,2 bonds (backbone) and β-1,6 bonds (branches)</strong>, whose abundance rises at low osmolarity — the defining hallmark of OPGs.</p>
+<p>The physiological role of the OpgH product is that of a <strong>periplasmic envelope component involved in osmotic and periplasmic-volume adaptation, membrane and detergent/antibiotic resistance, and Rcs-mediated envelope-stress signaling</strong>. Loss of OPG synthesis (via <em>opgH</em>/<em>mdoH</em> mutation) produces a pleiotropic envelope phenotype, sensitizes cells to SDS, perturbs the periplasmic Donnan potential, and de-represses colanic-acid capsule synthesis through the RcsC sensor. In enterobacteria and <em>Pseudomonas syringae</em>, the <em>opgGH</em> (<em>mdoGH</em> / <em>hrpM</em>) locus is additionally required for full virulence, linking periplasmic glucans to host interaction. Beyond its enzymatic role, OpgH <strong>moonlights</strong> in <em>E. coli</em> as a nutrient-dependent antagonist of the cell-division protein <strong>FtsZ</strong>, using UDP-glucose as a proxy for nutritional status to couple cell size to central metabolism.</p>
+<p>An important disambiguation was resolved during this investigation: OpgH is <strong>distinct</strong> from a separately encoded <em>P. putida</em> KT2440 BcsA-like "orphan" protein that synthesizes <strong>cyclic-β-1,3-glucan</strong> via a fused GT2–GH17 architecture. OpgH is a single-GT2-domain OpgH-subfamily enzyme producing β-1,2/β-1,6 OPGs, whereas the orphan synthase is a two-domain enzyme producing a different polymer. The two therefore represent <strong>two independent periplasmic glucan pathways</strong> in the same organism. Finally, note that the specific functional assignment for PP_5025 rests on <strong>strong orthology</strong> to biochemically characterized <em>E. coli</em> and <em>Pseudomonas</em> OpgH/MdoH proteins rather than on direct experimental study of the <em>P. putida</em> protein itself — the annotation is confident but inferential, and gene symbol, organism, GT2/OpgH family, and Pfam PF00535 all match the OPG glucosyltransferase, confirming this is the correct target.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-opgh-is-a-gt2-family-inner-membrane-glucosyltransferase-that-polymerizes-the-opg-glucose-backbone-from-udp-glucose">F001 — OpgH is a GT2-family inner-membrane glucosyltransferase that polymerizes the OPG glucose backbone from UDP-glucose</h3>
+<p><em>P. putida</em> OpgH belongs to <strong>glycosyltransferase family 2</strong> (Pfam PF00535; HAMAP rule MF_01072), the family that defines its enzymatic class. The reaction it catalyzes is the transfer of glucose from the nucleotide-sugar donor <strong>UDP-glucose</strong> onto a growing glucan chain, building the polysaccharide backbone of osmoregulated periplasmic glucans. This activity is best defined through its biochemically characterized orthologs. In <em>Yersinia pseudotuberculosis</em>, the <em>opgGH</em> operon "encodes glucosyltransferases that synthesize osmoregulated periplasmic glucans (OPGs) from UDP-glucose, using acyl carrier protein (ACP) as a cofactor" <a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">PMID: 26150539</a> — this single statement pins down substrate (UDP-glucose), product (OPGs), cofactor (ACP), and enzymatic class. Direct biochemical evidence comes from <em>E. coli</em>, where "mutants lacking MdoH are deficient in a glucosyltransferase activity assayed in vitro" <a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">PMID: 9352918</a>, and where MdoH "presence was shown to be necessary for normal glucosyl transferase activity" <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">PMID: 7934824</a>. Because Q88D04 is a clear ortholog carrying the same catalytic GT2 domain and HAMAP signature, the same reaction is assigned to the <em>P. putida</em> enzyme.</p>
+<p><strong>Reaction (backbone synthesis):</strong> UDP-glucose + [β-glucan]ₙ → UDP + [β-glucan]ₙ₊₁. <strong>Substrate specificity:</strong> sugar donor = UDP-glucose; acceptor = the elongating β-glucan chain; the product backbone is β-1,2-linked glucose (see F003, F004). <strong>Enzyme classification:</strong> GT2 family (nucleotide-diphospho-sugar transferase fold, IPR029044); EC 2.4.1.– hexosyltransferase.</p>
+<h3 id="f002-opgh-is-a-polytopic-inner-membrane-protein-with-a-large-cytoplasmic-catalytic-domain-positioned-to-translocate-nascent-glucan-to-the-periplasm">F002 — OpgH is a polytopic inner-membrane protein with a large cytoplasmic catalytic domain positioned to translocate nascent glucan to the periplasm</h3>
+<p>The membrane topology of the OpgH ortholog MdoH (847 aa in <em>E. coli</em>) was experimentally mapped using <strong>51 different MdoH–β-lactamase fusions</strong>, which showed that "the MdoH protein crosses the cytoplasmic membrane eight times, with the N and C termini in the cytoplasm" <a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">PMID: 9352918</a>. Critically, a large <strong>~310-amino-acid cytoplasmic domain</strong> lies between the second and third transmembrane segments and carries the catalytic (glucosyltransferase) function — consistent with the enzyme drawing on cytoplasmic UDP-glucose. The topological model further "suggests that this protein could be directly involved in the <strong>translocation of nascent polyglucose chains to the periplasmic space</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">PMID: 9352918</a>, implying a dual polymerization/translocation role. In <em>Pseudomonas</em>, the ortholog is likewise "a 97 kDa protein spanning the cytoplasmic membrane" <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">PMID: 7934824</a>. This places OpgH's catalysis on the cytoplasmic face of the inner membrane, with the polymer destined for the periplasm. The partner OpgG is a periplasmic ~56 kDa protein that matures the glucan there (F003).</p>
+<h3 id="f003-opgh-acts-with-the-periplasmic-partner-opgg-opggopgd-are-12-glucanases-new-family-gh186-that-shape-the-glucan">F003 — OpgH acts with the periplasmic partner OpgG; OpgG/OpgD are β-1,2-glucanases (new family GH186) that shape the glucan</h3>
+<p><em>opgH</em> is the second gene of the <strong>opgGH (mdoGH) operon</strong>, and OpgG is a ~56 kDa <strong>periplasmic</strong> protein whose function was long undefined <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">PMID: 7934824</a>. Recent structural and functional work resolved it: analyses of <em>E. coli</em> OpgG and OpgD "revealed that these proteins are <strong>β-1,2-glucanases</strong> with remarkably different activity from each other, establishing a new glycoside hydrolase family, <strong>GH186</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/37735577/">PMID: 37735577</a>. Because OpgG hydrolyzes β-1,2 linkages, the backbone made by OpgH is inferred to be <strong>β-1,2-linked glucose</strong>, which OpgG then trims/shapes in the periplasm. The synthesis–hydrolysis logic is reinforced in <em>Caulobacter</em>, where OpgH (synthesis) and BglX (hydrolysis) together define an OPG pathway producing a <strong>cyclic hexamer of glucose</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/36516849/">PMID: 36516849</a>. Thus OpgH does not act alone: it initiates and polymerizes, while periplasmic glucanases (OpgG/OpgD, or BglX) determine final chain length and architecture. Downstream substituent transferases (e.g., OpgC succinylation in enterobacteria; <a href="https://pubmed.ncbi.nlm.nih.gov/26790533/">PMID: 26790533</a>) may decorate the backbone in some species.</p>
+<h3 id="f004-in-pseudomonas-opgs-are-branched-12-16-glucans-and-the-opgghmdogh-locus-corresponds-to-the-hrpm-pathogenicity-locus">F004 — In <em>Pseudomonas</em>, OPGs are branched β-1,2/β-1,6 glucans, and the <em>opgGH</em>/<em>mdoGH</em> locus corresponds to the <em>hrpM</em> pathogenicity locus</h3>
+<p>Chemical characterization of the periplasmic glucans of <em>Pseudomonas syringae</em> pv. <em>syringae</em> showed they are "<strong>neutral, unsubstituted, and composed solely of glucose</strong>," 6–13 glucose units in size, and that "the glucans are <strong>linked by beta-1,2 and beta-1,6 glycosidic bonds</strong>" — a highly branched structure with a β-1,2 backbone and β-1,6 branches <a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">PMID: 7961404</a>. These glucans are osmoregulated: "these periplasmic glucans were more abundant when the osmolarity of the growth medium was lower" <a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">PMID: 7961404</a>. This defines the exact product class expected for <em>P. putida</em> OpgH — a neutral, branched pseudomonad-type glucan, contrasting with the anionic, substituted <em>E. coli</em> MDO. Furthermore, the <em>E. coli mdoGH</em> operon shares "<strong>a considerable homology (69% identical nucleotides out of 2816)</strong>" with the two genes at the <em>hrpM</em> locus of <em>Pseudomonas syringae</em> pv. <em>syringae</em>, a locus required for pathogenicity and the plant hypersensitive reaction <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">PMID: 7934824</a>. This directly links the glucosyltransferase operon to a pseudomonad host-interaction function.</p>
+<h3 id="f005-opgs-made-by-opgh-are-periplasmic-envelope-components-required-for-osmotic-adaptation-membranedetergent-resistance-and-rcs-mediated-signaling">F005 — OPGs made by OpgH are periplasmic envelope components required for osmotic adaptation, membrane/detergent resistance, and Rcs-mediated signaling</h3>
+<p>OPGs are periplasmic oligosaccharides that are "modulated during osmotic fluxes" and constitute intrinsic envelope components (review <a href="https://pubmed.ncbi.nlm.nih.gov/28593831/">PMID: 28593831</a>). Their loss is pleiotropic: "mutants defective in OPG synthesis have a highly pleiotropic phenotype, indicative of an overall alteration of their envelope properties" <a href="https://pubmed.ncbi.nlm.nih.gov/10779706/">PMID: 10779706</a>. A precise phenotype is detergent resistance: "wild-type <em>E. coli</em> MC4100 grew in the presence of <strong>10% SDS</strong> whereas isogenic <em>mdoA</em> and <em>mdoB</em> mutants could not grow above <strong>0.5% SDS</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/12798996/">PMID: 12798996</a> — a 20-fold sensitization. OPGs also shape periplasmic physical chemistry: as highly anionic (in enterobacteria) polymers they generate a <strong>Donnan potential</strong> that concentrates cations and contributes to periplasmic volume regulation <a href="https://pubmed.ncbi.nlm.nih.gov/12379178/">PMID: 12379178</a>, and MDOs are proposed to "play a key role in periplasmic volume regulation at low-to-moderate osmolality" <a href="https://pubmed.ncbi.nlm.nih.gov/10733957/">PMID: 10733957</a>. Finally, periplasmic OPG levels feed into envelope-stress signaling: inactivation of <em>mdoH</em> increases colanic-acid capsule via the Rcs system because "the periplasmic levels of MDOs act to signal RcsC to activate <em>cps</em> expression" <a href="https://pubmed.ncbi.nlm.nih.gov/9352941/">PMID: 9352941</a>. Reviews connect periplasmic OPGs to signal transduction that indirectly regulates virulence, and secreted OPGs to antibiotic and host-cell interactions <a href="https://pubmed.ncbi.nlm.nih.gov/26265506/">PMID: 26265506</a>.</p>
+<h3 id="f006-opgh-moonlights-as-a-nutrient-dependent-ftsz-antagonist-that-couples-cell-size-to-central-metabolism">F006 — OpgH moonlights as a nutrient-dependent FtsZ antagonist that couples cell size to central metabolism</h3>
+<p>Beyond making glucan, OpgH has a second, "moonlighting" function established in <em>E. coli</em>: it is "a <strong>nutrient-dependent regulator of <em>E. coli</em> cell size</strong>." Under nutrient-rich growth, "OpgH localizes to the nascent septal site, where it <strong>antagonizes assembly of the tubulin-like cell division protein FtsZ</strong>, delaying division and increasing cell size," a mechanism consistent with OpgH sequestering FtsZ from growing polymers <a href="https://pubmed.ncbi.nlm.nih.gov/23935518/">PMID: 23935518</a>. The molecular link to metabolism is UDP-glucose: the work highlights "the conservation of uridine diphosphate glucose as a proxy for nutrient status and the use of <strong>moonlighting enzymes to couple growth rate-dependent phenomena to central metabolism</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/23935518/">PMID: 23935518</a>. This is independently corroborated: "OpgH also <strong>sequesters FtsZ</strong> in order to regulate cell size according to nutrient availability," and Δ<em>opgGH</em> cells are smaller <a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">PMID: 26150539</a>. Whether the <em>P. putida</em> ortholog retains this moonlighting role has not been directly tested, but the shared UDP-glucose-binding GT2 architecture makes it plausible.</p>
+<h3 id="f007-opgh-is-distinct-from-the-co-existing-p-putida-kt2440-cyclic-13-glucan-synthase-a-bcsa-like-orphan-two-separate-periplasmic-glucan-pathways">F007 — OpgH is distinct from the co-existing <em>P. putida</em> KT2440 cyclic-β-1,3-glucan synthase (a BcsA-like "orphan"); two separate periplasmic glucan pathways</h3>
+<p>This finding resolves a potential misidentification. <em>P. putida</em> KT2440 encodes a <strong>BcsA-like "orphan" protein</strong> that bioinformatic and structural modeling describes as "a two-domain transmembrane ovoid-like structure ... with a periplasmic <strong>glycosyl hydrolase family GH17 domain</strong> linked via a transmembrane region to a <strong>cytoplasmic glycosyltransferase family GT2 domain</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/37267309/">PMID: 37267309</a>. The proposed mechanism is that "the <strong>GT2 domain synthesises β-(1,3)-glucan</strong> that is transferred to the GH17 domain where it is cleaved and cyclised to produce <strong>cyclic-β-(1,3)-glucan (CβG)</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/37267309/">PMID: 37267309</a>. This enzyme shares &lt;41% identity with cellulose synthase BcsA and is <strong>architecturally and product-wise distinct from OpgH</strong>: OpgH is a single-GT2-domain, OpgH-subfamily membrane glucosyltransferase (HAMAP MF_01072; PF00535) that produces β-1,2/β-1,6 osmoregulated periplasmic glucans in partnership with periplasmic OpgG. Thus, <em>P. putida</em> KT2440 possesses <strong>two separate periplasmic glucan pathways</strong>: the OpgGH OPG pathway (branched β-1,2/β-1,6 glucans) and the orphan CβG pathway (cyclic β-1,3-glucan). Q88D04/PP_5025 is the OPG pathway enzyme, and the two should not be conflated.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The evidence assembles into a coherent, spatially organized model of OpgH function at the <em>P. putida</em> inner membrane:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">CYTOPLASM</span><span class="w">                          </span><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span><span class="w">                    </span><span class="n">PERIPLASM</span>
+<span class="w"> </span><span class="o">------------------------------------------------------------------------------------</span>
+
+<span class="w">  </span><span class="n">UDP</span><span class="o">-</span><span class="n">glucose</span><span class="w"> </span><span class="o">----&gt;</span><span class="w">  </span><span class="p">[</span><span class="w"> </span><span class="n">OpgH</span><span class="w"> </span><span class="n">cytoplasmic</span><span class="w"> </span><span class="n">GT2</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">]</span>
+<span class="w">   </span><span class="p">(</span><span class="n">donor</span><span class="p">,</span><span class="w"> </span><span class="k">and</span><span class="w">       </span><span class="p">(</span><span class="o">~</span><span class="mh">310</span><span class="w"> </span><span class="n">aa</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">loop</span><span class="w"> </span><span class="n">between</span><span class="w"> </span><span class="n">TM2</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">TM3</span><span class="p">)</span>
+<span class="w">   </span><span class="n">nutrient</span><span class="w"> </span><span class="n">proxy</span><span class="p">)</span><span class="w">          </span><span class="o">|</span>
+<span class="w">            </span><span class="o">|</span><span class="w"> </span><span class="n">polymerize</span><span class="w"> </span><span class="n">beta</span><span class="o">-</span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="w"> </span><span class="n">backbone</span>
+<span class="w">            </span><span class="n">v</span>
+<span class="w">    </span><span class="o">======</span><span class="w"> </span><span class="n">OpgH</span><span class="w"> </span><span class="p">(</span><span class="mh">8</span><span class="w"> </span><span class="n">TM</span><span class="w"> </span><span class="n">segments</span><span class="p">)</span><span class="w"> </span><span class="o">======</span><span class="w">  </span><span class="o">--</span><span class="n">translocate</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">nascent</span>
+<span class="w">            </span><span class="n">N</span><span class="o">-</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">termini</span><span class="w"> </span><span class="n">cytoplasmic</span><span class="w">                   </span><span class="n">beta</span><span class="o">-</span><span class="n">glucan</span>
+<span class="w">                                                              </span><span class="o">|</span>
+<span class="w">                                                              </span><span class="n">v</span>
+<span class="w">                                            </span><span class="p">[</span><span class="w"> </span><span class="n">OpgG</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">OpgD</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">GH186</span><span class="w"> </span><span class="n">beta</span><span class="o">-</span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="o">-</span><span class="n">glucanase</span><span class="w"> </span><span class="p">]</span>
+<span class="w">                                             </span><span class="n">trims</span><span class="p">,</span><span class="w"> </span><span class="n">shapes</span><span class="p">,</span><span class="w"> </span><span class="n">branches</span><span class="w"> </span><span class="p">(</span><span class="n">beta</span><span class="o">-</span><span class="mh">1</span><span class="p">,</span><span class="mh">6</span><span class="p">)</span>
+<span class="w">                                                              </span><span class="o">|</span>
+<span class="w">                                                              </span><span class="n">v</span>
+<span class="w">                                            </span><span class="n">Mature</span><span class="w"> </span><span class="nl">OPG:</span><span class="w"> </span><span class="n">neutral</span><span class="p">,</span><span class="w"> </span><span class="n">branched</span>
+<span class="w">                                            </span><span class="n">beta</span><span class="o">-</span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">beta</span><span class="o">-</span><span class="mh">1</span><span class="p">,</span><span class="mh">6</span><span class="w"> </span><span class="n">glucan</span><span class="w"> </span><span class="p">(</span><span class="mh">6</span><span class="o">-</span><span class="mh">13</span><span class="w"> </span><span class="n">Glc</span><span class="p">)</span>
+<span class="w">                                            </span><span class="n">Osmoregulated</span><span class="w"> </span><span class="p">(</span><span class="n">up</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="n">osmolarity</span><span class="p">)</span>
+
+<span class="w">  </span><span class="n">MOONLIGHTING</span><span class="w"> </span><span class="p">(</span><span class="n">nutrient</span><span class="o">-</span><span class="n">rich</span><span class="p">)</span><span class="o">:</span>
+<span class="w">  </span><span class="n">UDP</span><span class="o">-</span><span class="n">glucose</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">OpgH</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">septum</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">sequesters</span><span class="w"> </span><span class="n">FtsZ</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">delays</span><span class="w"> </span><span class="n">division</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">larger</span><span class="w"> </span><span class="n">cells</span>
+</code></pre></div>
+
+<p><strong>Primary function (enzymatic).</strong> OpgH is the backbone-building enzyme of OPG biosynthesis. It binds cytoplasmic UDP-glucose at its large cytoplasmic GT2 domain (F001, F002) and transfers glucose to a growing chain, forming a β-1,2 backbone (F003, F004). Its eight-times-membrane-spanning topology positions it to hand the nascent chain across the inner membrane into the periplasm (F002).</p>
+<p><strong>Maturation (partner enzymes).</strong> OpgG (and its paralog OpgD), acting as a periplasmic GH186 β-1,2-glucanase, processes the nascent polymer to yield the final OPG species (F003). In <em>Pseudomonas</em>, the finished product is a neutral, branched β-1,2/β-1,6 glucan of 6–13 glucose units, more abundant at low osmolarity (F004).</p>
+<p><strong>Localization.</strong> Catalysis begins on the <strong>cytoplasmic face of the inner membrane</strong>; the finished polymer resides in the <strong>periplasm</strong> where it performs its physiological work (F002, F003, F005).</p>
+<p><strong>Downstream physiology.</strong> As a bulky, abundant periplasmic solute, OPGs regulate periplasmic osmotic/volume balance and Donnan potential, maintain envelope integrity (SDS/antibiotic resistance), and, through their concentration, act as an input to Rcs envelope-stress signaling that governs capsule, motility, biofilm, and — in pathogens — virulence (F005). In <em>Pseudomonas syringae</em>, the operon corresponds to the <em>hrpM</em> pathogenicity locus (F004).</p>
+<p><strong>Metabolic coupling (moonlighting).</strong> Because OpgH senses UDP-glucose, it doubles as a nutrient gauge; under rich conditions it sequesters FtsZ at the septum to enlarge cells, coupling division timing to central metabolism (F006).</p>
+<p>The following table summarizes the two distinct glucan systems in <em>P. putida</em> KT2440 and situates OpgH:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><strong>OpgH / OpgGH (PP_5025, Q88D04)</strong></th>
+<th>Orphan BcsA-like synthase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Architecture</td>
+<td>Single GT2 domain, 8 TM segments</td>
+<td>Fused GT2 (cytoplasmic) + GH17 (periplasmic)</td>
+</tr>
+<tr>
+<td>Product</td>
+<td>Branched β-1,2 / β-1,6 OPGs (6–13 Glc)</td>
+<td>Cyclic β-1,3-glucan (CβG)</td>
+</tr>
+<tr>
+<td>Donor</td>
+<td>UDP-glucose</td>
+<td>UDP-glucose</td>
+</tr>
+<tr>
+<td>Partner</td>
+<td>Periplasmic OpgG/OpgD (GH186 glucanase)</td>
+<td>Intramolecular GH17 domain</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>Osmoregulated (↑ low osmolarity)</td>
+<td>Not characterized</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>Orthology + biochemistry of MdoH/OpgH</td>
+<td>Bioinformatics/structural modeling</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">9352918</a></td>
+<td>Topological analysis of MdoH</td>
+<td>Direct biochemistry: MdoH mutants lack glucosyltransferase activity; 8-TM topology; large cytoplasmic catalytic domain; implicated in glucan translocation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">26150539</a></td>
+<td><em>opgGH</em> in <em>Yersinia</em></td>
+<td>States substrate (UDP-glucose), product (OPGs), cofactor (ACP); confirms FtsZ-sequestration/cell-size role</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">7934824</a></td>
+<td><em>mdoA</em>/<em>hrpM</em> homology</td>
+<td>MdoH necessary for glucosyltransferase activity; 97 kDa membrane protein; OpgG periplasmic; links operon to <em>Pseudomonas hrpM</em> pathogenicity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37735577/">37735577</a></td>
+<td>OpgG/OpgD enzymology</td>
+<td>Defines OpgG/OpgD as β-1,2-glucanases (new family GH186), implying β-1,2 backbone</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">7961404</a></td>
+<td><em>P. syringae</em> periplasmic glucans</td>
+<td>Chemical structure: neutral, β-1,2/β-1,6-linked, 6–13 Glc, osmoregulated</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36516849/">36516849</a></td>
+<td>EstG/OpgH/BglX in <em>Caulobacter</em></td>
+<td>OpgH (synthesis) + glucanase (hydrolysis) pathway; cyclic hexamer OPG product</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12798996/">12798996</a></td>
+<td>MDOs and SDS resistance</td>
+<td><em>mdoH</em> mutants: 20-fold SDS sensitization — envelope-integrity role</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9352941/">9352941</a></td>
+<td><em>mdoH</em> and colanic acid</td>
+<td>Periplasmic MDO levels signal via RcsC to control capsule</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23935518/">23935518</a></td>
+<td>Moonlighting enzyme/cell size</td>
+<td>OpgH sequesters FtsZ; UDP-glucose as nutrient proxy</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12379178/">12379178</a></td>
+<td>Periplasmic Ca²⁺/Donnan</td>
+<td>MDOs generate Donnan potential concentrating periplasmic cations</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10733957/">10733957</a></td>
+<td>Turgor/periplasmic water</td>
+<td>MDOs proposed key to periplasmic volume regulation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10779706/">10779706</a></td>
+<td>OPGs in Proteobacteria</td>
+<td>OPG-deficient mutants have pleiotropic envelope alteration</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28593831/">28593831</a></td>
+<td>OPG review</td>
+<td>OPGs modulated during osmotic fluxes; core envelope osmoadaptation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26265506/">26265506</a></td>
+<td>OPG biological roles review</td>
+<td>Periplasmic OPGs in signal transduction/virulence; secreted OPGs in antibiotic/host interaction</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37267309/">37267309</a></td>
+<td>BcsA-like orphan synthases</td>
+<td>Distinguishes <em>P. putida</em> cyclic-β-1,3-glucan synthase from OpgH</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26790533/">26790533</a></td>
+<td><em>opgC</em> succinylation</td>
+<td>Backbone (not substituents) required for virulence in <em>Dickeya</em>; contextualizes OPG modification</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7814331/">7814331</a></td>
+<td>UDP-glucose as signal</td>
+<td>UDP-glucose as intracellular signal (σS control), context for OpgH's nutrient-sensing</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> The enzymatic assignment (GT2 glucosyltransferase using UDP-glucose) is supported by both sequence/family criteria and direct in vitro biochemistry of orthologs (3 independent lines: <a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">9352918</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">26150539</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">7934824</a>). The product chemistry for <em>Pseudomonas</em> specifically is established (<a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">7961404</a>). Localization is supported by experimental topology mapping (<a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">9352918</a>). The downstream physiology is multiply corroborated across osmoadaptation, envelope integrity, Donnan/volume, and Rcs signaling. No retrieved paper contradicts the core annotation.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- OpgH is a GT2 inner-membrane glucosyltransferase using UDP-glucose to build the OPG β-glucan backbone (<a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">26150539</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">9352918</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">7934824</a>).<br />
+- OpgH is a polytopic inner-membrane protein (8 TM) with a cytoplasmic catalytic domain; its product is periplasmic (<a href="https://pubmed.ncbi.nlm.nih.gov/9352918/">9352918</a>).<br />
+- OpgH acts in an operon/pathway with the periplasmic β-1,2-glucanase OpgG (<a href="https://pubmed.ncbi.nlm.nih.gov/37735577/">37735577</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">7934824</a>).<br />
+- Pseudomonad OPGs are neutral branched β-1,2/β-1,6 glucans, osmoregulated (<a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">7961404</a>).<br />
+- OpgH product underlies envelope integrity, osmoadaptation, Rcs signaling, and pathogenicity (<a href="https://pubmed.ncbi.nlm.nih.gov/12798996/">12798996</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9352941/">9352941</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/10779706/">10779706</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7934824/">7934824</a>).<br />
+- OpgH moonlights as an FtsZ-sequestering cell-size regulator (<a href="https://pubmed.ncbi.nlm.nih.gov/23935518/">23935518</a>).</p>
+<p><strong>Refuted / Excluded</strong><br />
+- OpgH is <strong>not</strong> the <em>P. putida</em> cyclic-β-1,3-glucan "orphan" BcsA-like synthase (a separate GT2/GH17 enzyme; <a href="https://pubmed.ncbi.nlm.nih.gov/37267309/">37267309</a>).<br />
+- OpgH is <strong>not</strong> the periplasmic glucanase — that role belongs to OpgG/OpgD (GH186; <a href="https://pubmed.ncbi.nlm.nih.gov/37735577/">37735577</a>).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct study of PP_5025.</strong> Every mechanistic claim about Q88D04 is transferred by orthology from <em>E. coli</em> MdoH/OpgH, <em>Yersinia</em>, <em>Caulobacter</em>, and <em>P. syringae</em>. No paper reports purification, kinetics, gene knockout, or structural determination of the <em>P. putida</em> KT2440 OpgH itself. The assignment is confident but inferential.</p>
+</li>
+<li>
+<p><strong>Cofactor and precise mechanism.</strong> The ACP-cofactor requirement is cited from the <em>Yersinia opgGH</em> description (<a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">26150539</a>); the exact role of ACP, the initiation/priming mechanism, and processivity of the <em>P. putida</em> enzyme are not directly established.</p>
+</li>
+<li>
+<p><strong>Product structure in <em>P. putida</em> specifically.</strong> The β-1,2/β-1,6 branched structure is documented for <em>P. syringae</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">7961404</a>); <em>P. putida</em> KT2440 OPGs have not been chemically characterized here. Whether substituents (e.g., succinyl, as in <em>Dickeya</em> via OpgC, <a href="https://pubmed.ncbi.nlm.nih.gov/26790533/">26790533</a>) decorate <em>P. putida</em> OPGs is unknown — although pseudomonad OPGs are reported neutral/unsubstituted.</p>
+</li>
+<li>
+<p><strong>Moonlighting role unverified in <em>P. putida</em>.</strong> FtsZ antagonism/cell-size control is demonstrated in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23935518/">23935518</a>) and <em>Yersinia</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26150539/">26150539</a>); its conservation in <em>P. putida</em> is plausible but untested.</p>
+</li>
+<li>
+<p><strong>Signaling wiring may differ.</strong> Rcs-mediated capsule control (<a href="https://pubmed.ncbi.nlm.nih.gov/9352941/">9352941</a>) and Donnan-potential effects (<a href="https://pubmed.ncbi.nlm.nih.gov/12379178/">12379178</a>) derive from enterobacteria whose OPGs are anionic; <em>Pseudomonas</em> OPGs are neutral/unsubstituted (<a href="https://pubmed.ncbi.nlm.nih.gov/7961404/">7961404</a>), so downstream physiology may be quantitatively different.</p>
+</li>
+<li>
+<p><strong>Two-pathway coexistence.</strong> The relationship, regulation, and possible functional redundancy between the OpgGH OPG pathway and the orphan cyclic-β-1,3-glucan pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/37267309/">37267309</a>) in <em>P. putida</em> is unexplored.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Targeted knockout of PP_5025 (<em>opgH</em>) in <em>P. putida</em> KT2440</strong> with phenotyping for: low-osmolarity growth, SDS/antibiotic sensitivity, and cell-size distribution — directly testing F005/F006 in the native organism.</p>
+</li>
+<li>
+<p><strong>Chemical characterization of <em>P. putida</em> KT2440 OPGs</strong> (isolation + NMR/mass spectrometry of linkage composition and degree of polymerization) to confirm the β-1,2/β-1,6 branched structure and check for substituents.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution:</strong> express and purify the OpgH cytoplasmic GT2 domain (or full-length in nanodiscs) and assay UDP-glucose-dependent glucosyltransferase activity, including the ACP-cofactor dependence.</p>
+</li>
+<li>
+<p><strong>Reconstitute the OpgH–OpgG pair</strong> to demonstrate coupled synthesis–maturation and determine final chain-length control by the GH186 partner.</p>
+</li>
+<li>
+<p><strong>Test FtsZ-sequestration/cell-size moonlighting in <em>P. putida</em></strong> via localization (fluorescent OpgH), FtsZ co-localization, and cell-size measurement across nutrient conditions.</p>
+</li>
+<li>
+<p><strong>Genetically dissect pathway crosstalk</strong> between OpgGH and the orphan cyclic-β-1,3-glucan synthase (single and double mutants) to define whether the two periplasmic glucan systems are redundant, complementary, or independently regulated.</p>
+</li>
+<li>
+<p><strong>Structural determination</strong> (cryo-EM) of <em>P. putida</em> OpgH to confirm the 8-TM topology and visualize the UDP-glucose-binding catalytic domain and putative translocation path.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated from a 3-iteration autonomous investigation comprising 7 confirmed findings and 20 reviewed papers. The functional annotation of OpgH (Q88D04 / PP_5025) rests on strong orthology to biochemically characterized MdoH/OpgH proteins; direct experimental study of the P. putida protein is the principal outstanding gap.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="opgH-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="opgH-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:26150539</li>
+<li>PMID:9352918</li>
+<li>PMID:7934824</li>
+<li>PMID:37735577</li>
+<li>PMID:36516849</li>
+<li>PMID:26790533</li>
+<li>PMID:7961404</li>
+<li>PMID:28593831</li>
+<li>PMID:10779706</li>
+<li>PMID:12798996</li>
+<li>PMID:12379178</li>
+<li>PMID:10733957</li>
+<li>PMID:9352941</li>
+<li>PMID:26265506</li>
+<li>PMID:23935518</li>
+<li>PMID:37267309</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D04
+gene_symbol: opgH
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: opgH encodes a multi-pass inner-membrane GT2/OpgH-family glucosyltransferase that uses UDP-glucose to build the osmoregulated periplasmic glucan backbone with the periplasmic OpgG partner.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Plasma membrane is the appropriate GO cellular-component term for bacterial inner-membrane OpgH.
+    action: ACCEPT
+    reason: UniProt places OpgH in the cell inner membrane and records multiple transmembrane helices; GOA maps this bacterial inner-membrane location to plasma membrane.
+    supported_by:
+    - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+    - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+      supporting_text: &#34;FT   TRANSMEM        141..158&#34;
+    - reference_id: file:PSEPK/opgH/opgH-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+- term:
+    id: GO:0009250
+    label: glucan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Glucan biosynthesis is correct but should be made specific to osmoregulated periplasmic glucan biosynthesis.
+    action: MODIFY
+    reason: UniProt and UniPathway specifically place OpgH in osmoregulated periplasmic glucan biosynthesis, and GO provides a specific process term for this pathway.
+    proposed_replacement_terms:
+    - id: GO:1900727
+      label: osmoregulated periplasmic glucan biosynthetic process
+    supported_by:
+    - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+      supporting_text: &#34;FUNCTION: Involved in the biosynthesis of osmoregulated periplasmic&#34;
+    - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+      supporting_text: &#34;PATHWAY: Glycan metabolism; osmoregulated periplasmic glucan (OPG)&#34;
+    - reference_id: file:PSEPK/opgH/opgH-goa.tsv
+      supporting_text: &#34;GO:0009250\tglucan biosynthetic process&#34;
+- term:
+    id: GO:0016758
+    label: hexosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Hexosyltransferase activity is correct but less informative than glucosyltransferase activity for OpgH.
+    action: MODIFY
+    reason: OpgH is a glucans biosynthesis glucosyltransferase in the glycosyltransferase 2 family, so the child term glucosyltransferase activity better captures the transferred sugar.
+    proposed_replacement_terms:
+    - id: GO:0046527
+      label: glucosyltransferase activity
+    supported_by:
+    - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+      supporting_text: &#34;RecName: Full=Glucans biosynthesis glucosyltransferase H&#34;
+    - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+      supporting_text: &#34;Belongs to the glycosyltransferase 2 family. OpgH&#34;
+    - reference_id: file:PSEPK/opgH/opgH-goa.tsv
+      supporting_text: &#34;GO:0016758\thexosyltransferase activity&#34;
+    - reference_id: file:PSEPK/opgH/opgH-deep-research-openscientist.md
+      supporting_text: &#34;Using cytoplasmic **UDP-glucose** as the sugar donor, OpgH assembles a β-linked polyglucose chain at the cytoplasmic face of the inner membrane&#34;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/opgH/opgH-uniprot.txt
+  title: UniProtKB reviewed entry for opgH
+  findings:
+  - statement: UniProt identifies OpgH as a glucans biosynthesis glucosyltransferase H, places it in osmoregulated periplasmic glucan biosynthesis, and assigns it to the cell inner membrane with multiple transmembrane helices.
+- id: file:PSEPK/opgH/opgH-goa.tsv
+  title: QuickGO GOA annotations for opgH
+  findings:
+  - statement: The fetched GOA table contains the three annotations reviewed for opgH.
+- id: file:interpro/panther/PTHR43867/PTHR43867-metadata.yaml
+  title: PANTHER family metadata for opgH
+  findings:
+  - statement: PANTHER places OpgH in a glycosyltransferase 2/OpgH subfamily.
+- id: file:PSEPK/opgH/opgH-deep-research-openscientist.md
+  title: OpenScientist gene research for opgH
+  findings:
+  - statement: OpenScientist supports OpgH as a UDP-glucose-dependent inner-membrane OPG-backbone glucosyltransferase and flags FtsZ moonlighting as untested in KT2440.
+core_functions:
+- description: UDP-glucose-dependent inner-membrane glucosyltransferase activity that builds the osmoregulated periplasmic glucan backbone.
+  molecular_function:
+    id: GO:0046527
+    label: glucosyltransferase activity
+  directly_involved_in:
+  - id: GO:1900727
+    label: osmoregulated periplasmic glucan biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+    supporting_text: &#34;RecName: Full=Glucans biosynthesis glucosyltransferase H&#34;
+  - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+    supporting_text: &#34;PATHWAY: Glycan metabolism; osmoregulated periplasmic glucan (OPG)&#34;
+  - reference_id: file:PSEPK/opgH/opgH-uniprot.txt
+    supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+  - reference_id: file:PSEPK/opgH/opgH-deep-research-openscientist.md
+    supporting_text: &#34;OpgH is the backbone-building enzyme of OPG biosynthesis.&#34;
+  - reference_id: file:PSEPK/opgH/opgH-deep-research-openscientist.md
+    supporting_text: &#34;The annotation is confident but inferential.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does KT2440 OpgH use ACP as a cofactor and produce the same beta-1,2/beta-1,6 OPG product structure inferred from characterized orthologs?
+- question: How do OpgH and OpgG interact during KT2440 osmoregulated periplasmic glucan production?
+- question: Does KT2440 OpgH retain the E. coli-like FtsZ-sequestration moonlighting role, or should that function be explicitly excluded for this organism?
+suggested_experiments:
+- description: Assay opgH deletion or depletion strains for osmoregulated periplasmic glucan production under low-osmolarity growth conditions.
+  experiment_type: targeted genetics and glucan profiling
+- description: Reconstitute OpgH membrane fractions with candidate UDP-glucose donor and OpgG to measure glucan polymer formation.
+  experiment_type: in vitro glycosyltransferase assay
+- description: Test OpgH-FtsZ colocalization and cell-size effects across nutrient conditions in KT2440.
+  experiment_type: localization and cell-division phenotype assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

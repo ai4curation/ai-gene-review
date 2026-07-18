@@ -2,7 +2,7 @@
 
 Source: TOR1-bioreason-rl-predictions.md
 
-- **Correctness**: 5/5
+- **Correctness**: 4/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -19,7 +19,11 @@ Correct. The curated review confirms TORC1 signaling (GO:0038202) as a primary b
 
 > The soluble architecture indicates operation in the cytosol, where it assembles adaptor-rich complexes and executes ATP-dependent phosphorylation programs.
 
-Cytosolic localization is partially correct -- TOR1 does function in the cytoplasm (GO:0005737). However, the curated review documents that TOR1 localizes to multiple membrane compartments (vacuolar, plasma, endosomal, Golgi membranes) and translocates to the nucleus. The TORC1 complex (GO:0031931) is specifically associated with the vacuolar membrane. Calling it purely "soluble" and "cytosolic" underrepresents the membrane association, though it is not wrong per se since the kinase domain is cytoplasm-facing.
+Cytosolic localization is partially correct, but calling the architecture "soluble" is a
+limited topology error. TOR1 localizes to multiple membrane compartments, and TORC1 is
+prominently associated with the vacuolar membrane; TOR1 also translocates to the nucleus.
+A cytoplasm-facing kinase domain does not make the complex a purely soluble cytosolic
+factor. The central TORC1 signaling account remains accurate, supporting 4/5 correctness.
 
 The summary correctly identifies the TOR signaling axis and captures the nutrient-responsive growth control function. It is notably stronger than many of the other gene summaries, likely because the InterPro domains (IPR050517, IPR024585, IPR009076 FRB domain) are highly informative and specifically point to TOR/mTOR biology.
 
@@ -31,6 +35,11 @@ Areas missed by the summary:
 - Nuclear translocation for ribosomal protein gene transcription control
 - Vacuolar membrane as a primary signaling platform
 - Cell cycle progression and replicative aging
+
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt TOR1 is 2,470 residues. The omitted C-terminal sequence includes a substantial
+part of the kinase/regulatory region. This case should be stratified as a truncated-input
+case in aggregate analysis; the scores above evaluate the generated paragraph.
 
 Comparison with interpro2go:
 

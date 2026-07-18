@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 # PSEPK UPA00212: UniPathway UPA00212
 
-- Module seed: `mcl_pha_monomer_supply_from_fas`
+- Pathway seed: `mcl_pha_monomer_supply_from_fas` (single-step; no standalone module retained)
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -17,13 +17,13 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [x] Curate or update the species-neutral module.
-- [x] Run module-level OpenScientist deep research.
+- [x] Assess module granularity and record the single-step pathway curation.
+- [x] Run generic OpenScientist retrieval for the pathway seed.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run Asta deep research for selected genes.
 - [x] Curate each selected gene review.
-- [x] Validate module and gene reviews.
+- [x] Validate gene review; standalone module retired/deferred.
 - [x] Open one PR for this module/pathway: [PR #2050](https://github.com/ai4curation/ai-gene-review/pull/2050).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -39,8 +39,10 @@ Generated UTC: 2026-07-09T23:50:21.922208+00:00
 
 Curator notes, 2026-07-09:
 
-- New module created and validated:
-  `modules/mcl_pha_monomer_supply_from_fas.yaml`.
+- Retired the previous `modules/mcl_pha_monomer_supply_from_fas.yaml` seed:
+  UPA00212 is a single PhaG monomer-supply step and should not be represented
+  as a standalone one-part module. Reintroduce it only inside a broader
+  multi-part mcl-PHA biosynthesis or monomer-supply module.
 - `phaG` already had a valid curated review and gene-level Falcon report; Asta
   first-pass retrieval was run for current provider coverage but did not add
   stronger direct evidence than PMID:9727022, UniProt, and the existing Falcon
@@ -48,7 +50,7 @@ Curator notes, 2026-07-09:
 - Falcon/Edison generic and taxon-aware runs were attempted earlier and failed
   before report creation with Edison HTTP 402 Payment Required, so the batch was
   re-run with OpenScientist.
-- OpenScientist generic module research completed:
+- OpenScientist generic retrieval completed:
   `modules/mcl_pha_monomer_supply_from_fas-deep-research-openscientist.md`.
 - OpenScientist PSEPK module+pathway research completed and resolved the
   expected local UniPathway candidate set: one candidate, `phaG` / PP_1408 /

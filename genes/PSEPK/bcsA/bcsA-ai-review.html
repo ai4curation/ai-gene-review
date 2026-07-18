@@ -1,0 +1,2742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bcsA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>bcsA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JL4" target="_blank" class="term-link">
+                        Q88JL4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "bcsA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JL4" data-a="DESCRIPTION: bcsA encodes the multi-pass inner-membrane catalyt..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>bcsA encodes the multi-pass inner-membrane catalytic subunit of bacterial cellulose synthase, a GT2 enzyme that polymerizes UDP-glucose into cellulose during cellulose biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane is the appropriate bacterial inner-membrane location for BcsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places BcsA in the cell inner membrane and records it as a multi-pass membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006011" target="_blank" class="term-link">
+                                    GO:0006011
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-alpha-D-glucose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0006011" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UDP-alpha-D-glucose metabolism is related to the donor substrate but is not the best process term for BcsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BcsA uses UDP-glucose as the donor for cellulose polymerization, so the pathway-level annotation should be cellulose biosynthetic process rather than the broad donor-substrate metabolic process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030244" target="_blank" class="term-link">
+                                    cellulose biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006011	UDP-alpha-D-glucose metabolic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane is correct but less specific than the bacterial plasma membrane assignment already present.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BcsA is specifically an inner-membrane multi-pass protein; GO:0005886 is the more informative cellular-component term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016758" target="_blank" class="term-link">
+                                    GO:0016758
+                                </a>
+                            </span>
+                            <span class="term-label">hexosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0016758" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hexosyltransferase activity is correct but too broad for the BcsA catalytic subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt and GOA assign the specific UDP-forming cellulose synthase activity, which is more informative than the generic hexosyltransferase parent.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016760" target="_blank" class="term-link">
+                                    cellulose synthase (UDP-forming) activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Catalytic subunit of cellulose synthase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016758	hexosyltransferase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016759" target="_blank" class="term-link">
+                                    GO:0016759
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0016759" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cellulose synthase activity is correct but should be made specific to the UDP-forming activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The BcsA reaction is explicitly Rhea/EC-mapped as cellulose synthase (UDP-forming) activity, so GO:0016760 is the preferred specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016760" target="_blank" class="term-link">
+                                    cellulose synthase (UDP-forming) activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=[(1-&gt;4)-beta-D-glucosyl](n) + UDP-alpha-D-glucose</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016759	cellulose synthase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016760" target="_blank" class="term-link">
+                                    GO:0016760
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose synthase (UDP-forming) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0016760" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The UDP-forming cellulose synthase activity is the core catalytic function of BcsA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt describes BcsA as the catalytic subunit of cellulose synthase, maps EC 2.4.1.12/Rhea:19929, and GOA already contains the specific UDP-forming cellulose synthase term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Catalytic subunit of cellulose synthase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.4.1.12</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23222542" target="_blank" class="term-link">
+                                        PMID:23222542
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The inner membrane protein BcsA is the catalytically active subunit and contains a conserved family two GT-domain between TM-helices 4 and 5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016760	cellulose synthase (UDP-forming) activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035438" target="_blank" class="term-link">
+                                    GO:0035438
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic-di-GMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL4" data-a="GO:0035438" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cyclic-di-GMP binding is a relevant regulatory activity for BcsA but is secondary to the catalytic cellulose synthase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BcsA-family cellulose synthases are c-di-GMP regulated, and InterPro/UniProt support cyclic-di-GMP binding; the core catalytic output remains cellulose synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0035438	cyclic-di-GMP binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalytic subunit of cellulose synthase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24704788" target="_blank" class="term-link">
+                                        PMID:24704788
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BcsA forms a PilZ domain within its C-terminal intracellular extension</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Inner-membrane UDP-forming cellulose synthase activity that polymerizes UDP-glucose into cellulose.</h3>
+                <span class="vote-buttons" data-g="Q88JL4" data-a="FUNCTION: Inner-membrane UDP-forming cellulose synthase acti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016760" target="_blank" class="term-link">
+                            cellulose synthase (UDP-forming) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030244" target="_blank" class="term-link">
+                                cellulose biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FUNCTION: Catalytic subunit of cellulose synthase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/bcsA/bcsA-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0016760	cellulose synthase (UDP-forming) activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23222542" target="_blank" class="term-link">
+                                PMID:23222542
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The inner membrane protein BcsA is the catalytically active subunit and contains a conserved family two GT-domain between TM-helices 4 and 5</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/bcsA/bcsA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">This is the *canonical* BcsA, distinct from the recently described &#34;orphan&#34; BcsA</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/bcsA/bcsA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for bcsA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies BcsA as the UDP-forming cellulose synthase catalytic subunit in bacterial cellulose biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/bcsA/bcsA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for bcsA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the seven annotations reviewed for bcsA.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR43867/PTHR43867-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for bcsA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places BcsA in a glycosyltransferase 2/OpgH-family-related cellulose synthase subfamily.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23222542" target="_blank" class="term-link">
+                            PMID:23222542
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystallographic snapshot of cellulose synthesis and membrane translocation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The BcsA-B crystal structure establishes BcsA as the inner-membrane catalytic cellulose synthase subunit and BcsB as its membrane-anchored periplasmic partner.</div>
+
+                        <div class="finding-text">"The inner membrane protein BcsA is the catalytically active subunit and contains a conserved family two GT-domain between TM-helices 4 and 5"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24704788" target="_blank" class="term-link">
+                            PMID:24704788
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mechanism of activation of bacterial cellulose synthase by cyclic di-GMP.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BcsA carries the PilZ-domain c-di-GMP switch that relieves autoinhibition of the cellulose synthase.</div>
+
+                        <div class="finding-text">"BcsA forms a PilZ domain within its C-terminal intracellular extension"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/bcsA/bcsA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for bcsA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist verifies Q88JL4/PP_2635 as the canonical GT2/PilZ BcsA cellulose synthase rather than an orphan pseudomonad BcsA-like cyclic-beta-glucan synthase.</div>
+
+                        <div class="finding-text">"This is the *canonical* BcsA, distinct from the recently described &#34;orphan&#34; BcsA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 BcsA produce extracellular cellulose under the tested low-nutrient or biofilm conditions, and which c-di-GMP signals activate it?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL4" data-a="Q: Does KT2440 BcsA produce extracellular cellulose u..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which neighboring bcs-locus proteins are required with BcsA for cellulose export and mature polymer assembly?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL4" data-a="Q: Which neighboring bcs-locus proteins are required ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay cellulose production in wild-type and bcsA deletion strains using calcofluor/Congo red staining and beta-1,4-glucan quantification under biofilm-inducing conditions.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted genetics and polysaccharide profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL4" data-a="EXPERIMENT: Assay cellulose production in wild-type and bcsA d..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute BcsA/BcsB membrane complexes with UDP-glucose and c-di-GMP to measure cellulose synthase activity.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro glycosyltransferase assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL4" data-a="EXPERIMENT: Reconstitute BcsA/BcsB membrane complexes with UDP..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bcsA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JL4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of bcsA (Q88JL4 / PP_2635) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T15:49:24.453330</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="bcsA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="bcsA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-bcsa-q88jl4-pp_2635-in-pseudomonas-putida-kt2440">Functional Annotation of bcsA (Q88JL4 / PP_2635) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>bcsA (Q88JL4, ordered locus PP_2635) encodes the catalytic subunit of bacterial cellulose synthase (BcsA; EC 2.4.1.12).</strong> It is an integral inner‑membrane, processive family‑2 glycosyltransferase (GT2) that polymerizes UDP‑α‑D‑glucose into linear β‑(1→4)‑glucan (cellulose), releasing UDP, and simultaneously translocates the growing polymer through its own transmembrane channel to the periplasmic/cell‑surface side. Its activity is switched on by the second messenger <strong>cyclic di‑GMP (c‑di‑GMP)</strong>, which binds a C‑terminal PilZ domain and relieves autoinhibition. In <em>P. putida</em> KT2440, the cellulose produced by this machinery is one of several exopolysaccharides and serves as an accessory structural stabilizer of the biofilm matrix.</p>
+<p><strong>Gene identity was verified</strong> (see Section 2): the UniProt annotation, EC number, catalytic reaction, GT2/PilZ domain architecture, and diagnostic sequence motifs are all mutually consistent and match the well‑characterized bacterial cellulose synthase family. This is the <em>canonical</em> BcsA, distinct from the recently described "orphan" BcsA‑like cyclic‑β‑glucan synthases of pseudomonads (Section 6).</p>
+<hr />
+<h2 id="2-geneprotein-identity-verification">2. Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value (UniProt Q88JL4)</th>
+<th>Consistency check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein</td>
+<td>Cellulose synthase catalytic subunit [UDP‑forming]</td>
+<td>✅ matches symbol <em>bcsA</em></td>
+</tr>
+<tr>
+<td>EC</td>
+<td>2.4.1.12</td>
+<td>✅ cellulose synthase (UDP‑forming)</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td><em>bcsA</em> / PP_2635</td>
+<td>✅ matches target</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125)</td>
+<td>✅ matches target</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Glycosyltransferase 2 (GT2)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>869 aa</td>
+<td>consistent with BcsA</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>GT2‑like (356–565); PilZ (694–790); 9 TM helices</td>
+<td>✅ canonical BcsA topology</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bioinformatic confirmation of catalytic/regulatory residues (this work):</strong> direct scan of the 869‑aa sequence identified <strong>all four</strong> conserved catalytic motifs of processive cellulose synthases, in the canonical N→C order (Zimmer nomenclature), plus both c‑di‑GMP‑binding motifs:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Role</th>
+<th>Sequence found</th>
+<th>Residues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>U1 "D"</td>
+<td>UDP/sugar binding</td>
+<td><code>TYNED</code></td>
+<td>281–285</td>
+</tr>
+<tr>
+<td>U2 "DxD"</td>
+<td>Mg²⁺ / UDP‑glucose coordination</td>
+<td><code>FDCD</code></td>
+<td>359–362</td>
+</tr>
+<tr>
+<td>U3 "TED"</td>
+<td>catalytic general base (deprotonates acceptor O4)</td>
+<td><code>TED</code></td>
+<td>455–457</td>
+</tr>
+<tr>
+<td>U4 "QxxRW"</td>
+<td>processive glucan anchoring</td>
+<td><code>QRIRW</code></td>
+<td>493–497</td>
+</tr>
+<tr>
+<td>PilZ RxxxR</td>
+<td>c‑di‑GMP binding</td>
+<td><code>RRAHR</code></td>
+<td>(PilZ domain)</td>
+</tr>
+<tr>
+<td>PilZ (D/N)xSxxG</td>
+<td>c‑di‑GMP binding</td>
+<td><code>DYSDGG</code></td>
+<td>(PilZ domain)</td>
+</tr>
+</tbody>
+</table>
+<p>The presence and correct spacing of all four catalytic motifs within the cytoplasmic GT2 domain, together with the intact PilZ c‑di‑GMP module, is definitive evidence of a bona fide, c‑di‑GMP‑regulated GT‑A‑fold cellulose synthase — confirming we are researching the correct protein. KEGG independently assigns PP_2635 to orthology <strong>K00694</strong> (cellulose synthase, EC 2.4.1.12), pathway ppu00500 (starch and sucrose metabolism), with Pfam domains BcsA_N, Cellulose_synt, and PilZ.</p>
+<hr />
+<h2 id="3-primary-function-the-reaction-catalyzed-and-substrate-specificity">3. Primary Function: The Reaction Catalyzed and Substrate Specificity</h2>
+<p>BcsA is a <strong>processive, inverting β‑glycosyltransferase</strong>. The reaction (UniProt / Rhea:19929):</p>
+<blockquote>
+<p>[(1→4)‑β‑D‑glucosyl]ₙ + UDP‑α‑D‑glucose → [(1→4)‑β‑D‑glucosyl]₍ₙ₊₁₎ + UDP + H⁺  (cofactor <strong>Mg²⁺</strong>)</p>
+</blockquote>
+<ul>
+<li><strong>Donor substrate:</strong> UDP‑α‑D‑glucose (the sole sugar‑nucleotide donor).</li>
+<li><strong>Acceptor:</strong> the non‑reducing end of the growing β‑1,4‑glucan chain.</li>
+<li><strong>Product:</strong> cellulose (linear, unbranched β‑1,4‑glucan).</li>
+</ul>
+<p>Crystallographic and QM/MM studies of the homologous <em>Rhodobacter sphaeroides</em> BcsA–BcsB complex define the mechanism at atomic resolution: the enzyme extends the polymer <strong>one glucose at a time</strong> via an <strong>Sₙ2‑type transition state</strong>, in which the non‑reducing‑end O4 hydroxyl performs nucleophilic attack on the anomeric C1 of UDP‑glucose, breaking the C1–O1 glycosidic bond, with a conserved catalytic aspartate acting as general base (Morgan et al., <em>Nature</em> 2013, PMID 23222542; Yang et al. 2015, PMID 25942604). Successive glucose units are added in alternating 180° orientations to build the cellobiose repeat. Catalysis and membrane translocation are mechanistically coupled: each glucose addition ratchets the nascent chain through the BcsA transmembrane channel (Morgan et al. 2013, PMID 23222542).</p>
+<hr />
+<h2 id="4-subcellular-localization-site-of-action">4. Subcellular Localization / Site of Action</h2>
+<ul>
+<li><strong>Inner (cytoplasmic) membrane</strong>, multi‑pass integral membrane protein (UniProt; 9 predicted TM helices). The GT2 catalytic domain faces the cytoplasm (where UDP‑glucose is available), while the TM helices form a <strong>cellulose‑conducting channel</strong> that extrudes the polymer toward the periplasm (Morgan et al. 2013, PMID 23222542).</li>
+<li>Function is therefore carried out <strong>at the inner membrane</strong>, with the polysaccharide product delivered across it. In the complete Bcs system the periplasmic subunit <strong>BcsB</strong> anchors and guides the emerging chain, and additional components (e.g., BcsC, BcsZ) complete export to the cell surface (Morgan et al. 2013, PMID 23222542; Knecht et al. 2022, PMID 35289468).</li>
+</ul>
+<h3 id="the-p-putida-kt2440-bcs-operon-genomic-context-kegg">The <em>P. putida</em> KT2440 <em>bcs</em> operon (genomic context, KEGG)</h3>
+<p>PP_2635 sits within a canonical, complete cellulose synthesis–secretion operon (locus ~PP_2631–PP_2638):</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product / role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2631</td>
+<td><em>bcsF</em>/yhjT</td>
+<td>accessory membrane protein</td>
+</tr>
+<tr>
+<td>PP_2632</td>
+<td><em>bcsG</em></td>
+<td>putative endoglucanase / membrane accessory</td>
+</tr>
+<tr>
+<td>PP_2634</td>
+<td>—</td>
+<td>putative cellulose synthase (accessory)</td>
+</tr>
+<tr>
+<td><strong>PP_2635</strong></td>
+<td><strong><em>bcsA</em></strong></td>
+<td><strong>catalytic + translocator subunit (target; K00694)</strong></td>
+</tr>
+<tr>
+<td>PP_2636</td>
+<td><em>bcsB</em></td>
+<td>co‑catalytic, periplasmic translocator subunit</td>
+</tr>
+<tr>
+<td>PP_2637</td>
+<td><em>bcsZ</em></td>
+<td>periplasmic endo‑1,4‑β‑D‑glucanase (chain editing)</td>
+</tr>
+<tr>
+<td>PP_2638</td>
+<td><em>bcsC</em></td>
+<td>outer‑membrane export channel (Bcs operon C protein)</td>
+</tr>
+</tbody>
+</table>
+<p>This <em>bcsA–bcsB–bcsZ–bcsC</em> arrangement is the hallmark of a functional trans‑envelope cellulose machine: BcsA+BcsB polymerize and translocate the glucan across the inner membrane, BcsZ trims/edits it in the periplasm, and BcsC exports it to the cell surface. The co‑clustering independently corroborates the identity of PP_2635 as the cellulose‑synthase catalytic subunit.</p>
+<hr />
+<h2 id="5-regulation-and-pathway-context">5. Regulation and Pathway Context</h2>
+<ul>
+<li><strong>c‑di‑GMP gating (allosteric activation).</strong> BcsA's C‑terminal <strong>PilZ domain</strong> binds c‑di‑GMP; binding "releases an autoinhibited state of the enzyme by breaking a salt bridge that otherwise tethers a conserved gating loop that controls access to and substrate coordination at the active site" (Morgan et al., <em>Nature Struct. Mol. Biol.</em> 2014, PMID 24704788). Thus cellulose synthesis is directly slaved to intracellular c‑di‑GMP, the master regulator of the motile→sessile (biofilm) transition.</li>
+<li><strong>Experimental validation of the PilZ motif.</strong> In <em>Salmonella</em>, mutating the conserved <strong>RxxxR</strong> residues of the BcsA PilZ domain abolishes c‑di‑GMP‑dependent cellulose production (Zorraquino et al. 2013, PMID 23161026). This is direct experimental support that the very motif present in Q88JL4 (<code>RRAHR</code>) is functionally required for signal‑dependent activation. That study also showed that cellulose itself acts as a physical brake on flagellar rotation at high c‑di‑GMP — so BcsA output reinforces the sessile lifestyle both as matrix and by steric hindrance of motility.</li>
+<li><strong>Minimal functional unit.</strong> The authoritative review of bacterial cellulose biosynthesis (Römling &amp; Galperin 2015, PMID 26077867) states that "in most studied bacteria, just two subunits, BcsA and BcsB, are necessary and sufficient for the formation of the polysaccharide chain in vitro," with auxiliary subunits modulating expression, export, and higher‑order fiber organization — and with cellulose important for rhizosphere colonization and host interactions.</li>
+<li><strong>Pathway.</strong> UniProt assigns BcsA to "Glycan metabolism; bacterial cellulose biosynthesis"; KEGG places it in ppu00500 (starch and sucrose metabolism). Cellulose production is frequently linked to biofilm formation (Morgan et al. 2014, PMID 24704788).</li>
+<li><strong>Regulatory network in <em>P. putida</em> KT2440.</strong> c‑di‑GMP levels and downstream EPS/biofilm genes are governed by regulators such as <strong>FleQ</strong>, a c‑di‑GMP‑binding transcription factor that controls flagellar and EPS operons and whose mutation reduces biofilm formation and plant‑surface colonization (Molina‑Henares et al. 2017, PMID 27503246), and by diguanylate‑cyclase/phosphodiesterase enzymes (e.g., the GGDEF/EAL response regulator Rup4959, whose activity raises c‑di‑GMP and Calcofluor‑stainable EPS while suppressing motility; Matilla et al. 2011, PMID 21554519). These place BcsA within the broader c‑di‑GMP–biofilm signaling circuitry of this organism.</li>
+</ul>
+<hr />
+<h2 id="6-organismspecific-biological-role-p-putida-kt2440">6. Organism‑Specific Biological Role (<em>P. putida</em> KT2440)</h2>
+<p><em>P. putida</em> KT2440 possesses <strong>four exopolysaccharide (EPS) systems</strong> — alginate (<em>alg</em>), <strong>cellulose (<em>bcs</em>)</strong>, and the two novel clusters <em>pea</em> and <em>peb</em>. A dedicated genetic study (Nilsson et al. 2011, PMID 21507178) reports that "the gene clusters alg and bcs, which code for proteins mediating alginate and cellulose biosynthesis, were found to play minor roles in <em>P. putida</em> KT2440 biofilm formation and stability under the conditions tested," with <em>pea</em>/<em>peb</em> being the dominant matrix stabilizers. Accordingly, the primary biological output of PP_2635/BcsA — cellulose — acts as an <strong>accessory structural stabilizer</strong> of the biofilm rather than the principal matrix polymer in this species. This functional redundancy among EPS systems explains why a <em>bcs</em> lesion alone has limited biofilm phenotype.</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1 — PP_2635/Q88JL4 is a genuine BcsA cellulose synthase catalytic subunit (EC 2.4.1.12). <em>Supported</em> by UniProt annotation + Rhea reaction + GT2 domain + diagnostic QxxRW/DxD motifs.<br />
+- H2 — Activity is c‑di‑GMP‑regulated via a C‑terminal PilZ domain. <em>Supported</em> by domain annotation, presence of both RxxxR and DxSxxG c‑di‑GMP motifs, and structural precedent (PMID 24704788).<br />
+- H3 — The protein acts at the inner membrane and translocates its product across it. <em>Supported</em> by 9‑TM topology and BcsA–BcsB channel structure (PMID 23222542).<br />
+- H4 — In <em>P. putida</em> KT2440 cellulose is a minor/accessory biofilm component. <em>Supported</em> by Nilsson et al. 2011 (PMID 21507178).</p>
+<p><strong>Refuted / ruled out:</strong><br />
+- The target is NOT the "orphan" BcsA‑like protein that constitutes a novel pseudomonad cyclic‑β‑(1,3)‑glucan synthase family (which shares &lt;41% identity with true BcsA and has a distinct GH17‑domain architecture; Spiers et al. 2023, PMID 37267309). Q88JL4 carries the canonical GT2 + PilZ cellulose‑synthase architecture and the QxxRW/DxD cellulose‑synthase motifs, so it is the <em>bona fide</em> BcsA, not an orphan.<br />
+- Cellulose is NOT the dominant/essential biofilm matrix polymer in <em>P. putida</em> KT2440 (refuted by PMID 21507178).</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>Direct enzymology in <em>P. putida</em> KT2440 is lacking.</strong> The catalytic and structural evidence derives from homologs (<em>R. sphaeroides</em>, <em>G. hydrophila</em>/<em>E. coli</em>, <em>Komagataeibacter</em>). The exact substrate specificity, processivity, and c‑di‑GMP affinity of the <em>P. putida</em> enzyme are inferred by homology/motif conservation, not measured.</li>
+<li><strong>Cellulose chemistry.</strong> Some pseudomonads/enterobacteria produce chemically modified cellulose (e.g., phosphoethanolamine‑ or acetyl‑decorated). Whether <em>P. putida</em> cellulose is modified, and by which accessory <em>bcs</em> genes, was not established here.</li>
+<li><strong>Operon composition.</strong> The full complement and arrangement of the PP_2635 <em>bcs</em> operon (BcsB/BcsC/BcsZ and any BcsE/F/G regulatory genes) in KT2440 warrants explicit mapping.</li>
+<li><strong>Conditional phenotypes.</strong> The "minor" biofilm role was established under specific laboratory conditions; cellulose may be more important during plant‑root/rhizosphere colonization, desiccation resistance, or phage defense (cf. cellulose as a phage receptor in <em>Erwinia</em>, PMID 35289468).</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li><strong>26077867</strong> — Römling, Galperin. Bacterial cellulose biosynthesis: diversity of operons, subunits, products, and functions. <em>Trends Microbiol.</em> (2015). <em>(authoritative review)</em></li>
+<li><strong>23161026</strong> — Zorraquino et al. Coordinated cyclic‑di‑GMP repression of <em>Salmonella</em> motility through YcgR and cellulose. <em>J. Bacteriol.</em> (2013). <em>(RxxxR PilZ mutagenesis)</em></li>
+<li><strong>23222542</strong> — Morgan, Strumillo, Zimmer. Crystallographic snapshot of cellulose synthesis and membrane translocation. <em>Nature</em> (2013).</li>
+<li><strong>24704788</strong> — Morgan, McNamara, Zimmer. Mechanism of activation of bacterial cellulose synthase by cyclic di‑GMP. <em>Nat. Struct. Mol. Biol.</em> (2014).</li>
+<li><strong>25942604</strong> — Yang, Zimmer, Yingling, Kubicki. QM/MM study of cellulose polymerization mechanism in bacterial CESA (2015).</li>
+<li><strong>21507178</strong> — Nilsson et al. Influence of putative exopolysaccharide genes on <em>P. putida</em> KT2440 biofilm stability (2011).</li>
+<li><strong>27503246</strong> — Molina‑Henares et al. FleQ of <em>P. putida</em> KT2440 is a multimeric c‑di‑GMP‑binding regulator of biofilm matrix components (2017).</li>
+<li><strong>21554519</strong> — Matilla et al. Cyclic diguanylate turnover by the sole GGDEF/EAL response regulator in <em>P. putida</em> (2011).</li>
+<li><strong>35289468</strong> — Knecht et al. Bacteriophage S6 requires bacterial cellulose for <em>Erwinia amylovora</em> infection (2022).</li>
+<li><strong>37267309</strong> — Spiers et al. Bioinformatics characterization of BcsA‑like orphan proteins suggests a novel family of pseudomonad cyclic‑β‑glucan synthases (2023) — used to <em>exclude</em> misidentification.</li>
+<li>UniProt <strong>Q88JL4</strong>; Rhea <strong>RHEA:19929</strong>; InterPro IPR003919, IPR001173, IPR009875.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="bcsA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="bcsA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JL4
+gene_symbol: bcsA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: bcsA encodes the multi-pass inner-membrane catalytic subunit of bacterial cellulose synthase, a GT2 enzyme that polymerizes UDP-glucose into cellulose during cellulose biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Plasma membrane is the appropriate bacterial inner-membrane location for BcsA.
+    action: ACCEPT
+    reason: UniProt places BcsA in the cell inner membrane and records it as a multi-pass membrane protein.
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+- term:
+    id: GO:0006011
+    label: UDP-alpha-D-glucose metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: UDP-alpha-D-glucose metabolism is related to the donor substrate but is not the best process term for BcsA.
+    action: MODIFY
+    reason: BcsA uses UDP-glucose as the donor for cellulose polymerization, so the pathway-level annotation should be cellulose biosynthetic process rather than the broad donor-substrate metabolic process.
+    proposed_replacement_terms:
+    - id: GO:0030244
+      label: cellulose biosynthetic process
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0006011\tUDP-alpha-D-glucose metabolic process&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Membrane is correct but less specific than the bacterial plasma membrane assignment already present.
+    action: MODIFY
+    reason: BcsA is specifically an inner-membrane multi-pass protein; GO:0005886 is the more informative cellular-component term.
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+- term:
+    id: GO:0016758
+    label: hexosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Hexosyltransferase activity is correct but too broad for the BcsA catalytic subunit.
+    action: MODIFY
+    reason: UniProt and GOA assign the specific UDP-forming cellulose synthase activity, which is more informative than the generic hexosyltransferase parent.
+    proposed_replacement_terms:
+    - id: GO:0016760
+      label: cellulose synthase (UDP-forming) activity
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;FUNCTION: Catalytic subunit of cellulose synthase&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0016758\thexosyltransferase activity&#34;
+- term:
+    id: GO:0016759
+    label: cellulose synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Cellulose synthase activity is correct but should be made specific to the UDP-forming activity.
+    action: MODIFY
+    reason: The BcsA reaction is explicitly Rhea/EC-mapped as cellulose synthase (UDP-forming) activity, so GO:0016760 is the preferred specific term.
+    proposed_replacement_terms:
+    - id: GO:0016760
+      label: cellulose synthase (UDP-forming) activity
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;Reaction=[(1-&gt;4)-beta-D-glucosyl](n) + UDP-alpha-D-glucose&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0016759\tcellulose synthase activity&#34;
+- term:
+    id: GO:0016760
+    label: cellulose synthase (UDP-forming) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The UDP-forming cellulose synthase activity is the core catalytic function of BcsA.
+    action: ACCEPT
+    reason: UniProt describes BcsA as the catalytic subunit of cellulose synthase, maps EC 2.4.1.12/Rhea:19929, and GOA already contains the specific UDP-forming cellulose synthase term.
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;FUNCTION: Catalytic subunit of cellulose synthase&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;EC=2.4.1.12&#34;
+    - reference_id: PMID:23222542
+      supporting_text: &#34;The inner membrane protein BcsA is the catalytically active subunit and contains a conserved family two GT-domain between TM-helices 4 and 5&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0016760\tcellulose synthase (UDP-forming) activity&#34;
+- term:
+    id: GO:0035438
+    label: cyclic-di-GMP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Cyclic-di-GMP binding is a relevant regulatory activity for BcsA but is secondary to the catalytic cellulose synthase function.
+    action: KEEP_AS_NON_CORE
+    reason: BcsA-family cellulose synthases are c-di-GMP regulated, and InterPro/UniProt support cyclic-di-GMP binding; the core catalytic output remains cellulose synthase activity.
+    supported_by:
+    - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+      supporting_text: &#34;GO:0035438\tcyclic-di-GMP binding&#34;
+    - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+      supporting_text: &#34;Catalytic subunit of cellulose synthase&#34;
+    - reference_id: PMID:24704788
+      supporting_text: &#34;BcsA forms a PilZ domain within its C-terminal intracellular extension&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/bcsA/bcsA-uniprot.txt
+  title: UniProtKB entry for bcsA
+  findings:
+  - statement: UniProt identifies BcsA as the UDP-forming cellulose synthase catalytic subunit in bacterial cellulose biosynthesis.
+- id: file:PSEPK/bcsA/bcsA-goa.tsv
+  title: QuickGO GOA annotations for bcsA
+  findings:
+  - statement: The fetched GOA table contains the seven annotations reviewed for bcsA.
+- id: file:interpro/panther/PTHR43867/PTHR43867-metadata.yaml
+  title: PANTHER family metadata for bcsA
+  findings:
+  - statement: PANTHER places BcsA in a glycosyltransferase 2/OpgH-family-related cellulose synthase subfamily.
+- id: PMID:23222542
+  title: Crystallographic snapshot of cellulose synthesis and membrane translocation.
+  findings:
+  - statement: The BcsA-B crystal structure establishes BcsA as the inner-membrane catalytic cellulose synthase subunit and BcsB as its membrane-anchored periplasmic partner.
+    supporting_text: &#34;The inner membrane protein BcsA is the catalytically active subunit and contains a conserved family two GT-domain between TM-helices 4 and 5&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMC-cached primary structural paper supporting the BcsA catalytic and inner-membrane translocation role.
+- id: PMID:24704788
+  title: Mechanism of activation of bacterial cellulose synthase by cyclic di-GMP.
+  findings:
+  - statement: BcsA carries the PilZ-domain c-di-GMP switch that relieves autoinhibition of the cellulose synthase.
+    supporting_text: &#34;BcsA forms a PilZ domain within its C-terminal intracellular extension&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMC-cached primary structural paper supporting c-di-GMP regulation of BcsA.
+- id: file:PSEPK/bcsA/bcsA-deep-research-openscientist.md
+  title: OpenScientist gene research for bcsA
+  findings:
+  - statement: OpenScientist verifies Q88JL4/PP_2635 as the canonical GT2/PilZ BcsA cellulose synthase rather than an orphan pseudomonad BcsA-like cyclic-beta-glucan synthase.
+    supporting_text: &#34;This is the *canonical* BcsA, distinct from the recently described \&#34;orphan\&#34; BcsA&#34;
+core_functions:
+- description: Inner-membrane UDP-forming cellulose synthase activity that polymerizes UDP-glucose into cellulose.
+  molecular_function:
+    id: GO:0016760
+    label: cellulose synthase (UDP-forming) activity
+  directly_involved_in:
+  - id: GO:0030244
+    label: cellulose biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+    supporting_text: &#34;FUNCTION: Catalytic subunit of cellulose synthase&#34;
+  - reference_id: file:PSEPK/bcsA/bcsA-uniprot.txt
+    supporting_text: &#34;PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.&#34;
+  - reference_id: file:PSEPK/bcsA/bcsA-goa.tsv
+    supporting_text: &#34;GO:0016760\tcellulose synthase (UDP-forming) activity&#34;
+  - reference_id: PMID:23222542
+    supporting_text: &#34;The inner membrane protein BcsA is the catalytically active subunit and contains a conserved family two GT-domain between TM-helices 4 and 5&#34;
+  - reference_id: file:PSEPK/bcsA/bcsA-deep-research-openscientist.md
+    supporting_text: &#34;This is the *canonical* BcsA, distinct from the recently described \&#34;orphan\&#34; BcsA&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does KT2440 BcsA produce extracellular cellulose under the tested low-nutrient or biofilm conditions, and which c-di-GMP signals activate it?
+- question: Which neighboring bcs-locus proteins are required with BcsA for cellulose export and mature polymer assembly?
+suggested_experiments:
+- description: Assay cellulose production in wild-type and bcsA deletion strains using calcofluor/Congo red staining and beta-1,4-glucan quantification under biofilm-inducing conditions.
+  experiment_type: targeted genetics and polysaccharide profiling
+- description: Reconstitute BcsA/BcsB membrane complexes with UDP-glucose and c-di-GMP to measure cellulose synthase activity.
+  experiment_type: in vitro glycosyltransferase assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

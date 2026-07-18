@@ -2,7 +2,7 @@
 
 Source: DnaK-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -17,6 +17,8 @@ This is a solid summary that correctly captures the core molecular mechanism of 
 - Refolding promotion and aggregation prevention
 - Co-chaperone cooperation (DnaJ, GrpE mentioned in trace)
 - Cytoplasmic localization
+
+All scored claims are supported. The following are omissions and therefore affect completeness only.
 
 However, notable omissions reduce completeness:
 - No mention of the holdase function (ATP-independent aggregation prevention, PMID:2203539)

@@ -29,4 +29,4 @@ The interpro2go domain mapping does not appear to provide autophagy-specific GO 
 
 ## Notes on thinking trace
 
-The trace correctly identifies the MIT domain superfamily but then defaults to generic MIT domain biology (ESCRT-III, cytoskeletal assemblies) rather than integrating the autophagy context. The UniProt summary "Involved in vesicle-mediated transport" likely misled the model, as the actual function is in autophagy-specific PI3K complex assembly.
+The trace correctly identifies the MIT domain superfamily but then defaults to generic MIT domain biology (ESCRT-III, cytoskeletal assemblies) rather than integrating the autophagy context. BioReason's model-generated UniProt-style line "Involved in vesicle-mediated transport" recapitulates the same generic framing; it is not imported source evidence. The actual function is in autophagy-specific PI3K complex assembly.

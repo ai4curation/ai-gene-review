@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 # PSEPK UPA00729: tRNA ms2io6A37 hydroxylation
 
-- Module seed: `trna_ms2io6a37_hydroxylation`
+- Pathway seed: `trna_ms2io6a37_hydroxylation` (single-step; no standalone module retained)
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -17,13 +17,13 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [x] Curate or update the species-neutral module.
-- [x] Run module-level OpenScientist deep research.
+- [x] Assess module granularity and record the single-step pathway curation.
+- [x] Run generic OpenScientist retrieval for the pathway seed.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
-- [ ] Validate module and gene reviews.
+- [x] Validate gene review; standalone module retired/deferred.
 - [x] Open one PR for this module/pathway: [PR #2054](https://github.com/ai4curation/ai-gene-review/pull/2054).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -37,11 +37,13 @@ autolink_gene_symbols: false
 
 Generated UTC: 2026-07-11T20:27:48.376449+00:00
 
-- Created and validated `modules/trna_ms2io6a37_hydroxylation.yaml` as a
-  compact UPA00729 module centered on `miaE` / PP_2188 / Q88KV1.
+- Retired the previous `modules/trna_ms2io6a37_hydroxylation.yaml` seed:
+  UPA00729 is a single MiaE hydroxylation step and should not be represented as
+  a standalone one-part module. Reintroduce it only inside a broader multi-part
+  tRNA A37 hypermodification module.
 - OpenScientist gene-level research completed:
   `genes/PSEPK/miaE/miaE-deep-research-openscientist.md`.
-- OpenScientist generic module research completed:
+- OpenScientist generic retrieval completed:
   `modules/trna_ms2io6a37_hydroxylation-deep-research-openscientist.md`.
 - OpenScientist PSEPK module+pathway research completed:
   `projects/P_PUTIDA/deep-research/PSEPK__trna_ms2io6a37_hydroxylation__upa00729-deep-research-openscientist.md`.

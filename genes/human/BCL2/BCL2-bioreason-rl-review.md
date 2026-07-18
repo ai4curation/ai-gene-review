@@ -2,7 +2,7 @@
 
 Source: BCL2-bioreason-rl-predictions.md
 
-- **Correctness**: 5/5
+- **Correctness**: 4/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -11,9 +11,17 @@ The BioReason functional summary states:
 
 > An anti-apoptotic regulator that assembles a BH4-BH1-3 modular scaffold to bind and neutralize pro-apoptotic factors at organelle membranes. It operates as a soluble cytoplasmic protein that dynamically associates with the outer surface of mitochondria and with the endoplasmic reticulum, where it prevents assembly of apoptosis-inducing complexes and preserves cell survival by restraining mitochondrial pathway activation.
 
-This is an accurate and well-structured summary. The identification of BCL2 as an anti-apoptotic regulator with BH1-4 domains that sequesters pro-apoptotic BH3-only proteins and prevents BAX/BAK oligomerization is correct. The localization to mitochondrial outer membrane and ER membrane is supported by the curated review and experimental evidence. The curated review confirms BCL2's role in negative regulation of apoptotic process (GO:0043066), negative regulation of intrinsic apoptotic signaling pathway (GO:2001243), and localization to mitochondrial outer membrane (GO:0005741) and ER membrane (GO:0005789).
+The central anti-apoptotic account is accurate and well structured. The identification of
+BCL2 as a BH1-4 regulator that sequesters pro-apoptotic partners and prevents BAX/BAK
+activation is correct. The curated review confirms negative regulation of apoptosis and
+localization to mitochondrial outer and ER membranes.
 
-The description of "soluble cytoplasmic protein that dynamically associates" with membranes is slightly misleading -- BCL2 has a C-terminal transmembrane anchor and is constitutively membrane-associated, unlike BAX which translocates. However, this is a minor inaccuracy in the context of an otherwise strong summary.
+The description of a "soluble cytoplasmic protein that dynamically associates" with
+membranes is a real, though limited, topology error: BCL2 is a tail-anchored integral
+membrane protein that is constitutively membrane-associated, unlike BAX. This warrants
+4/5 correctness and matches the treatment of the analogous error in the mouse Bcl2
+review. Human completeness remains higher because this paragraph names both organelle
+membranes and gives a somewhat fuller anti-apoptotic mechanism.
 
 The summary does not mention BCL2's roles in calcium homeostasis regulation at the ER, B cell activation, or its non-apoptotic functions in autophagy regulation, which the curated review covers extensively. These are secondary functions but represent a completeness gap.
 

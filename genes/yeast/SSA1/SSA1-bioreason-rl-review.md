@@ -2,7 +2,7 @@
 
 Source: SSA1-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -20,6 +20,8 @@ The Hsp70 allosteric mechanism description is correct, mapping to the domain arc
 > Operating in soluble compartments with a significant nuclear pool, it supports folding and quality control of diverse proteins and coordinates with co-chaperones and downstream disaggregation/refolding systems.
 
 The mention of both cytoplasmic and nuclear localization is correct -- the curated review confirms nucleus (GO:0005634 via IBA and IDA) and cytoplasm (GO:0005737 via IBA and IDA). However, the thinking trace oddly infers "GO:0005622 nucleus" as the most parsimonious localization, which is peculiar -- the primary localization is cytoplasmic. The summary is more balanced than the trace.
+
+All claims in the Functional Summary are supported. The trace-only identifier/localization error is diagnostic and does not lower correctness.
 
 The summary is extremely generic for what is one of the most functionally diverse chaperones in yeast. It misses:
 - De novo protein folding and protein refolding after stress

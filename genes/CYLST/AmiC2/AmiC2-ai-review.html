@@ -1,0 +1,2388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmiC2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AmiC2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/K9X2S2" target="_blank" class="term-link">
+                        K9X2S2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Cylindrospermum stagnale PCC 7417</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">K9X2S2</span>
+
+                    <span class="badge">Cylst_4888</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AmiC2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="K9X2S2" data-a="DESCRIPTION: AmiC2 (ORF Cylst_4888, UniProt K9X2S2) of the fila..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AmiC2 (ORF Cylst_4888, UniProt K9X2S2) of the filamentous, heterocyst-forming cyanobacterium Cylindrospermum stagnale PCC 7417 is a secreted, Zn-dependent cell-wall N-acetylmuramoyl-L-alanine amidase (EC 3.5.1.28). The 635-residue protein has an N-terminal signal peptide (residues 1-23), AMIN peptidoglycan-targeting domains (Pfam PF11741, InterPro IPR021731) and a C-terminal Amidase_3 / MurNAc-LAA catalytic domain (Pfam PF01520, InterPro IPR002508; PANTHER PTHR30404 &#34;AmiC&#34;), and hydrolyses the amide bond between N-acetylmuramoyl residues and L-alanine in peptidoglycan. It is the ortholog (reciprocal best hit, 72.2% identity, forward E-value 2.3e-293) of the experimentally characterized AmiC2 of Nostoc/Anabaena sp. PCC 7120 (alr0093) and Nostoc punctiforme (Npun_F1846). In these characterized relatives, AmiC2 does not split the septum for daughter-cell separation (the role of housekeeping amidases in unicellular bacteria) but instead drills a regular array of nanopores into the septal cross-wall (murein). This nanopore array forms the framework through which septal junctions connect the cytoplasms of adjacent cells in the filament, enabling intercellular exchange of metabolites and signalling molecules, filament integrity and differentiation of nitrogen-fixing heterocysts. AmiC2 localises to the newly formed septum / cross-wall (periplasmic cell-wall compartment). Notably, unlike Nostoc/Anabaena PCC 7120, A. variabilis and N. punctiforme (which each carry a tandem AmiC1/AmiC2 amidase pair), C. stagnale encodes this AmiC2 ortholog as a standalone gene: no adjacent AmiC1 paralog is present, and both PCC 7120 AmiC exemplars reciprocate to the single K9X2S2 - so the AmiC1/AmiC2 duplication appears to be a Nostoc/Anabaena-specific event rather than ancestral to this module.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    GO:0008745
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmuramoyl-L-alanine amidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="K9X2S2" data-a="GO:0008745" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. K9X2S2 carries an Amidase_3 (MurNAc-LAA) catalytic domain (Pfam PF01520, InterPro IPR002508) and is named an N-acetylmuramoyl-L-alanine amidase (EC 3.5.1.28) by UniProt. It is the reciprocal-best-hit ortholog (72.2% identity, forward E=2.3e-293) of the experimentally characterized AmiC2 of Nostoc/Anabaena PCC 7120 (alr0093) and N. punctiforme (Npun_F1846), a bona fide N-acetylmuramoyl-L-alanine amidase. The IEA amidase-activity assignment is therefore well supported by both the catalytic domain and the orthologous biochemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the Amidase_3 catalytic domain, the UniProt N-acetylmuramoyl-L-alanine amidase name (EC 3.5.1.28), and reciprocal-best-hit orthology to the directly characterized AmiC2; represents the primary evolved molecular function of the gene product.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:CYLST/AmiC2/AmiC2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=N-acetylmuramoyl-L-alanine amidase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21244533" target="_blank" class="term-link">
+                                        PMID:21244533
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mutation of a single gene, encoding cell wall amidase AmiC2, completely changes the morphology and abrogates cell differentiation and intercellular communication</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="K9X2S2" data-a="GO:0009253" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. As an N-acetylmuramoyl-L-alanine amidase, AmiC2 hydrolyses (breaks down) peptidoglycan. In the characterized PCC 7120 ortholog, the enzyme perforates the septal peptidoglycan to drill the nanopore array; the biologically salient activity is specialized, localized septal PG remodelling rather than bulk PG turnover, but amidase cleavage of PG is legitimately peptidoglycan catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Amidase cleavage of peptidoglycan is peptidoglycan catabolism; supported by the catalytic domain and by the PG-perforating activity of the AmiC2 ortholog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                                        PMID:28929086
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzyme perforates the septal peptidoglycan creating an array of nanopores, which may be the framework for septal junction complexes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="K9X2S2" data-a="GO:0030288" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localization annotation. AmiC2 is a secreted amidase (N-terminal signal peptide, residues 1-23) that acts on the septal peptidoglycan, which in this outer-membrane- bearing (diderm) cyanobacterium lies within the periplasmic space between the cytoplasmic and outer membranes. The TreeGrafter periplasmic-space call is therefore defensible. However, the orthology-supported and more informative location is the cell septum / cross-wall (see the added GO:0030428 annotation).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with a secreted amidase acting on periplasmic septal PG; not wrong, though less specific than the septal localization observed for the AmiC2 ortholog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                                        PMID:28929086
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both amidases, AmiC1 and AmiC2, localized to the septa of young vegetative cells and to the septal and polar neck areas connecting heterocysts with vegetative cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:CYLST/AmiC2/AmiC2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=N-acetylmuramoyl-L-alanine amidase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28929086
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Two Cell Wall Amidases in Septal Junction and Nanopo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="K9X2S2" data-a="GO:0071555" data-r="PMID:28929086" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By orthology (72.2% identity, reciprocal best hit) to the characterized PCC 7120 / N. punctiforme AmiC2, K9X2S2 is inferred to remodel and pattern the septal cell wall by drilling the nanopore array, a specialized cell-wall organization process distinct from bulk PG turnover. Not in the GOA set; added by ISS transfer to capture the septal PG remodelling core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The characterized AmiC2 ortholog does not merely degrade PG but organizes the septal cross-wall into a patterned nanopore array; genetics show loss of amiC2 alters septal nanopore structure and number. Transferred to K9X2S2 by orthology (ISS).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                                        PMID:28929086
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzyme perforates the septal peptidoglycan creating an array of nanopores, which may be the framework for septal junction complexes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007267" target="_blank" class="term-link">
+                                    GO:0007267
+                                </a>
+                            </span>
+                            <span class="term-label">cell-cell signaling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28929086
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Two Cell Wall Amidases in Septal Junction and Nanopo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="K9X2S2" data-a="GO:0007267" data-r="PMID:28929086" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By orthology to the characterized AmiC2, K9X2S2 is inferred to drill the septal nanopore array through which septal junctions connect neighbouring cytoplasms, and so to be required (upstream) for intercellular communication: in PCC 7120, amiC2 (and amiC1) inactivation reduces FRAP tracer exchange, and in N. punctiforme loss of AmiC2 abolishes intercellular communication. Not in the GOA set; added by ISS transfer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong genetic evidence in the characterized orthologs that AmiC2 is required for cell-cell communication (the nanopores it creates are the conduits for septal junctions); an enabling/upstream role rather than direct signal transfer. Transferred to K9X2S2 by orthology (ISS).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                                        PMID:28929086
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Inactivation of either amidase resulted in significant reduction in nanopore count and in the rate of fluorescent tracer exchange between neighboring cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology was affected and heterocyst differentiation was abolished.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21244533" target="_blank" class="term-link">
+                                        PMID:21244533
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mutation of a single gene, encoding cell wall amidase AmiC2, completely changes the morphology and abrogates cell differentiation and intercellular communication</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                    GO:0030428
+                                </a>
+                            </span>
+                            <span class="term-label">cell septum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21244533" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21244533
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The morphogene AmiC2 is pivotal for multicellular developmen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="K9X2S2" data-a="GO:0030428" data-r="PMID:21244533" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By orthology to the characterized AmiC2, K9X2S2 is inferred to localize to the newly formed septum / cross-wall of dividing cells, the experimentally observed site of action for the ortholog (GFP fusion, immunofluorescence). Not in the GOA set; added by ISS transfer as the more informative location than the generic periplasmic space.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Localization studies place the AmiC2 ortholog at the division septum / cross-wall. Transferred to K9X2S2 by orthology (ISS).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21244533" target="_blank" class="term-link">
+                                        PMID:21244533
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AmiC2-GFP localizes in the cell wall with a focus in the cross walls of dividing cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                                        PMID:28929086
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AmiC2 localizes to the newly formed septum and migrates during septal invagination to cover the entire septal plane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Septal cell-wall N-acetylmuramoyl-L-alanine amidase that hydrolyses peptidoglycan to drill and pattern the nanopore array in the septal cross-wall, thereby creating the framework for septal junctions and enabling intercellular communication, filament integrity and heterocyst differentiation (inferred by reciprocal-best-hit orthology to the characterized PCC 7120 / N. punctiforme AmiC2). In C. stagnale this is a standalone amidase (no tandem AmiC1 paralog).</h3>
+                <span class="vote-buttons" data-g="K9X2S2" data-a="FUNCTION: Septal cell-wall N-acetylmuramoyl-L-alanine amidas..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                            N-acetylmuramoyl-L-alanine amidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                peptidoglycan catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                cell wall organization
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007267" target="_blank" class="term-link">
+                                cell-cell signaling
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                cell septum
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                                PMID:28929086
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Inactivation of either amidase resulted in significant reduction in nanopore count and in the rate of fluorescent tracer exchange between neighboring cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology was affected and heterocyst differentiation was abolished.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21244533" target="_blank" class="term-link">
+                                PMID:21244533
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">mutation of a single gene, encoding cell wall amidase AmiC2, completely changes the morphology and abrogates cell differentiation and intercellular communication</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" target="_blank" class="term-link">
+                            PMID:28929086
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role of Two Cell Wall Amidases in Septal Junction and Nanopore Formation in the Multicellular Cyanobacterium Anabaena sp. PCC 7120.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Inactivation of either amidase (AmiC1 or AmiC2) reduces septal nanopore number and the rate of intercellular tracer exchange; the amiC1 amiC2 double mutant loses filament morphology and heterocyst differentiation.</div>
+
+                        <div class="finding-text">"Inactivation of either amidase resulted in significant reduction in nanopore count and in the rate of fluorescent tracer exchange between neighboring cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology was affected and heterocyst differentiation was abolished."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The AmiC2 amidase perforates the septal peptidoglycan to create the nanopore array proposed to frame septal junction complexes.</div>
+
+                        <div class="finding-text">"This enzyme perforates the septal peptidoglycan creating an array of nanopores, which may be the framework for septal junction complexes"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21244533" target="_blank" class="term-link">
+                            PMID:21244533
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The morphogene AmiC2 is pivotal for multicellular development in the cyanobacterium Nostoc punctiforme.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutation of the single amiC2 gene in N. punctiforme abolishes cell differentiation and intercellular communication; AmiC2-GFP localizes to the cross-walls of dividing cells.</div>
+
+                        <div class="finding-text">"mutation of a single gene, encoding cell wall amidase AmiC2, completely changes the morphology and abrogates cell differentiation and intercellular communication"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:CYLST/AmiC2/AmiC2-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AmiC2 (Cylst_4888 / K9X2S2) gene review notes</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RBH orthology assigns AmiC2 = K9X2S2 in C. stagnale; this genome has no tandem AmiC1 (standalone amidase; both PCC 7120 AmiC exemplars reciprocate to K9X2S2; forward E=2.3e-293, 72.2% identity vs PCC 7120 AmiC2 A0ACD7S2F2).</div>
+
+                        <div class="finding-text">"this genome has **no tandem AmiC1** — the AmiC2 ortholog (K9X2S2) is standalone and both 7120 AmiC exemplars reciprocate to it"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:CYLST/AmiC2/AmiC2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry K9X2S2 (Cylst_4888)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt names Cylst_4888 (K9X2S2) an N-acetylmuramoyl-L-alanine amidase.</div>
+
+                        <div class="finding-text">"SubName: Full=N-acetylmuramoyl-L-alanine amidase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AmiC2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="K9X2S2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="amic2-cylst_4888-k9x2s2-cylindrospermum-stagnale-pcc-7417-cylst-gene-review-notes">AmiC2 (Cylst_4888 / K9X2S2) — Cylindrospermum stagnale PCC 7417 (CYLST) — Gene Review Notes</h1>
+<p>UniProt: <strong>K9X2S2</strong> (K9X2S2_9NOST; unreviewed, TrEMBL), 635 aa, MW 69,147. ORF name<br />
+<strong>Cylst_4888</strong>. Taxon NCBITaxon:56107 (<em>Cylindrospermum stagnale</em> PCC 7417, a filamentous,<br />
+heterocyst-forming Nostocaceae). UniProt SubName "N-acetylmuramoyl-L-alanine amidase"<br />
+[file:CYLST/AmiC2/AmiC2-uniprot.txt "SubName: Full=N-acetylmuramoyl-L-alanine amidase"].</p>
+<h2 id="orthology-basis-this-protein-is-not-directly-characterized">Orthology basis (this protein is NOT directly characterized)</h2>
+<p>K9X2S2 is <strong>not itself experimentally characterized</strong>. Its function is transferred by<br />
+<strong>orthology (ISS)</strong> from the directly-characterized AmiC2 of <em>Nostoc/Anabaena</em> sp. PCC 7120<br />
+(alr0093, UniProt A0ACD7S2F2) and <em>Nostoc punctiforme</em> (Npun_F1846).</p>
+<p>Reciprocal-best-hit (RBH) analysis in <code>modules/septal_junction/RESULTS.md</code> identifies the<br />
+<em>C. stagnale</em> septal-junction module orthologs and assigns <strong>AmiC2 = K9X2S2</strong>. The AmiC2 call<br />
+is a forward best hit with <strong>E = 2.3e-293</strong> and <strong>72.2% identity</strong> to the PCC 7120 AmiC2<br />
+exemplar (A0ACD7S2F2), and it is reciprocal (the reverse best hit from K9X2S2 returns<br />
+A0ACD7S2F2). This 1:1 reciprocal relationship across the whole protein (both AMIN and<br />
+Amidase_3 domains) supports transfer of the characterized AmiC2 function to K9X2S2.</p>
+<h2 id="standalone-amidase-no-tandem-amic1-in-this-genome-comparative-note">Standalone amidase — no tandem AmiC1 in this genome (comparative note)</h2>
+<p>Unlike <em>Nostoc/Anabaena</em> PCC 7120, <em>A. variabilis</em> (Q3MD47/Q3MD48) and <em>N. punctiforme</em><br />
+(B2J2S4/B2J2S3), which carry a <strong>tandem AmiC1/AmiC2 amidase pair</strong>, <em>C. stagnale</em> has this<br />
+AmiC2 ortholog (K9X2S2) as a <strong>standalone gene</strong>: no adjacent AmiC1 paralog was detected, and<br />
+<strong>both PCC 7120 AmiC exemplars (AmiC1 and AmiC2) reciprocate to the single K9X2S2</strong><br />
+[file:CYLST/AmiC2/AmiC2-notes.md; modules/septal_junction/RESULTS.md "this genome has <strong>no<br />
+tandem AmiC1</strong> — the AmiC2 ortholog (K9X2S2) is standalone and both 7120 AmiC exemplars<br />
+reciprocate to it, so the AmiC1/AmiC2 duplication appears to be a <em>Nostoc/Anabaena</em>-specific<br />
+event rather than ancestral to the module"]. This is an interesting comparative finding: the<br />
+AmiC1/AmiC2 duplication appears to be a <em>Nostoc/Anabaena</em>-specific event rather than ancestral<br />
+to the septal-junction module, and in <em>C. stagnale</em> a single AmiC likely carries out the<br />
+septal-PG nanopore-drilling role that is (partly redundantly) shared between two amidases in<br />
+PCC 7120.</p>
+<h2 id="protein-family-domain-architecture">Protein family / domain architecture</h2>
+<p>From the UniProt/InterPro record for K9X2S2:<br />
+- N-terminal <strong>signal peptide</strong> (residues 1–23; SignalP), consistent with export to the<br />
+  periplasmic/cell-wall compartment where septal peptidoglycan resides.<br />
+- <strong>AMIN domain(s)</strong> (InterPro IPR021731, Pfam PF11741 — two copies) in the N-terminal<br />
+  region: a septal/PG-targeting module that directs the enzyme to the division septum.<br />
+- C-terminal <strong>N-acetylmuramoyl-L-alanine amidase catalytic domain, Amidase_3 / MurNAc-LAA</strong><br />
+  (InterPro IPR002508, Pfam PF01520, CDD cd02696, SMART SM00646; DOMAIN 520–629) — a<br />
+<strong>Zn-dependent amidase</strong> (SUPFAM SSF53187, Zn-dependent exopeptidases; Gene3D 3.40.630.40).<br />
+  PANTHER family <strong>PTHR30404</strong> ("N-acetylmuramoyl-L-alanine amidase", subfamily SF0 "AmiC"),<br />
+  eggNOG COG0860.<br />
+- InterPro family IPR050695 "N-acetylmuramoyl_amidase_3". EC 3.5.1.28.</p>
+<p>This domain architecture (AMIN targeting + Amidase_3 catalytic, Zn-dependent, secreted) is<br />
+identical to that of the characterized 7120/<em>N. punctiforme</em> AmiC2.</p>
+<h2 id="molecular-function-amidase-activity-go0008745">Molecular function — amidase activity (GO:0008745)</h2>
+<p>The characterized ortholog is a bona fide N-acetylmuramoyl-L-alanine amidase (EC 3.5.1.28)<br />
+that hydrolyses the bond between N-acetylmuramoyl residues and L-alanine in peptidoglycan.<br />
+The single-gene <em>amiC2</em> mutant of <em>N. punctiforme</em><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21244533" title="mutation of a single gene, encoding cell wall amidase AmiC2, completely changes the morphology and abrogates cell differentiation and intercellular communication">PMID:21244533</a>.<br />
+The GOA IEA amidase-activity assignment (InterPro IPR002508 / PANTHER PTN002018865) for<br />
+K9X2S2 is thus consistent with both the catalytic domain and the orthologous biochemistry.<br />
+ACCEPT.</p>
+<h2 id="biological-process-septal-pg-remodelling-nanopore-array-cellcell-communication">Biological process — septal PG remodelling / nanopore array / cell–cell communication</h2>
+<p>In PCC 7120 the AmiC2 ortholog perforates the septal peptidoglycan, creating the nanopore<br />
+array <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" title="This enzyme perforates the septal peptidoglycan creating an array of nanopores, which may be the framework for septal junction complexes">PMID:28929086</a>. Inactivation of either<br />
+amidase reduces the nanopore array and impairs FRAP tracer exchange, and the double mutant<br />
+loses filament morphology and heterocyst differentiation <a href="https://pubmed.ncbi.nlm.nih.gov/28929086" title="Inactivation of either amidase resulted in significant reduction in nanopore count and in the rate of fluorescent tracer exchange between neighboring cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology was affected and heterocyst differentiation was abolished">PMID:28929086</a>.</p>
+<p>For K9X2S2 (by orthology, ISS):<br />
+- <strong>GO:0009253 peptidoglycan catabolic process</strong> — amidase cleavage of PG is PG catabolism<br />
+  (GOA IEA; ACCEPT).<br />
+- <strong>GO:0071555 cell wall organization</strong> — the amidase does not merely degrade PG but patterns<br />
+  the septal cross-wall into a nanopore array (NEW, ISS).<br />
+- <strong>GO:0007267 cell-cell signaling</strong> — the nanopore array is the conduit for septal junctions<br />
+  that connect neighbouring cytoplasms, so AmiC2 is required (upstream) for intercellular<br />
+  communication (NEW, ISS).</p>
+<h2 id="cellular-localisation">Cellular localisation</h2>
+<p>The characterized AmiC2 localises to the division septum / cross-wall. AmiC2-GFP<br />
+"localizes in the cell wall with a focus in the cross walls of dividing cells"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21244533">PMID:21244533</a>, and in Anabaena AmiC2 "localizes to the newly formed septum and migrates<br />
+during septal invagination to cover the entire septal plane" <a href="https://pubmed.ncbi.nlm.nih.gov/28929086">PMID:28929086</a>.</p>
+<ul>
+<li><strong>GO:0030288 outer membrane-bounded periplasmic space</strong> — the GOA IEA (TreeGrafter) call is<br />
+  defensible for a secreted amidase of a diderm cyanobacterium acting on periplasmic septal<br />
+  PG (ACCEPT), but is less informative than the septal localization.</li>
+<li><strong>GO:0030428 cell septum</strong> — the more informative, orthology-supported location (NEW, ISS).</li>
+</ul>
+<h2 id="cited-references-cached-in-publications">Cited references (cached in publications/)</h2>
+<ul>
+<li><strong>PMID:28929086</strong> — Bornikoel et al. 2017, Front Cell Infect Microbiol — PRIMARY (Anabaena<br />
+  PCC 7120 amiC1/amiC2 mutants, nanopores, FRAP, heterocysts). Full text cached. Basis for<br />
+  orthology transfer to K9X2S2.</li>
+<li><strong>PMID:21244533</strong> — Lehner et al. 2011, Mol Microbiol — "The morphogene AmiC2 is pivotal for<br />
+  multicellular development in Nostoc punctiforme." Abstract cached. Basis for orthology<br />
+  transfer to K9X2S2.</li>
+<li>Orthology/RBH evidence: <code>modules/septal_junction/RESULTS.md</code> (AmiC2 = K9X2S2; forward<br />
+  E=2.3e-293, 72.2% identity, reciprocal best hit vs PCC 7120 A0ACD7S2F2; standalone — no<br />
+  tandem AmiC1 in this genome).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: K9X2S2
+gene_symbol: AmiC2
+aliases:
+  - K9X2S2
+  - Cylst_4888
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:56107
+  label: Cylindrospermum stagnale PCC 7417
+description: &gt;-
+  AmiC2 (ORF Cylst_4888, UniProt K9X2S2) of the filamentous, heterocyst-forming
+  cyanobacterium Cylindrospermum stagnale PCC 7417 is a secreted, Zn-dependent cell-wall
+  N-acetylmuramoyl-L-alanine amidase (EC 3.5.1.28). The 635-residue protein has an
+  N-terminal signal peptide (residues 1-23), AMIN peptidoglycan-targeting domains
+  (Pfam PF11741, InterPro IPR021731) and a C-terminal Amidase_3 / MurNAc-LAA catalytic
+  domain (Pfam PF01520, InterPro IPR002508; PANTHER PTHR30404 &#34;AmiC&#34;), and hydrolyses the
+  amide bond between N-acetylmuramoyl residues and L-alanine in peptidoglycan. It is the
+  ortholog (reciprocal best hit, 72.2% identity, forward E-value 2.3e-293) of the
+  experimentally characterized AmiC2 of Nostoc/Anabaena sp. PCC 7120 (alr0093) and
+  Nostoc punctiforme (Npun_F1846). In these characterized relatives, AmiC2 does not split the
+  septum for daughter-cell separation (the role of housekeeping amidases in unicellular
+  bacteria) but instead drills a regular array of nanopores into the septal cross-wall
+  (murein). This nanopore array forms the framework through which septal junctions connect the
+  cytoplasms of adjacent cells in the filament, enabling intercellular exchange of metabolites
+  and signalling molecules, filament integrity and differentiation of nitrogen-fixing
+  heterocysts. AmiC2 localises to the newly formed septum / cross-wall (periplasmic cell-wall
+  compartment). Notably, unlike Nostoc/Anabaena PCC 7120, A. variabilis and N. punctiforme
+  (which each carry a tandem AmiC1/AmiC2 amidase pair), C. stagnale encodes this AmiC2 ortholog
+  as a standalone gene: no adjacent AmiC1 paralog is present, and both PCC 7120 AmiC exemplars
+  reciprocate to the single K9X2S2 - so the AmiC1/AmiC2 duplication appears to be a
+  Nostoc/Anabaena-specific event rather than ancestral to this module.
+references:
+- id: PMID:28929086
+  title: Role of Two Cell Wall Amidases in Septal Junction and Nanopore Formation in
+    the Multicellular Cyanobacterium Anabaena sp. PCC 7120.
+  findings:
+  - statement: Inactivation of either amidase (AmiC1 or AmiC2) reduces septal nanopore
+      number and the rate of intercellular tracer exchange; the amiC1 amiC2 double mutant
+      loses filament morphology and heterocyst differentiation.
+    supporting_text: Inactivation of either amidase resulted in significant reduction
+      in nanopore count and in the rate of fluorescent tracer exchange between neighboring
+      cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology
+      was affected and heterocyst differentiation was abolished.
+  - statement: The AmiC2 amidase perforates the septal peptidoglycan to create the nanopore
+      array proposed to frame septal junction complexes.
+    supporting_text: This enzyme perforates the septal peptidoglycan creating an array
+      of nanopores, which may be the framework for septal junction complexes
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified primary paper directly characterizing Anabaena PCC 7120
+      AmiC2 (alr0093) and AmiC1 (alr0092) mutants; full text cached. Used here as the
+      characterization basis for transferring AmiC2 function to the C. stagnale ortholog
+      K9X2S2 by orthology (ISS). K9X2S2 itself is not assayed in this paper.
+- id: PMID:21244533
+  title: The morphogene AmiC2 is pivotal for multicellular development in the cyanobacterium
+    Nostoc punctiforme.
+  findings:
+  - statement: Mutation of the single amiC2 gene in N. punctiforme abolishes cell
+      differentiation and intercellular communication; AmiC2-GFP localizes to the cross-walls
+      of dividing cells.
+    supporting_text: mutation of a single gene, encoding cell wall amidase AmiC2, completely
+      changes the morphology and abrogates cell differentiation and intercellular communication
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Characterizes the N. punctiforme ortholog (Npun_F1846)
+      of the AmiC2 clade; establishes AmiC2 as a morphogene required for multicellularity.
+      Abstract cached. Basis (with PMID:28929086) for the ISS transfer to K9X2S2.
+- id: file:CYLST/AmiC2/AmiC2-notes.md
+  title: AmiC2 (Cylst_4888 / K9X2S2) gene review notes
+  findings:
+  - statement: RBH orthology assigns AmiC2 = K9X2S2 in C. stagnale; this genome has no tandem
+      AmiC1 (standalone amidase; both PCC 7120 AmiC exemplars reciprocate to K9X2S2; forward
+      E=2.3e-293, 72.2% identity vs PCC 7120 AmiC2 A0ACD7S2F2).
+    supporting_text: this genome has **no tandem AmiC1** — the AmiC2 ortholog (K9X2S2) is
+      standalone and both 7120 AmiC exemplars reciprocate to it
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reviewer notes documenting the domain architecture, orthology/RBH basis
+      (from modules/septal_junction/RESULTS.md), and the standalone (no-AmiC1) comparative
+      finding.
+- id: file:CYLST/AmiC2/AmiC2-uniprot.txt
+  title: UniProt entry K9X2S2 (Cylst_4888)
+  findings:
+  - statement: UniProt names Cylst_4888 (K9X2S2) an N-acetylmuramoyl-L-alanine amidase.
+    supporting_text: &#39;SubName: Full=N-acetylmuramoyl-L-alanine amidase&#39;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. K9X2S2 carries an Amidase_3 (MurNAc-LAA) catalytic domain
+      (Pfam PF01520, InterPro IPR002508) and is named an N-acetylmuramoyl-L-alanine amidase
+      (EC 3.5.1.28) by UniProt. It is the reciprocal-best-hit ortholog (72.2% identity,
+      forward E=2.3e-293) of the experimentally characterized AmiC2 of Nostoc/Anabaena PCC 7120
+      (alr0093) and N. punctiforme (Npun_F1846), a bona fide N-acetylmuramoyl-L-alanine
+      amidase. The IEA amidase-activity assignment is therefore well supported by both the
+      catalytic domain and the orthologous biochemistry.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by the Amidase_3 catalytic domain, the UniProt N-acetylmuramoyl-L-alanine
+      amidase name (EC 3.5.1.28), and reciprocal-best-hit orthology to the directly
+      characterized AmiC2; represents the primary evolved molecular function of the gene
+      product.
+    supported_by:
+    - reference_id: file:CYLST/AmiC2/AmiC2-uniprot.txt
+      supporting_text: &#39;SubName: Full=N-acetylmuramoyl-L-alanine amidase&#39;
+    - reference_id: PMID:21244533
+      supporting_text: mutation of a single gene, encoding cell wall amidase AmiC2, completely
+        changes the morphology and abrogates cell differentiation and intercellular communication
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. As an N-acetylmuramoyl-L-alanine amidase, AmiC2 hydrolyses
+      (breaks down) peptidoglycan. In the characterized PCC 7120 ortholog, the enzyme
+      perforates the septal peptidoglycan to drill the nanopore array; the biologically
+      salient activity is specialized, localized septal PG remodelling rather than bulk PG
+      turnover, but amidase cleavage of PG is legitimately peptidoglycan catabolism.
+    action: ACCEPT
+    reason: &gt;-
+      Amidase cleavage of peptidoglycan is peptidoglycan catabolism; supported by the
+      catalytic domain and by the PG-perforating activity of the AmiC2 ortholog.
+    supported_by:
+    - reference_id: PMID:28929086
+      supporting_text: This enzyme perforates the septal peptidoglycan creating an array
+        of nanopores, which may be the framework for septal junction complexes
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localization annotation. AmiC2 is a secreted amidase (N-terminal signal peptide,
+      residues 1-23) that acts on the septal peptidoglycan, which in this outer-membrane-
+      bearing (diderm) cyanobacterium lies within the periplasmic space between the
+      cytoplasmic and outer membranes. The TreeGrafter periplasmic-space call is therefore
+      defensible. However, the orthology-supported and more informative location is the
+      cell septum / cross-wall (see the added GO:0030428 annotation).
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with a secreted amidase acting on periplasmic septal PG; not wrong, though
+      less specific than the septal localization observed for the AmiC2 ortholog.
+    supported_by:
+    - reference_id: PMID:28929086
+      supporting_text: both amidases, AmiC1 and AmiC2, localized to the septa of young
+        vegetative cells and to the septal and polar neck areas connecting heterocysts with
+        vegetative cells
+    - reference_id: file:CYLST/AmiC2/AmiC2-uniprot.txt
+      supporting_text: &#39;SubName: Full=N-acetylmuramoyl-L-alanine amidase&#39;
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: ISS
+  original_reference_id: PMID:28929086
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      By orthology (72.2% identity, reciprocal best hit) to the characterized PCC 7120 /
+      N. punctiforme AmiC2, K9X2S2 is inferred to remodel and pattern the septal cell wall
+      by drilling the nanopore array, a specialized cell-wall organization process distinct
+      from bulk PG turnover. Not in the GOA set; added by ISS transfer to capture the septal
+      PG remodelling core function.
+    action: NEW
+    reason: &gt;-
+      The characterized AmiC2 ortholog does not merely degrade PG but organizes the septal
+      cross-wall into a patterned nanopore array; genetics show loss of amiC2 alters septal
+      nanopore structure and number. Transferred to K9X2S2 by orthology (ISS).
+    supported_by:
+    - reference_id: PMID:28929086
+      supporting_text: This enzyme perforates the septal peptidoglycan creating an array
+        of nanopores, which may be the framework for septal junction complexes
+- term:
+    id: GO:0007267
+    label: cell-cell signaling
+  evidence_type: ISS
+  original_reference_id: PMID:28929086
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      By orthology to the characterized AmiC2, K9X2S2 is inferred to drill the septal
+      nanopore array through which septal junctions connect neighbouring cytoplasms, and so
+      to be required (upstream) for intercellular communication: in PCC 7120, amiC2 (and
+      amiC1) inactivation reduces FRAP tracer exchange, and in N. punctiforme loss of AmiC2
+      abolishes intercellular communication. Not in the GOA set; added by ISS transfer.
+    action: NEW
+    reason: &gt;-
+      Strong genetic evidence in the characterized orthologs that AmiC2 is required for
+      cell-cell communication (the nanopores it creates are the conduits for septal
+      junctions); an enabling/upstream role rather than direct signal transfer. Transferred
+      to K9X2S2 by orthology (ISS).
+    supported_by:
+    - reference_id: PMID:28929086
+      supporting_text: Inactivation of either amidase resulted in significant reduction
+        in nanopore count and in the rate of fluorescent tracer exchange between neighboring
+        cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology
+        was affected and heterocyst differentiation was abolished.
+    - reference_id: PMID:21244533
+      supporting_text: mutation of a single gene, encoding cell wall amidase AmiC2, completely
+        changes the morphology and abrogates cell differentiation and intercellular communication
+- term:
+    id: GO:0030428
+    label: cell septum
+  evidence_type: ISS
+  original_reference_id: PMID:21244533
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      By orthology to the characterized AmiC2, K9X2S2 is inferred to localize to the newly
+      formed septum / cross-wall of dividing cells, the experimentally observed site of
+      action for the ortholog (GFP fusion, immunofluorescence). Not in the GOA set; added by
+      ISS transfer as the more informative location than the generic periplasmic space.
+    action: NEW
+    reason: &gt;-
+      Localization studies place the AmiC2 ortholog at the division septum / cross-wall.
+      Transferred to K9X2S2 by orthology (ISS).
+    supported_by:
+    - reference_id: PMID:21244533
+      supporting_text: AmiC2-GFP localizes in the cell wall with a focus in the cross
+        walls of dividing cells
+    - reference_id: PMID:28929086
+      supporting_text: AmiC2 localizes to the newly formed septum and migrates during
+        septal invagination to cover the entire septal plane
+core_functions:
+- description: &gt;-
+    Septal cell-wall N-acetylmuramoyl-L-alanine amidase that hydrolyses peptidoglycan to
+    drill and pattern the nanopore array in the septal cross-wall, thereby creating the
+    framework for septal junctions and enabling intercellular communication, filament
+    integrity and heterocyst differentiation (inferred by reciprocal-best-hit orthology to
+    the characterized PCC 7120 / N. punctiforme AmiC2). In C. stagnale this is a standalone
+    amidase (no tandem AmiC1 paralog).
+  molecular_function:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  directly_involved_in:
+  - id: GO:0009253
+    label: peptidoglycan catabolic process
+  - id: GO:0071555
+    label: cell wall organization
+  - id: GO:0007267
+    label: cell-cell signaling
+  locations:
+  - id: GO:0030428
+    label: cell septum
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: PMID:28929086
+    supporting_text: Inactivation of either amidase resulted in significant reduction
+      in nanopore count and in the rate of fluorescent tracer exchange between neighboring
+      cells measured by FRAP analysis. In an amiC1 amiC2 double mutant, filament morphology
+      was affected and heterocyst differentiation was abolished.
+  - reference_id: PMID:21244533
+    supporting_text: mutation of a single gene, encoding cell wall amidase AmiC2, completely
+      changes the morphology and abrogates cell differentiation and intercellular communication
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

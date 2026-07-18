@@ -13,7 +13,7 @@ The functional summary states:
 
 This is accurate and consistent with the curated review. The ai-review.yaml confirms ATP hydrolysis activity (GO:0016887), protein folding chaperone (GO:0044183), unfolded protein binding (GO:0051082), protein refolding (GO:0042026), heat shock protein binding (GO:0031072), cytoplasm (GO:0005737), cytosol (GO:0005829), and nucleus (GO:0005634).
 
-The description of the Hsp70 chaperone cycle (ATP/ADP states, conformational switching, co-chaperone coordination) is mechanistically sound and matches the UniProt summary.
+The description of the Hsp70 chaperone cycle (ATP/ADP states, conformational switching, co-chaperone coordination) is mechanistically sound and supported by the curated review. Its agreement with BioReason's model-generated UniProt-style section is not independent source support.
 
 However, the BioReason summary misses several important and distinctive functions of Hspa8/Hsc70. The curated review includes clathrin coat disassembly (GO:0072318), which is a hallmark function of Hsc70 that distinguishes it from inducible Hsp70. Hspa8 is also annotated for autophagy (GO:0006914) via chaperone-mediated autophagy (CMA), lysosomal membrane association (GO:0005765), plasma membrane (GO:0005886), and signal transduction (GO:0007165, kept as non-core). These represent the distinctive biology of the constitutive Hsc70 isoform versus general Hsp70 function.
 

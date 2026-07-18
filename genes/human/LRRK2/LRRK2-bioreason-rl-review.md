@@ -2,7 +2,7 @@
 
 Source: LRRK2-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -13,12 +13,16 @@ The BioReason functional summary states:
 
 This is a strong summary that correctly identifies all major functional domains of LRRK2: ARM repeats, ANK repeats, LRR domain, Roc GTPase, COR domain, and kinase domain. The description of the GTPase-kinase coupling mechanism is accurate and matches the curated review's accepted annotations for GTPase activity (GO:0003924), GTP binding (GO:0005525), protein kinase activity (GO:0004672), and protein serine/threonine kinase activity (GO:0004674).
 
+No substantive claim in the Functional Summary is contradicted by the curated review. The missing pathway and substrate specificity below affects completeness only.
+
 The curated review describes LRRK2 as a multidomain protein with kinase and GTPase activities whose core functions include intracellular signal transduction (GO:0035556), vesicle-mediated transport (GO:0016192), and Golgi organization (GO:0007030). BioReason captures the kinase-GTPase coupling and cytoskeletal signaling themes but misses the specific vesicle trafficking and Golgi functions.
 
 Key gaps:
 1. LRRK2's well-characterized role in vesicle trafficking, particularly Rab GTPase phosphorylation (Rab8A, Rab10, etc.), is not mentioned
 2. The lysosomal biology and autophagy connections are absent
 3. The Parkinson disease context and neuronal function specificity are not captured
+
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached UniProt LRRK2 is 2,527 residues. The truncation removes C-terminal sequence that includes part of the kinase region and the WD40 domain. This case should be stratified as a truncated-input case in aggregate analysis; the scores still evaluate only the Functional Summary produced.
 
 Comparison with interpro2go:
 

@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sdhD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sdhD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FA6" target="_blank" class="term-link">
+                        Q88FA6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sdhD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FA6" data-a="DESCRIPTION: Hydrophobic membrane anchor subunit of the succina..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Hydrophobic membrane anchor subunit of the succinate dehydrogenase/respiratory Complex II enzyme in Pseudomonas putida KT2440. SdhD is a multi-pass inner-membrane protein that helps anchor the SdhAB catalytic head to the plasma membrane and contributes to quinone-linked electron transfer through the SdhC/SdhD membrane domain. It binds heme together with the second transmembrane subunit and supports the succinate-to-fumarate TCA-cycle step carried out by the SdhABCD complex.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization for the bacterial inner-membrane succinate dehydrogenase anchor subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates SdhD as a cell inner membrane, multi-pass membrane protein. In Gram-negative bacteria the inner membrane corresponds to the GO plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct TCA-cycle annotation because SdhD is part of the SdhABCD succinate dehydrogenase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The SdhABCD complex catalyzes the succinate-to-fumarate step of the TCA cycle. SdhD is not the catalytic flavoprotein subunit, but it is part of the required membrane anchor/quinone-transfer domain of the same complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Carbohydrate metabolism; tricarboxylic acid cycle.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0009055" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subunit-level role for the heme/quinone membrane domain of succinate dehydrogenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SdhD is a membrane anchor subunit with heme and ubiquinone-binding features, contributing to electron transfer from the catalytic head to the quinone pool.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=heme; Xref=ChEBI:CHEBI:30413;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0009060" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct respiratory context for the forward succinate dehydrogenase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SdhD is part of membrane-bound succinate dehydrogenase/Complex II, coupling TCA-cycle succinate oxidation to aerobic respiratory electron transfer.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less precise than the plasma membrane/inner membrane annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SdhD is a membrane protein, but UniProt specifies the bacterial cell inner membrane and GOA already has the more informative plasma membrane annotation. Use GO:0005886 as the preferred location term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017004" target="_blank" class="term-link">
+                                    GO:0017004
+                                </a>
+                            </span>
+                            <span class="term-label">cytochrome complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0017004" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-propagated assembly-process annotation; SdhD is a cytochrome/heme-containing subunit, not an assembly factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt supports SdhD as a membrane-anchoring subunit of succinate dehydrogenase with heme binding, but not as a factor that assembles cytochrome complexes. The annotation appears to over-interpret cytochrome b/heme membership as an assembly process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA6" data-a="GO:0020037" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct heme-binding feature for the SdhC/SdhD membrane anchor domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates heme for SdhD and states that the heme is bound between the two transmembrane subunits. This is a meaningful molecular feature of the Complex II membrane domain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=heme; Xref=ChEBI:CHEBI:30413;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Heme-containing membrane anchor subunit of succinate dehydrogenase/Complex II that contributes to quinone-linked succinate dehydrogenase activity and anchors the complex in the bacterial plasma membrane.</h3>
+                <span class="vote-buttons" data-g="Q88FA6" data-a="FUNCTION: Heme-containing membrane anchor subunit of succina..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                            heme binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                aerobic respiration
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=heme; Xref=ChEBI:CHEBI:30413;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Membrane-anchoring subunit of succinate dehydrogenase (SDH).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/sdhD/sdhD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88FA6 for Pseudomonas putida KT2440 sdhD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates sdhD as a membrane-anchoring subunit of succinate dehydrogenase.</div>
+
+                        <div class="finding-text">"Membrane-anchoring subunit of succinate dehydrogenase (SDH)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates SdhD as an inner-membrane multipass protein.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cell inner membrane"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates heme binding for the SdhC/SdhD membrane domain.</div>
+
+                        <div class="finding-text">"Name=heme; Xref=ChEBI:CHEBI:30413;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report identifies sdhCDAB as the complete Complex II operon for TCA-cycle succinate oxidation.</div>
+
+                        <div class="finding-text">"The complete four-subunit operon: cytochrome b556 (*sdhC*, K00241), membrane anchor (*sdhD*, K00242), flavoprotein (*sdhA*, K00239), and iron-sulfur subunit (*sdhB*, K00240) (Finding F005)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the SdhC/SdhD membrane domain of P. putida KT2440 bind heme stoichiometrically and what quinone species is preferred in vivo?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FA6" data-a="Q: Does the SdhC/SdhD membrane domain of P. putida KT..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify SdhABCD and measure heme content, quinone binding, and succinate:quinone activity after mutating the predicted SdhD heme and ubiquinone-binding residues.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FA6" data-a="EXPERIMENT: Purify SdhABCD and measure heme content, quinone b..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sdhD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FA6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *sdhD* (PP_4192, UniProt Q88FA6) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T19:10:25.646206</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sdhD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="sdhD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-sdhd-pp_4192-uniprot-q88fa6-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>sdhD</em> (PP_4192, UniProt Q88FA6) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>The gene <em>sdhD</em> (locus PP_4192; UniProt Q88FA6) of <em>Pseudomonas putida</em> KT2440 encodes SdhD, the "D" membrane-anchor subunit of succinate dehydrogenase (SDH), also known as respiratory Complex II or succinate:ubiquinone oxidoreductase (EC 1.3.5.1).</strong> The gene symbol, the UniProt description, the InterPro/Pfam domain architecture (IPR014312 Succ_DH_anchor; IPR000701 SuccDH_FuR_B_TM-su; IPR034804 SQR/QFR_C/D; PF01127 Sdh_cyt), and the genomic context all converge unambiguously on this identity. This is the correct gene — the target gene symbol, organism, and domain complement are mutually consistent, and no ambiguity with an unrelated same-symbol gene was encountered.</p>
+<p>SdhD is a small (122-residue) polytopic integral protein of the cytoplasmic (inner) membrane, predicted to span the bilayer three times (transmembrane helices at approximately residues 21–39, 59–77, and 98–120). It has no catalytic activity of its own. Instead, together with its partner anchor subunit SdhC, it (i) tethers the soluble catalytic head of the enzyme — the SdhA flavoprotein and the SdhB iron–sulfur protein — to the cytoplasmic face of the inner membrane; (ii) supplies one axial ligand (His71) for a single bridging <em>b</em>-type heme shared with SdhC; and (iii) contributes a conserved residue (Tyr83) to the proximal ubiquinone-binding (Qp) site. Through these structural and cofactor-holding roles, SdhD completes the physical electron-transfer conduit that carries electrons from succinate, via FAD and the iron–sulfur clusters, to membrane ubiquinone. Its membrane-side substrate is therefore <strong>ubiquinone</strong>, which it helps reduce to ubiquinol.</p>
+<p>Biologically, SdhD sits precisely at the junction between the tricarboxylic acid (TCA/Krebs) cycle and the aerobic respiratory chain: the reaction its complex catalyzes (succinate + ubiquinone ⇌ fumarate + ubiquinol) is simultaneously the succinate-oxidizing step of the TCA cycle and an electron-donating step to the quinone pool of oxidative phosphorylation. The gene lies in a conserved <em>sdhCDAB</em> operon, itself embedded in the <em>gltA–sdhCDAB–sucAB</em> gene cluster that co-locates SDH with citrate synthase and 2-oxoglutarate dehydrogenase — a genomic arrangement inherited essentially intact from the canonical <em>Escherichia coli</em> organization. On the basis of its two-anchor-subunit, single-heme architecture, <em>P. putida</em> Complex II belongs to the <em>E. coli</em>-like (type C) class of the Complex II superfamily.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-q88fa6-is-the-membrane-anchor-subunit-d-of-succinate-dehydrogenase-complex-ii">Finding 1 — Q88FA6 is the membrane-anchor subunit D of succinate dehydrogenase (Complex II)</h3>
+<p>The primary identity of the gene product is firmly established. UniProt Q88FA6 describes a 122-amino-acid integral membrane protein carrying three predicted helical transmembrane segments, annotated with the FUNCTION "Membrane-anchoring subunit of succinate dehydrogenase (SDH)," a heme COFACTOR, membership in the tricarboxylic acid cycle pathway (UniPathway UPA00223), and a SUBCELLULAR LOCATION of "cell inner membrane." Its domain signatures — InterPro IPR014312 (Succ_DH_anchor), IPR000701 (SuccDH_FuR_B_TM-su), IPR034804 (SQR/QFR_C/D), and Pfam PF01127 (Sdh_cyt) — are precisely the diagnostic domains of the cytochrome-<em>b</em> / membrane-anchor module of the Complex II superfamily. The gene maps to KEGG entry ppu:PP_4192 and orthology group eggNOG COG2142.</p>
+<p>Complex II is a highly conserved four-subunit enzyme. As stated directly in the literature, "<em>Complex II consists of four subunits including a catalytic flavoprotein (SdhA), an iron-sulphur subunit (SdhB) and two hydrophobic membrane anchors (SdhC and SdhD)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/22985599/">PMID: 22985599</a>). SdhD is one of those two hydrophobic membrane anchors. The source organism and genome are likewise confirmed: sequencing of "<em>the 6.18 Mb genome of strain KT2440</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12534463/">PMID: 12534463</a>) documents the <em>P. putida</em> KT2440 chromosome that encodes PP_4192/<em>sdhD</em>.</p>
+<h3 id="finding-2-sdhd-provides-a-heme-b-axial-ligand-his71-and-with-sdhc-builds-the-ubiquinone-reduction-site">Finding 2 — SdhD provides a heme <em>b</em> axial ligand (His71) and, with SdhC, builds the ubiquinone-reduction site</h3>
+<p>Q88FA6 carries an annotated axial heme-binding residue at <strong>His71</strong> (UniProt binding site 71, "axial binding residue"), with a second annotated binding site at residue 83. His71 maps exactly onto <em>E. coli</em> SdhD-His71, which was experimentally identified by systematic mutagenesis as one of the two histidine axial ligands of the enzyme's <em>b</em>-type heme. As reported, "<em>SDHC-His84 and SDHD-His71 have been identified as the most likely heme axial ligands in the E. coli enzyme, suggesting that the heme bridges these two subunits in the membrane</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9521736/">PMID: 9521736</a>). A single heme <em>b</em> thus sits at the SdhC/SdhD interface, held on one side by SdhD-His71 and on the other by SdhC-His84.</p>
+<p>The heme-ligating histidine lies within a transmembrane helix — consistent with the position of His71 inside the predicted TM helix (residues 59–77) of Q88FA6: "<em>Histidine residues, which are possible heme axial ligands in cytochrome b of complex II, were found in the second transmembrane segment of each subunit</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9533030/">PMID: 9533030</a>). The crystal structure of the homologous <em>E. coli</em> enzyme traces the complete electron path "<em>revealing the electron transport pathway from the electron donor, succinate, to the terminal electron acceptor, ubiquinone</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12560550/">PMID: 12560550</a>). In this pathway, the quinone site is formed at the SdhC/SdhD membrane interface, and although the four subunits can assemble even without heme, heme is required for full electron transfer.</p>
+<h3 id="finding-3-sdhd-lies-in-a-conserved-sdhcdabsucab-operon-linking-complex-ii-to-the-tca-cycle">Finding 3 — <em>sdhD</em> lies in a conserved <em>sdhCDAB–sucAB</em> operon linking Complex II to the TCA cycle</h3>
+<p>Genomic mapping of the KT2440 chromosome places <em>sdhD</em> in an intact, canonical operon. Reading along the complement strand (high→low coordinate): PP_4193 <em>sdhC</em> (KEGG K00241, cytochrome <em>b</em>-556 subunit) → <strong>PP_4192 <em>sdhD</em></strong> (K00242, membrane anchor) → PP_4191 <em>sdhA</em> (K00239, flavoprotein, EC 1.3.5.1) → PP_4190 <em>sdhB</em> (K00240, Fe–S subunit) → PP_4189 <em>sucA</em> (2-oxoglutarate dehydrogenase E1) → PP_4188 <em>sucB</em> (E2). Citrate synthase <em>gltA</em> (PP_4194, K01647) sits immediately adjacent on the opposite strand. Notably, <em>sdhC</em> (coordinates 4738735–4739121) and <em>sdhD</em> (4738373–4738741) overlap/abut by ~7 bp, an arrangement indicative of translational coupling. KEGG assigns PP_4192 to Module M00149 (Succinate dehydrogenase, prokaryotes) and to pathways ppu00020 (TCA cycle) and ppu00190 (oxidative phosphorylation).</p>
+<p>This gene order reproduces the classic <em>E. coli</em> organization: "<em>Together with the iron-sulphur protein gene (sdhB) these genes form an operon (sdhCDAB) situated between the citrate synthase gene (gltA) and the 2-oxoglutarate dehydrogenase complex genes (sucAB): gltA-sdhCDAB-sucAB</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/6383359/">PMID: 6383359</a>). The conservation of both the <em>sdhCDAB</em> internal order and the flanking <em>gltA</em>/<em>sucAB</em> genes strongly implies a co-regulated, co-inherited TCA/respiration gene module in <em>P. putida</em>.</p>
+<h3 id="finding-4-p-putida-complex-ii-is-an-e-coli-type-type-c-single-heme-enzyme-catalyzing-succinateubiquinone-oxidoreduction-ec-1351">Finding 4 — <em>P. putida</em> Complex II is an <em>E. coli</em>-type (type C) single-heme enzyme catalyzing succinate:ubiquinone oxidoreduction (EC 1.3.5.1)</h3>
+<p>The enzyme SdhD anchors catalyzes the reaction succinate + ubiquinone ⇌ fumarate + ubiquinol, which "<em>couples the oxidation of succinate in the matrix / cytoplasm to the reduction of quinone in the membrane. This function directly connects the Krebs cycle and the aerobic respiratory chain</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/15078221/">PMID: 15078221</a>). The architecture of the membrane anchor varies across the Complex II superfamily: some organisms (e.g., <em>Bacillus subtilis</em> SQR, <em>Wolinella succinogenes</em> QFR) use a single hydrophobic subunit with two heme <em>b</em> groups, whereas "<em>SQR and QFR of Escherichia coli contain two hydrophobic subunits (C and D) which bind either one (SQR) or no haem b group (QFR)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/11004459/">PMID: 11004459</a>).</p>
+<p><em>P. putida</em> KT2440 encodes the two-subunit configuration — SdhC (K00241, "cytochrome <em>b</em>-556") plus SdhD (K00242) — with a single bridging heme <em>b</em> whose axial ligand His71 is contributed by Q88FA6. This places its Complex II squarely in the <em>E. coli</em>-like (type C) class: a two-anchor, single-heme succinate:ubiquinone reductase operating in the forward (aerobic, succinate-oxidizing) direction. SdhD's transmembrane helices and its share of the heme thus complete the physiological aerobic electron-transfer enzyme.</p>
+<h3 id="finding-5-both-functional-residues-of-p-putida-sdhd-his71-tyr83-are-conserved-with-e-coli-sdhd">Finding 5 — Both functional residues of <em>P. putida</em> SdhD (His71, Tyr83) are conserved with <em>E. coli</em> SdhD</h3>
+<p>A global Needleman–Wunsch alignment of Q88FA6 (122 aa) against <em>E. coli</em> K-12 SdhD (P0AC44, 115 aa) gives roughly 36.5% identity (42/115 over the aligned length) — a modest overall value that is typical of the poorly conserved membrane-anchor subunits and stands in contrast to the far higher conservation of the soluble catalytic SdhA/SdhB subunits. Despite the low global identity, the two functionally critical residues align exactly:</p>
+<ul>
+<li><strong>His71 ↔ His71</strong> (heme <em>b</em> axial ligand), within a conserved "…HAW-x-GMW…" motif (<em>P. putida</em> GAHAWVGMW vs <em>E. coli</em> IHAWIGMW).</li>
+<li><strong>Tyr83 ↔ Tyr83</strong> (quinone binding), within a conserved "TDY" motif.</li>
+</ul>
+<p>In the <em>E. coli</em> SQR crystal structure, SdhD-Tyr83 hydrogen-bonds the ubiquinone at the proximal quinone (Qp) site, cooperating with SdhB-His207 and SdhC residues, while SdhD-His71 axially ligates the heme <em>b</em>. The heme role is anchored by the mutagenesis result that "<em>SDHC-His84 and SDHD-His71 have been identified as the most likely heme axial ligands in the E. coli enzyme</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9521736/">PMID: 9521736</a>), and the quinone role by the structural definition of the pathway "<em>from the electron donor, succinate, to the terminal electron acceptor, ubiquinone</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12560550/">PMID: 12560550</a>). The precise conservation of both residues justifies confidently transferring the <em>E. coli</em> mechanistic assignments to <em>P. putida</em> SdhD.</p>
+<h3 id="finding-6-sdhd-localizes-to-and-functions-within-the-cytoplasmic-inner-membrane-orienting-the-catalytic-head-toward-the-cytoplasm">Finding 6 — SdhD localizes to and functions within the cytoplasmic (inner) membrane, orienting the catalytic head toward the cytoplasm</h3>
+<p>UniProt Q88FA6 gives a SUBCELLULAR LOCATION of "Cell inner membrane," with keywords Cell inner membrane / Cell membrane / Membrane / Transmembrane helix. With three predicted transmembrane α-helices (~21–39, 59–77, 98–120), SdhD is a polytopic integral membrane protein. Together, SdhC and SdhD form the membrane-embedded cytochrome-<em>b</em> module, from which the soluble SdhA/SdhB dimer protrudes into the cytoplasm — an orientation consistent with the enzyme coupling "<em>the oxidation of succinate in the matrix / cytoplasm to the reduction of quinone in the membrane</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/15078221/">PMID: 15078221</a>). The three-transmembrane-helix anchor topology is a general feature of these subunits: "<em>both cybL and cybS appear to have three transmembrane segments, indicating their role as membrane-anchors for the enzyme complex</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9533030/">PMID: 9533030</a>). No secretion signal or periplasmic domain is present, so SdhD carries out its function entirely within, and on the cytoplasmic side of, the inner membrane.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-and-where-each-event-happens">The reaction and where each event happens</h3>
+<p>Complex II performs a single, spatially organized redox reaction:</p>
+<div class="codehilite"><pre><span></span><code>     CYTOPLASM (matrix side)
+     ┌──────────────────────────────────────────────┐
+     │   succinate  ──►  fumarate                     │
+     │        │  (2e⁻, 2H⁺)                           │
+     │        ▼                                        │
+     │      FAD (SdhA, flavoprotein)                   │
+     │        │                                        │
+     │        ▼                                        │
+     │   [2Fe-2S]→[4Fe-4S]→[3Fe-4S]  (SdhB, Fe–S)      │
+     │        │                                        │
+=====│========▼======= INNER MEMBRANE ================│=====
+     │     heme b  ◄── His71 (SdhD) + His84 (SdhC)     │
+     │        │                                        │
+     │        ▼                                        │
+     │   ubiquinone ──► ubiquinol   (Qp site:          │
+     │                   SdhD-Tyr83 + SdhB-His207 +    │
+     │                   SdhC residues)                │
+     └──────────────────────────────────────────────┘
+        SdhC + SdhD = membrane anchor / cytochrome b module
+</code></pre></div>
+
+<p>Electrons are abstracted from succinate at the FAD site of the SdhA flavoprotein on the cytoplasmic side, passed through the iron–sulfur relay of SdhB, and delivered across the membrane interface to ubiquinone. <strong>SdhD's contribution is structural and electron-conducting, not catalytic:</strong> its transmembrane helices anchor the soluble catalytic dimer to the membrane and, with SdhC, sculpt the cytochrome-<em>b</em> module; its His71 supplies one of the two axial ligands to the single bridging heme <em>b</em>; and its Tyr83 helps form and hydrogen-bond the substrate at the proximal quinone site. The heme is not strictly required for assembly of the four subunits, but it is required for full electron transfer, so SdhD's cofactor-holding role is functionally essential to the physiological enzyme.</p>
+<h3 id="placement-in-the-complex-ii-superfamily">Placement in the Complex II superfamily</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>P. putida</em> KT2440 SdhCD</th>
+<th><em>E. coli</em> SQR</th>
+<th><em>B. subtilis</em> SQR / <em>W. succinogenes</em> QFR</th>
+<th>Type A (e.g., <em>T. thermophilus</em>, <em>S. acidocaldarius</em>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Number of membrane anchors</td>
+<td><strong>2 (SdhC + SdhD)</strong></td>
+<td>2 (C + D)</td>
+<td>1 (single subunit C)</td>
+<td>2 (C + D)</td>
+</tr>
+<tr>
+<td>Heme <em>b</em> content</td>
+<td><strong>1 (bridging C/D)</strong></td>
+<td>1 (SQR) / 0 (QFR)</td>
+<td>2</td>
+<td>2 (or non-canonical)</td>
+</tr>
+<tr>
+<td>Class</td>
+<td><strong>Type C (E. coli-like)</strong></td>
+<td>Type C</td>
+<td>Diheme single-anchor types</td>
+<td>Type A</td>
+</tr>
+<tr>
+<td>Direction (physiological)</td>
+<td><strong>Succinate → ubiquinone (aerobic)</strong></td>
+<td>Succinate → UQ</td>
+<td>Variable</td>
+<td>Succinate → menaquinone/caldariellaquinone</td>
+</tr>
+</tbody>
+</table>
+<p><em>P. putida</em> thus falls in the same class as the well-characterized <em>E. coli</em> enzyme, which is why the <em>E. coli</em> structural and mutagenesis data transfer so cleanly. Evolutionary analyses suggest that single-heme type C complexes (including mitochondrial Complex II) may have arisen from diheme two-anchor ancestors, consistent with the two-subunit/single-heme configuration seen here.</p>
+<h3 id="placement-in-cellular-physiology">Placement in cellular physiology</h3>
+<p>SdhD's enzyme is the physical hinge between two metabolic subsystems:</p>
+<ul>
+<li><strong>TCA cycle (ppu00020):</strong> the succinate → fumarate step is catalyzed here, so Complex II is a bona fide cycle enzyme.</li>
+<li><strong>Oxidative phosphorylation (ppu00190):</strong> the same step feeds electrons into the ubiquinone pool, from which they travel to terminal oxidases.</li>
+</ul>
+<p>The conserved <em>gltA–sdhCDAB–sucAB</em> gene cluster reinforces this integration at the genetic level, co-locating (and likely co-regulating) succinate dehydrogenase with the neighboring citrate synthase and 2-oxoglutarate dehydrogenase steps of the cycle. In the metabolically versatile <em>P. putida</em>, which oxidizes a wide range of carbon sources through central metabolism, a functional Complex II provides the conduit for succinate-derived reducing equivalents to enter aerobic respiration.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22985599/">22985599</a></td>
+<td><em>Prokaryotic assembly factors for the attachment of flavin to complex II</em></td>
+<td>States the four-subunit composition of Complex II, defining SdhD as one of the two hydrophobic membrane anchors (F001).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12534463/">12534463</a></td>
+<td><em>Complete genome sequence… P. putida KT2440</em></td>
+<td>Confirms the source organism/genome that encodes PP_4192/<em>sdhD</em> (F001).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9521736/">9521736</a></td>
+<td><em>Localization of histidine residues responsible for heme axial ligation in cytochrome b556… E. coli</em></td>
+<td>Experimental mutagenesis identifying SdhD-His71 as a heme <em>b</em> axial ligand — directly supports the His71 role in <em>P. putida</em> (F002, F005).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12560550/">12560550</a></td>
+<td><em>Architecture of succinate dehydrogenase and reactive oxygen species generation</em></td>
+<td>Crystal structure establishing the succinate→ubiquinone electron path and quinone site (F002, F005).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9533030/">9533030</a></td>
+<td><em>Cytochrome b in human complex II… SDHC/SDHD</em></td>
+<td>Confirms heme-ligating His in a TM helix and the three-TM-helix anchor topology (F002, F006).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6383359/">6383359</a></td>
+<td><em>Nucleotide sequence encoding… succinate dehydrogenase of E. coli</em></td>
+<td>Defines the canonical <em>gltA–sdhCDAB–sucAB</em> operon matching the KT2440 arrangement (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15078221/">15078221</a></td>
+<td><em>Complex II from a structural perspective</em></td>
+<td>States the reaction catalyzed and its role bridging the Krebs cycle and aerobic respiration; defines cytoplasm/membrane orientation (F004, F006).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11004459/">11004459</a></td>
+<td><em>Succinate:quinone oxidoreductases: new insights from X-ray crystal structures</em></td>
+<td>Establishes the two-anchor (C+D) single-heme SQR architecture that <em>P. putida</em> shares (F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36171656/">36171656</a></td>
+<td><em>Structural Insight into Evolution of the Quinone Binding Site in Complex II</em></td>
+<td>Supports the type-A–F classification and the evolutionary origin of single-heme type C complexes from diheme ancestors (context for F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20951673/">20951673</a></td>
+<td><em>…succinate:quinone reductase from Thermus thermophilus</em></td>
+<td>Comparative type A SQR (four subunits, two heme <em>b</em>), contrasting with the <em>E. coli</em>-like single-heme <em>P. putida</em> enzyme (context for F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9287013/">9287013</a></td>
+<td><em>…succinate dehydrogenase… Sulfolobus acidocaldarius</em></td>
+<td>Illustrates divergent anchor subunits lacking typical TM helices, underscoring anchor variability across the family (context for F004/F005).</td>
+</tr>
+</tbody>
+</table>
+<p>The <em>P. putida</em>-specific physiology papers in the literature set (e.g., PHA metabolism <a href="https://pubmed.ncbi.nlm.nih.gov/22225632/">PMID: 22225632</a>; glyoxylate-shunt/TCA rearrangements <a href="https://pubmed.ncbi.nlm.nih.gov/10698750/">PMID: 10698750</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/22416130/">PMID: 22416130</a>; lignin carbon metabolism <a href="https://pubmed.ncbi.nlm.nih.gov/40883435/">PMID: 40883435</a>) provide the metabolic backdrop in which a functional TCA cycle — and therefore Complex II — operates, but none characterizes SdhD directly.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental study of Q88FA6/PP_4192.</strong> Every mechanistic claim about <em>P. putida</em> SdhD is an inference by orthology from <em>E. coli</em> (and, for topology, from human) SDH. There is no published purification, spectroscopy, crystal structure, or mutagenesis of the <em>P. putida</em> enzyme itself. The evidence is therefore strong by homology but not by direct experiment in this organism.</p>
+</li>
+<li>
+<p><strong>Modest sequence identity of the anchor.</strong> Global identity between <em>P. putida</em> and <em>E. coli</em> SdhD is only ~36.5%. While the two functional residues (His71, Tyr83) are exactly conserved, the low overall identity means fine details — exact heme redox potential, precise quinone-site geometry, and any accessory residues — cannot be assumed identical.</p>
+</li>
+<li>
+<p><strong>Quinone identity assumed, not measured.</strong> Ubiquinone is inferred as the physiological acceptor from the aerobic, <em>E. coli</em>-like classification and KEGG pathway assignment. The actual quinone pool used by <em>P. putida</em> Complex II (ubiquinone-9 versus other species, or menaquinone under specific conditions) has not been directly verified here.</p>
+</li>
+<li>
+<p><strong>Operon transcription not experimentally confirmed in KT2440.</strong> The <em>sdhCDAB</em> operon structure and the <em>sdhC</em>/<em>sdhD</em> overlap are derived from genome coordinates and orthology to <em>E. coli</em>; the actual transcript boundaries, promoter, and regulation in <em>P. putida</em> have not been experimentally mapped in this investigation.</p>
+</li>
+<li>
+<p><strong>Predicted (not experimentally determined) membrane topology.</strong> The three-TM-helix model and residue boundaries come from UniProt predictions; no experimental topology mapping for <em>P. putida</em> SdhD exists in the reviewed literature.</p>
+</li>
+<li>
+<p><strong>Assembly-factor and heme-insertion pathway not examined.</strong> Complex II requires assembly factors for flavin attachment (per <a href="https://pubmed.ncbi.nlm.nih.gov/22985599/">PMID: 22985599</a>); the analogous factors and heme-insertion machinery in <em>P. putida</em> were not investigated.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct biochemical characterization.</strong> Purify <em>P. putida</em> KT2440 Complex II (e.g., via an affinity-tagged SdhC or SdhB), confirm the four-subunit stoichiometry, and quantify heme <em>b</em> content and its reduction midpoint potential(s) by UV-visible and EPR spectroscopy — testing the predicted single-heme, <em>E. coli</em>-like configuration.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of His71 and Tyr83.</strong> Introduce His71→Ala/Met and Tyr83→Phe substitutions in the chromosomal <em>sdhD</em> and measure succinate:ubiquinone oxidoreductase activity, heme retention, and quinone-site occupancy, directly testing the inferred heme-ligation and quinone-binding roles in the native organism.</p>
+</li>
+<li>
+<p><strong>Quinone-species determination.</strong> Extract and identify the quinone(s) reduced by <em>P. putida</em> Complex II under aerobic growth to confirm ubiquinone as the physiological acceptor and determine its isoprenoid chain length.</p>
+</li>
+<li>
+<p><strong>Operon and regulation mapping.</strong> Use RT-PCR/RNA-seq and 5′-RACE to confirm the <em>sdhCDAB</em> (and <em>gltA</em>, <em>sucAB</em>) transcript structure, promoter, and any carbon-source-dependent regulation, verifying the co-transcription implied by the ~7-bp <em>sdhC</em>/<em>sdhD</em> overlap.</p>
+</li>
+<li>
+<p><strong>Deletion phenotyping.</strong> Construct a Δ<em>sdhD</em> mutant and assay growth on succinate (and other TCA-dependent carbon sources) versus glycolytic substrates, plus whole-cell succinate oxidase activity, to establish the physiological consequence of losing the anchor.</p>
+</li>
+<li>
+<p><strong>Experimental topology and structure.</strong> Determine SdhD membrane topology (e.g., reporter fusions) and, ideally, obtain a cryo-EM structure of the assembled <em>P. putida</em> complex to resolve the heme and quinone sites definitively.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The evidence — UniProt annotation, InterPro/Pfam domain architecture, genomic operon context, and exact conservation of the two catalytically important residues with the experimentally characterized <em>E. coli</em> enzyme — converges on a single, well-supported conclusion. <em>sdhD</em> (PP_4192, Q88FA6) encodes the D membrane-anchor subunit of <em>Pseudomonas putida</em> KT2440 succinate dehydrogenase (Complex II, EC 1.3.5.1): a small, three-TM-helix integral inner-membrane protein that, with SdhC, anchors the soluble SdhA/SdhB catalytic dimer to the cytoplasmic face of the membrane, provides an axial ligand (His71) for the single bridging heme <em>b</em>, and contributes to the ubiquinone-reduction (Qp) site (Tyr83). Its role is structural and electron-conducting rather than catalytic; its membrane-side substrate is ubiquinone; and it functions to couple the succinate-oxidizing step of the TCA cycle to the aerobic respiratory chain.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sdhD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="sdhD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:22985599</li>
+<li>PMID:12534463</li>
+<li>PMID:9521736</li>
+<li>PMID:9533030</li>
+<li>PMID:12560550</li>
+<li>PMID:6383359</li>
+<li>PMID:15078221</li>
+<li>PMID:11004459</li>
+<li>PMID:22225632</li>
+<li>PMID:10698750</li>
+<li>PMID:22416130</li>
+<li>PMID:40883435</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FA6
+gene_symbol: sdhD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Hydrophobic membrane anchor subunit of the succinate dehydrogenase/respiratory Complex II enzyme in Pseudomonas putida KT2440. SdhD is a multi-pass inner-membrane protein that helps anchor the SdhAB catalytic head to the plasma membrane and contributes to quinone-linked electron transfer through the SdhC/SdhD membrane domain. It binds heme together with the second transmembrane subunit and supports the succinate-to-fumarate TCA-cycle step carried out by the SdhABCD complex.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct localization for the bacterial inner-membrane succinate dehydrogenase anchor subunit.
+    action: ACCEPT
+    reason: UniProt annotates SdhD as a cell inner membrane, multi-pass membrane protein. In Gram-negative bacteria the inner membrane corresponds to the GO plasma membrane.
+    supported_by:
+    - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct TCA-cycle annotation because SdhD is part of the SdhABCD succinate dehydrogenase complex.
+    action: ACCEPT
+    reason: The SdhABCD complex catalyzes the succinate-to-fumarate step of the TCA cycle. SdhD is not the catalytic flavoprotein subunit, but it is part of the required membrane anchor/quinone-transfer domain of the same complex.
+    supported_by:
+    - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+      supporting_text: &#39;PATHWAY: Carbohydrate metabolism; tricarboxylic acid cycle.&#39;
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Correct subunit-level role for the heme/quinone membrane domain of succinate dehydrogenase.
+    action: ACCEPT
+    reason: SdhD is a membrane anchor subunit with heme and ubiquinone-binding features, contributing to electron transfer from the catalytic head to the quinone pool.
+    supported_by:
+    - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+      supporting_text: &#39;Name=heme; Xref=ChEBI:CHEBI:30413;&#39;
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct respiratory context for the forward succinate dehydrogenase complex.
+    action: ACCEPT
+    reason: SdhD is part of membrane-bound succinate dehydrogenase/Complex II, coupling TCA-cycle succinate oxidation to aerobic respiratory electron transfer.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct but less precise than the plasma membrane/inner membrane annotation.
+    action: MODIFY
+    reason: SdhD is a membrane protein, but UniProt specifies the bacterial cell inner membrane and GOA already has the more informative plasma membrane annotation. Use GO:0005886 as the preferred location term.
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+    supported_by:
+    - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+- term:
+    id: GO:0017004
+    label: cytochrome complex assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Over-propagated assembly-process annotation; SdhD is a cytochrome/heme-containing subunit, not an assembly factor.
+    action: REMOVE
+    reason: UniProt supports SdhD as a membrane-anchoring subunit of succinate dehydrogenase with heme binding, but not as a factor that assembles cytochrome complexes. The annotation appears to over-interpret cytochrome b/heme membership as an assembly process.
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct heme-binding feature for the SdhC/SdhD membrane anchor domain.
+    action: ACCEPT
+    reason: UniProt annotates heme for SdhD and states that the heme is bound between the two transmembrane subunits. This is a meaningful molecular feature of the Complex II membrane domain.
+    supported_by:
+    - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+      supporting_text: &#39;Name=heme; Xref=ChEBI:CHEBI:30413;&#39;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/sdhD/sdhD-uniprot.txt
+  title: UniProtKB entry Q88FA6 for Pseudomonas putida KT2440 sdhD
+  findings:
+  - statement: UniProt annotates sdhD as a membrane-anchoring subunit of succinate dehydrogenase.
+    supporting_text: Membrane-anchoring subunit of succinate dehydrogenase (SDH).
+    reference_section_type: RESULTS
+  - statement: UniProt annotates SdhD as an inner-membrane multipass protein.
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cell inner membrane&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt annotates heme binding for the SdhC/SdhD membrane domain.
+    supporting_text: &#39;Name=heme; Xref=ChEBI:CHEBI:30413;&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88FA6; protein-existence level is predicted.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report identifies sdhCDAB as the complete Complex II operon for TCA-cycle succinate oxidation.
+    supporting_text: &#39;The complete four-subunit operon: cytochrome b556 (*sdhC*, K00241), membrane anchor (*sdhD*, K00242), flavoprotein (*sdhA*, K00239), and iron-sulfur subunit (*sdhB*, K00240) (Finding F005).&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with UniProt labels.
+core_functions:
+- description: Heme-containing membrane anchor subunit of succinate dehydrogenase/Complex II that contributes to quinone-linked succinate dehydrogenase activity and anchors the complex in the bacterial plasma membrane.
+  molecular_function:
+    id: GO:0020037
+    label: heme binding
+  contributes_to_molecular_function:
+    id: GO:0008177
+    label: succinate dehydrogenase (quinone) activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  - id: GO:0009060
+    label: aerobic respiration
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+    supporting_text: &#39;Name=heme; Xref=ChEBI:CHEBI:30413;&#39;
+  - reference_id: file:PSEPK/sdhD/sdhD-uniprot.txt
+    supporting_text: Membrane-anchoring subunit of succinate dehydrogenase (SDH).
+suggested_questions:
+- question: Does the SdhC/SdhD membrane domain of P. putida KT2440 bind heme stoichiometrically and what quinone species is preferred in vivo?
+suggested_experiments:
+- description: Purify SdhABCD and measure heme content, quinone binding, and succinate:quinone activity after mutating the predicted SdhD heme and ubiquinone-binding residues.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

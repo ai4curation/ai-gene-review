@@ -23,12 +23,12 @@ Paper drafts and supporting material for the **BioReason-Pro / AI-AUGR** manuscr
 Annotation databases face a practical deployment question — *when is a new function-prediction method good enough to trust in production?* — that CAFA-style aggregate metrics ($F_{\max}$, $S_{\min}$) cannot fully answer. AI-AUGR (Assessment via Unified Gene-evidence Review) is an agentic curation pipeline that complements CAFA-style evaluation by:
 
 1. **Reading the narrative.** Modern agentic predictors such as BioReason-Pro emit free-text functional summaries and chain-of-thought reasoning traces that sit outside bag-of-GO-terms scoring.
-2. **Surfacing systematic failure modes.** Pseudoenzyme blind spots, localisation defaults, paralog indistinguishability, missing organism-specific biology, neo-functionalisation, narrative–GO disconnect, and cross-kingdom fold bias — not visible in aggregate scores, decisive for deployment.
-3. **Distinguishing novel insight from restatement.** Most BioReason-Pro summaries narratively restate InterPro2GO. An aggregate score cannot see this; an agentic review can.
+2. **Surfacing systematic failure modes.** Pseudoenzyme blind spots, localisation defaults, paralog indistinguishability, missing organism-specific biology, neo-functionalisation, narrative–GO disconnect, cross-kingdom fold bias, and generated UniProt-style fabrication are not visible in aggregate scores but are decisive for deployment.
+3. **Distinguishing novel insight from restatement.** Most BioReason-Pro summaries narratively restate supplied InterPro labels; actual InterPro2GO mappings are available for only a subset. An aggregate score cannot see this distinction; an agentic review can.
 
 ## Evidence base
 
-- **ARGO139/ARGO95 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): fixed 139-gene ARGO139 benchmark for RL narrative review, plus the 95-gene ARGO95 HF-catalogue subset for SFT GO-term review, with overall RL correctness 3.7/5, completeness 2.9/5, a seven-mode failure-mode taxonomy, and SFT term assessments.
+- **ARGO139/ARGO95 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): a 139-export ARGO139 collected cohort with a 138-gene RL performance set, plus the 95-gene ARGO95 HF-catalogue subset for SFT GO-term review. Audited RL means are 4.0/5 correctness and 2.9/5 completeness, with eight recurrent model-output failure modes, blinded second-rater agreement, and regenerated SFT term assessments.
 - **`ESR-ECOLI-DET-Mini` 7-gene *E. coli* positive control and recap** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md` and `../recapitulation-experiment/claude-expt-1/`; dataset ID `10.5281/zenodo.20751016`): AI-AUGR reproduces all 7 classes when labels/rationales are present as a positive control. An answer-key-withheld, literature/bioinformatics-assisted recapitulation recovers 4/7 exact labels, enough for useful triage but not expert-equivalent.
 - **Supplemental SFT source checks** on the public HuggingFace `wanglab/protein_catalogue` dataset: retained for reproducibility in `supplemental-benchmark-details.md`.
 
@@ -53,4 +53,4 @@ just pdf
 ```
 
 The recipe runs `latexmk` in `article/` and writes `article/manuscript.pdf`.
-Generated PDFs and LaTeX build outputs are intentionally ignored here.
+The manuscript PDF is committed as a publication artifact; intermediate LaTeX build files are ignored.

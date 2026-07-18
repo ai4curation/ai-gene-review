@@ -16,7 +16,7 @@ Genes whose deposited structure papers predate their last experimental GO curati
 | 2 | RPS3 | human | 17.5 | contested | 78 | 9 | 12 | PMID:29875412 (2018) | ZN |
 | 3 | BIRC5 | human | 17.0 | contested | 59 | 6 | 14 | PMID:22357620 (2012) | ZN |
 | 4 | GCH1 | human | 17.0 | contested | 19 | 2 | 10 | PMID:33229582 (2020) | 5RW,8GT,HBI,PHE,QBK,QBQ,ZN |
-| 5 | HAP1 | human | 17.0 | contested | 62 | 6 | 9 | PMID:10667800 (2000) | MN |
+| 5 | APEX1 | human | 17.0 | contested | 62 | 6 | 9 | PMID:10667800 (2000) | MN |
 | 6 | NAA15 | human | 17.0 | contested | 26 | 5 | 10 | PMID:39169182 (2024) | GTP,IHP,MG,SPD,SPM,ZN |
 | 7 | CCT7 | yeast | 16.5 | euk | 1 | 6 | 15 | PMID:31492816 (2019) | ADP,AF3,MG |
 | 8 | CWC27 | human | 16.5 | euk | 1 | 3 | 4 | PMID:29361316 (2018) | ADP,GTP,IHP,MG,ZN |

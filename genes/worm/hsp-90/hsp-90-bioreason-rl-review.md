@@ -2,7 +2,7 @@
 
 Source: hsp-90-bioreason-rl-predictions.md
 
-- **Correctness**: 5/5
+- **Correctness**: 4/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -11,7 +11,8 @@ The BioReason functional summary states:
 
 > A cytoplasmic ATP-dependent molecular chaperone that uses an N-terminal nucleotide-binding module and a dimerizing C-terminus to drive conformational cycles that fold and stabilize labile client proteins. By coupling ATP binding and hydrolysis to transient recognition of non-native polypeptides, it promotes proteostasis and stress-adaptive signaling in the cytosol, coordinating with co-chaperones to assemble and remodel multiprotein complexes.
 
-This is an accurate and well-constructed summary. All core assertions are supported by the curated review:
+This is a strong summary of HSP90 architecture and ATP-dependent chaperone function. Most
+core assertions are supported by the curated review:
 
 - ATP-dependent molecular chaperone: matches GO:0140662 (ATP-dependent protein folding chaperone) and GO:0016887 (ATP hydrolysis activity)
 - N-terminal nucleotide-binding module driving conformational cycles: correctly describes the HSP90 N-terminal ATPase domain
@@ -21,6 +22,12 @@ This is an accurate and well-constructed summary. All core assertions are suppor
 - Coordination with co-chaperones: the curated review explicitly mentions STI-1/Hop, CDC-37, AHA-1, and PPH-5
 
 The thinking trace even correctly hypothesizes interactions with "Hsp70 and its adaptors," "CDC37-like adaptor," and "p23- and Aha1-like co-chaperones" -- all confirmed by the curated review.
+
+One limited but material error prevents 5/5 correctness. The phrase "transient recognition
+of non-native polypeptides" suggests generic unfolded-protein/holdase activity. HSP90
+primarily remodels near-native, metastable client proteins rather than binding arbitrary
+unfolded polypeptides. This is the same client-state error identified in the Drosophila
+Hsp83 review, so the two ortholog reviews receive the same 4/5 correctness score.
 
 Missing aspects for completeness:
 

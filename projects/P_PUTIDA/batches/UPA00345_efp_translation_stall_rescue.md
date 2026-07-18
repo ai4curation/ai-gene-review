@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [PR #2051](https://github.com/ai4curation/ai-gene-review/pull/2051).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
@@ -40,13 +40,22 @@ Generated UTC: 2026-07-10T01:23:19.469718+00:00
 - Fetched by accession alias, Asta-backed, curated, and validated the single
   UniPathway member: `efp` / PP_1858 / Q88LS0.
 - Created and validated `modules/efp_translation_stall_rescue.yaml` as a compact
-  single-gene UPA00345 module for cytoplasmic EF-P translation elongation and
-  stalled-ribosome rescue.
+  single-gene UPA00345 module with two EF-P roles: stalled-ribosome engagement
+  and EF-P-dependent elongation/stall rescue.
+- Follow-up after PR #2051 review: generalized the reusable module from a
+  PSEPK-centered wording to a species-neutral bacterial EF-P-family module.
+  `efp` / PP_1858 / Q88LS0 is now recorded as the PSEPK UniProt exemplar rather
+  than as the module's full scope, with additional representative EF-P members
+  and PAINT/PTN anchors recorded in the module.
+- Follow-up after PR #2071 review: removed module-level molecular-function
+  concepts, collapsed redundant cytoplasm/cytosol locations to cytosol, and
+  split the module into explicit ribosome-engagement and elongation/stall-rescue
+  roles.
 - Corrected the accession-based seed so `gene_symbol` is `efp` rather than
   `Q88LS0`.
 - `efp` accepts translation elongation factor activity, translational
-  elongation, cytoplasm/cytosol, and rescue of stalled cytosolic ribosome as
-  core annotations.
+  elongation, cytosolic localization, and rescue of stalled cytosolic ribosome
+  as core annotations.
 - Broad `regulation of translation` and `peptide biosynthetic process`
   annotations were retained as non-core context because the more informative
   module core is EF-P-dependent elongation and stall rescue.

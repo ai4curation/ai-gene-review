@@ -1,0 +1,84 @@
+schema_version: 1
+benchmark_release: argo-audit-2026-07-11
+baseline_commit: f661dc2298c040d22ef8cf070c349d32616e2073
+
+cohorts:
+  argo139_rl_narrative:
+    role: collected_cohort
+    expected_members: 139
+    membership_file: genes.csv
+    prediction_suffix: -bioreason-rl-predictions.md
+    review_suffix: -bioreason-rl-review.md
+    model_source: app.bioreason.net/RL
+    model_version: unavailable_in_web_export
+    export_timestamp_source: per-file BioReason export header
+    frozen_inputs:
+      goa: per-gene committed TSV at baseline_commit, identified by SHA-256
+      ontology_release: "2026-03-25"
+      ontology_url: https://release.geneontology.org/2026-03-25/ontology/go-basic.obo
+      ontology_sha256: a77e356737dab39a4f620dce35fc4d6eb531c4b6153af6cacaaa322b49b804bd
+      ontology_integrity_sentinels:
+        obsolete: [GO:0000002, GO:0000003, GO:0005615, GO:0005844, GO:0007568]
+        active: [GO:0005576, GO:0022414, GO:0051082]
+      ontology_external_verification:
+        checked_on: "2026-07-12"
+        command: uv run python projects/BIOREASON_COMPARISON/verify_ontology_authority.py
+        official_archive_sha256_match: true
+        live_obsolete_terms: [GO:0000002, GO:0000003, GO:0005615, GO:0005844, GO:0007568]
+        authorities:
+          - https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{GO_ID}
+          - https://www.ebi.ac.uk/ols4/api/ontologies/go/terms?obo_id={GO_ID}
+      model_input_sections: >-
+        The full sequence, InterPro Domains section, and upstream GO-GPT GO Terms
+        section are preserved in each committed raw web export. Per-section counts
+        and SHA-256 checksums are recorded in benchmark-quality.csv.
+    reference:
+      source: local AIGR gene review
+      interpretation: agent-adjudicated local reference, not independent expert ground truth
+      status_field: status
+    scoring:
+      minimum: 1
+      maximum: 5
+      axes:
+        correctness: factual support for claims that the model actually makes
+        completeness: coverage of established core functions, locations, complexes, and pathway context
+    input_quality:
+      model_sequence_limit: 2000
+      truncated_inputs_are_stratified: true
+      truncated_inputs_are_excluded: false
+    performance_exclusions:
+      - species: worm
+        symbol: csr-1
+        reason: WRONG_INPUT_SEQUENCE
+        details: >-
+          The benchmark requested CSR-1 (Q21992), but the cached UniProt record and
+          BioReason input are nhr-47 (Q17370). The resulting nuclear-receptor summary
+          evaluates the supplied sequence correctly and is not a model-function error.
+
+  argo95_sft_terms:
+    role: primary_sft_term_cohort
+    expected_members: 95
+    parent: argo139_rl_narrative
+    model_source: wanglab/protein_catalogue
+    novelty_rule: >-
+      COR means absent from the committed per-gene GOA snapshot; an exact GOA
+      identifier match is CNN unless a separately documented temporal rule applies.
+    ontology_status_rule: >-
+      Record ontology status in every affected review rationale and include every
+      mismatched or unresolved pair that is biologically nonnegative at the audit
+      baseline or after reclassification in the ontology-pair audit. Do not change the
+      biological assessment solely because of ontology status. CNN, COR, UNC, and LSP
+      retain their schema meanings; LSP is used only when the supplied ID denotes a more
+      generic concept than the supported annotation, not as a catch-all for a stale
+      identifier whose historical concept is unchanged.
+
+reporting:
+  distinguish_collection_and_performance_denominators: true
+  report_reference_status_distribution: true
+  report_input_quality_distribution: true
+  generated_sidecars:
+    - benchmark-cohorts.csv
+    - benchmark-genes.csv
+    - benchmark-quality.csv
+    - benchmark-metrics.json
+    - second-review-agreement.json

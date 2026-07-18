@@ -162,7 +162,11 @@ needed, write them as notes or a clearly named manual research file.
 For each module:
 
 1. Define the expected pathway shape in `modules/*.yaml` or identify that a new
-   module document is needed.
+   module document is needed. A standalone module must have more than one
+   substantive part. If a UniPathway/KEGG bucket is a single gene, single enzyme,
+   or single reaction, record the curation in the batch page and fold it into a
+   broader multi-step module later rather than creating or retaining a one-part
+   `ModuleReview`.
 2. Pull candidate PSEPK genes from the metadata table using EC, KEGG `ppu:*`,
    BioCyc monomers, UniPathway, InterPro/Pfam/PANTHER families, GO IDs, keywords,
    protein names, and locus tags.
@@ -201,7 +205,8 @@ Each module batch should leave behind:
 
 - A module checklist in this subfolder naming candidate genes, expected steps,
   and gap decisions.
-- Any revised or new `modules/*.yaml` files.
+- Any revised or new `modules/*.yaml` files, only when the reusable module has
+  more than one substantive part.
 - A short list of genes promoted from metadata-only triage to full review.
 - Links to completed gene reviews and validation commands run.
 - Notes on GO term gaps, obsolete/broad terms, and cases where a PSEPK enzyme
@@ -251,7 +256,7 @@ Main curation conclusions from the pilot:
   reviews accept the enzyme-class annotations while avoiding claims about which
   paralog uniquely satisfies upstream shikimate flux.
 
-## Current batch: ppu00010 / entner_doudoroff_and_gluconeogenesis
+## Previous batch: ppu00010 / entner_doudoroff_and_gluconeogenesis
 
 Batch files:
 
@@ -284,6 +289,41 @@ Main curation conclusions from the current batch:
   dehydrogenases, phosphosugar mutases/epimerases, and periplasmic glucose
   oxidation. These reviews are useful first-pass curation, but not every member
   is a core ED/gluconeogenesis module component.
+
+## Current batch: ppu00622 / benzoate_upper_pathway
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00622_benzoate_upper_pathway.tsv`
+- `projects/P_PUTIDA/batches/ppu00622_benzoate_upper_pathway.md`
+
+Status as of 2026-07-13:
+
+- 6 KEGG `ppu00622` membership candidates extracted for first-pass review.
+- 4/6 candidates selected as core upper benzoate genes:
+  `benA`, `benB`, `benC`, and `benD`.
+- 2/6 candidates (`PP_1791`, `PP_2504`) classified as lower meta-cleavage
+  spillover from overlapping KEGG maps and excluded from this module.
+- 4/4 selected review folders present and already curated.
+- 4/4 selected genes now have OpenScientist gene-level retrieval reports.
+- OpenScientist generic module research complete:
+  `modules/benzoate_upper_pathway-deep-research-openscientist.md`.
+- OpenScientist PSEPK module+pathway research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__benzoate_upper_pathway__ppu00622-deep-research-openscientist.md`.
+- Module YAML seeded:
+  `modules/benzoate_upper_pathway.yaml`.
+
+Main curation conclusions from this batch:
+
+- The useful module boundary is the benzoate-to-catechol upper pathway:
+  BenABC dioxygenation followed by BenD cis-diol dehydrogenation.
+- KT2440 satisfies the module with the contiguous single-copy
+  `benA`/`benB`/`benC`/`benD` cluster.
+- The KEGG `ppu00622` "Xylene degradation" label is misleading for plasmid-free
+  KT2440; the biochemical anchor is closer to KEGG M00551 and ppu00362
+  benzoate degradation.
+- Catechol ortho-cleavage, catechol meta-cleavage, and CoA-dependent benzoate
+  routes are separate modules, not parts of this upper-pathway module.
 
 ## First batch proposal
 

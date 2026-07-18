@@ -11,16 +11,29 @@ The BioReason functional summary states:
 
 > A large cytoplasmic scaffold that organizes intracellular transport by assembling multivalent protein complexes through tandem helical repeats and a C-terminal bridge module. Its architecture supports high-capacity binding and conformational switching that couples vesicle carriers to cytoskeletal systems, thereby coordinating intracellular protein trafficking pathways in human cells.
 
-This is a reasonable inference from the domain architecture. The identification of HEAT repeat arrays and armadillo-type fold as a scaffold for protein-protein interactions is correct. The curated review assigns intracellular signal transduction (GO:0035556) as an accepted core function and describes roles in vesicle transport (Golgi vesicle transport GO:0048193, vesicle-mediated transport GO:0016192), microtubule-based processes, and autophagy. BioReason correctly captures the vesicular trafficking and cytoskeletal coupling themes.
+The central functional claims are supported by the current, completed curated review. HTT
+is a large non-enzymatic HEAT/ARM-repeat scaffold, and motor-coupled vesicle transport
+along microtubules is one of its core functions. One limited architecture error prevents
+5/5 correctness: the bridge domain is central and is followed by the C-HEAT domain; it is
+not a C-terminal bridge module in the full-length protein. The 2,000-residue truncation
+likely made the bridge appear terminal to the model. The earlier comparison used a stale
+TODO description and therefore understated how well the paragraph captures transport,
+even though 4/5 remains appropriate for the domain-placement error.
 
-However, the curated review description is "TODO: Add description for P42858," indicating the review is incomplete. Based on the annotations present, HTT functions as a scaffold for diverse cellular processes beyond just intracellular transport:
+The summary remains incomplete. The current review also identifies selective
+macroautophagy as a core scaffold function, including assembly of ULK1, p62/SQSTM1, LC3,
+and ubiquitinated cargo. It further identifies the HTT-HAP1-PCM1 ciliogenesis axis and a
+role in mitotic spindle orientation in neural progenitors. These are separate core roles,
+not merely peripheral autophagy annotations. Coverage of one major transport function but
+omission of these other core functions supports 3/5 completeness. More specific motor and
+cargo interactions (dynein/dynactin, kinesin-1, BDNF vesicles, and endolysosomes) are also
+absent.
 
-1. BioReason misses HTT's role in transcriptional regulation (GO:0010468, kept as non-core in the curated review).
-2. The role in autophagy (marked as over-annotated in curated review) is not mentioned.
-3. HTT's role in cilium assembly and centrosome biology is absent.
-4. The polyglutamine expansion disease context is obviously outside scope but the normal function in neuronal survival and signaling is underrepresented.
-
-The assignment of protein binding (GO:0005515) as the molecular function is appropriate but generic -- the curated review includes more specific binding terms like p53 binding, tubulin binding, and profilin binding.
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt HTT is 3,142 residues. The omitted C-terminal 1,142 residues include much of the
+C-terminal HEAT-repeat architecture. This case should be stratified as a truncated-input
+case in aggregate performance analysis; the scores above still evaluate only the
+Functional Summary that was produced.
 
 Comparison with interpro2go:
 

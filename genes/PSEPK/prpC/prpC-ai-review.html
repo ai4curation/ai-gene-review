@@ -1,0 +1,2538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>prpC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>prpC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KF5" target="_blank" class="term-link">
+                        Q88KF5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "prpC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KF5" data-a="DESCRIPTION: Citrate-synthase-family 2-methylcitrate synthase o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Citrate-synthase-family 2-methylcitrate synthase of Pseudomonas putida KT2440. PrpC is best interpreted as the propionyl-CoA/oxaloacetate-condensing enzyme of the methylcitrate cycle for propionate metabolism, producing 2-methylcitrate. Although electronic annotations also assign citrate synthase/TCA-cycle activity because of family similarity, the PSEPK pathway-level review identifies PrpC as a methylcitrate-cycle boundary enzyme rather than the canonical TCA citrate synthase; GltA is the unambiguous TCA citrate synthase.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected localization for a soluble bacterial citrate-synthase-family enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PrpC is a soluble central-carbon/organic-acid metabolic enzyme and is expected to act in the bacterial cytoplasm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0005975" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad and potentially misleading process annotation for a propionate/methylcitrate-cycle enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The stronger process assignment is propionate catabolism via the methylcitrate cycle, not generic carbohydrate metabolism. The TreeGrafter process term appears to be broad family over-propagation and should be replaced with GO:0019543.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                    propionate catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpC/prpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Organic acid metabolism; propanoate degradation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Module-boundary over-annotation; PrpC is not the canonical TCA citrate synthase step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt includes a TCA/citrate-synthase-family mapping, but the pathway-level review identifies prpC as K01659 2-methylcitrate synthase rather than the canonical TCA citrate synthase. GltA is the unambiguous TCA citrate synthase in KT2440, so PrpC should not be used to satisfy the core TCA citrate synthase step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Reassign to methylcitrate cycle; NOT step 1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036440" target="_blank" class="term-link">
+                                    GO:0036440
+                                </a>
+                            </span>
+                            <span class="term-label">citrate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0036440" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-derived activity that should not be treated as PrpC&#39;s core function in this organism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PrpC belongs to the citrate synthase family and UniProt lists a citrate synthase reaction, but the organism-level pathway review assigns PP_2335 to methylcitrate/propionate metabolism and identifies GltA as the canonical TCA citrate synthase. The core activity for PrpC is 2-methylcitrate synthase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">prpC*/PP_2335 is 2-methylcitrate synthase (K01659, EC 2.3.3.5), not citrate synthase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046912" target="_blank" class="term-link">
+                                    GO:0046912
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, acyl groups converted into alkyl on transfer</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0046912" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad parent-like term for citrate/2-methylcitrate synthase chemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PrpC performs acyltransferase/condensation chemistry, but GO:0050440 2-methylcitrate synthase activity is the specific and informative core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050440" target="_blank" class="term-link">
+                                    GO:0050440
+                                </a>
+                            </span>
+                            <span class="term-label">2-methylcitrate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0050440" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for PrpC in propionate/methylcitrate metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt lists the propionyl-CoA + oxaloacetate reaction producing 2-methylcitrate with EC 2.3.3.5, and the pathway report explicitly assigns prpC to K01659 2-methylcitrate synthase rather than to the core TCA citrate synthase step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpC/prpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=propanoyl-CoA + oxaloacetate + H2O = (2S,3S)-2-methylcitrate +</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">prpC*/PP_2335 is 2-methylcitrate synthase (K01659, EC 2.3.3.5), not citrate synthase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                    GO:0019543
+                                </a>
+                            </span>
+                            <span class="term-label">propionate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF5" data-a="GO:0019543" data-r="file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Missing process annotation that captures PrpC&#39;s core role in propionate catabolism through the methylcitrate cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt includes propanoate degradation and GO cross-reference support for the methylcitrate cycle, and the pathway report identifies PrpC as a methylcitrate-cycle boundary enzyme rather than a core TCA enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpC/prpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Organic acid metabolism; propanoate degradation.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Reassign to methylcitrate cycle; NOT step 1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>2-methylcitrate synthase catalyzing condensation of propionyl-CoA and oxaloacetate to form 2-methylcitrate in the methylcitrate cycle for propionate metabolism.</h3>
+                <span class="vote-buttons" data-g="Q88KF5" data-a="FUNCTION: 2-methylcitrate synthase catalyzing condensation o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050440" target="_blank" class="term-link">
+                            2-methylcitrate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                propionate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/prpC/prpC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=propanoyl-CoA + oxaloacetate + H2O = (2S,3S)-2-methylcitrate +</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Reassign to methylcitrate cycle; NOT step 1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/prpC/prpC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88KF5 for Pseudomonas putida KT2440 prpC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt includes the 2-methylcitrate synthase reaction for PrpC.</div>
+
+                        <div class="finding-text">"Reaction=propanoyl-CoA + oxaloacetate + H2O = (2S,3S)-2-methylcitrate +"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places PrpC in propanoate degradation.</div>
+
+                        <div class="finding-text">"PATHWAY: Organic acid metabolism; propanoate degradation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report identifies PrpC as a methylcitrate-cycle enzyme rather than the canonical TCA citrate synthase.</div>
+
+                        <div class="finding-text">"prpC*/PP_2335 is 2-methylcitrate synthase (K01659, EC 2.3.3.5), not citrate synthase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recommends reassigning PrpC out of the TCA module boundary.</div>
+
+                        <div class="finding-text">"Reassign to methylcitrate cycle; NOT step 1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PrpC retain measurable citrate synthase activity in vitro, and if so is that activity physiologically relevant compared with GltA in P. putida KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KF5" data-a="Q: Does PrpC retain measurable citrate synthase activ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PrpC and compare kinetic parameters for propionyl-CoA plus oxaloacetate versus acetyl-CoA plus oxaloacetate, then test prpC and gltA mutants on propionate and canonical TCA carbon sources.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KF5" data-a="EXPERIMENT: Purify PrpC and compare kinetic parameters for pro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(prpC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KF5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *prpC* (PP_2335 / UniProt Q88KF5) — 2-Methylcitrate Synthase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">15 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T18:21:02.531072</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="prpC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="prpC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-prpc-pp_2335-uniprot-q88kf5-2-methylcitrate-synthase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>prpC</em> (PP_2335 / UniProt Q88KF5) — 2-Methylcitrate Synthase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>prpC</strong> (ordered locus <strong>PP_2335</strong>, UniProt accession <strong>Q88KF5</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes <strong>2-methylcitrate synthase</strong> (<strong>2-MCS; EC 2.3.3.5</strong>), a soluble, cytoplasmic enzyme belonging to the citrate synthase superfamily. Its primary function is to catalyze the <strong>committed condensation step of the 2-methylcitrate cycle</strong>: the Claisen-type condensation of <strong>propionyl-CoA with oxaloacetate (and water)</strong> to yield <strong>(2S,3S)-2-methylcitrate plus free coenzyme A</strong>. Although the enzyme retains the ancestral ability to condense acetyl-CoA with oxaloacetate to form citrate, kinetic characterization of orthologs shows that <strong>propionyl-CoA is the strongly preferred substrate</strong>, distinguishing PrpC from the housekeeping citrate synthase of the tricarboxylic acid (TCA) cycle.</p>
+<p>This report confirms the gene/protein identity with high confidence. The gene symbol <em>prpC</em>, the ordered locus PP_2335, the InterPro domain architecture (2-MeCitrate/Citrate_synth_II, IPR011278, plus the canonical citrate-synthase fold domains), the KEGG orthology assignment (K01659), and the genomic context of the gene (embedded within a <em>prp</em> operon, PP_2333–PP_2338) all converge on a single, unambiguous conclusion. A global sequence alignment demonstrates that the P. putida protein is <strong>53.6% identical</strong> to the biochemically characterized and crystallized <em>Salmonella</em> Typhimurium 2-methylcitrate synthase (StPrpC), with the two catalytic residues (His261 and Asp312) mapping exactly onto their StPrpC counterparts. In contrast, PrpC shares only <strong>35.3% identity</strong> with its own organism's housekeeping citrate synthase (GltA/PP_4194), placing it firmly in the specialized 2-MCS clade rather than the general citrate-synthase clade.</p>
+<p>Physiologically, PrpC initiates the pathway by which <em>P. putida</em> oxidizes propionate and propionyl-CoA — a metabolite that is cytotoxic when it accumulates — into pyruvate and succinate that can enter central metabolism. In <em>P. putida</em>, this methylcitrate cycle is the <strong>only known route for propionate oxidation</strong>. The enzyme functions in the cytoplasm, requires no metal cofactor for the condensation chemistry itself, and — unlike some Gram-negative citrate synthases — is <strong>not allosterically regulated by NADH</strong>, its regulation instead being imposed at the transcriptional level through the <em>prp</em> operon. The following report details the evidence for each of these conclusions and situates PrpC within the broader biochemistry of the 2-methylcitrate cycle.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting functional findings, the mandatory identity check is addressed directly. All independent lines of evidence agree:</p>
+<table>
+<thead>
+<tr>
+<th>Verification criterion</th>
+<th>Expected (from UniProt)</th>
+<th>Finding</th>
+<th>Match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td>prpC</td>
+<td>Consistent with <em>prp</em> (propionate) catabolic locus</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Ordered locus</td>
+<td>PP_2335</td>
+<td>Sits in <em>prp</em> operon PP_2333–PP_2338</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Confirmed</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>Citrate synthase family</td>
+<td>IPR011278 (2-MeCitrate/Citrate_synth_II) + citrate-synthase fold domains</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Catalytic identity</td>
+<td>Citrate synthase (RecName)</td>
+<td>Dual citrate synthase / 2-methylcitrate synthase; 2-MCS is the physiological role</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>KEGG orthology</td>
+<td>—</td>
+<td>K01659 (2-methylcitrate synthase, EC 2.3.3.5)</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <em>prpC</em> is <strong>not</strong> ambiguous in this case: it corresponds to the well-established <em>prp</em> (propionate catabolism) nomenclature used across <em>Salmonella</em>, <em>Corynebacterium</em>, <em>Pseudomonas</em>, and other bacteria. Literature retrieved describes this exact gene family and its function, and the organism-specific features of the <em>P. putida</em> operon are consistent with related pseudomonads. <strong>Research proceeded with high confidence on the correct target.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-prpc-is-2-methylcitrate-synthase-catalyzing-propionyl-coa-oxaloacetate-2-methylcitrate-coa">Finding 1 — PrpC is 2-methylcitrate synthase catalyzing propionyl-CoA + oxaloacetate → 2-methylcitrate + CoA</h3>
+<p>The InterPro/UniProt domain assignment places PP_2335 in the <strong>methylcitrate-synthase subfamily</strong> of the citrate synthase superfamily: it carries IPR011278 ("2-MeCitrate/Citrate_synth_II") together with the citrate-synthase fold domains (IPR016142, IPR016143, IPR002020, and the citrate-synthase active-site signature IPR019810). This domain architecture is the sequence-level signature of enzymes that perform Claisen condensation of an acyl-CoA thioester with oxaloacetate.</p>
+<p>The functional assignment rests on <strong>direct biochemical proof in orthologs</strong>. In <em>Salmonella</em> Typhimurium, the PrpC enzyme was purified to homogeneity and shown to have 2-methylcitrate synthase activity in vitro, forming 2-methylcitrate from propionyl-CoA and oxaloacetate (<a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a>). In <em>Corynebacterium glutamicum</em>, characterization of two <em>prpDBC</em> gene clusters revealed that their gene products were active as citrate synthases and 2-methylcitrate synthases (<a href="https://pubmed.ncbi.nlm.nih.gov/11976302/">PMID: 11976302</a>). The gene name <em>prpC</em> and its operon position (PP_2335, adjacent to <em>prpB</em>, <em>prpD</em>, and the <em>acnD/prpF</em> dehydratase-isomerase genes) match the canonical <em>prp</em> propionate-catabolic locus, so the P. putida gene is confidently assigned the same catalytic function.</p>
+<blockquote>
+<p><em>"the PrpC enzyme was purified to homogeneity and shown to have 2-methylcitrate synthase activity in vitro"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a></p>
+<p><em>"revealed that their gene products were active as citrate synthases and 2-methylcitrate synthases"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/11976302/">PMID: 11976302</a></p>
+</blockquote>
+<h3 id="finding-2-substrate-specificity-propionyl-coa-is-strongly-preferred-over-acetyl-coa-and-butyryl-coa">Finding 2 — Substrate specificity: propionyl-CoA is strongly preferred over acetyl-CoA and butyryl-CoA</h3>
+<p>A defining property of PrpC that distinguishes it from housekeeping citrate synthase is its substrate preference. Kinetic characterization of purified <em>Salmonella</em> PrpC established that although the enzyme <em>can</em> use acetyl-CoA as a substrate to synthesize citrate, kinetic analysis demonstrated that <strong>propionyl-CoA is the preferred substrate</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a>). A later study of the crystallized <em>Salmonella</em> enzyme (StPrpC) confirmed that it <strong>utilizes propionyl-CoA more efficiently than acetyl-CoA or butyryl-CoA</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a>). Specificity is conferred not by the catalytic residues themselves — which are identical to those of citrate synthase — but by <strong>residues adjacent to the active site</strong> (e.g., Tyr197 and Leu324 in StPrpC) that shape the acyl-CoA binding pocket to accommodate the extra methyl group of propionyl-CoA.</p>
+<blockquote>
+<p><em>"Although PrpC could use acetyl-CoA as a substrate to synthesize citrate, kinetic analysis demonstrated that propionyl-CoA is the preferred substrate"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a></p>
+<p><em>"StPrpC was found to utilize propionyl-CoA more efficiently than acetyl-CoA or butyryl-CoA"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a></p>
+</blockquote>
+<h3 id="finding-3-prpc-operates-in-the-2-methylcitrate-cycle-that-detoxifies-propionyl-coa-and-converts-propionate-to-pyruvate">Finding 3 — PrpC operates in the 2-methylcitrate cycle that detoxifies propionyl-CoA and converts propionate to pyruvate</h3>
+<p>PrpC catalyzes the <strong>second, committed step</strong> of the 2-methylcitrate cycle. In <em>Salmonella</em>, ¹³C-labeling reconstruction assigned each Prp enzyme's role in an ordered pathway: <strong>PrpE</strong> (propionyl-CoA synthetase) activates propionate to propionyl-CoA; <strong>PrpC</strong> (2-methylcitrate synthase) condenses it with oxaloacetate to form 2-methylcitrate; <strong>PrpD</strong> (2-methylcitrate dehydratase) and aconitase/<strong>AcnA</strong> (2-methylisocitrate hydratase) carry out the dehydration/rehydration; and <strong>PrpB</strong> (2-methylisocitrate lyase) cleaves 2-methylisocitrate to pyruvate and succinate, oxidizing propionate's α-carbon to pyruvate (<a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/11294638/">PMID: 11294638</a>).</p>
+<p>In <em>Pseudomonas</em>, the same cycle is the principal route for propionate oxidation. Disrupting the downstream PrpB (2-methylisocitrate lyase) step blocks completion of the cycle (<a href="https://pubmed.ncbi.nlm.nih.gov/37995793/">PMID: 37995793</a>), and in <em>P. aeruginosa</em> the 2-methylcitrate and glyoxylate cycles are enzymatically linked and partially redundant (<a href="https://pubmed.ncbi.nlm.nih.gov/40015638/">PMID: 40015638</a>). The broader physiological purpose is <strong>detoxification</strong>: fungal 2-methylcitrate synthase (mcsA) is described as being responsible for detoxifying propionyl-CoA, a toxic metabolite (<a href="https://pubmed.ncbi.nlm.nih.gov/31141475/">PMID: 31141475</a>).</p>
+<blockquote>
+<p><em>"The reactions are catalyzed by propionyl coenzyme A (propionyl-CoA) synthetase (PrpE), 2-methylcitrate synthase (PrpC), 2-methylcitrate dehydratase (probably PrpD), 2-methylisocitrate hydratase (probably PrpD), and 2-methylisocitrate lyase (PrpB)"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a></p>
+<p><em>"responsible for detoxifying propionyl-CoA, a toxic metabolite"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/31141475/">PMID: 31141475</a></p>
+</blockquote>
+<h3 id="finding-4-structure-and-mechanism-conserved-citrate-synthase-fold-cytoplasmic-domain-closure-catalysis-not-nadh-regulated">Finding 4 — Structure and mechanism: conserved citrate-synthase fold, cytoplasmic, domain-closure catalysis, not NADH-regulated</h3>
+<p>The 2.4 Å X-ray crystal structure of <em>Salmonella</em> StPrpC established that the <strong>polypeptide fold and catalytic residues are conserved with citrate synthases</strong>, implying shared catalytic mechanism. The enzyme is dimeric (forming higher oligomers at high concentration) and adopts a nearly closed conformation, consistent with the induced-fit <strong>domain-closure mechanism</strong> characteristic of citrate synthases, in which a large domain movement sequesters substrates from solvent during catalysis. Critically, <strong>the key residues involved in allosteric NADH binding are not conserved in StPrpC</strong> — meaning PrpC is not subject to the NADH feedback inhibition seen in hexameric Gram-negative citrate synthases (<a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a>).</p>
+<p>Comparative crystallography of <em>Aspergillus fumigatus</em> mcsA versus human citrate synthase reinforced this picture: the active sites are near-identical, with substrate specificity determined by residues near the active site and by enzyme conformational changes (<a href="https://pubmed.ncbi.nlm.nih.gov/31141475/">PMID: 31141475</a>). Consistent with the citrate synthase family, PrpC is a <strong>soluble cytoplasmic protein</strong> with no signal peptide or transmembrane features; it carries out its function in the bacterial cytoplasm where propionyl-CoA and oxaloacetate are generated.</p>
+<blockquote>
+<p><em>"The polypeptide fold and the catalytic residues of StPrpC are conserved in citrate synthases (CSs) suggesting similarities in their functional mechanisms"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a></p>
+<p><em>"the key residues involved in NADH binding are not conserved in StPrpC"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a></p>
+</blockquote>
+<h3 id="finding-5-bioinformatic-confirmation-pp_2335-2-methylcitrate-synthase-with-conserved-catalytic-his261asp312">Finding 5 — Bioinformatic confirmation: PP_2335 = 2-methylcitrate synthase with conserved catalytic His261/Asp312</h3>
+<p>UniProt entry Q88KF5 (375 amino acids, ~42 kDa) annotates <strong>two catalytic activities</strong>: acetyl-CoA + oxaloacetate → citrate (citrate synthase reaction) and propanoyl-CoA + oxaloacetate + H₂O → (2S,3S)-2-methylcitrate + CoA (2-methylcitrate synthase reaction), with pathway assignments to the TCA cycle and "propanoate degradation." Two catalytic active-site residues are annotated by the PIRSR rule PIRSR001369: <strong>His261</strong> (within a conserved G-F-G-H motif) and <strong>Asp312</strong> — the acid/base histidine and catalytic aspartate that are hallmarks of the citrate synthase superfamily active site. KEGG independently assigns PP_2335 to orthology group <strong>K01659</strong> (2-methylcitrate synthase, EC 2.3.3.5). These sequence-based assignments (evidence codes ECO:0000256 PIRNR/PIRSR) independently corroborate the biochemical identity established in orthologs.</p>
+<h3 id="finding-6-the-p-putida-kt2440-prp-operon-uses-an-acndprpf-type-architecture-with-a-gntr-family-regulator">Finding 6 — The <em>P. putida</em> KT2440 <em>prp</em> operon uses an AcnD/PrpF-type architecture with a GntR-family regulator</h3>
+<p>The genomic neighborhood of PP_2335 defines a complete methylcitrate-cycle gene cluster:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product</th>
+<th>KO</th>
+<th>EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2333</td>
+<td>—</td>
+<td>GntR-family transcriptional regulator</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_2334</td>
+<td>prpB</td>
+<td>2-methylisocitrate lyase</td>
+<td>K03417</td>
+<td>4.1.3.30</td>
+</tr>
+<tr>
+<td><strong>PP_2335</strong></td>
+<td><strong>prpC</strong></td>
+<td><strong>2-methylcitrate synthase</strong></td>
+<td><strong>K01659</strong></td>
+<td><strong>2.3.3.5</strong></td>
+</tr>
+<tr>
+<td>PP_2336</td>
+<td>acnD</td>
+<td>2-methylcitrate dehydratase (2-methyl-<em>trans</em>-aconitate forming)</td>
+<td>K20455</td>
+<td>4.2.1.117</td>
+</tr>
+<tr>
+<td>PP_2337</td>
+<td>prpF</td>
+<td>2-methylaconitate isomerase</td>
+<td>K09788</td>
+<td>5.3.3.–</td>
+</tr>
+<tr>
+<td>PP_2338</td>
+<td>prpD</td>
+<td>2-methylcitrate dehydratase</td>
+<td>K01720</td>
+<td>4.2.1.79</td>
+</tr>
+</tbody>
+</table>
+<p>This clustering places PrpC as the <strong>committed condensation enzyme</strong> that feeds the downstream isomerase/lyase steps. Notably, <em>P. putida</em> uses the <strong>AcnD + PrpF</strong> (2-methyl-<em>trans</em>-aconitate isomerase) branch of the cycle rather than the single PrpD-aconitase route of <em>Salmonella</em>, and its operon regulator is <strong>GntR-family</strong> rather than the σ⁵⁴/RpoN-dependent PrpR activator of <em>Salmonella</em>. In <em>Salmonella</em>, the <em>prp</em> regulator PrpR is a member of the sigma-54 family of transcriptional activators (<a href="https://pubmed.ncbi.nlm.nih.gov/10648513/">PMID: 10648513</a>); the contrast highlights organism-specific regulation of an otherwise conserved catabolic module.</p>
+<blockquote>
+<p><em>"members of the sigma-54 family of transcriptional activators"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/10648513/">PMID: 10648513</a></p>
+</blockquote>
+<h3 id="finding-7-physiological-rationale-and-evolution-detoxification-plus-salvage-2-mcs-and-citrate-synthase-share-a-common-ancestor">Finding 7 — Physiological rationale and evolution: detoxification-plus-salvage; 2-MCS and citrate synthase share a common ancestor</h3>
+<p>The methylcitrate cycle converts cytotoxic propionyl-CoA to pyruvate; when the cycle is impaired, toxic intermediates (propionyl-CoA, 2-methylcitrate, 2-methylisocitrate) accumulate and inhibit numerous enzymes, including dehydrogenases (<a href="https://pubmed.ncbi.nlm.nih.gov/37764443/">PMID: 37764443</a>). This dual role — detoxification of a poisonous metabolite plus salvage of its carbon skeleton into central metabolism — is the raison d'être of PrpC.</p>
+<p>Evolutionarily, <strong>2-methylcitrate synthase and citrate synthase evolved from a common ancestral protein</strong>, as did isocitrate lyase and 2-methylisocitrate lyase (<a href="https://pubmed.ncbi.nlm.nih.gov/37764443/">PMID: 37764443</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/31141475/">PMID: 31141475</a>). PrpC is thus a gene-duplication-derived specialist that acquired preferential propionyl-CoA activity while retaining the ancestral fold and catalytic chemistry. In <em>P. putida</em>, the cycle is the <strong>only known and described pathway for propionate oxidation</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/37995793/">PMID: 37995793</a>); blocking a downstream step (PrpB) is non-lethal but redirects propionyl-CoA into polyhydroxyalkanoate (PHA) polymer synthesis, a finding exploited biotechnologically to fine-tune PHA monomer composition.</p>
+<blockquote>
+<p><em>"the methylcitrate cycle converts cytotoxic propionyl-coenzyme A (CoA) to pyruvate"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/37764443/">PMID: 37764443</a></p>
+<p><em>"Fungal citrate synthase and 2-methylcitrate synthase as well as isocitrate lyase and 2-methylisocitrate lyase, each evolved from a common ancestral protein"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/37764443/">PMID: 37764443</a></p>
+<p><em>"the only known and described pathway for propionate oxidation in this organism"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/37995793/">PMID: 37995793</a></p>
+</blockquote>
+<h3 id="finding-8-sequence-homology-536-identity-to-characterized-salmonella-2-mcs-with-exact-catalytic-residue-conservation">Finding 8 — Sequence homology: 53.6% identity to characterized <em>Salmonella</em> 2-MCS with exact catalytic-residue conservation</h3>
+<p>A global Needleman–Wunsch alignment (BLOSUM62) of <em>P. putida</em> KT2440 PrpC (Q88KF5, 375 aa) against the biochemically characterized and crystallized <em>Salmonella</em> Typhimurium 2-methylcitrate synthase StPrpC (Q56063, 389 aa; EC 2.3.3.5) yields <strong>201/375 = 53.6% identity</strong>. Crucially, the two annotated catalytic residues of the P. putida enzyme map exactly onto the catalytic residues of StPrpC: <strong>Ppu His261 ↔ Stm His274</strong> and <strong>Ppu Asp312 ↔ Stm Asp325</strong>. Because StPrpC is precisely the enzyme shown to prefer propionyl-CoA over acetyl-CoA/butyryl-CoA and whose crystal structure defined the 2-MCS fold (<a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">PMID: 10482501</a>), this high identity and exact active-site conservation transfer the experimentally validated function to PP_2335 with strong confidence.</p>
+<blockquote>
+<p><em>"The polypeptide fold and the catalytic residues of StPrpC are conserved in citrate synthases (CSs) suggesting similarities in their functional mechanisms"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">PMID: 20970504</a></p>
+</blockquote>
+<h3 id="finding-9-prpc-is-a-specialized-paralog-distinct-from-housekeeping-citrate-synthase-glta-pp_4194">Finding 9 — PrpC is a specialized paralog distinct from housekeeping citrate synthase GltA (PP_4194)</h3>
+<p><em>P. putida</em> KT2440 encodes two citrate-synthase-family proteins: <strong>PrpC</strong> (Q88KF5/PP_2335, 375 aa) and the <strong>housekeeping citrate synthase GltA</strong> (Q88FA4/PP_4194, 429 aa). Pairwise Needleman–Wunsch (BLOSUM62) alignment shows that PrpC shares only <strong>35.3% identity (132/374)</strong> with its own organism's GltA, but <strong>53.6% identity</strong> with the biochemically validated <em>Salmonella</em> 2-MCS StPrpC. This clean separation — greater similarity to the validated 2-MCS ortholog than to the co-encoded housekeeping enzyme — demonstrates that <strong>PrpC groups phylogenetically with the 2-MCS clade rather than the housekeeping citrate-synthase clade</strong>, and that the two enzymes have specialized, non-overlapping metabolic roles: GltA drives the TCA cycle with acetyl-CoA, while PrpC drives the methylcitrate cycle with propionyl-CoA.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>PrpC (PP_2335) is the <strong>gatekeeper enzyme of propionate detoxification</strong> in <em>Pseudomonas putida</em> KT2440. The coherent narrative that emerges from the nine findings is as follows.</p>
+<p><strong>The reaction.</strong> In the cytoplasm, PrpC catalyzes a Claisen condensation identical in chemistry to citrate synthase but tuned for a larger acyl donor:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">propionyl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span><span class="w">  </span><span class="o">--</span><span class="n">PrpC</span><span class="o">--&gt;</span><span class="w">  </span><span class="p">(</span><span class="mi">2</span><span class="n">S</span><span class="p">,</span><span class="mi">3</span><span class="n">S</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="n">methylcitrate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">CoA</span><span class="o">-</span><span class="n">SH</span>
+</code></pre></div>
+
+<p>The reaction proceeds through the conserved citrate-synthase mechanism: the catalytic <strong>His261</strong> acts as a general acid/base to enolize the acyl-CoA thioester, the enolate attacks the carbonyl of oxaloacetate, and <strong>Asp312</strong> participates in proton shuttling, followed by hydrolysis of the citryl-CoA-analog intermediate to release CoA and the free acid product. A large domain-closure motion sequesters the reaction from bulk solvent, as seen in the StPrpC crystal structure.</p>
+<p><strong>Why propionyl-CoA and not acetyl-CoA.</strong> The catalytic residues are identical to those of citrate synthase, so specificity is imposed by the <em>shape of the acyl-binding pocket</em> — active-site-adjacent residues that create room for the extra methyl group of propionyl-CoA. This is an elegant example of substrate discrimination achieved without altering the catalytic machinery, and it explains why PrpC is a physiologically dedicated 2-MCS even though it retains residual citrate-synthase activity.</p>
+<p><strong>Where it sits in metabolism.</strong></p>
+<div class="codehilite"><pre><span></span><code> Propionate
+    |  PrpE (propionyl-CoA synthetase)
+    v
+ Propionyl-CoA  ──────────────► [toxic if it accumulates]
+    |  PrpC (2-methylcitrate synthase)   ◄── THIS ENZYME (PP_2335)
+    |  + oxaloacetate
+    v
+ (2S,3S)-2-methylcitrate
+    |  PrpD / AcnD (2-methylcitrate dehydratase)
+    v
+ 2-methyl-cis-aconitate ─ PrpF (2-methylaconitate isomerase) ─► 2-methyl-trans-aconitate
+    |  aconitase / AcnA (2-methylisocitrate hydratase)
+    v
+ 2-methylisocitrate
+    |  PrpB (2-methylisocitrate lyase)
+    v
+ PYRUVATE  +  SUCCINATE  ──► central carbon metabolism (TCA cycle)
+</code></pre></div>
+
+<p><strong>Two roles at once.</strong> By consuming propionyl-CoA, PrpC simultaneously (i) <strong>detoxifies</strong> a metabolite that otherwise inhibits dehydrogenases and other enzymes, and (ii) <strong>salvages</strong> the carbon into pyruvate and succinate for growth. Propionyl-CoA arises in <em>P. putida</em> from diverse sources — degradation of odd-chain fatty acids, catabolism of certain amino acids (Ile, Val, Met, Thr), and breakdown of monoterpenes such as β-myrcene (in related pseudomonads). The methylcitrate cycle is the sole exit route for this pool in <em>P. putida</em>.</p>
+<p><strong>Regulatory logic.</strong> PrpC is controlled at the level of transcription of its operon rather than by allosteric feedback: it lacks the NADH-binding residues that regulate some Gram-negative citrate synthases. In <em>P. putida</em> the operon carries a <strong>GntR-family regulator (PP_2333)</strong>, in contrast to the σ⁵⁴-dependent PrpR of enteric bacteria — but the underlying logic is the same: the enzymes are induced when propionate (or its methylcitrate-derived signal) is present. In <em>Salmonella</em>, 2-methylcitrate itself (the product of PrpC) or a derivative serves as the inducing coregulator of the operon (<a href="https://pubmed.ncbi.nlm.nih.gov/9851993/">PMID: 9851993</a>).</p>
+<p><strong>Distinct from the TCA-cycle citrate synthase.</strong> The presence of a separate housekeeping citrate synthase (GltA/PP_4194) with only 35% identity confirms a clean division of labor. GltA handles acetyl-CoA condensation for the TCA cycle; PrpC handles propionyl-CoA condensation for the methylcitrate cycle. This paralog separation is the genomic signature of a dedicated propionate-detoxification module.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>PrpC (PP_2335)</th>
+<th>GltA (PP_4194)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme</td>
+<td>2-methylcitrate synthase</td>
+<td>Citrate synthase (housekeeping)</td>
+</tr>
+<tr>
+<td>Preferred acyl-CoA</td>
+<td>Propionyl-CoA</td>
+<td>Acetyl-CoA</td>
+</tr>
+<tr>
+<td>Product</td>
+<td>(2S,3S)-2-methylcitrate</td>
+<td>Citrate</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>2-methylcitrate cycle</td>
+<td>TCA cycle</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>375 aa</td>
+<td>429 aa</td>
+</tr>
+<tr>
+<td>% identity to Salmonella StPrpC</td>
+<td>53.6%</td>
+<td>(housekeeping clade)</td>
+</tr>
+<tr>
+<td>Identity to each other</td>
+<td>35.3%</td>
+<td>35.3%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10482501/">10482501</a></td>
+<td><em>Salmonella typhimurium LT2 catabolizes propionate via the 2-methylcitric acid cycle</em></td>
+<td>Direct biochemical proof: purified PrpC has 2-MCS activity; propionyl-CoA is the preferred substrate; defines the ordered pathway enzymes. Foundation for F001, F002, F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20970504/">20970504</a></td>
+<td><em>Crystal structure of Salmonella typhimurium 2-methylcitrate synthase</em></td>
+<td>Structure/mechanism: conserved fold &amp; catalytic residues, domain closure, propionyl-CoA &gt; acetyl-CoA &gt; butyryl-CoA, NADH-binding residues NOT conserved. Foundation for F002, F004, F008.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11976302/">11976302</a></td>
+<td><em>Two prpDBC clusters in Corynebacterium glutamicum</em></td>
+<td>Confirms PrpC orthologs act as citrate/2-methylcitrate synthases in a second organism. Supports F001.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11294638/">11294638</a></td>
+<td><em>In vitro conversion of propionate to pyruvate (PrpD, aconitase)</em></td>
+<td>Reconstitutes the full 2-methylcitrate cycle in vitro; clarifies downstream enzyme roles that PrpC feeds. Supports F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31141475/">31141475</a></td>
+<td><em>Aspergillus fumigatus 2-MCS vs human citrate synthase</em></td>
+<td>Establishes detoxification role of propionyl-CoA; near-identical active sites; specificity from active-site-adjacent residues. Supports F003, F004, F007.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10648513/">10648513</a></td>
+<td><em>prpR, ntrA, ihf required for prpBCDE expression</em></td>
+<td>Salmonella regulator is σ⁵⁴-family — contrasts with the GntR-family regulator in the P. putida operon. Supports F006.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9851993/">9851993</a></td>
+<td><em>Regulation of the prpBCDE operon</em></td>
+<td>Shows 2-methylcitrate (from PrpC) or a derivative is the inducing signal for the operon. Contextual support for regulation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37995793/">37995793</a></td>
+<td><em>Fed-batch cultivation with glucose+propionate (PHA composition)</em></td>
+<td>Methylcitrate cycle is the only propionate-oxidation route in Pseudomonas; blocking PrpB redirects flux to PHA. Supports F003, F007.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40015638/">40015638</a></td>
+<td><em>Methylcitrate &amp; glyoxylate cycles linked in P. aeruginosa</em></td>
+<td>Enzymatic redundancy/crosstalk between the cycles in a close relative. Supports F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37764443/">37764443</a></td>
+<td><em>Methylcitrate cycle crosstalk in pathogenic fungi (review)</em></td>
+<td>Detoxification of cytotoxic propionyl-CoA; common evolutionary ancestor of CS and 2-MCS. Supports F007.</td>
+</tr>
+</tbody>
+</table>
+<p>Additional retrieved literature (<a href="https://pubmed.ncbi.nlm.nih.gov/36377867/">PMID: 36377867</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16879647/">PMID: 16879647</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/19798672/">PMID: 19798672</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/39492536/">PMID: 39492536</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/40020280/">PMID: 40020280</a>) provides broader context on propionate/organic-acid metabolism and propionyl-CoA toxicity in <em>Pseudomonas</em>, <em>Mycobacterium</em>, and related organisms, reinforcing the physiological importance of the methylcitrate cycle that PrpC initiates. In particular, the β-myrcene catabolism study in <em>Pseudomonas</em> sp. M1 shows the methylcitrate cycle channeling propionyl-CoA from a degradation pathway into central metabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/19798672/">PMID: 19798672</a>).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of the <em>P. putida</em> KT2440 enzyme.</strong> The function of PP_2335 is assigned by strong homology (53.6% identity, exact catalytic-residue conservation) to biochemically validated orthologs (<em>Salmonella</em> StPrpC) and by genomic context, not by purification and kinetic assay of the P. putida protein itself. No published <em>K</em>ₘ, <em>k</em>cat, or crystal structure exists specifically for Q88KF5.</p>
+</li>
+<li>
+<p><strong>Substrate specificity ratios are transferred, not measured.</strong> The quantitative preference for propionyl-CoA over acetyl-CoA/butyryl-CoA is documented for orthologs; the exact kinetic constants for the P. putida enzyme are unknown, though the conserved active-site-adjacent residues make the qualitative preference highly likely.</p>
+</li>
+<li>
+<p><strong>Regulatory details in P. putida are incompletely defined.</strong> The operon carries a GntR-family regulator (PP_2333) rather than a σ⁵⁴ activator, but the precise inducing signal, promoter architecture, and regulon in KT2440 have not been experimentally dissected here.</p>
+</li>
+<li>
+<p><strong>Oligomeric state in P. putida is inferred.</strong> StPrpC is dimeric (with higher-order oligomers at high concentration); the native quaternary structure of the P. putida enzyme has not been directly determined.</p>
+</li>
+<li>
+<p><strong>Localization is inferred bioinformatically.</strong> The cytoplasmic assignment is based on the absence of signal/transmembrane features and the known behavior of the citrate synthase family; it has not been experimentally confirmed for this protein.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and kinetic characterization.</strong> Clone PP_2335, express with an affinity tag, purify, and measure steady-state kinetics (<em>K</em>ₘ, <em>k</em>cat, catalytic efficiency) for propionyl-CoA, acetyl-CoA, and butyryl-CoA with oxaloacetate to confirm the predicted specificity ratio in the P. putida enzyme.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal (or cryo-EM) structure of the P. putida enzyme, ideally with bound substrate/product analogs, to verify the domain-closure mechanism and map the acyl-CoA pocket residues (analogous to StPrpC Tyr197/Leu324) that dictate propionyl-CoA preference. AlphaFold modeling followed by structural superposition on StPrpC (PDB) would be a rapid first step.</p>
+</li>
+<li>
+<p><strong>Gene deletion and growth phenotyping.</strong> Construct a clean ΔprpC (ΔPP_2335) mutant and test growth on propionate (and odd-chain fatty acids) as sole carbon source; a growth defect specific to propionate — rescued by complementation — would confirm the physiological role, and metabolomics would reveal propionyl-CoA/2-methylcitrate accumulation.</p>
+</li>
+<li>
+<p><strong>Regulatory dissection.</strong> Characterize the GntR-family regulator (PP_2333): identify its operator, the inducing metabolite (2-methylcitrate vs propionate), and the promoter driving PP_2333–PP_2338, using reporter fusions and EMSA.</p>
+</li>
+<li>
+<p><strong>Confirm distinct roles of PrpC vs GltA.</strong> Test whether GltA (PP_4194) can complement a ΔprpC mutant on propionate and vice versa, to establish functional non-redundancy of the two citrate-synthase-family paralogs.</p>
+</li>
+<li>
+<p><strong>Biotechnological exploitation.</strong> Given that flux through the methylcitrate cycle competes with propionyl-CoA incorporation into PHA polymers, modulate PrpC expression to tune odd-chain-length monomer content of medium-chain-length PHAs in engineered <em>P. putida</em> strains.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>prpC</em> (PP_2335, UniProt Q88KF5) of <em>Pseudomonas putida</em> KT2440 encodes <strong>2-methylcitrate synthase (EC 2.3.3.5)</strong>, a soluble cytoplasmic enzyme of the citrate-synthase superfamily. It catalyzes the committed condensation of <strong>propionyl-CoA with oxaloacetate (and water) to form (2S,3S)-2-methylcitrate plus CoA</strong>, using conserved catalytic residues His261 and Asp312 and strongly preferring propionyl-CoA over acetyl-CoA. Through this reaction it initiates the <strong>2-methylcitrate cycle</strong>, the pathway that oxidizes propionate/propionyl-CoA to pyruvate and succinate while detoxifying growth-inhibitory propionyl-CoA. In <em>P. putida</em> the gene lies in an AcnD/PrpF-variant <em>prp</em> operon (PP_2333–PP_2338) under GntR-family transcriptional control rather than NADH allostery, and it is a specialized paralog clearly distinct from the housekeeping TCA-cycle citrate synthase GltA (PP_4194).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="prpC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="prpC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10482501</li>
+<li>PMID:11976302</li>
+<li>PMID:20970504</li>
+<li>PMID:11294638</li>
+<li>PMID:37995793</li>
+<li>PMID:40015638</li>
+<li>PMID:31141475</li>
+<li>PMID:10648513</li>
+<li>PMID:37764443</li>
+<li>PMID:9851993</li>
+<li>PMID:36377867</li>
+<li>PMID:16879647</li>
+<li>PMID:19798672</li>
+<li>PMID:39492536</li>
+<li>PMID:40020280</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KF5
+gene_symbol: prpC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Citrate-synthase-family 2-methylcitrate synthase of Pseudomonas putida KT2440. PrpC is best interpreted as the propionyl-CoA/oxaloacetate-condensing enzyme of the methylcitrate cycle for propionate metabolism, producing 2-methylcitrate. Although electronic annotations also assign citrate synthase/TCA-cycle activity because of family similarity, the PSEPK pathway-level review identifies PrpC as a methylcitrate-cycle boundary enzyme rather than the canonical TCA citrate synthase; GltA is the unambiguous TCA citrate synthase.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Correct expected localization for a soluble bacterial citrate-synthase-family enzyme.
+    action: ACCEPT
+    reason: PrpC is a soluble central-carbon/organic-acid metabolic enzyme and is expected to act in the bacterial cytoplasm.
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Broad and potentially misleading process annotation for a propionate/methylcitrate-cycle enzyme.
+    action: REMOVE
+    reason: The stronger process assignment is propionate catabolism via the methylcitrate cycle, not generic carbohydrate metabolism. The TreeGrafter process term appears to be broad family over-propagation and should be replaced with GO:0019543.
+    proposed_replacement_terms:
+    - id: GO:0019543
+      label: propionate catabolic process
+    supported_by:
+    - reference_id: file:PSEPK/prpC/prpC-uniprot.txt
+      supporting_text: &#39;PATHWAY: Organic acid metabolism; propanoate degradation.&#39;
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Module-boundary over-annotation; PrpC is not the canonical TCA citrate synthase step.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: UniProt includes a TCA/citrate-synthase-family mapping, but the pathway-level review identifies prpC as K01659 2-methylcitrate synthase rather than the canonical TCA citrate synthase. GltA is the unambiguous TCA citrate synthase in KT2440, so PrpC should not be used to satisfy the core TCA citrate synthase step.
+    supported_by:
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: Reassign to methylcitrate cycle; NOT step 1
+- term:
+    id: GO:0036440
+    label: citrate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Family-derived activity that should not be treated as PrpC&#39;s core function in this organism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: PrpC belongs to the citrate synthase family and UniProt lists a citrate synthase reaction, but the organism-level pathway review assigns PP_2335 to methylcitrate/propionate metabolism and identifies GltA as the canonical TCA citrate synthase. The core activity for PrpC is 2-methylcitrate synthase.
+    supported_by:
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: &#39;prpC*/PP_2335 is 2-methylcitrate synthase (K01659, EC 2.3.3.5), not citrate synthase&#39;
+- term:
+    id: GO:0046912
+    label: acyltransferase activity, acyl groups converted into alkyl on transfer
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but broad parent-like term for citrate/2-methylcitrate synthase chemistry.
+    action: KEEP_AS_NON_CORE
+    reason: PrpC performs acyltransferase/condensation chemistry, but GO:0050440 2-methylcitrate synthase activity is the specific and informative core molecular function.
+- term:
+    id: GO:0050440
+    label: 2-methylcitrate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function for PrpC in propionate/methylcitrate metabolism.
+    action: ACCEPT
+    reason: UniProt lists the propionyl-CoA + oxaloacetate reaction producing 2-methylcitrate with EC 2.3.3.5, and the pathway report explicitly assigns prpC to K01659 2-methylcitrate synthase rather than to the core TCA citrate synthase step.
+    supported_by:
+    - reference_id: file:PSEPK/prpC/prpC-uniprot.txt
+      supporting_text: &#39;Reaction=propanoyl-CoA + oxaloacetate + H2O = (2S,3S)-2-methylcitrate +&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: &#39;prpC*/PP_2335 is 2-methylcitrate synthase (K01659, EC 2.3.3.5), not citrate synthase&#39;
+- term:
+    id: GO:0019543
+    label: propionate catabolic process
+  evidence_type: IC
+  original_reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  qualifier: involved_in
+  review:
+    summary: Missing process annotation that captures PrpC&#39;s core role in propionate catabolism through the methylcitrate cycle.
+    action: NEW
+    reason: UniProt includes propanoate degradation and GO cross-reference support for the methylcitrate cycle, and the pathway report identifies PrpC as a methylcitrate-cycle boundary enzyme rather than a core TCA enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/prpC/prpC-uniprot.txt
+      supporting_text: &#39;PATHWAY: Organic acid metabolism; propanoate degradation.&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: Reassign to methylcitrate cycle; NOT step 1
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/prpC/prpC-uniprot.txt
+  title: UniProtKB entry Q88KF5 for Pseudomonas putida KT2440 prpC
+  findings:
+  - statement: UniProt includes the 2-methylcitrate synthase reaction for PrpC.
+    supporting_text: &#39;Reaction=propanoyl-CoA + oxaloacetate + H2O = (2S,3S)-2-methylcitrate +&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places PrpC in propanoate degradation.
+    supporting_text: &#39;PATHWAY: Organic acid metabolism; propanoate degradation.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88KF5; protein-existence level is homology-inferred. UniProt also contains a citrate/TCA mapping, but module-level curation treats this as non-core for PrpC.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report identifies PrpC as a methylcitrate-cycle enzyme rather than the canonical TCA citrate synthase.
+    supporting_text: &#39;prpC*/PP_2335 is 2-methylcitrate synthase (K01659, EC 2.3.3.5), not citrate synthase&#39;
+    reference_section_type: RESULTS
+  - statement: The report recommends reassigning PrpC out of the TCA module boundary.
+    supporting_text: Reassign to methylcitrate cycle; NOT step 1
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with PrpC naming and UniProt 2-methylcitrate reaction.
+core_functions:
+- description: 2-methylcitrate synthase catalyzing condensation of propionyl-CoA and oxaloacetate to form 2-methylcitrate in the methylcitrate cycle for propionate metabolism.
+  molecular_function:
+    id: GO:0050440
+    label: 2-methylcitrate synthase activity
+  directly_involved_in:
+  - id: GO:0019543
+    label: propionate catabolic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/prpC/prpC-uniprot.txt
+    supporting_text: &#39;Reaction=propanoyl-CoA + oxaloacetate + H2O = (2S,3S)-2-methylcitrate +&#39;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+    supporting_text: Reassign to methylcitrate cycle; NOT step 1
+suggested_questions:
+- question: Does PrpC retain measurable citrate synthase activity in vitro, and if so is that activity physiologically relevant compared with GltA in P. putida KT2440?
+suggested_experiments:
+- description: Purify PrpC and compare kinetic parameters for propionyl-CoA plus oxaloacetate versus acetyl-CoA plus oxaloacetate, then test prpC and gltA mutants on propionate and canonical TCA carbon sources.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

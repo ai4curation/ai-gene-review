@@ -2,8 +2,8 @@
 
 Source: mbiA-deep-research-bioreason-sft.md
 
-- **Correctness**: 0/5
-- **Completeness**: 0/5
+- **Correctness**: 1/5
+- **Completeness**: 1/5
 
 ## Functional Summary Review
 

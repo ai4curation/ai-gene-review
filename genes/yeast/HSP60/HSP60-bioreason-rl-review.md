@@ -21,7 +21,7 @@ The mechanistic description of the chaperonin cycle (equatorial ATPase, intermed
 
 This is generically correct but misses the specific biological context. The curated review documents: folding of newly imported mitochondrial proteins (the primary function), roles in mtDNA maintenance as a component of mitochondrial nucleoids (PMID:14597775), single-stranded DNA binding and replication origin binding (GO:0003697, GO:0003688), cooperation with co-chaperonin HSP10, and the essential self-assembly requirement.
 
-Notably, the UniProt summary itself states "assist free passage of proteins through the channels of the mitochondrial translocation machinery," directly pointing to mitochondrial localization, which BioReason appears to have ignored.
+BioReason's model-generated UniProt-style section happens to mention passage through mitochondrial translocation machinery, while its Functional Summary says cytosol. This is an internal contradiction, not evidence imported from UniProt.
 
 Comparison with interpro2go:
 

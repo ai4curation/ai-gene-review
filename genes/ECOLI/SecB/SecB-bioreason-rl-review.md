@@ -2,7 +2,7 @@
 
 Source: SecB-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -19,6 +19,8 @@ This is a well-written and largely accurate summary. The key elements are correc
 - Cytoplasmic localization
 - Oligomeric assembly (though described as generic "oligomeric" rather than the specific homotetramer/dimer-of-dimers architecture)
 
+Every scored claim is supported. The missing oligomeric and pathway specificity affects completeness only.
+
 Minor gaps:
 - Does not specify SecB forms a homotetramer (dimer of dimers)
 - Does not name SecA as the specific delivery target at the membrane
@@ -26,7 +28,7 @@ Minor gaps:
 - Does not mention that substrates wrap around the tetrameric surface (PMID:16962134)
 - The thinking trace says "trimers" which is incorrect -- SecB is a tetramer
 
-The thinking trace's mention of "trimers" is an error, though the functional summary avoids specifying the oligomeric state. The curated review identifies SecB's function as GO:0140309 (unfolded protein carrier activity), which is more specific than the generic "chaperone" description but aligned with the narrative.
+The thinking trace's mention of "trimers" is an error, but the Functional Summary avoids specifying the oligomeric state, so this diagnostic error does not lower correctness. The curated review identifies SecB's function as GO:0140309 (unfolded protein carrier activity), which is more specific than the generic "chaperone" description but aligned with the narrative.
 
 Comparison with interpro2go:
 

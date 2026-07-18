@@ -3,7 +3,7 @@
 Source: Prkaa2-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
-- **Completeness**: 4/5
+- **Completeness**: 3/5
 
 ## Functional Summary Review
 
@@ -15,7 +15,11 @@ This is largely correct and captures the core biology of AMPK alpha-2. The curat
 
 One issue: while the summary mentions "metabolic and cytoskeletal substrates," the curated review emphasizes metabolic substrates (ACC, HMGCR, PFK-2, ChREBP, TSC2, Raptor) far more than cytoskeletal targets. The repeated mention of "cytoskeletal" substrates in the summary and thinking trace appears to be driven by the KA1 domain annotation, which BioReason interprets as mediating cytoskeletal interactions. While AMPK does have roles in cell polarity and cytoskeletal regulation, this emphasis slightly overstates what is a secondary function relative to the primary metabolic control role. This is a minor accuracy issue.
 
-The curated review also highlights chromatin remodeling (GO:0006338) via histone H2B phosphorylation, positive regulation of autophagy (GO:0010508), and cellular response to glucose starvation (GO:0042149) -- none of which are mentioned in the BioReason summary. These represent important biology that the domain-based reasoning does not capture.
+The curated review also highlights a separate core chromatin function through histone H2B
+Ser36 phosphorylation, as well as autophagy, glucose-starvation response, and specific
+metabolic targets. Because the paragraph covers the central AMPK energy-sensor role but
+omits another curated core kinase function and substantial pathway context, 3/5 is the
+appropriate completeness anchor rather than 4/5.
 
 Comparison with interpro2go:
 

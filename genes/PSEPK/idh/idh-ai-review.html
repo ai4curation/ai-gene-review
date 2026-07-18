@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>idh - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>idh</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FS1" target="_blank" class="term-link">
+                        Q88FS1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "idh";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FS1" data-a="DESCRIPTION: Monomeric-type NADP-dependent isocitrate dehydroge..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Monomeric-type NADP-dependent isocitrate dehydrogenase of Pseudomonas putida KT2440. Idh catalyzes oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate with reduction of NADP+ to NADPH, contributing to the isocitrate oxidation step of the tricarboxylic acid cycle. Together with icd, it supports the organism&#39;s NADP-only isocitrate dehydrogenase module; no NAD-dependent isocitrate dehydrogenase is evident in the pathway report.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004450" target="_blank" class="term-link">
+                                    GO:0004450
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate dehydrogenase (NADP+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS1" data-a="GO:0004450" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for the monomeric NADP-dependent isocitrate dehydrogenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates Q88FS1 as isocitrate dehydrogenase [NADP], EC 1.1.1.42, with the reaction D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH. The PSEPK pathway report identifies idh and icd as the NADP-dependent isocitrate dehydrogenases covering TCA-cycle step 3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/idh/idh-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Both map to **K00031, NADP-dependent ICD (EC 1.1.1.42)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FS1" data-a="GO:0006099" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct TCA-cycle process annotation for isocitrate oxidative decarboxylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Idh catalyzes the TCA-cycle isocitrate-to-2-oxoglutarate step. The PSEPK pathway report specifically notes that KT2440 has NADP-only isocitrate dehydrogenase coverage through icd and idh.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">KT2440 therefore has **NADP-only** isocitrate dehydrogenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NADP-dependent isocitrate dehydrogenase catalyzing oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate and CO2 with production of NADPH in the TCA cycle.</h3>
+                <span class="vote-buttons" data-g="Q88FS1" data-a="FUNCTION: NADP-dependent isocitrate dehydrogenase catalyzing..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004450" target="_blank" class="term-link">
+                            isocitrate dehydrogenase (NADP+) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/idh/idh-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">KT2440 therefore has **NADP-only** isocitrate dehydrogenase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/idh/idh-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88FS1 for Pseudomonas putida KT2440 idh</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates idh as NADP-dependent isocitrate dehydrogenase catalyzing oxidative decarboxylation of isocitrate.</div>
+
+                        <div class="finding-text">"Reaction=D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report identifies icd and idh as the NADP-dependent isocitrate dehydrogenase coverage for the TCA cycle.</div>
+
+                        <div class="finding-text">"Both map to **K00031, NADP-dependent ICD (EC 1.1.1.42)**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which conditions do the monomeric idh enzyme and the dimeric icd enzyme contribute most to TCA-cycle flux and NADPH production in P. putida KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FS1" data-a="Q: Under which conditions do the monomeric idh enzyme..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare icd and idh single and double perturbations with NADPH/NADP+ measurements and 13C flux analysis during growth on glucose, succinate, acetate, and amino-acid carbon sources.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FS1" data-a="EXPERIMENT: Compare icd and idh single and double perturbation..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(idh-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FS1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *idh* (PP_4012, UniProt Q88FS1) — Monomeric NADP⁺-Dependent Isocitrate Dehydrogenase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T18:32:15.114708</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="idh-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="idh-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-idh-pp_4012-uniprot-q88fs1-monomeric-nadp-dependent-isocitrate-dehydrogenase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>idh</em> (PP_4012, UniProt Q88FS1) — Monomeric NADP⁺-Dependent Isocitrate Dehydrogenase of <em>Pseudomonas putida</em> KT2440</h1>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>idh</strong> (ordered locus <strong>PP_4012</strong>; UniProt <strong>Q88FS1</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes a <strong>monomeric-type, NADP⁺-dependent isocitrate dehydrogenase</strong> (IDH; EC 1.1.1.42). The protein is a single polypeptide of <strong>741 amino acids with a molecular mass of ~79.9 kDa</strong>, a size that is the structural signature of the monomeric IDH family and stands in contrast to the smaller (~45–50 kDa) subunits of the more familiar dimeric IDHs. Its identity is anchored by multiple orthogonal lines of evidence: the UniProt annotation (monomeric-type IDH family, InterPro IPR004436 "Isocitrate_DH_NADP_mono," Pfam PF03971 "IDH"), the annotated catalytic activity (D-<em>threo</em>-isocitrate + NADP⁺ → 2-oxoglutarate + CO₂ + NADPH), a required divalent metal cofactor (Mg²⁺ or Mn²⁺), and mapped active-site residues for isocitrate, NADP⁺, and the catalytic metal. The gene symbol "idh" and the UniProt description are fully consistent with the literature on monomeric bacterial NADP-IDHs; there is no evidence of gene-symbol ambiguity for this protein.</p>
+<p>Functionally, Q88FS1 catalyzes the <strong>third reaction of the tricarboxylic acid (TCA) cycle</strong>: the metal-assisted, two-step oxidative decarboxylation of isocitrate. The reaction proceeds through the transient intermediate <strong>oxalosuccinate</strong> — the basis of the enzyme's alternative name "oxalosuccinate decarboxylase" — via a conserved <strong>Tyr–Asp–Lys catalytic triad</strong>, yielding 2-oxoglutarate (α-ketoglutarate), CO₂, and NADPH. The enzyme is located in the <strong>cytoplasm</strong> (no signal peptide, no transmembrane segments) and displays near-absolute specificity for NADP⁺ over NAD⁺ and for isocitrate over related substrates. Because IDH sits precisely at the branch point between the CO₂-generating steps of the TCA cycle and the carbon-conserving glyoxylate bypass, its product NADPH feeds anabolism and oxidative-stress defense, while its product 2-oxoglutarate is the primary carbon skeleton for nitrogen assimilation into glutamate and glutamine.</p>
+<p>A key mechanistic conclusion of this investigation is that, unlike the paradigmatic <em>Escherichia coli</em> dimeric NADP-IDH, the <em>P. putida</em> monomeric enzyme is <strong>not controlled by the AceK phosphorylation switch</strong>. Monomeric-type IDHs lack the flexible phosphorylation loop (built around the <em>E. coli</em> Ser-113 site) that AceK kinase/phosphatase uses to inactivate the dimeric enzyme during acetate growth; in monomeric IDHs the corresponding region is a rigid α-helix. Consequently, the activity of Q88FS1 is governed chiefly by substrate and coenzyme availability and by transcriptional/metabolic control rather than by covalent modification.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-q88fs1-is-a-monomeric-type-nadp-dependent-isocitrate-dehydrogenase-ec-11142">Finding 1 — Q88FS1 is a monomeric-type, NADP⁺-dependent isocitrate dehydrogenase (EC 1.1.1.42)</h3>
+<p>The UniProt record for Q88FS1 assigns the protein to the <strong>monomeric-type IDH family</strong>, with InterPro domain <strong>IPR004436 (Isocitrate_DH_NADP_mono)</strong> and Pfam <strong>PF03971 (IDH)</strong>, EC number <strong>1.1.1.42</strong>, and the alternate name <strong>oxalosuccinate decarboxylase</strong>. NADP⁺-dependent isocitrate dehydrogenase belongs to the β-decarboxylating dehydrogenase family and catalyzes the oxidative decarboxylation of (2R,3S)-isocitrate to yield 2-oxoglutarate and CO₂ within the Krebs cycle (<a href="https://pubmed.ncbi.nlm.nih.gov/12467571/">PMID: 12467571</a>). Monomeric NADP-IDHs are distinguished from dimeric IDHs by being single-chain enzymes of ~80–100 kDa; the characterized <em>Streptomyces lividans</em> monomeric IDH (SlIDH), for example, has a molecular mass of about 80 kDa, described as "typical of a monomeric NADP-IDH" (<a href="https://pubmed.ncbi.nlm.nih.gov/19631711/">PMID: 19631711</a>). The ~79.9 kDa mass of Q88FS1 (see Finding 8) places it squarely within this family and distinguishes it from the ~45 kDa subunits that assemble into dimeric IDHs.</p>
+<h3 id="finding-2-monomeric-idh-arose-by-intragenic-domain-duplication-that-recreates-the-dimeric-active-site-within-one-chain">Finding 2 — Monomeric IDH arose by intragenic domain duplication that recreates the dimeric active site within one chain</h3>
+<p>The evolutionary and structural logic of the monomeric IDH family explains how a single polypeptide accomplishes what dimeric IDHs achieve only by assembling two subunits. The 1.95 Å crystal structure of the <em>Azotobacter vinelandii</em> monomeric IDH (AvIDH) revealed that the enzyme is built from two distinct domains related by a duplicated structural motif; this <strong>"fusional structure by domain duplication enables a single polypeptide chain to form a structure at the catalytic site that is homologous to the dimeric IDH, the catalytic site of which is located at the interface of two identical subunits"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/12467571/">PMID: 12467571</a>). The NADP⁺-bound closed-form structure of AvIDH further confirmed that this reconstituted active site is a genuine, fully functional β-decarboxylating dehydrogenase catalyzing "the dehydration and decarboxylation of isocitrate to yield 2-oxoglutarate and CO₂ in the Krebs cycle" (<a href="https://pubmed.ncbi.nlm.nih.gov/12855708/">PMID: 12855708</a>). Because Q88FS1 is a member of this family, its catalytic architecture is inferred, by strong homology, to follow the same single-chain domain-duplication design.</p>
+<h3 id="finding-3-high-nadp-coenzyme-specificity-and-divalent-metal-dependence-cytoplasmic-role-at-the-tcaglyoxylate-branch-and-in-nadph-supply">Finding 3 — High NADP⁺ coenzyme specificity and divalent-metal dependence; cytoplasmic role at the TCA/glyoxylate branch and in NADPH supply</h3>
+<p>Monomeric IDHs display an extreme preference for NADP⁺ over NAD⁺. The recombinant <em>S. lividans</em> SlIDH showed a <strong>62,000-fold (kcat/Km) preference for NADP⁺ over NAD⁺ with Mn²⁺, and 85,000-fold with Mg²⁺</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/19631711/">PMID: 19631711</a>), underscoring both the coenzyme selectivity and the requirement for a divalent cation. Structurally, the 2′-phosphate of NADP⁺ that confers this selectivity is coordinated in the monomeric IDH of <em>Corynebacterium glutamicum</em> by two arginines, a histidine, and (via water) a lysine (<a href="https://pubmed.ncbi.nlm.nih.gov/21931217/">PMID: 21931217</a>). The same work emphasized that IDH "lies at a crucial bifurcation point between CO₂-generating steps in the cycle and carbon-conserving steps in the glyoxylate bypass. Hence, the enzyme is a focus of regulation" (<a href="https://pubmed.ncbi.nlm.nih.gov/21931217/">PMID: 21931217</a>). In the specific physiological context of <em>P. putida</em> KT2440, this NADPH-producing role is central: determination of the NADPH balance "revealed that the default metabolic state of <em>P. putida</em> KT2440 is characterized by a slight catabolic overproduction of reducing power" (<a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">PMID: 26350459</a>), which serves anabolism and stress defense.</p>
+<h3 id="finding-4-two-step-catalytic-mechanism-via-an-oxalosuccinate-intermediate-with-a-conserved-tyrasplys-catalytic-triad">Finding 4 — Two-step catalytic mechanism via an oxalosuccinate intermediate with a conserved Tyr–Asp–Lys catalytic triad</h3>
+<p>The reaction catalyzed by Q88FS1 proceeds in two chemical steps. First, a metal-assisted dehydrogenation transfers a hydride to NADP⁺, converting isocitrate to the unstable β-keto acid <strong>oxalosuccinate</strong>; second, β-decarboxylation of oxalosuccinate releases CO₂ and yields 2-oxoglutarate. The crystal structure of the <em>Thermus thermophilus</em> NADP-IDH explicitly describes the enzyme as "catalyzing oxidative decarboxylation of isocitrate into oxalosuccinate (intermediate) and finally the product α-ketoglutarate" (<a href="https://pubmed.ncbi.nlm.nih.gov/24832735/">PMID: 24832735</a>). This intermediate is the structural basis of the enzyme's alternate name, <strong>oxalosuccinate decarboxylase</strong>, recorded in the UniProt entry for Q88FS1. The same structure showed that "the overall TtIDH structure exhibits closed conformation with catalytic triad residues, Tyr144-Asp248-Lys191 are conserved" (<a href="https://pubmed.ncbi.nlm.nih.gov/24832735/">PMID: 24832735</a>), identifying the acid–base machinery that mediates the chemistry. In the monomeric AvIDH, binding of NADP⁺ induces a closed conformation that positions the nicotinamide ring for immediate hydride transfer, accounting for the exceptionally high turnover of monomeric IDHs (<a href="https://pubmed.ncbi.nlm.nih.gov/12855708/">PMID: 12855708</a>).</p>
+<h3 id="finding-5-physiological-role-nadph-and-2-oxoglutarate-provision-links-idh-to-anabolism-nitrogen-assimilation-and-oxidative-stress-defense">Finding 5 — Physiological role: NADPH and 2-oxoglutarate provision links IDH to anabolism, nitrogen assimilation, and oxidative-stress defense</h3>
+<p>In <em>Pseudomonas</em> and other aerobic bacteria, NADP-dependent IDH is a principal source of both NADPH and 2-oxoglutarate (α-ketoglutarate, KG). KG is itself a non-enzymatic antioxidant that neutralizes reactive oxygen species (yielding succinate + CO₂), while NADPH fuels the glutathione and thioredoxin antioxidant systems. In <em>Pseudomonas fluorescens</em> challenged with H₂O₂, "the increased production of KG mediated by NADP-dependent isocitrate dehydrogenase (NADP-ICDH) and its decreased utilization via the TCA cycle confer a unique strategy to modulate the cellular redox environment" (<a href="https://pubmed.ncbi.nlm.nih.gov/17668068/">PMID: 17668068</a>), with NAD-linked TCA enzymes simultaneously downregulated. The centrality of NADPH provision in the related strain is reinforced by the observation that "cells growing on glucose thus run a biochemical cycle that favors NADPH formation" in <em>P. putida</em> KT2440 (<a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">PMID: 26350459</a>). In parallel, the KG produced by IDH is the entry-point carbon skeleton for glutamate/glutamine biosynthesis and therefore for nitrogen assimilation.</p>
+<h3 id="finding-6-the-monomeric-enzyme-is-not-controlled-by-the-acek-phosphorylation-switch-used-for-e-coli-dimeric-idh">Finding 6 — The monomeric enzyme is NOT controlled by the AceK phosphorylation switch used for <em>E. coli</em> dimeric IDH</h3>
+<p>The best-characterized regulatory device for bacterial IDH is the <em>E. coli</em> phosphorylation cycle, in which the bifunctional IDH kinase/phosphatase AceK phosphorylates Ser-113 to inactivate the dimeric enzyme and thereby divert isocitrate into the glyoxylate bypass during growth on acetate; "it is the phosphorylation of the Ser-113 residue that renders the enzyme catalytically inactive as it prevents isocitrate from binding to the active site" (<a href="https://pubmed.ncbi.nlm.nih.gov/16415587/">PMID: 16415587</a>). Monomeric-type IDHs lack this switch. In the <em>C. glutamicum</em> monomeric IDH, "the amino acid residues corresponding to the <em>Escherichia coli</em> IDH phosphorylation-loop are α-helical compared with the more flexible random-coil region in the <em>E. coli</em> protein where IDH activation is controlled by phosphorylation. This more structured region supports the idea that activation of CgIDH is not controlled by phosphorylation" (<a href="https://pubmed.ncbi.nlm.nih.gov/16416443/">PMID: 16416443</a>). By homology, Q88FS1 is expected to be regulated by substrate/coenzyme availability and by transcriptional control rather than by reversible phosphorylation.</p>
+<h3 id="finding-7-exceptional-isocitratenadp-specificity-and-catalytic-efficiency-a-catalytic-lysine-demonstrated-by-mutagenesis-a-family-spanning-the-proteobacteria">Finding 7 — Exceptional isocitrate/NADP⁺ specificity and catalytic efficiency; a catalytic lysine demonstrated by mutagenesis; a family spanning the proteobacteria</h3>
+<p>Direct biochemical comparison shows that monomeric IDHs are not merely equivalent to dimeric IDHs but frequently superior in efficiency and selectivity. The <em>C. glutamicum</em> monomeric IDH is "10-fold more active (calculated as kcat/Km.isocitrate/Km.NADP) and 7-fold more NADP-specific than the dimeric enzyme, favoring NADP over NAD by a factor of 50,000" (<a href="https://pubmed.ncbi.nlm.nih.gov/11185559/">PMID: 11185559</a>). Crucially, direct experimental (rather than purely structural) evidence for the catalytic apparatus exists: "the role of Lys253 as catalytic residue has been demonstrated by site-directed mutagenesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/11185559/">PMID: 11185559</a>). The monomeric family is widely distributed: "Monomeric NADP⁺-specific IDHs have been identified from about 50 different bacterial species, such as proteobacteria, actinobacteria, and planctomycetes" (<a href="https://pubmed.ncbi.nlm.nih.gov/16416443/">PMID: 16416443</a>), placing the proteobacterial <em>P. putida</em> enzyme within a well-populated and well-studied clade.</p>
+<h3 id="finding-8-sequence-level-confirmation-a-741-aa-799-kda-single-chain-cytoplasmic-nadp-idh-with-mapped-substratecofactormetal-binding-sites">Finding 8 — Sequence-level confirmation: a 741-aa, ~79.9 kDa single-chain cytoplasmic NADP-IDH with mapped substrate/cofactor/metal binding sites</h3>
+<p>The UniProt Q88FS1 record (retrieved programmatically) provides the definitive molecular-level confirmation of identity. The protein is <strong>741 amino acids</strong> long with a molecular weight of <strong>79,900 Da (~80 kDa)</strong> — matching the single-chain size of monomeric-type IDHs — encoded by gene <em>idh</em>, ordered locus <strong>PP_4012</strong>. The annotated catalytic activity is <strong>D-<em>threo</em>-isocitrate + NADP⁺ = 2-oxoglutarate + CO₂ + NADPH</strong>, with the cofactor <strong>Mg²⁺ or Mn²⁺</strong>. Functional keywords include "Tricarboxylic acid cycle," "Glyoxylate bypass," "NADP," "Oxidoreductase," "Metal-binding," and "Magnesium." The record contains <strong>no signal peptide and no transmembrane segment</strong>, consistent with a <strong>cytoplasmic</strong> localization. Mapped functional sites include NADP⁺-binding residues (approximately 83–88, 136, 585–586, 590, 601–603, 650), D-<em>threo</em>-isocitrate/substrate-binding residues (~133–140, 146, 548), and Mg²⁺-coordinating residues (351, 549, 553).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-and-its-place-in-metabolism">The reaction and its place in metabolism</h3>
+<p>Q88FS1 catalyzes the third step of the oxidative TCA cycle, converting isocitrate to 2-oxoglutarate. The overall reaction and its two-step mechanism can be summarized:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">     </span><span class="n">Mg2</span><span class="o">+/</span><span class="n">Mn2</span><span class="o">+</span><span class="w">                        </span><span class="n">Mg2</span><span class="o">+/</span><span class="n">Mn2</span><span class="o">+</span>
+<span class="w">   </span><span class="n">D</span><span class="o">-</span><span class="n">threo</span><span class="o">-</span><span class="n">isocitrate</span><span class="w">  </span><span class="c1">----&gt;  [oxalosuccinate]  ----&gt;  2-oxoglutarate</span>
+<span class="o">+</span><span class="w"> </span><span class="n">NADP</span><span class="o">+</span><span class="w">     </span><span class="p">(</span><span class="n">dehydrogenation</span><span class="p">,</span><span class="w">        </span><span class="p">(</span><span class="n">beta</span><span class="o">-</span><span class="n">decarboxylation</span><span class="p">,</span><span class="w">    </span><span class="o">+</span><span class="w"> </span><span class="n">CO2</span>
+<span class="w">     </span><span class="n">hydride</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NADP</span><span class="o">+</span><span class="p">)</span><span class="w">          </span><span class="n">loss</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">CO2</span><span class="p">)</span><span class="w">            </span><span class="o">+</span><span class="w"> </span><span class="n">NADPH</span>
+<span class="w">          </span><span class="o">|</span><span class="n">___________</span><span class="w"> </span><span class="n">Tyr</span><span class="o">-</span><span class="n">Asp</span><span class="o">-</span><span class="n">Lys</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">triad</span><span class="w"> </span><span class="n">__________</span><span class="o">|</span>
+</code></pre></div>
+
+<p>The enzyme sits at a pivotal metabolic junction:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">Citrate</span>
+<span class="w">    </span><span class="o">|</span><span class="w">  </span><span class="p">(</span><span class="n">aconitase</span><span class="p">)</span>
+<span class="w">    </span><span class="n">v</span>
+<span class="w">       </span><span class="n">Isocitrate</span>
+<span class="w"> </span><span class="o">/</span><span class="w">       </span><span class="err">\</span>
+<span class="w">   </span><span class="n">IDH</span><span class="w"> </span><span class="p">(</span><span class="n">PP_4012</span><span class="p">)</span><span class="o">/</span><span class="w">         </span><span class="err">\</span><span class="w">  </span><span class="n">isocitrate</span><span class="w"> </span><span class="n">lyase</span><span class="w"> </span><span class="p">(</span><span class="n">glyoxylate</span><span class="w"> </span><span class="n">bypass</span><span class="p">)</span>
+<span class="w">      </span><span class="o">/</span><span class="w">            </span><span class="err">\</span>
+<span class="w">   </span><span class="mi">2</span><span class="o">-</span><span class="n">oxoglutarate</span><span class="w">         </span><span class="n">glyoxylate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">succinate</span>
+<span class="w">   </span><span class="o">+</span><span class="w"> </span><span class="n">CO2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">NADPH</span><span class="w">            </span><span class="o">|</span>
+<span class="w">       </span><span class="o">|</span><span class="w">                    </span><span class="n">v</span><span class="w">  </span><span class="p">(</span><span class="n">carbon</span><span class="o">-</span><span class="n">conserving</span><span class="p">;</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">C2</span><span class="w"> </span><span class="n">substrates</span><span class="p">)</span>
+<span class="w">       </span><span class="o">|</span><span class="w">  </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">glutamate</span><span class="o">/</span><span class="n">glutamine</span><span class="w"> </span><span class="p">(</span><span class="n">N</span><span class="w"> </span><span class="n">assimilation</span><span class="p">)</span>
+<span class="w">       </span><span class="o">|</span><span class="w">  </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">NADPH</span><span class="o">:</span><span class="w"> </span><span class="n">biosynthesis</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">antioxidant</span><span class="w"> </span><span class="n">systems</span>
+<span class="w">       </span><span class="n">v</span>
+<span class="w">   </span><span class="n">rest</span><span class="w"> </span><span class="kr">of</span><span class="w"> </span><span class="n">TCA</span><span class="w"> </span><span class="n">cycle</span>
+</code></pre></div>
+
+<h3 id="why-the-monomeric-design-matters">Why the monomeric design matters</h3>
+<p>The monomeric IDH family solves the same catalytic problem as dimeric IDH but with a fundamentally different architecture. Dimeric IDHs build their active site at the interface between two identical ~45 kDa subunits. The monomeric enzymes instead fuse two domains within a single ~80 kDa chain by intragenic duplication, reconstituting an interface-like active site within one polypeptide (<a href="https://pubmed.ncbi.nlm.nih.gov/12467571/">PMID: 12467571</a>). This design is not merely an evolutionary curiosity — the <em>C. glutamicum</em> enzyme demonstrates that the monomeric form can be an order of magnitude more catalytically efficient and dramatically more NADP⁺- and isocitrate-specific than its dimeric counterpart (<a href="https://pubmed.ncbi.nlm.nih.gov/11185559/">PMID: 11185559</a>).</p>
+<h3 id="regulation-substrate-driven-not-phosphorylation-driven">Regulation: substrate-driven, not phosphorylation-driven</h3>
+<p>The most consequential regulatory distinction for Q88FS1 is the <strong>absence of the AceK phosphorylation switch</strong>. In <em>E. coli</em>, the flux partition between the TCA cycle and glyoxylate bypass is enforced by phosphorylation of dimeric IDH at Ser-113 (<a href="https://pubmed.ncbi.nlm.nih.gov/16415587/">PMID: 16415587</a>). Monomeric IDHs replace the <em>E. coli</em> flexible phosphorylation loop with a rigid α-helix and therefore cannot be regulated this way (<a href="https://pubmed.ncbi.nlm.nih.gov/16416443/">PMID: 16416443</a>). This implies that in <em>P. putida</em> KT2440, partitioning of isocitrate between the TCA cycle and the glyoxylate bypass — and the setting of IDH flux itself — is governed by isocitrate and NADP⁺/NADPH pool concentrations and by transcriptional regulation, rather than by rapid covalent modification of the enzyme.</p>
+<h3 id="comparative-summary">Comparative summary</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th><em>P. putida</em> Q88FS1 (monomeric)</th>
+<th><em>E. coli</em> dimeric NADP-IDH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quaternary structure</td>
+<td>Single chain (~80 kDa)</td>
+<td>Homodimer (~2 × 45 kDa)</td>
+</tr>
+<tr>
+<td>Active-site origin</td>
+<td>Intragenic domain duplication</td>
+<td>Subunit interface</td>
+</tr>
+<tr>
+<td>Family / domains</td>
+<td>Monomeric IDH (IPR004436, PF03971)</td>
+<td>Dimeric IDH</td>
+</tr>
+<tr>
+<td>Coenzyme specificity</td>
+<td>NADP⁺ ≫ NAD⁺ (10⁴–10⁵-fold)</td>
+<td>NADP⁺-specific, less extreme</td>
+</tr>
+<tr>
+<td>Phospho-regulation (AceK)</td>
+<td><strong>Absent</strong> (rigid α-helix)</td>
+<td><strong>Present</strong> (Ser-113 loop)</td>
+</tr>
+<tr>
+<td>Catalytic triad</td>
+<td>Tyr–Asp–Lys (conserved)</td>
+<td>Conserved acid–base residues</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>Mg²⁺ or Mn²⁺</td>
+<td>Mg²⁺/Mn²⁺</td>
+</tr>
+</tbody>
+</table>
+<h3 id="localization-and-pathway-integration">Localization and pathway integration</h3>
+<p>All evidence points to a <strong>cytoplasmic</strong> enzyme: Q88FS1 has no signal peptide and no transmembrane helix, and its substrates (isocitrate, NADP⁺) and products (2-oxoglutarate, NADPH) are cytosolic metabolites of central carbon metabolism. Its outputs integrate directly into three programs: (1) continuation of the oxidative TCA cycle; (2) <strong>anabolic NADPH supply</strong>, consistent with the observation that glucose-grown <em>P. putida</em> KT2440 runs a cycle favoring NADPH formation and maintains a slight catabolic overproduction of reducing power (<a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">PMID: 26350459</a>); and (3) <strong>oxidative-stress defense and nitrogen assimilation</strong> through 2-oxoglutarate, which both scavenges ROS non-enzymatically and serves as the carbon skeleton for glutamate/glutamine synthesis (<a href="https://pubmed.ncbi.nlm.nih.gov/17668068/">PMID: 17668068</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (subject)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12467571/">12467571</a></td>
+<td>Structure of monomeric IDH (<em>A. vinelandii</em>); domain duplication</td>
+<td>Defines the reaction (isocitrate → 2-oxoglutarate + CO₂), the β-decarboxylating family, and the single-chain domain-duplication architecture (Findings 1, 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12855708/">12855708</a></td>
+<td>NADP⁺-bound monomeric IDH structure (<em>A. vinelandii</em>)</td>
+<td>Confirms cofactor recognition, closed conformation for hydride transfer, and reaction chemistry (Findings 2, 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19631711/">19631711</a></td>
+<td>Monomeric IDH from <em>S. lividans</em></td>
+<td>Confirms ~80 kDa single-chain mass and quantifies 62,000–85,000-fold NADP⁺ preference with divalent metal (Findings 1, 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21931217/">21931217</a></td>
+<td>Highly NADP⁺-specific monomeric IDH structure (<em>C. glutamicum</em>)</td>
+<td>Structural basis of 2′-phosphate recognition; establishes the TCA/glyoxylate branch-point role and regulatory importance (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24832735/">24832735</a></td>
+<td>NADP-IDH structure (<em>T. thermophilus</em>)</td>
+<td>Documents the oxalosuccinate intermediate and identifies the conserved Tyr144–Asp248–Lys191 catalytic triad (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11185559/">11185559</a></td>
+<td>Highly specific monomeric IDH (<em>C. glutamicum</em>)</td>
+<td>Quantifies superior efficiency/specificity vs. dimeric IDH; mutagenesis demonstrates catalytic Lys253 (Finding 7)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16416443/">16416443</a></td>
+<td>Substrate-free monomeric IDH structure; phylogeny</td>
+<td>Shows monomeric IDHs lack the <em>E. coli</em> phosphorylation loop (rigid α-helix) and span ~50 proteobacterial/actinobacterial/planctomycete species (Findings 6, 7)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16415587/">16415587</a></td>
+<td>Phosphoregulation of <em>E. coli</em> IDH</td>
+<td>Describes the AceK/Ser-113 device that the monomeric family lacks (Finding 6)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">26350459</a></td>
+<td>Central metabolism of <em>P. putida</em> KT2440 (EDEMP cycle)</td>
+<td>Places NADP-IDH's NADPH output in the strain-specific physiological context of default reducing-power overproduction (Findings 3, 5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17668068/">17668068</a></td>
+<td>TCA cycle "novel twist"; KG in redox defense (<em>Pseudomonas</em>)</td>
+<td>Links NADP-IDH's product (KG) and its regulation to oxidative-stress defense (Finding 5)</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is internally consistent and mutually reinforcing. Structural studies of four different bacterial monomeric IDHs (<em>A. vinelandii</em>, <em>C. glutamicum</em>, <em>S. lividans</em>, <em>T. thermophilus</em>) converge on the same architecture, mechanism, and specificity, and the <em>P. putida</em> UniProt record's sequence-level features (741 aa, ~80 kDa, mapped NADP⁺/isocitrate/Mg²⁺ sites, cytoplasmic) match this family exactly. No literature was found that would reassign the "idh" symbol for this organism to a different protein, so there is no gene-symbol ambiguity here.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical study of Q88FS1 itself.</strong> All kinetic parameters (coenzyme preference, kcat/Km, metal dependence), the catalytic-triad assignment, and the absence of phosphoregulation are inferred by strong homology from other monomeric IDHs (<em>C. glutamicum</em>, <em>A. vinelandii</em>, <em>S. lividans</em>, <em>T. thermophilus</em>), not measured on the purified <em>P. putida</em> KT2440 enzyme. The specific catalytic residue numbering (e.g., Lys253 in <em>C. glutamicum</em>, the Tyr144–Asp248–Lys191 triad in <em>T. thermophilus</em>) has not been mapped experimentally onto the Q88FS1 sequence.</p>
+</li>
+<li>
+<p><strong>Localization is predicted, not experimentally demonstrated.</strong> The cytoplasmic assignment rests on the absence of a signal peptide/transmembrane segment and on the known biochemistry of central metabolism, not on direct fractionation or imaging of <em>P. putida</em> KT2440.</p>
+</li>
+<li>
+<p><strong>Regulatory mechanism inferred, not tested.</strong> The conclusion that Q88FS1 lacks AceK-type phosphoregulation is based on the structural rigidity of the phospho-loop region in other monomeric IDHs. Whether <em>P. putida</em> possesses any alternative post-translational regulation of IDH, and how transcription of PP_4012 responds to carbon source (glucose vs. acetate/C2 substrates), remains uncharacterized here.</p>
+</li>
+<li>
+<p><strong>Quantitative flux role in <em>P. putida</em> is indirect.</strong> The NADPH and 2-oxoglutarate physiology is drawn largely from <em>P. fluorescens</em> oxidative-stress studies and the <em>P. putida</em> EDEMP-cycle work; the precise fractional contribution of IDH (versus the ED pathway's NADPH-producing steps and the pentose phosphate pathway) to the KT2440 NADPH budget was not partitioned in this investigation.</p>
+</li>
+<li>
+<p><strong>Possible isozymes not excluded.</strong> Some bacteria carry both monomeric and dimeric IDHs (e.g., <em>Colwellia</em>, <em>Xylella fastidiosa</em>). Whether <em>P. putida</em> KT2440 encodes a second IDH isozyme was not exhaustively assessed; PP_4012 is treated here as the annotated <em>idh</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and steady-state kinetics.</strong> Clone PP_4012, purify the protein, and measure kcat, Km(isocitrate), Km(NADP⁺), and the NADP⁺/NAD⁺ and isocitrate specificity ratios with both Mg²⁺ and Mn²⁺ — directly confirming the family-based inferences for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Map the <em>T. thermophilus</em> Tyr–Asp–Lys triad and the <em>C. glutamicum</em> catalytic Lys onto the Q88FS1 sequence and test alanine substitutions for loss of activity, verifying the acid–base machinery and the catalytic lysine in this specific protein.</p>
+</li>
+<li>
+<p><strong>Phosphorylation test.</strong> Assay whether purified Q88FS1 can be phosphorylated/inactivated (e.g., incubation with cell extracts, phospho-specific detection, or an AceK homolog if present) to experimentally confirm the predicted absence of AceK-type regulation.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure (or generate a high-confidence AlphaFold model with PAE analysis) of Q88FS1 to verify the domain-duplication architecture, the rigid (α-helical) phospho-loop region, and the cofactor-2′-phosphate recognition residues.</p>
+</li>
+<li>
+<p><strong>Physiological flux and knockout studies.</strong> Construct a PP_4012 deletion (or knockdown) in <em>P. putida</em> KT2440 and quantify effects on growth on glucose vs. C2 substrates, NADPH/NADP⁺ ratios, 2-oxoglutarate pools, glutamate auxotrophy, and oxidative-stress (H₂O₂) tolerance — directly testing the proposed roles in NADPH supply, nitrogen assimilation, and redox defense.</p>
+</li>
+<li>
+<p><strong>Genome survey for IDH isozymes.</strong> Confirm whether KT2440 encodes any additional (dimeric or second monomeric) IDH, to establish whether PP_4012 is the sole isocitrate dehydrogenase and thus solely responsible for this TCA step.</p>
+</li>
+</ol>
+<hr />
+<h2 id="consensus-answer">Consensus Answer</h2>
+<p><em>P. putida</em> KT2440 <strong>idh</strong> (PP_4012, Q88FS1) encodes a <strong>monomeric-type, NADP⁺-dependent isocitrate dehydrogenase</strong> (EC 1.1.1.42; 741 aa, ~80 kDa single chain) that catalyzes the cytoplasmic, Mg²⁺/Mn²⁺-dependent oxidative decarboxylation of D-<em>threo</em>-isocitrate to 2-oxoglutarate + CO₂ + NADPH — the third step of the TCA cycle at its branch point with the glyoxylate bypass — proceeding via an oxalosuccinate intermediate through a conserved Tyr–Asp–Lys catalytic triad with near-absolute specificity for NADP⁺ and isocitrate. Its products supply NADPH for biosynthesis and oxidative-stress defense and 2-oxoglutarate for nitrogen assimilation, and, unlike the <em>E. coli</em> dimeric IDH, it lacks the AceK phosphorylation switch, so its activity is set by substrate/coenzyme levels rather than covalent modification.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="idh-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="idh-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12467571</li>
+<li>PMID:19631711</li>
+<li>PMID:12855708</li>
+<li>PMID:21931217</li>
+<li>PMID:26350459</li>
+<li>PMID:24832735</li>
+<li>PMID:17668068</li>
+<li>PMID:16415587</li>
+<li>PMID:16416443</li>
+<li>PMID:11185559</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FS1
+gene_symbol: idh
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Monomeric-type NADP-dependent isocitrate dehydrogenase of Pseudomonas putida KT2440. Idh catalyzes oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate with reduction of NADP+ to NADPH, contributing to the isocitrate oxidation step of the tricarboxylic acid cycle. Together with icd, it supports the organism&#39;s NADP-only isocitrate dehydrogenase module; no NAD-dependent isocitrate dehydrogenase is evident in the pathway report.
+existing_annotations:
+- term:
+    id: GO:0004450
+    label: isocitrate dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function for the monomeric NADP-dependent isocitrate dehydrogenase.
+    action: ACCEPT
+    reason: UniProt annotates Q88FS1 as isocitrate dehydrogenase [NADP], EC 1.1.1.42, with the reaction D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH. The PSEPK pathway report identifies idh and icd as the NADP-dependent isocitrate dehydrogenases covering TCA-cycle step 3.
+    supported_by:
+    - reference_id: file:PSEPK/idh/idh-uniprot.txt
+      supporting_text: &#39;Reaction=D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH;&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: Both map to **K00031, NADP-dependent ICD (EC 1.1.1.42)**
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct TCA-cycle process annotation for isocitrate oxidative decarboxylation.
+    action: ACCEPT
+    reason: Idh catalyzes the TCA-cycle isocitrate-to-2-oxoglutarate step. The PSEPK pathway report specifically notes that KT2440 has NADP-only isocitrate dehydrogenase coverage through icd and idh.
+    supported_by:
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: KT2440 therefore has **NADP-only** isocitrate dehydrogenase
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/idh/idh-uniprot.txt
+  title: UniProtKB entry Q88FS1 for Pseudomonas putida KT2440 idh
+  findings:
+  - statement: UniProt annotates idh as NADP-dependent isocitrate dehydrogenase catalyzing oxidative decarboxylation of isocitrate.
+    supporting_text: &#39;Reaction=D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH;&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88FS1; protein-existence level is homology-inferred.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report identifies icd and idh as the NADP-dependent isocitrate dehydrogenase coverage for the TCA cycle.
+    supporting_text: Both map to **K00031, NADP-dependent ICD (EC 1.1.1.42)**
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with UniProt labels.
+core_functions:
+- description: NADP-dependent isocitrate dehydrogenase catalyzing oxidative decarboxylation of D-threo-isocitrate to 2-oxoglutarate and CO2 with production of NADPH in the TCA cycle.
+  molecular_function:
+    id: GO:0004450
+    label: isocitrate dehydrogenase (NADP+) activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  supported_by:
+  - reference_id: file:PSEPK/idh/idh-uniprot.txt
+    supporting_text: &#39;Reaction=D-threo-isocitrate + NADP(+) = 2-oxoglutarate + CO2 + NADPH;&#39;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+    supporting_text: KT2440 therefore has **NADP-only** isocitrate dehydrogenase
+suggested_questions:
+- question: Under which conditions do the monomeric idh enzyme and the dimeric icd enzyme contribute most to TCA-cycle flux and NADPH production in P. putida KT2440?
+suggested_experiments:
+- description: Compare icd and idh single and double perturbations with NADPH/NADP+ measurements and 13C flux analysis during growth on glucose, succinate, acetate, and amino-acid carbon sources.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2638 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2638</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JL1" target="_blank" class="term-link">
+                        Q88JL1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2638";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JL1" data-a="DESCRIPTION: PP_2638 encodes a large BcsC-like cellulose syntha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2638 encodes a large BcsC-like cellulose synthase operon C protein assigned to the outer membrane and required for maximal bacterial cellulose synthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019867" target="_blank" class="term-link">
+                                    GO:0019867
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL1" data-a="GO:0019867" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Outer membrane is the appropriate location for the BcsC-like PP_2638 cellulose synthase operon C protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GOA assigns the Gram-negative outer membrane term and UniProt describes PP_2638 as a cellulose synthase operon C protein, consistent with an export/support component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2638/PP_2638-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0019867	outer membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2638/PP_2638-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Cellulose synthase operon C protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31604608" target="_blank" class="term-link">
+                                        PMID:31604608
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pEtN-cellulose is secreted through the β-barrel porin BcsC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030244" target="_blank" class="term-link">
+                                    GO:0030244
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JL1" data-a="GO:0030244" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cellulose biosynthetic process is the appropriate pathway annotation for PP_2638.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt states that PP_2638 is required for maximal bacterial cellulose synthesis and places it in bacterial cellulose biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2638/PP_2638-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Required for maximal bacterial cellulose synthesis.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2638/PP_2638-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2638/PP_2638-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0030244	cellulose biosynthetic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Outer-membrane cellulose synthase operon C export/support role required for maximal bacterial cellulose synthesis.</h3>
+                <span class="vote-buttons" data-g="Q88JL1" data-a="FUNCTION: Outer-membrane cellulose synthase operon C export/..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030244" target="_blank" class="term-link">
+                                cellulose biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019867" target="_blank" class="term-link">
+                                outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2638/PP_2638-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FUNCTION: Required for maximal bacterial cellulose synthesis.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2638/PP_2638-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2638/PP_2638-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0019867	outer membrane</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31604608" target="_blank" class="term-link">
+                                PMID:31604608
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">pEtN-cellulose is secreted through the β-barrel porin BcsC</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2638/PP_2638-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PP_2638 is BcsC, the outer-membrane cellulose secretion porin.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2638/PP_2638-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_2638</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies PP_2638 as a cellulose synthase operon C protein required for maximal bacterial cellulose synthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2638/PP_2638-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_2638</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the two annotations reviewed for PP_2638.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR12558/PTHR12558-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for PP_2638</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places PP_2638 in a broad repeat-containing family; the specific cellulose operon C role is supported by UniProt and InterPro domain context rather than a specific PANTHER family name.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31604608" target="_blank" class="term-link">
+                            PMID:31604608
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the Cellulose Synthase Outer Membrane Channel and Its Association with the Periplasmic TPR Domain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The BcsC structural paper defines the cellulose outer-membrane porin as a beta-barrel preceded by a long TPR domain.</div>
+
+                        <div class="finding-text">"The BcsC porin is a 1157 residues long protein containing two predicted domains: an N-terminal domain with 19 TPRs, and a C-terminal pore-forming β-barrel"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39242554" target="_blank" class="term-link">
+                            PMID:39242554
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Insights into phosphoethanolamine cellulose synthesis and secretion across the Gram-negative cell envelope.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM evidence shows how BcsB and BcsC form the trans-envelope cellulose secretion path.</div>
+
+                        <div class="finding-text">"BcsC interacts with the terminal BcsB subunit of the semicircle to establish an envelope-spanning complex."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21507177" target="_blank" class="term-link">
+                            PMID:21507177
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cell-cell and cell-surface interactions mediated by cellulose and a novel exopolysaccharide contribute to Pseudomonas putida biofilm formation and fitness under water-limiting conditions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida-specific physiology links cellulose to biofilm formation, water-stress fitness, and rhizosphere colonization.</div>
+
+                        <div class="finding-text">"formation and stability, although it does contribute to rhizosphere colonization"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2638/PP_2638-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_2638</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist identifies PP_2638/Q88JL1 as the BcsC outer-membrane cellulose secretion porin by domain architecture, operon context, and full-length similarity to characterized BcsC orthologs.</div>
+
+                        <div class="finding-text">"PP_2638 is BcsC, the outer-membrane cellulose secretion porin."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the exact molecular role of PP_2638 in KT2440 cellulose export, pore formation, or synthase-complex assembly?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL1" data-a="Q: What is the exact molecular role of PP_2638 in KT2..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should PP_2638 be curated under a broader BcsC/export-support term if GO has or needs a more specific molecular-function representation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL1" data-a="Q: Should PP_2638 be curated under a broader BcsC/exp..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare cellulose production, cell-surface cellulose retention, and extracellular cellulose export in wild-type and PP_2638 deletion strains.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted genetics and cellulose localization assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL1" data-a="EXPERIMENT: Compare cellulose production, cell-surface cellulo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine PP_2638 localization and complex association with BcsA/BcsB using fractionation and co-immunoprecipitation or proximity tagging.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: localization and protein-complex assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JL1" data-a="EXPERIMENT: Determine PP_2638 localization and complex associa..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2638-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JL1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_2638 (Q88JL1): BcsC, the Outer-Membrane Cellulose-Secreting Porin of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T15:51:26.858329</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2638-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2638-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_2638-q88jl1-bcsc-the-outer-membrane-cellulose-secreting-porin-of-pseudomonas-putida-kt2440">Functional Annotation of PP_2638 (Q88JL1): BcsC, the Outer-Membrane Cellulose-Secreting Porin of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_2638 (UniProt Q88JL1) encodes BcsC, the outer-membrane subunit of the bacterial cellulose secretion (Bcs) complex in <em>Pseudomonas putida</em> KT2440.</strong> The identity of this gene is unambiguous. The UniProt description ("Cellulose synthase operon C protein"), the ordered-locus name (PP_2638), the organism (<em>P. putida</em> KT2440), and the diagnostic domain architecture — a C-terminal BCSC_C β-barrel (Pfam PF05420) preceded by a periplasmic array of tetratricopeptide (TPR) repeats (Pfam PF13432/PF14559) and an N-terminal Sec signal peptide — all converge on the same conclusion. KEGG orthology assignment (K20543), COG0457, and Transporter Classification 1.B.55.3 independently corroborate that this protein is the <em>bcsC</em> gene product, orthologous to the extensively studied <em>Escherichia coli</em> BcsC. No conflicting gene-symbol ambiguity was encountered; the literature on "BcsC" refers to exactly this class of protein.</p>
+<p>BcsC is <strong>not a catalytic enzyme</strong>. It is a structural/secretory transport protein that forms the final, outer-membrane conduit of a trans-envelope molecular machine. Its C-terminal BCSC_C domain folds into a 16-stranded β-barrel that inserts into the outer membrane and forms a hydrophilic pore, while its long periplasmic TPR domain (up to ~19 repeats in the E. coli ortholog) reaches down toward the inner membrane, binds the nascent β-1,4-glucan (cellulose) chain, and guides it into the pore. The polymer itself is synthesized from UDP-glucose and translocated across the inner membrane by the catalytic glycosyltransferase BcsA together with the periplasmic BcsB subunit, in a reaction allosterically switched on by the second messenger cyclic di-GMP (c-di-GMP). BcsC therefore constitutes the outer-membrane terminus of a continuous synthesis-to-secretion pathway that deposits cellulose on the cell surface.</p>
+<p>Functionally, BcsC-mediated cellulose secretion contributes to the <strong>biofilm extracellular matrix</strong>. In <em>P. putida</em> KT2440 specifically, cellulose plays a supporting (rather than dominant) role in biofilm and pellicle formation, but it is important for <strong>rhizosphere colonization</strong> and for fitness under <strong>water-limiting (osmotic/matric) stress</strong>. Transcription of the <em>bcs</em> operon is embedded in the c-di-GMP/FleQ/FleN regulatory network that governs the switch between motile and sessile lifestyles. Confidence in this functional assignment is high: <em>P. putida</em> BcsC shares ~39% full-length sequence identity with the structurally characterized E. coli BcsC, well above the "twilight zone" where structure/function transfer becomes unreliable, and the two proteins share identical domain architecture and orthology assignments.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88JL1</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_2638</td>
+<td>UniProt / EMBL AAN68246.1</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>1,172 aa</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>N-terminus</td>
+<td>Sec signal peptide (<code>MQRMIGVLMLAAITCQADA...</code>)</td>
+<td>UniProt Keyword "Signal"</td>
+</tr>
+<tr>
+<td>Periplasmic domain</td>
+<td>TPR repeats: Pfam PF13432 (TPR_16 ×3), PF14559 (TPR_19); SUPFAM SSF48452 TPR-like</td>
+<td>UniProt/InterPro</td>
+</tr>
+<tr>
+<td>C-terminal domain</td>
+<td>BCSC_C β-barrel porin, ~aa 806–1152; Pfam PF05420; InterPro IPR008410</td>
+<td>UniProt/InterPro</td>
+</tr>
+<tr>
+<td>Keywords</td>
+<td>Cellulose biosynthesis; TPR repeat; Signal</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>KEGG Orthology</td>
+<td>K20543 (<em>bcsC</em>)</td>
+<td>KEGG</td>
+</tr>
+<tr>
+<td>Transporter Classification</td>
+<td>1.B.55.3 (β-barrel OM porin)</td>
+<td>TCDB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Identity is unambiguous.</strong> The gene symbol, organism, domain architecture (signal peptide + TPR + BCSC_C β-barrel), and the "cellulose synthase operon C protein" name all agree with the BcsC family. This is not a case of symbol ambiguity — the literature on BcsC refers to exactly this protein class.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pp_2638-is-bcsc-the-outer-membrane-cellulose-secreting-porin">F001 — PP_2638 is BcsC, the outer-membrane cellulose-secreting porin</h3>
+<p>The primary identity finding rests on the domain architecture encoded by Q88JL1, a 1,172-amino-acid protein. The sequence begins with a classic Sec-type signal peptide (<code>MQRMIGVLMLAAITCQADA...</code>; UniProt keyword "Signal"), directing the mature protein to the periplasm/outer membrane. The bulk of the periplasmic region is built from multiple tetratricopeptide repeats (Pfam PF13432 "TPR_16" ×3, PF14559 "TPR_19"; SUPFAM SSF48452 "TPR-like"), a helical protein–protein/protein–polymer interaction scaffold. The C-terminus carries a BCSC_C domain (Pfam PF05420, approximately residues 806–1152) that forms the outer-membrane β-barrel. UniProt keywords include "Cellulose biosynthesis," "TPR repeat," and "Signal."</p>
+<p>This architecture is precisely that of BcsC. The crystallographic study of the homologous BcsC outer-membrane channel by Acheson and colleagues established that the protein forms a <strong>16-stranded β-barrel pore</strong> in the outer membrane, extended into the periplasm by <strong>19 tetratricopeptide repeats</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/31604608/">PMID: 31604608</a>). The verbatim descriptions — "Translocation across the outer membrane occurs through the BcsC porin, which extends into the periplasm via 19 tetra-tricopeptide repeats (TPR)" and "revealing a 16-stranded, β barrel pore architecture" — map directly onto the BCSC_C + TPR + signal-peptide architecture of Q88JL1. The match in domain composition, order, and function leaves no ambiguity: PP_2638 is <em>bcsC</em>.</p>
+<h3 id="f002-bcsc-translocates-cellulose-across-the-outer-membrane-catalysis-is-performed-by-bcsabcsb">F002 — BcsC translocates cellulose across the outer membrane; catalysis is performed by BcsA–BcsB</h3>
+<p>A critical mechanistic distinction is that BcsC does not make cellulose. Polymer synthesis and inner-membrane translocation are the job of the catalytic BcsA glycosyltransferase in complex with the membrane-anchored periplasmic BcsB protein. The crystallographic work of Morgan et al. showed that "Cellulose synthesis and transport across the inner bacterial membrane is mediated by a complex of the membrane-integrated catalytic BcsA subunit and the membrane-anchored, periplasmic BcsB protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/23222542/">PMID: 23222542</a>). BcsA polymerizes UDP-glucose into a β-1,4-glucan and simultaneously extrudes it through its own transmembrane channel.</p>
+<p>This synthase is under second-messenger control. Morgan et al. subsequently demonstrated that "The bacterial signaling molecule cyclic di-GMP (c-di-GMP) stimulates the synthesis of bacterial cellulose" (<a href="https://pubmed.ncbi.nlm.nih.gov/24704788/">PMID: 24704788</a>) by binding the PilZ domain of BcsA and breaking a salt bridge that tethers a gating loop, thereby opening the catalytic site. BcsC is the downstream secretory endpoint of this regulated pathway.</p>
+<p>The physical hand-off from the inner-membrane machinery to BcsC has been visualized directly. Cryo-EM of the E. coli trans-envelope Bcs system by Verma et al. showed that "the semicircle's terminal BcsB subunit tethers the N-terminus of a single BcsC protein in a trans-envelope secretion system" (<a href="https://pubmed.ncbi.nlm.nih.gov/39242554/">PMID: 39242554</a>), and that "BcsC's TPR motifs bind a putative cello-oligosaccharide near the entrance to its OM pore." Together these establish BcsC as the outer-membrane terminus of a continuous conduit: the glucan emerges from BcsA at the inner membrane, is handed across the periplasm via BcsB and the BcsC TPR array, and finally exits through the BcsC β-barrel to the cell surface. The channel is lined with hydrophilic and aromatic residues, consistent with facilitated diffusion of the sugar polymer by aromatic stacking and hydrogen bonding rather than active, energy-coupled transport (<a href="https://pubmed.ncbi.nlm.nih.gov/31604608/">PMID: 31604608</a>).</p>
+<h3 id="f003-in-p-putida-kt2440-the-bcs-operon-contributes-to-biofilm-matrix-water-stress-fitness-and-rhizosphere-colonization-under-fleqflenc-di-gmp-control">F003 — In <em>P. putida</em> KT2440, the <em>bcs</em> operon contributes to biofilm matrix, water-stress fitness, and rhizosphere colonization under FleQ/FleN/c-di-GMP control</h3>
+<p>The physiological role of the <em>bcs</em> system in <em>P. putida</em> itself has been characterized experimentally. Nielsen and colleagues found that in this organism cellulose plays a supporting rather than dominant matrix role: "Bcs plays a minor role in biofilm formation and stability, although it does contribute to rhizosphere colonization based on a competition assay" (<a href="https://pubmed.ncbi.nlm.nih.gov/21507177/">PMID: 21507177</a>). The same study linked the system to environmental stress, reporting that "both forms of water stress highly induced bcs expression" — i.e., osmotic and matric (drying) stress strongly upregulate cellulose production, consistent with a role in desiccation tolerance and survival in the soil/rhizosphere niche.</p>
+<p>Transcriptional regulation of the operon is wired into the motile-to-sessile lifestyle switch. Navarrete et al. showed that "FleN, along with FleQ and the second messenger c-di-GMP differentially regulated transcription of lapA and the bcs operon, encoding a large adhesion protein and cellulose synthase" (<a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">PMID: 30889223</a>). In this circuit, the <em>bcsD</em> promoter is repressed by the FleQ/FleN master regulators, and that repression is relieved when intracellular c-di-GMP rises. Thus cellulose secretion via BcsC is switched on as the cell commits to a biofilm/sessile lifestyle — the same second messenger that allosterically activates the BcsA synthase (F002) also derepresses transcription of the operon, providing coherent multi-level control.</p>
+<h3 id="f004-pp_2638-is-bcsc-within-a-complete-contiguous-bcs-operon-orthologous-to-e-coli-bcsc-k20543-classified-as-an-outer-membrane-barrel-porin">F004 — PP_2638 is <em>bcsC</em> within a complete, contiguous <em>bcs</em> operon, orthologous to E. coli <em>bcsC</em> (K20543), classified as an outer-membrane β-barrel porin</h3>
+<p>Genomic-context analysis via KEGG places PP_2638 inside a contiguous bacterial cellulose secretion (<em>bcs</em>) gene cluster on the KT2440 chromosome (position ~3,019,463–3,022,981; 1,172 aa). The neighboring genes encode the full complement of a functional synthesis-plus-secretion machine:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene / assignment</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2631</td>
+<td><em>bcsF</em> / YhjT-like</td>
+<td>Accessory membrane subunit</td>
+</tr>
+<tr>
+<td>PP_2632</td>
+<td><em>bcsG</em>-like</td>
+<td>pEtN-transferase-like accessory</td>
+</tr>
+<tr>
+<td>PP_2634</td>
+<td>putative cellulose synthase</td>
+<td>Accessory / second synthase</td>
+</tr>
+<tr>
+<td>PP_2635</td>
+<td><em>bcsA</em></td>
+<td><strong>Catalytic glycosyltransferase / inner-membrane translocator</strong></td>
+</tr>
+<tr>
+<td>PP_2636</td>
+<td><em>bcsB</em></td>
+<td><strong>Periplasmic partner subunit</strong></td>
+</tr>
+<tr>
+<td>PP_2637</td>
+<td><em>bcsZ</em></td>
+<td>Endo-1,4-β-D-glucanase (periplasmic cellulase)</td>
+</tr>
+<tr>
+<td><strong>PP_2638</strong></td>
+<td><strong><em>bcsC</em></strong> (target)</td>
+<td><strong>Outer-membrane β-barrel porin (BcsC)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>PP_2638 is assigned KEGG Orthology <strong>K20543</strong> (<em>bcsC</em>, "cellulose synthase operon protein C"), directly orthologous to E. coli <em>bcsC</em> (b3530 / <em>yhjL</em>), COG0457 (TPR/Sel1-like repeats), and Transporter Classification <strong>1.B.55.3</strong> — i.e., TC class 1.B, the β-barrel outer-membrane porins. KEGG BRITE files PP_2638 under Transporters → Pores/ion channels. The presence of co-operonic <em>bcsA</em> (PP_2635) and <em>bcsB</em> (PP_2636) confirms that KT2440 possesses a complete, functional cellulose synthesis-and-secretion apparatus, of which BcsC is the outer-membrane exit component. The <em>bcsE/F/G</em>-like accessory genes indicate an enterobacterial-type (E. coli-like) Bcs system. This is decisive organism-specific evidence that PP_2638 is a genuine BcsC, complementing the homology-based structural inference.</p>
+<h3 id="f005-p-putida-bcsc-shares-39-full-length-identity-with-structurally-characterized-e-coli-bcsc-supporting-confident-functional-transfer">F005 — <em>P. putida</em> BcsC shares ~39% full-length identity with structurally characterized E. coli BcsC, supporting confident functional transfer</h3>
+<p>To quantify the reliability of transferring functional/structural knowledge from the E. coli ortholog, a global Needleman–Wunsch alignment (banded) was performed between Q88JL1 (1,172 aa) and E. coli K-12 BcsC (UniProt P37650, 1,157 aa). The alignment yielded <strong>463 identical positions over a 1,192-residue alignment = 38.8% identity</strong> (40.0% over the shorter sequence), spanning the full length of both proteins. Both share the same three-part architecture: N-terminal signal peptide, periplasmic TPR array, and C-terminal BCSC_C β-barrel.</p>
+<p>This level of identity is well above the ~20–25% "twilight zone" at which structural and functional conservation becomes uncertain, and is reinforced by shared KEGG Orthology (K20543), shared COG (COG0457), and identical domain architecture. E. coli BcsC is precisely the ortholog for which the outer-membrane β-barrel + periplasmic TPR crystal structure (<a href="https://pubmed.ncbi.nlm.nih.gov/31604608/">PMID: 31604608</a>) and cryo-EM structures of the trans-envelope secretion system (<a href="https://pubmed.ncbi.nlm.nih.gov/39242554/">PMID: 39242554</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/33563593/">PMID: 33563593</a>) were determined. The ~39% identity therefore provides a robust basis for transferring these structural and mechanistic insights to PP_2638, licensing confident functional transfer.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>BcsC (PP_2638) is best understood as the <strong>outer-membrane exit gate of a molecular "conveyor belt"</strong> that spans the entire Gram-negative cell envelope. The following schematic integrates the findings:</p>
+<div class="codehilite"><pre><span></span><code>     EXTRACELLULAR SPACE
+  (biofilm matrix / cell surface)
+            ▲
+            │  cellulose fiber deposited on surface
+╔═══════════════════╪═══════════════════╗
+║   OUTER MEMBRANE  │                   ║
+║        ┌──────────┴──────────┐        ║
+║        │  BcsC β-barrel pore  │  ◄── PP_2638 / Q88JL1
+║        │  (BCSC_C, 16-strand) │      C-terminal domain
+╚════════╪══════════════════════╪═══════╝
+ │  TPR repeats (≈19)   │  ◄── periplasmic TPR array
+ │  guide &amp; bind glucan │      binds cello-oligosaccharide
+   PERIPLASM     │          ▲           │
+ │          │ nascent β-1,4-glucan
+ │      ┌───┴────┐
+ │      │  BcsB  │  ◄── PP_2636 (periplasmic partner)
+╔════════╪══════╪════════╪══════╗
+║ INNER  │      │  BcsA  │      ║  ◄── PP_2635 (catalytic GT;
+║ MEMBRANE│     └───┬────┘      ║      c-di-GMP-activated)
+╚═════════════════╪═════════════╝
+          │  polymerizes UDP-glucose → β-1,4-glucan
+    CYTOPLASM
+          ▲
+    c-di-GMP binds BcsA PilZ domain → activates synthesis
+          │
+     FleQ / FleN / c-di-GMP transcriptional control of bcs operon
+</code></pre></div>
+
+<p><strong>Reaction and substrate specificity.</strong> BcsC itself catalyzes no chemical reaction; the catalytic step (processive β-1,4 glycosyl transfer from UDP-glucose) belongs to BcsA (PP_2635). BcsC's "substrate" is the pre-formed cellulose polymer, which it moves by facilitated diffusion — the channel and TPR groove present hydrophilic and aromatic surfaces that stack against and hydrogen-bond to the glucan, ratcheting it outward without an external energy source at the outer membrane. Specificity for the glucan is therefore built into the geometry of the TPR groove and pore, and BcsC's role is transport/translocation, not chemistry. In some enterobacteria the polymer is phosphoethanolamine (pEtN)-modified cellulose, but the pEtN modification is added by BcsG at the inner membrane, upstream of BcsC.</p>
+<p><strong>Localization.</strong> BcsC is delivered to the periplasm by its Sec signal peptide, inserts its C-terminal BCSC_C domain into the <strong>outer membrane</strong> as a β-barrel, and projects its TPR domain across the <strong>periplasm</strong> toward the inner-membrane synthase. Its N-terminus is tethered to the terminal BcsB subunit, physically bridging the two membranes. It carries out its function at the outer membrane / periplasmic interface, delivering cellulose to the <strong>extracellular</strong> cell surface.</p>
+<p><strong>Pathway context.</strong> BcsC is the terminal component of the c-di-GMP–dependent cellulose biosynthesis pathway. Rising intracellular c-di-GMP acts at two levels: (1) allosterically activating the BcsA synthase, and (2) derepressing <em>bcs</em> operon transcription via the FleQ/FleN circuit. The net output — surface cellulose — is a component of the biofilm extracellular matrix that promotes rhizosphere colonization and desiccation tolerance in <em>P. putida</em>.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Assignment for PP_2638 / BcsC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Molecular function</td>
+<td>Outer-membrane polysaccharide (cellulose) translocase / porin</td>
+</tr>
+<tr>
+<td>Enzymatic activity</td>
+<td>None (non-catalytic transport protein)</td>
+</tr>
+<tr>
+<td>Substrate handled</td>
+<td>Nascent β-1,4-glucan (cellulose) polymer</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Outer membrane (β-barrel) + periplasm (TPR array)</td>
+</tr>
+<tr>
+<td>Site of action</td>
+<td>Cell envelope → extracellular surface</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>c-di-GMP–dependent bacterial cellulose secretion (Bcs)</td>
+</tr>
+<tr>
+<td>Biological process</td>
+<td>Biofilm matrix formation; rhizosphere colonization; water-stress fitness</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>FleQ/FleN + c-di-GMP (transcriptional); c-di-GMP (post-translational, at BcsA)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31604608/">31604608</a></td>
+<td><em>Architecture of the Cellulose Synthase Outer Membrane Channel and Its Association with the Periplasmic TPR Domain</em></td>
+<td>Crystal structure defining BcsC as a 16-stranded β-barrel OM porin extended by 19 periplasmic TPR repeats — matches Q88JL1 domain architecture (F001, F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23222542/">23222542</a></td>
+<td><em>Crystallographic snapshot of cellulose synthesis and membrane translocation</em></td>
+<td>Assigns synthesis + inner-membrane translocation to BcsA/BcsB, distinguishing them from BcsC's OM role (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24704788/">24704788</a></td>
+<td><em>Mechanism of activation of bacterial cellulose synthase by cyclic di-GMP</em></td>
+<td>Establishes c-di-GMP as the activating second messenger acting at BcsA, upstream of BcsC secretion (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39242554/">39242554</a></td>
+<td><em>Insights into phosphoethanolamine cellulose synthesis and secretion...</em></td>
+<td>Cryo-EM showing BcsB tethers a single BcsC and BcsC TPRs bind a cello-oligosaccharide near the pore — direct evidence for the synthesis-to-secretion conduit (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21507177/">21507177</a></td>
+<td><em>Cell-cell and cell-surface interactions mediated by cellulose... in P. putida</em></td>
+<td>Experimental characterization in the target organism: Bcs supports biofilm, contributes to rhizosphere colonization, induced by water stress (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">30889223</a></td>
+<td><em>Transcriptional organization... of flhF and fleN in P. putida</em></td>
+<td>Defines the FleQ/FleN/c-di-GMP transcriptional circuit controlling the P. putida bcs operon (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33563593/">33563593</a></td>
+<td><em>Architecture and regulation of an enterobacterial cellulose secretion system</em></td>
+<td>Cryo-EM of the assembled Bcs macrocomplex; corroborates trans-envelope architecture and c-di-GMP regulation (F002, F005).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39394223/">39394223</a></td>
+<td><em>Structural basis for synthase activation and cellulose modification in the E. coli Type II Bcs secretion system</em></td>
+<td>Confirms BcsC as the outer-membrane porin of the BcsRQABEFG macrocomplex; supports orthology-based transfer (F005).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38688160/">38688160</a></td>
+<td><em>Bacterial synthase-dependent exopolysaccharide secretion: a focus on cellulose</em></td>
+<td>Authoritative review placing Bcs/BcsC in the broader context of synthase-dependent EPS secretion and biofilm formation.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Convergent bioinformatic evidence.</strong> Beyond the primary literature, four independent database classifications agree that PP_2638 is BcsC: UniProt (Q88JL1, "Cellulose synthase operon C protein"), KEGG Orthology (K20543, <em>bcsC</em>), COG (COG0457, TPR repeats), and the Transporter Classification Database (1.B.55.3, β-barrel OM porin). The ~39% full-length identity to the structurally solved E. coli ortholog (F005) elevates these annotations from database inference to structurally grounded confidence.</p>
+<p><strong>Confidence levels.</strong> The mechanistic and structural work (β-barrel architecture, TPR–glucan binding, BcsA/BcsB catalysis, c-di-GMP activation, trans-envelope hand-off) was performed on BcsC and Bcs orthologs from E. coli and <em>Rhodobacter</em> and is of <strong>high experimental confidence</strong>. The physiology and regulation of the <em>bcs</em> system in <em>P. putida</em> KT2440 itself is directly supported by organism-specific experimental studies (<a href="https://pubmed.ncbi.nlm.nih.gov/21507177/">PMID: 21507177</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">PMID: 30889223</a>). The molecular-level function of the specific Q88JL1 protein is inferred by strong sequence/domain homology (F005) rather than by direct structural determination of the P. putida protein.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- PP_2638 is BcsC, the outer-membrane cellulose secretion porin. ✔ (domain architecture + family homology + operon context)<br />
+- Its function is structural/secretory (channel + periplasmic scaffold), not enzymatic catalysis of glucan synthesis. ✔ (structure; division of labour with BcsA/BcsB)<br />
+- It acts at the outer membrane/periplasm and delivers cellulose to the extracellular matrix. ✔<br />
+- It participates in a c-di-GMP-regulated biofilm pathway in <em>P. putida</em>. ✔</p>
+<p><strong>Refuted / Not supported:</strong><br />
+- BcsC is the catalytic cellulose synthase. ✘ (catalysis is performed by BcsA)<br />
+- BcsC directly binds c-di-GMP. ✘ (regulation acts on the BcsA synthase and at the operon promoter)</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental study of PP_2638 in isolation.</strong> The functional assignment rests on (a) unambiguous sequence/domain homology to structurally characterized orthologs (E. coli BcsC) and (b) operon-level phenotypic studies of the P. putida <em>bcs</em> system as a whole (<a href="https://pubmed.ncbi.nlm.nih.gov/21507177/">PMID: 21507177</a>). There is no published structure, single-gene knockout phenotype, or in vitro transport assay for the KT2440 BcsC protein specifically. The ~39% identity, while strong, is not identity — subtle differences in pore dimensions, TPR-repeat count, or surface-decoration handling cannot be ruled out.</p>
+</li>
+<li>
+<p><strong>Bcs system subtype and cellulose chemistry.</strong> <em>P. putida</em> cellulose may or may not carry the same chemical decorations (e.g., phosphoethanolamine, pEtN) documented in E. coli. Several papers in the corpus concern pEtN-modified cellulose (<a href="https://pubmed.ncbi.nlm.nih.gov/39242554/">PMID: 39242554</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38645035/">PMID: 38645035</a>); whether KT2440 modifies its cellulose similarly, and how that affects BcsC-mediated secretion, is not established here.</p>
+</li>
+<li>
+<p><strong>Stoichiometry and dynamics in P. putida.</strong> Cryo-EM of the enterobacterial system shows a single BcsC tethered per macrocomplex with asymmetric assembly (<a href="https://pubmed.ncbi.nlm.nih.gov/33563593/">PMID: 33563593</a>), but the assembly stoichiometry, copy number, and regulation of BcsC in the P. putida envelope have not been measured.</p>
+</li>
+<li>
+<p><strong>Quantitative regulation at the single-gene level.</strong> While the FleQ/FleN/c-di-GMP circuit is established for the operon (<a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">PMID: 30889223</a>), the precise promoter architecture upstream of <em>bcsC</em> and whether it is co-transcribed with <em>bcsA/bcsB</em> or independently modulated was not resolved at the single-gene level in this investigation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Targeted deletion of PP_2638 in KT2440.</strong> Construct a clean, in-frame ΔbcsC (ΔPP_2638) mutant and assay: (i) surface cellulose using calcofluor/Congo red binding, (ii) pellicle and biofilm formation, (iii) rhizosphere/root colonization in competition assays, and (iv) survival under matric/osmotic water stress. Complementation should restore each phenotype. This would directly confirm that BcsC is required for secretion of the cellulose that mediates the F003 phenotypes.</p>
+</li>
+<li>
+<p><strong>AlphaFold / AlphaFold-Multimer model of P. putida BcsC.</strong> Generate a structural model of Q88JL1 and superpose it (via <code>phenix.superpose_pdbs</code>) onto the E. coli BcsC crystal structure to confirm the 16-stranded β-barrel and count the TPR repeats. This would test whether the P. putida ortholog has the same pore geometry and TPR-repeat number as the E. coli protein, quantifying the structural basis of the ~39% identity.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution / transport assay.</strong> Purify recombinant P. putida BcsC (following the Bcs-complex expression strategies reviewed in <a href="https://pubmed.ncbi.nlm.nih.gov/37930542/">PMID: 37930542</a>) and test binding to cello-oligosaccharides (e.g., by ITC or fluorescence) to verify that the TPR groove engages the glucan as seen for the E. coli ortholog.</p>
+</li>
+<li>
+<p><strong>Cellulose chemistry characterization.</strong> Determine whether KT2440 cellulose carries pEtN or other modifications (via NMR/mass spectrometry of purified matrix polysaccharide) to place the P. putida Bcs system within the Type I/Type II framework and clarify what exact polymer BcsC secretes.</p>
+</li>
+<li>
+<p><strong>Promoter / transcript mapping.</strong> Use RNA-seq or 5′-RACE across the PP_2631–PP_2638 cluster under low- vs. high-c-di-GMP and water-stress conditions to define the transcriptional units and confirm co-regulation of <em>bcsC</em> with the catalytic core, refining the F003/F004 regulatory model.</p>
+</li>
+</ol>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Acheson JF, Derewenda ZS, Zimmer J. <em>Architecture of the Cellulose Synthase Outer Membrane Channel and Its Association with the Periplasmic TPR Domain.</em> Structure, 2019. <a href="https://pubmed.ncbi.nlm.nih.gov/31604608/">PMID: 31604608</a></li>
+<li>Morgan JLW, Strumillo J, Zimmer J. <em>Crystallographic snapshot of cellulose synthesis and membrane translocation.</em> Nature, 2013. <a href="https://pubmed.ncbi.nlm.nih.gov/23222542/">PMID: 23222542</a></li>
+<li>Morgan JLW, McNamara JT, Zimmer J. <em>Mechanism of activation of bacterial cellulose synthase by cyclic di-GMP.</em> Nat Struct Mol Biol, 2014. <a href="https://pubmed.ncbi.nlm.nih.gov/24704788/">PMID: 24704788</a></li>
+<li>Verma et al. <em>Insights into phosphoethanolamine cellulose synthesis and secretion across the Gram-negative cell envelope.</em> 2024. <a href="https://pubmed.ncbi.nlm.nih.gov/39242554/">PMID: 39242554</a></li>
+<li>Abidi et al. <em>Architecture and regulation of an enterobacterial cellulose secretion system.</em> Nat Commun, 2021. <a href="https://pubmed.ncbi.nlm.nih.gov/33563593/">PMID: 33563593</a></li>
+<li>Anso et al. <em>Structural basis for synthase activation and cellulose modification in the E. coli Type II Bcs secretion system.</em> 2024. <a href="https://pubmed.ncbi.nlm.nih.gov/39394223/">PMID: 39394223</a></li>
+<li>Krasteva PV. <em>Bacterial synthase-dependent exopolysaccharide secretion: a focus on cellulose.</em> 2024. <a href="https://pubmed.ncbi.nlm.nih.gov/38688160/">PMID: 38688160</a></li>
+<li>Nielsen L, Li X, Halverson LJ. <em>Cell–cell and cell–surface interactions mediated by cellulose and a novel exopolysaccharide contribute to Pseudomonas putida biofilm formation and fitness under water-limiting conditions.</em> 2011. <a href="https://pubmed.ncbi.nlm.nih.gov/21507177/">PMID: 21507177</a></li>
+<li>Navarrete et al. <em>Transcriptional organization, regulation and functional analysis of flhF and fleN in Pseudomonas putida.</em> 2019. <a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">PMID: 30889223</a></li>
+</ul>
+<hr />
+<p><em>Prepared from a 3-iteration autonomous investigation. Five findings confirmed (F001–F005); 21 papers reviewed. All functional claims are grounded in cited primary literature or explicitly flagged as homology-based inference.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_2638-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_2638-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:31604608</li>
+<li>PMID:23222542</li>
+<li>PMID:24704788</li>
+<li>PMID:39242554</li>
+<li>PMID:21507177</li>
+<li>PMID:30889223</li>
+<li>PMID:33563593</li>
+<li>PMID:38645035</li>
+<li>PMID:37930542</li>
+<li>PMID:39394223</li>
+<li>PMID:38688160</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JL1
+gene_symbol: PP_2638
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: PP_2638 encodes a large BcsC-like cellulose synthase operon C protein assigned to the outer membrane and required for maximal bacterial cellulose synthesis.
+existing_annotations:
+- term:
+    id: GO:0019867
+    label: outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Outer membrane is the appropriate location for the BcsC-like PP_2638 cellulose synthase operon C protein.
+    action: ACCEPT
+    reason: GOA assigns the Gram-negative outer membrane term and UniProt describes PP_2638 as a cellulose synthase operon C protein, consistent with an export/support component.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2638/PP_2638-goa.tsv
+      supporting_text: &#34;GO:0019867\touter membrane&#34;
+    - reference_id: file:PSEPK/PP_2638/PP_2638-uniprot.txt
+      supporting_text: &#34;SubName: Full=Cellulose synthase operon C protein&#34;
+    - reference_id: PMID:31604608
+      supporting_text: &#34;pEtN-cellulose is secreted through the β-barrel porin BcsC&#34;
+- term:
+    id: GO:0030244
+    label: cellulose biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Cellulose biosynthetic process is the appropriate pathway annotation for PP_2638.
+    action: ACCEPT
+    reason: UniProt states that PP_2638 is required for maximal bacterial cellulose synthesis and places it in bacterial cellulose biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2638/PP_2638-uniprot.txt
+      supporting_text: &#34;FUNCTION: Required for maximal bacterial cellulose synthesis.&#34;
+    - reference_id: file:PSEPK/PP_2638/PP_2638-uniprot.txt
+      supporting_text: &#34;PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.&#34;
+    - reference_id: file:PSEPK/PP_2638/PP_2638-goa.tsv
+      supporting_text: &#34;GO:0030244\tcellulose biosynthetic process&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: file:PSEPK/PP_2638/PP_2638-uniprot.txt
+  title: UniProtKB entry for PP_2638
+  findings:
+  - statement: UniProt identifies PP_2638 as a cellulose synthase operon C protein required for maximal bacterial cellulose synthesis.
+- id: file:PSEPK/PP_2638/PP_2638-goa.tsv
+  title: QuickGO GOA annotations for PP_2638
+  findings:
+  - statement: The fetched GOA table contains the two annotations reviewed for PP_2638.
+- id: file:interpro/panther/PTHR12558/PTHR12558-metadata.yaml
+  title: PANTHER family metadata for PP_2638
+  findings:
+  - statement: PANTHER places PP_2638 in a broad repeat-containing family; the specific cellulose operon C role is supported by UniProt and InterPro domain context rather than a specific PANTHER family name.
+- id: PMID:31604608
+  title: Architecture of the Cellulose Synthase Outer Membrane Channel and Its Association
+    with the Periplasmic TPR Domain.
+  findings:
+  - statement: The BcsC structural paper defines the cellulose outer-membrane porin as a beta-barrel preceded by a long TPR domain.
+    supporting_text: &#34;The BcsC porin is a 1157 residues long protein containing two predicted domains: an N-terminal domain with 19 TPRs, and a C-terminal pore-forming β-barrel&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMC-cached primary structural paper supporting the BcsC outer-membrane/export role.
+- id: PMID:39242554
+  title: Insights into phosphoethanolamine cellulose synthesis and secretion across
+    the Gram-negative cell envelope.
+  findings:
+  - statement: Cryo-EM evidence shows how BcsB and BcsC form the trans-envelope cellulose secretion path.
+    supporting_text: &#34;BcsC interacts with the terminal BcsB subunit of the semicircle to establish an envelope-spanning complex.&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMC-cached primary structural paper supporting BcsB-BcsC handoff in the cellulose secretion complex.
+- id: PMID:21507177
+  title: Cell-cell and cell-surface interactions mediated by cellulose and a novel exopolysaccharide
+    contribute to Pseudomonas putida biofilm formation and fitness under water-limiting
+    conditions.
+  full_text_unavailable: true
+  findings:
+  - statement: P. putida-specific physiology links cellulose to biofilm formation, water-stress fitness, and rhizosphere colonization.
+    supporting_text: &#34;formation and stability, although it does contribute to rhizosphere colonization&#34;
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-cached abstract-only primary research; supports P. putida bcs pathway physiology rather than PP_2638 molecular mechanism directly.
+- id: file:PSEPK/PP_2638/PP_2638-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_2638
+  findings:
+  - statement: OpenScientist identifies PP_2638/Q88JL1 as the BcsC outer-membrane cellulose secretion porin by domain architecture, operon context, and full-length similarity to characterized BcsC orthologs.
+    supporting_text: &#34;PP_2638 is BcsC, the outer-membrane cellulose secretion porin.&#34;
+core_functions:
+- description: Outer-membrane cellulose synthase operon C export/support role required for maximal bacterial cellulose synthesis.
+  directly_involved_in:
+  - id: GO:0030244
+    label: cellulose biosynthetic process
+  locations:
+  - id: GO:0019867
+    label: outer membrane
+  supported_by:
+  - reference_id: file:PSEPK/PP_2638/PP_2638-uniprot.txt
+    supporting_text: &#34;FUNCTION: Required for maximal bacterial cellulose synthesis.&#34;
+  - reference_id: file:PSEPK/PP_2638/PP_2638-uniprot.txt
+    supporting_text: &#34;PATHWAY: Glycan metabolism; bacterial cellulose biosynthesis.&#34;
+  - reference_id: file:PSEPK/PP_2638/PP_2638-goa.tsv
+    supporting_text: &#34;GO:0019867\touter membrane&#34;
+  - reference_id: PMID:31604608
+    supporting_text: &#34;pEtN-cellulose is secreted through the β-barrel porin BcsC&#34;
+  - reference_id: file:PSEPK/PP_2638/PP_2638-deep-research-openscientist.md
+    supporting_text: &#34;PP_2638 is BcsC, the outer-membrane cellulose secretion porin.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: What is the exact molecular role of PP_2638 in KT2440 cellulose export, pore formation, or synthase-complex assembly?
+- question: Should PP_2638 be curated under a broader BcsC/export-support term if GO has or needs a more specific molecular-function representation?
+suggested_experiments:
+- description: Compare cellulose production, cell-surface cellulose retention, and extracellular cellulose export in wild-type and PP_2638 deletion strains.
+  experiment_type: targeted genetics and cellulose localization assay
+- description: Determine PP_2638 localization and complex association with BcsA/BcsB using fractionation and co-immunoprecipitation or proximity tagging.
+  experiment_type: localization and protein-complex assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

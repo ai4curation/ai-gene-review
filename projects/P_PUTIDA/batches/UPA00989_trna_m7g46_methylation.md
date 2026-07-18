@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 # PSEPK UPA00989: tRNA m7G46 methylation
 
-- Module seed: `trna_m7g46_methylation`
+- Pathway seed: `trna_m7g46_methylation` (single-step; no standalone module retained)
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -17,13 +17,13 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [x] Curate or update the species-neutral module.
-- [x] Run module-level OpenScientist deep research.
+- [x] Assess module granularity and record the single-step pathway curation.
+- [x] Run generic OpenScientist retrieval for the pathway seed.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run Asta deep research for selected genes.
 - [x] Curate each selected gene review.
-- [x] Validate module and gene reviews.
+- [x] Validate gene review; standalone module retired/deferred.
 - [x] Open one PR for this module/pathway: [PR #2052](https://github.com/ai4curation/ai-gene-review/pull/2052).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -39,8 +39,10 @@ Generated UTC: 2026-07-10T01:06:56.581466+00:00
 
 - Fetched, Asta-backed, curated, and validated the single UniPathway member:
   `trmB` / PP_5103 / Q88CS7.
-- Created and validated `modules/trna_m7g46_methylation.yaml` as a compact
-  single-reaction UPA00989 module.
+- Retired the previous `modules/trna_m7g46_methylation.yaml` seed: UPA00989 is
+  a single TrmB methylation step and should not be represented as a standalone
+  one-part module. Reintroduce it only inside a broader multi-part tRNA
+  modification module.
 - `trmB` accepts the specific GO:0008176 tRNA
   (guanine(46)-N7)-methyltransferase activity and the GO:0106004 tRNA
   (guanine-N7)-methylation process.
@@ -50,7 +52,7 @@ Generated UTC: 2026-07-10T01:06:56.581466+00:00
 - Falcon/Edison generic and taxon-aware runs were attempted earlier and failed
   before report creation with Edison HTTP 402 Payment Required, so the batch was
   re-run with OpenScientist.
-- OpenScientist generic module research completed:
+- OpenScientist generic retrieval completed:
   `modules/trna_m7g46_methylation-deep-research-openscientist.md`.
 - OpenScientist PSEPK module+pathway research completed and resolved the
   expected local UniPathway candidate set: one candidate, `trmB` / PP_5103 /

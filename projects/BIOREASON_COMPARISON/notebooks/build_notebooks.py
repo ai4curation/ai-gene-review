@@ -30,9 +30,12 @@ nb1 = new_notebook(cells=[
 
 This notebook recomputes, **from the committed per-gene review files**, the
 narrative-evaluation numbers quoted in `projects/BIOREASON_COMPARISON.md` and the
-manuscript:
+manuscript. ARGO139 is the collected RL cohort; policy exclusions are removed from
+the model-performance denominator and retained in the quality audit:
 
-- overall mean **Correctness** and **Completeness** (RL: 3.7 / 2.9; SFT: 2.9 / 2.7)
+- overall mean **Correctness** and **Completeness**
+- Pearson and Spearman association between the independently defined axes
+- input-quality and local-reference-status strata
 - **Table 1** — score distribution
 - **Table 2** — per-organism means
 - top performers (5/5 correctness) and critical failures (1/5)
@@ -56,9 +59,14 @@ import bioreason_stats as bs
 ROOT = bs.find_repo_root()
 print("repo root:", ROOT)
 
+all_rl = bs.parse_narrative_reviews("rl", ROOT, include_excluded=True)
 rl = bs.parse_narrative_reviews("rl", ROOT)
 sft = bs.parse_narrative_reviews("sft", ROOT)
-print(f"RL  reviews parsed: {len(rl)}  (skipped: {len(rl.attrs['skipped'])})")
+print(f"RL collected reviews parsed: {len(all_rl)}")
+print(f"RL performance reviews:      {len(rl)}")
+print(f"RL policy exclusions:        {len(rl.attrs['excluded'])}")
+for row in rl.attrs["excluded"]:
+    print(f"  excluded: {row['species']}/{row['gene']} ({row['exclusion_reason']})")
 print(f"SFT reviews parsed: {len(sft)} (skipped: {len(sft.attrs['skipped'])})")
 if sft.attrs["skipped"]:
     print("  skipped SFT files (no parseable score line):")
@@ -66,7 +74,7 @@ if sft.attrs["skipped"]:
         print("   ", p)
 rl.head()
 """),
-    md("## Overall means\n\nCompare the computed means against the values quoted in the manuscript."),
+md("## Overall means and axis association\n\nAll values are computed on the policy-defined performance denominator."),
     code(r"""
 def summarise(df, label):
     return dict(
@@ -78,10 +86,28 @@ def summarise(df, label):
 
 overall = pd.DataFrame([summarise(rl, "RL"), summarise(sft, "SFT")])
 print(overall.to_string(index=False))
-print("\nManuscript values -> RL: correctness 3.7, completeness 2.9 | "
-      "SFT: correctness 2.9, completeness 2.7")
+print("\nRL axis association:")
+print(f"  Pearson:  {rl.correctness.corr(rl.completeness, method='pearson'):.3f}")
+print(f"  Spearman: {rl.correctness.rank().corr(rl.completeness.rank()):.3f}")
 """),
-    md("## Table 1 — score distribution (RL, 139 genes)"),
+    md("## Input and reference quality strata"),
+    code(r"""
+print("Input quality in the collected cohort:")
+print(all_rl.input_quality.value_counts().to_string())
+print("\nLocal AIGR reference status:")
+print(all_rl.reference_status.value_counts().to_string())
+
+strata = (
+    rl.groupby("input_quality")
+      .agg(n=("gene", "size"),
+           correctness=("correctness", "mean"),
+           completeness=("completeness", "mean"))
+      .round(2)
+)
+print("\nPerformance scores by input-quality stratum:")
+print(strata.to_string())
+"""),
+    md("## Table 1 — RL score distribution (policy-defined performance set)"),
     code(r"""
 def distribution(df):
     out = pd.DataFrame(index=[5, 4, 3, 2, 1])
@@ -95,7 +121,7 @@ def distribution(df):
 dist = distribution(rl)
 print(dist.to_string())
 """),
-    md("## Table 2 — per-organism means\n\nSorted by mean correctness, descending. `n` is the number of reviewed genes per clade."),
+    md("## Table 2 — per-organism means\n\nSorted by mean correctness, descending. These are descriptive selected-case summaries, not estimates of organism-level performance; case mix and input quality are confounders."),
     code(r"""
 per_org = (
     rl.groupby("species")
@@ -107,7 +133,7 @@ per_org = (
 )
 print(per_org.to_string())
 """),
-    md("### Figure: per-organism correctness & completeness\n\nRegenerated from the parsed scores and written next to this notebook. It should match the committed `article/figures/per_organism_scores.png`."),
+    md("### Figure: descriptive per-organism correctness & completeness\n\nRegenerated from the parsed scores and written next to this notebook. It should match the committed `article/figures/per_organism_scores.png`."),
     code(r"""
 fig_df = per_org[per_org.n >= 3]  # mirror the manuscript figure (multi-gene clades)
 x = range(len(fig_df))
@@ -122,12 +148,15 @@ for i, (sp, row) in zip(x, fig_df.iterrows()):
             ha="center", va="bottom", fontsize=8, color="#555")
 ax.set_xticks(list(x)); ax.set_xticklabels(fig_df.index, rotation=30, ha="right")
 ax.set_ylim(0, 5.2); ax.set_ylabel("Mean score (1-5)")
-ax.set_title("BioReason-Pro RL: per-organism narrative scores (clades with n>=3)")
+ax.set_title("BioReason-Pro RL: selected-case scores by organism (clades with n>=3)")
 ax.legend(loc="upper right")
 fig.tight_layout()
 outdir = Path("figures"); outdir.mkdir(exist_ok=True)
 fig.savefig(outdir / "per_organism_scores.repro.png", dpi=120)
+paper_outdir = Path("../article/figures"); paper_outdir.mkdir(parents=True, exist_ok=True)
+fig.savefig(paper_outdir / "per_organism_scores.png", dpi=180)
 print("saved", outdir / "per_organism_scores.repro.png")
+print("saved", paper_outdir / "per_organism_scores.png")
 plt.show()
 """),
     md("## Top performers and critical failures"),

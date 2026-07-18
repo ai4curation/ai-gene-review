@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sdhB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sdhB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FA8" target="_blank" class="term-link">
+                        Q88FA8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sdhB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FA8" data-a="DESCRIPTION: Iron-sulfur subunit of the membrane-bound succinat..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Iron-sulfur subunit of the membrane-bound succinate dehydrogenase/respiratory Complex II enzyme in Pseudomonas putida KT2440. SdhB transfers electrons from the SdhA flavoprotein catalytic subunit through iron-sulfur clusters toward the membrane anchor/quinone site, contributing to quinone-linked succinate oxidation. This places SdhB at the interface between the tricarboxylic acid cycle and the aerobic respiratory electron transport chain.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0006099" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process annotation for the succinate-to-fumarate step of the TCA cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SdhB is part of the succinate dehydrogenase complex that oxidizes succinate to fumarate in the TCA cycle. UniProt places Q88FA8 in the bacterial route from succinate to fumarate, and the PSEPK pathway report identifies the complete sdhCDAB operon as covering step 6.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">fumarate from succinate (bacterial route): step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008177" target="_blank" class="term-link">
+                                    GO:0008177
+                                </a>
+                            </span>
+                            <span class="term-label">succinate dehydrogenase (quinone) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0008177" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct holoenzyme activity that SdhB contributes to as the iron-sulfur electron-transfer subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The complete SdhABCD complex catalyzes quinone-linked succinate oxidation, and UniProt lists EC 1.3.5.1 with the reaction a quinone + succinate = fumarate + a quinol. SdhB contributes electron transfer within this complex rather than carrying the flavin active site independently.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a quinone + succinate = fumarate + a quinol;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0009055" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and subunit-relevant function for the SdhB iron-sulfur protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SdhB is the iron-sulfur relay between the SdhA flavoprotein site and the membrane quinone-reduction site, so electron transfer is a meaningful subunit-level function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0009060" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct respiratory-process context for forward succinate dehydrogenase/Complex II.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt distinguishes aerobic succinate dehydrogenase from anaerobic fumarate reductase. SdhB is annotated as the succinate dehydrogenase iron-sulfur subunit and participates in aerobic respiratory electron transfer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the succinate dehydrogenase is used in aerobic growth</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad parent of the specific succinate dehydrogenase/electron-transfer role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The SdhB-containing complex is an oxidoreductase, but GO:0008177 and GO:0009055 better capture the specific complex-level and subunit-level functions.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022904" target="_blank" class="term-link">
+                                    GO:0022904
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory electron transport chain</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0022904" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process annotation because Complex II feeds electrons from succinate into the quinone pool.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SdhB is an electron-transfer subunit of respiratory Complex II. The complex bridges TCA-cycle succinate oxidation to the respiratory electron transport chain.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA8" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor-binding annotation for the succinate dehydrogenase iron-sulfur subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates [2Fe-2S], [3Fe-4S], and [4Fe-4S] cofactors for Q88FA8. Iron-sulfur cluster binding is intrinsic to SdhB electron transfer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=[2Fe-2S] cluster; Xref=ChEBI:CHEBI:190135;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Iron-sulfur electron-transfer subunit of succinate dehydrogenase/Complex II, relaying electrons from succinate oxidation through Fe-S clusters toward quinone reduction by the SdhABCD complex.</h3>
+                <span class="vote-buttons" data-g="Q88FA8" data-a="FUNCTION: Iron-sulfur electron-transfer subunit of succinate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                            electron transfer activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022904" target="_blank" class="term-link">
+                                respiratory electron transport chain
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=a quinone + succinate = fumarate + a quinol;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=[2Fe-2S] cluster; Xref=ChEBI:CHEBI:190135;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/sdhB/sdhB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88FA8 for Pseudomonas putida KT2440 sdhB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates sdhB as the iron-sulfur subunit of succinate dehydrogenase with quinone-linked succinate oxidation.</div>
+
+                        <div class="finding-text">"Reaction=a quinone + succinate = fumarate + a quinol;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places sdhB in the TCA-cycle succinate-to-fumarate step.</div>
+
+                        <div class="finding-text">"fumarate from succinate (bacterial route): step 1/1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates iron-sulfur cofactors for sdhB.</div>
+
+                        <div class="finding-text">"Name=[2Fe-2S] cluster; Xref=ChEBI:CHEBI:190135;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report identifies sdhCDAB as the complete Complex II operon for TCA-cycle succinate oxidation.</div>
+
+                        <div class="finding-text">"The complete four-subunit operon: cytochrome b556 (*sdhC*, K00241), membrane anchor (*sdhD*, K00242), flavoprotein (*sdhA*, K00239), and iron-sulfur subunit (*sdhB*, K00240) (Finding F005)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the quinone specificity and electron-transfer kinetics of the P. putida KT2440 SdhABCD complex?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FA8" data-a="Q: What are the quinone specificity and electron-tran..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify SdhABCD and assay succinate-dependent reduction of physiological and analog quinones, while mutating conserved SdhB Fe-S ligands to confirm the electron-transfer path.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FA8" data-a="EXPERIMENT: Purify SdhABCD and assay succinate-dependent reduc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sdhB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FA8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **sdhB** (PP_4190, UniProt Q88FA8) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T19:04:50.767780</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sdhB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="sdhB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-sdhb-pp_4190-uniprot-q88fa8-in-pseudomonas-putida-kt2440">Functional Annotation Report: <strong>sdhB</strong> (PP_4190, UniProt Q88FA8) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88FA8</td>
+</tr>
+<tr>
+<td>Gene name</td>
+<td><em>sdhB</em> (ordered locus PP_4190)</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Succinate dehydrogenase iron-sulfur subunit</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>1.3.5.1 (succinate:quinone oxidoreductase)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Succinate dehydrogenase / fumarate reductase, iron-sulfur (B) subunit</td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td>2Fe-2S ferredoxin-like (IPR036010); 4Fe-4S Fe-S binding (IPR017896); 4Fe-4S ferredoxin CS (IPR017900); β-grasp (IPR012675); helical ferredoxin (IPR009051)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Identity confirmed.</strong> The gene symbol <em>sdhB</em>, the "succinate dehydrogenase iron-sulfur subunit" description, the EC 1.3.5.1 assignment, and the diagnostic 2Fe-2S + 4Fe-4S iron-sulfur domain architecture are all mutually consistent and match the highly conserved SdhB/FrdB (subunit B) family. This is an unambiguous, well-characterized protein family. Because no <em>P. putida</em>-specific biochemical study of SdhB exists in the searched literature, function is established here from (i) UniProt/InterPro annotation and (ii) primary crystallographic and biochemical studies of the closely homologous bacterial complexes (<em>E. coli</em> SQR and QFR, <em>Wolinella succinogenes</em> QFR), whose subunit B is structurally and mechanistically equivalent.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>SdhB is the <strong>iron-sulfur subunit of succinate:quinone oxidoreductase (respiratory Complex II / succinate dehydrogenase, EC 1.3.5.1)</strong>. Together with the flavoprotein subunit SdhA it forms the soluble catalytic head of the complex, which is peripherally attached to the <strong>cytoplasmic (inner/matrix) face of the bacterial inner membrane</strong> via the integral membrane cytochrome subunit(s) SdhC(/SdhD). SdhB's specific molecular role is <strong>electron conduction</strong>: it carries a linear chain of three iron-sulfur clusters ([2Fe-2S], [4Fe-4S], [3Fe-4S]) that wires electrons, one at a time, from the FAD/succinate-oxidation site in SdhA to the membrane quinone-reduction site, thereby coupling <strong>succinate → fumarate oxidation (a TCA-cycle step) to quinone → quinol reduction (feeding the aerobic respiratory chain)</strong>.</p>
+<hr />
+<h2 id="2-primary-function-the-catalyzed-reaction-and-substrate-specificity">2. Primary Function: the Catalyzed Reaction and Substrate Specificity</h2>
+<p>The holoenzyme catalyzes the reversible reaction (EC 1.3.5.1):</p>
+<blockquote>
+<p><strong>succinate + quinone ⇌ fumarate + quinol</strong></p>
+</blockquote>
+<p>Membrane-bound succinate:quinone reductases (SQR, Complex II) and the related quinol:fumarate reductases (QFR) "couple the oxidation of succinate to fumarate to the reduction of quinone to quinol and also catalyse the reverse reaction" [Lancaster &amp; Kröger 2000, PMID 11004459]. The two enzyme classes "are collectively referred to as succinate:quinone oxidoreductases (EC 1.3.5.1), have very similar compositions and are predicted to share similar structures" [PMID 11004459].</p>
+<p><strong>Substrate specificity / division of labor within the complex:</strong><br />
+- The <strong>dicarboxylate substrate (succinate/fumarate)</strong> is bound and oxidized/reduced at the covalently bound <strong>FAD in subunit A (SdhA)</strong>, not in SdhB. "Subunit A contains the site of fumarate reduction and a covalently bound flavin adenine dinucleotide prosthetic group. Subunit B contains three iron-sulphur centres" [Lancaster et al. 1999, <em>Nature</em>, PMID 10586875].<br />
+- <strong>SdhB's "substrate" is the electron itself.</strong> It provides the physical conduit of three Fe-S clusters that transfer electrons from FAD to the quinone. In the intact complex "the cofactors are arranged in a nearly linear manner from the membrane-bound quinone to the active site flavin" [Iverson et al. 1999, <em>Science</em>, PMID 10373108].<br />
+- The distal end of SdhB, together with the membrane anchor, forms part of the <strong>quinone-binding site</strong>. In <em>E. coli</em> SQR the residue SdhB(G227) lies at the entrance of the water channel/quinone pocket [Cheng et al. 2008, PMID 18690748], and quinone binding is mediated by hydrogen bonding to a conserved tyrosine at the interface [Horsefield et al. 2006, PMID 16407191].</p>
+<p>Thus SdhB does not itself possess dicarboxylate substrate specificity; its molecular specificity is for <strong>single-electron transfer</strong> along a defined redox gradient toward ubiquinone (the physiological acceptor in aerobic <em>P. putida</em>).</p>
+<hr />
+<h2 id="3-cofactor-content-and-electron-transfer-mechanism">3. Cofactor Content and Electron-Transfer Mechanism</h2>
+<p>SdhB harbors <strong>three iron-sulfur centres</strong>, the defining feature of the B subunit [PMID 11004459; PMID 10586875]:<br />
+1. A <strong>[2Fe-2S]</strong> cluster (2Fe-2S ferredoxin-like domain, IPR036010) — proximal, adjacent to the FAD of SdhA.<br />
+2. A <strong>[4Fe-4S]</strong> cluster (4Fe-4S Fe-S binding domain, IPR017896/IPR017900) — central.<br />
+3. A <strong>[3Fe-4S]</strong> cluster — distal, near the quinone-binding site at the membrane interface.</p>
+<p>These clusters form a nearly linear relay spanning ~40 Å, enabling sequential electron hops from FAD to quinone [PMID 10373108]. Crucially, the redox potentials of this arrangement are tuned to <strong>minimize electron leakage</strong>: Yankovskaya et al. determined the <em>E. coli</em> SQR structure and found "the SQR redox centers are arranged in a manner that aids the prevention of reactive oxygen species (ROS) formation at the flavin adenine dinucleotide. This is likely to be the main reason SQR is expressed during aerobic respiration rather than the related enzyme fumarate reductase, which produces high levels of ROS" [Yankovskaya et al. 2003, <em>Science</em>, PMID 12560550]. The eukaryotic SDHB subunit likewise "is required for succinate oxidation" and is the subunit critical in driving/controlling mitochondrial ROS generation [Sun et al. 2020, PMID 32371258], underscoring the conserved role of this Fe-S wire.</p>
+<p><strong>Biogenesis note:</strong> correct incorporation of Fe-S clusters into the B subunit is essential for a functional, stable protein. In the human ortholog, dedicated assembly factors deliver Fe-S clusters to SDHB, and failure "impairs biogenesis of holo-SDHB and results in ... degradation of SDHB" [Maio et al. 2016, PMID 26749241]. While <em>P. putida</em> uses bacterial ISC/SUF Fe-S machinery rather than the mitochondrial factors, the principle that SdhB requires post-translational Fe-S cluster loading to be active is general.</p>
+<hr />
+<h2 id="3a-direct-sequence-level-evidence-for-the-kt2440-protein">3a. Direct Sequence-Level Evidence for the KT2440 Protein</h2>
+<p>To move beyond database annotation, the KT2440 SdhB sequence (Q88FA8, 234 aa) was retrieved and aligned to the crystallographically-characterized <em>E. coli</em> SdhB (P07014, 238 aa):</p>
+<ul>
+<li><strong>73.1% amino-acid identity</strong> (Needleman–Wunsch global alignment; 69% over the 248-residue alignment) — far above the ~30% threshold for confident functional orthology.</li>
+<li><strong>All 11 iron-sulfur cluster cysteine ligands are strictly conserved and in identical order:</strong> P. putida Cys 53, 58, 73, 145, 148, 150, 151, 155, 202, 208, 212 correspond one-to-one to E. coli Cys 55, 60, 75, 149, 152, 154, 155, 159, 206, 212, 216.</li>
+<li>The <strong>N-terminal [2Fe-2S] ferredoxin motif</strong> (<code>CREGVCGSDG…NMNGKNGLACIT</code>) is <strong>identical</strong> between the two species.</li>
+<li>The <strong>C-terminal bacterial di-ferredoxin motif</strong> that ligates the [4Fe-4S] and [3Fe-4S] clusters and lies adjacent to the quinone site (<code>YECILCACCSTSCPSF</code>) is <strong>identical</strong>, and the second motif (<code>RC..IMNC..VCPKG</code>) is nearly identical.</li>
+</ul>
+<p>This constitutes direct, protein-specific evidence (not merely transferred annotation) that KT2440 SdhB has the same three-cluster ligation scheme and therefore the same electron-relay mechanism as the structurally-defined <em>E. coli</em> Complex II subunit. Consistent with the SDHB subfamily, the sequence contains <strong>no signal peptide or transmembrane segment</strong>, confirming it is a soluble/peripheral subunit.</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>SdhB is a <strong>peripheral (extrinsic) membrane protein on the cytoplasmic face of the <em>P. putida</em> inner (cytoplasmic) membrane</strong>. It is not itself membrane-integral (it has no signal peptide or transmembrane helix; the SDHB subfamily is "without a signal peptide" [PMID 32371258]) but is held at the membrane through:<br />
+- its tight association with SdhA (forming the soluble catalytic dimer), and<br />
+- the docking of that dimer onto the integral membrane subunit(s) SdhC(/SdhD), which contain the transmembrane helices and heme b and constitute the quinone-binding, membrane-embedded module [PMID 11004459; PMID 12560550].</p>
+<p>The overall complex therefore places the succinate-oxidation and Fe-S electron-relay chemistry in the cytoplasm, immediately adjacent to the membrane quinone pool—consistent with its electroneutral operation in which "the quinone reduction reaction must consume cytoplasmic protons which are released stoichiometrically during succinate oxidation" [Cheng et al. 2008, PMID 18690748].</p>
+<hr />
+<h2 id="4a-genomic-context-the-sdhcdab-operon-kt2440-specific-evidence">4a. Genomic Context: the sdhCDAB Operon (KT2440-specific evidence)</h2>
+<p>KEGG genome annotation of <em>P. putida</em> KT2440 shows that PP_4190 (<em>sdhB</em>) sits in a contiguous, same-strand (complement) gene block encoding the <strong>complete Complex II</strong> plus the adjacent 2-oxoglutarate dehydrogenase genes:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Product</th>
+<th>Complex II role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4193</td>
+<td>SDH cytochrome b-556 subunit</td>
+<td><strong>SdhC</strong> (membrane anchor, heme <em>b</em>, quinone site)</td>
+</tr>
+<tr>
+<td>PP_4192</td>
+<td>SDH hydrophobic membrane anchor</td>
+<td><strong>SdhD</strong> (membrane anchor, quinone site)</td>
+</tr>
+<tr>
+<td>PP_4191</td>
+<td>SDH flavoprotein subunit</td>
+<td><strong>SdhA</strong> (FAD, succinate oxidation)</td>
+</tr>
+<tr>
+<td><strong>PP_4190</strong></td>
+<td><strong>SDH iron-sulfur subunit</strong></td>
+<td><strong>SdhB (this protein), 4735881–4736585 (705 bp = 234 aa)</strong></td>
+</tr>
+<tr>
+<td>PP_4189</td>
+<td>2-oxoglutarate decarboxylase E1</td>
+<td>SucA (2-OG dehydrogenase)</td>
+</tr>
+<tr>
+<td>PP_4188</td>
+<td>dihydrolipoyltranssuccinylase E2</td>
+<td>SucB</td>
+</tr>
+<tr>
+<td>PP_4187</td>
+<td>dihydrolipoyl dehydrogenase E3</td>
+<td>Lpd</td>
+</tr>
+</tbody>
+</table>
+<p>Key implications:<br />
+- <strong>All four Complex II subunits are encoded</strong> (membrane cytochrome-<em>b</em>/quinone module SdhC+SdhD and the soluble catalytic SdhA+SdhB dimer) → KT2440 possesses an intact, membrane-bound succinate:ubiquinone oxidoreductase.<br />
+- Gene order <strong>sdhC–sdhD–sdhA–sdhB</strong> is the canonical <em>sdhCDAB</em> arrangement conserved with <em>E. coli</em>; <strong>SdhA immediately precedes SdhB</strong>, consistent with their assembly into the FAD-flavoprotein/iron-sulfur catalytic dimer.<br />
+- The tight genomic linkage of <em>sdhCDAB</em> to the <strong>2-oxoglutarate dehydrogenase complex (sucAB) and shared E3 (lpd)</strong> mirrors the classic bacterial TCA-cycle operon and implies co-regulation of two sequential citric-acid-cycle steps, firmly placing SdhB's succinate-oxidation activity within the citric acid cycle in vivo.</p>
+<h2 id="5-biochemical-pathways-and-physiological-role">5. Biochemical Pathways and Physiological Role</h2>
+<p>SdhB sits at the <strong>junction of two pathways</strong>:</p>
+<ol>
+<li>
+<p><strong>Tricarboxylic acid (TCA / citric acid) cycle</strong> — the SdhA·SdhB catalytic head performs the succinate → fumarate oxidation step of the cycle. In <em>P. putida</em> KT2440 the citric acid cycle is a core, tightly regulated component of central carbon metabolism [Sudarsan et al. 2014, PMID 24951791]. <em>P. putida</em> is a metabolically versatile obligate aerobe that channels carbon (from sugars via the Entner–Doudoroff route, and from many aromatic/organic-acid substrates) into the TCA cycle, making succinate dehydrogenase an important node of central metabolic flux.</p>
+</li>
+<li>
+<p><strong>Aerobic respiratory electron-transport chain</strong> — the electrons removed from succinate are passed by SdhB's Fe-S chain into the <strong>membrane ubiquinone pool</strong>, which then feeds downstream respiratory complexes (cytochrome bc1 / terminal oxidases) to reduce O₂ and generate proton-motive force. Complex II is thus the physical, non-proton-pumping link that couples the TCA cycle directly to aerobic respiration [PMID 12560550; PMID 11004459].</p>
+</li>
+</ol>
+<p>By carrying out succinate oxidation while its redox centers are poised to avoid ROS production, SdhB (as part of SQR) is specifically adapted to <em>P. putida</em>'s <strong>aerobic lifestyle</strong>, in contrast to the ROS-prone fumarate reductase used in anaerobic respiration [PMID 12560550].</p>
+<p><strong>KEGG pathway-level confirmation (KT2440-specific).</strong> KEGG assigns PP_4190 to orthology <strong>K00240</strong> ("succinate dehydrogenase iron-sulfur subunit [EC:1.3.5.1]"; EC 1.3.5.1 = oxidoreductase acting on the CH–CH group of donors with a quinone as acceptor). Critically, sdhB is listed <strong>simultaneously in the Citrate cycle map (ppu00020) and the Oxidative phosphorylation map (ppu00190)</strong> — the formal database statement of its dual role as the single reaction shared by the TCA cycle and the respiratory chain. It belongs to module <strong>M00149 "Succinate dehydrogenase, prokaryotes" (SdhABCD)</strong> and to TCA modules M00009 and M00011 (2-oxoglutarate ⇒ oxaloacetate). Additional membership in the butanoate (ppu00650) and methylcitrate-cycle (M00982) maps reflects that succinate–fumarate interconversion also connects to propionate/short-chain-carbon metabolism in the metabolically versatile <em>P. putida</em>.</p>
+<hr />
+<h2 id="6-supported-vs-refuted-hypotheses">6. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- H1: SdhB is the iron-sulfur (B) subunit of Complex II (SQR), part of EC 1.3.5.1. <strong>Strongly supported</strong> (UniProt/InterPro + homologous structures).<br />
+- H2: SdhB's molecular role is electron conduction via three Fe-S clusters, not dicarboxylate catalysis (which occurs at SdhA/FAD). <strong>Strongly supported</strong> [PMID 10586875, 10373108].<br />
+- H3: The complex is localized to the cytoplasmic face of the inner membrane, coupling TCA cycle to aerobic respiratory chain. <strong>Supported</strong> [PMID 12560550, 18690748, 24951791].<br />
+- H4: Fe-S center arrangement is tuned to suppress ROS, favoring aerobic expression. <strong>Supported</strong> [PMID 12560550].</p>
+<p><strong>Refuted / not supported</strong><br />
+- That SdhB itself binds/oxidizes the dicarboxylate substrate — <strong>refuted</strong>; the FAD/dicarboxylate site is in SdhA [PMID 10586875].<br />
+- That SdhB is an integral membrane protein — <strong>refuted</strong>; the SDHB subfamily lacks a signal peptide/TM domain and is peripheral [PMID 32371258].</p>
+<hr />
+<h2 id="7-limitations-and-future-directions">7. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No <em>P. putida</em> KT2440-specific biochemical/structural study</strong> of SdhB was found; direct mechanistic and structural evidence is from homologs (<em>E. coli</em>, <em>W. succinogenes</em>, eukaryotic SDHB). This gap is mitigated by three independent organism-specific lines of evidence assembled here — 73% sequence identity with all 11 Fe-S cysteine ligands conserved, an intact canonical <em>sdhCDAB</em> operon, and KEGG K00240/EC 1.3.5.1 pathway mapping — so transfer of function is well justified; nonetheless, direct EPR/kinetic/structural characterization of the KT2440 enzyme would confirm cluster identities and midpoint potentials.</li>
+<li>The exact <strong>quinone species</strong> used in <em>Pseudomonas</em> (ubiquinone-9) and the <strong>transcriptional regulation</strong> of the KT2440 <em>sdhCDAB–sucAB</em> locus were not experimentally examined here (the operon gene organization was confirmed from the KEGG genome annotation).</li>
+<li>Future work: verify the three Fe-S cluster types by EPR in the KT2440 enzyme, define the SdhB–SdhA and SdhB–SdhC/D interfaces, and quantify Complex II flux under aerobic vs. carbon-limited growth.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Lancaster &amp; Kröger 2000, <em>Biochim Biophys Acta</em> — PMID 11004459</li>
+<li>Lancaster et al. 1999, <em>Nature</em> (W. succinogenes QFR structure) — PMID 10586875</li>
+<li>Iverson et al. 1999, <em>Science</em> (E. coli QFR structure) — PMID 10373108</li>
+<li>Yankovskaya et al. 2003, <em>Science</em> (E. coli SQR / Complex II structure, ROS) — PMID 12560550</li>
+<li>Horsefield et al. 2006 (quinone-binding site) — PMID 16407191</li>
+<li>Cheng et al. 2008 (proton/quinone channel, SdhB G227) — PMID 18690748</li>
+<li>Sun et al. 2020 (SDHB subunit, Fe-S domains, ROS) — PMID 32371258</li>
+<li>Maio et al. 2016 (Fe-S delivery to SDHB) — PMID 26749241</li>
+<li>Sudarsan et al. 2014 (P. putida KT2440 central carbon metabolism) — PMID 24951791</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sdhB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="sdhB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FA8
+gene_symbol: sdhB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Iron-sulfur subunit of the membrane-bound succinate dehydrogenase/respiratory Complex II enzyme in Pseudomonas putida KT2440. SdhB transfers electrons from the SdhA flavoprotein catalytic subunit through iron-sulfur clusters toward the membrane anchor/quinone site, contributing to quinone-linked succinate oxidation. This places SdhB at the interface between the tricarboxylic acid cycle and the aerobic respiratory electron transport chain.
+existing_annotations:
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct process annotation for the succinate-to-fumarate step of the TCA cycle.
+    action: ACCEPT
+    reason: SdhB is part of the succinate dehydrogenase complex that oxidizes succinate to fumarate in the TCA cycle. UniProt places Q88FA8 in the bacterial route from succinate to fumarate, and the PSEPK pathway report identifies the complete sdhCDAB operon as covering step 6.
+    supported_by:
+    - reference_id: file:PSEPK/sdhB/sdhB-uniprot.txt
+      supporting_text: &#39;fumarate from succinate (bacterial route): step 1/1.&#39;
+- term:
+    id: GO:0008177
+    label: succinate dehydrogenase (quinone) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct holoenzyme activity that SdhB contributes to as the iron-sulfur electron-transfer subunit.
+    action: ACCEPT
+    reason: The complete SdhABCD complex catalyzes quinone-linked succinate oxidation, and UniProt lists EC 1.3.5.1 with the reaction a quinone + succinate = fumarate + a quinol. SdhB contributes electron transfer within this complex rather than carrying the flavin active site independently.
+    supported_by:
+    - reference_id: file:PSEPK/sdhB/sdhB-uniprot.txt
+      supporting_text: &#39;Reaction=a quinone + succinate = fumarate + a quinol;&#39;
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct and subunit-relevant function for the SdhB iron-sulfur protein.
+    action: ACCEPT
+    reason: SdhB is the iron-sulfur relay between the SdhA flavoprotein site and the membrane quinone-reduction site, so electron transfer is a meaningful subunit-level function.
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct respiratory-process context for forward succinate dehydrogenase/Complex II.
+    action: ACCEPT
+    reason: UniProt distinguishes aerobic succinate dehydrogenase from anaerobic fumarate reductase. SdhB is annotated as the succinate dehydrogenase iron-sulfur subunit and participates in aerobic respiratory electron transfer.
+    supported_by:
+    - reference_id: file:PSEPK/sdhB/sdhB-uniprot.txt
+      supporting_text: the succinate dehydrogenase is used in aerobic growth
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but broad parent of the specific succinate dehydrogenase/electron-transfer role.
+    action: KEEP_AS_NON_CORE
+    reason: The SdhB-containing complex is an oxidoreductase, but GO:0008177 and GO:0009055 better capture the specific complex-level and subunit-level functions.
+- term:
+    id: GO:0022904
+    label: respiratory electron transport chain
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct process annotation because Complex II feeds electrons from succinate into the quinone pool.
+    action: ACCEPT
+    reason: SdhB is an electron-transfer subunit of respiratory Complex II. The complex bridges TCA-cycle succinate oxidation to the respiratory electron transport chain.
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct cofactor-binding annotation for the succinate dehydrogenase iron-sulfur subunit.
+    action: ACCEPT
+    reason: UniProt annotates [2Fe-2S], [3Fe-4S], and [4Fe-4S] cofactors for Q88FA8. Iron-sulfur cluster binding is intrinsic to SdhB electron transfer.
+    supported_by:
+    - reference_id: file:PSEPK/sdhB/sdhB-uniprot.txt
+      supporting_text: &#39;Name=[2Fe-2S] cluster; Xref=ChEBI:CHEBI:190135;&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/sdhB/sdhB-uniprot.txt
+  title: UniProtKB entry Q88FA8 for Pseudomonas putida KT2440 sdhB
+  findings:
+  - statement: UniProt annotates sdhB as the iron-sulfur subunit of succinate dehydrogenase with quinone-linked succinate oxidation.
+    supporting_text: &#39;Reaction=a quinone + succinate = fumarate + a quinol;&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places sdhB in the TCA-cycle succinate-to-fumarate step.
+    supporting_text: &#39;fumarate from succinate (bacterial route): step 1/1.&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt annotates iron-sulfur cofactors for sdhB.
+    supporting_text: &#39;Name=[2Fe-2S] cluster; Xref=ChEBI:CHEBI:190135;&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88FA8; protein-existence level is homology-inferred.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report identifies sdhCDAB as the complete Complex II operon for TCA-cycle succinate oxidation.
+    supporting_text: &#39;The complete four-subunit operon: cytochrome b556 (*sdhC*, K00241), membrane anchor (*sdhD*, K00242), flavoprotein (*sdhA*, K00239), and iron-sulfur subunit (*sdhB*, K00240) (Finding F005).&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with UniProt labels.
+core_functions:
+- description: Iron-sulfur electron-transfer subunit of succinate dehydrogenase/Complex II, relaying electrons from succinate oxidation through Fe-S clusters toward quinone reduction by the SdhABCD complex.
+  molecular_function:
+    id: GO:0009055
+    label: electron transfer activity
+  contributes_to_molecular_function:
+    id: GO:0008177
+    label: succinate dehydrogenase (quinone) activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  - id: GO:0022904
+    label: respiratory electron transport chain
+  supported_by:
+  - reference_id: file:PSEPK/sdhB/sdhB-uniprot.txt
+    supporting_text: &#39;Reaction=a quinone + succinate = fumarate + a quinol;&#39;
+  - reference_id: file:PSEPK/sdhB/sdhB-uniprot.txt
+    supporting_text: &#39;Name=[2Fe-2S] cluster; Xref=ChEBI:CHEBI:190135;&#39;
+suggested_questions:
+- question: What are the quinone specificity and electron-transfer kinetics of the P. putida KT2440 SdhABCD complex?
+suggested_experiments:
+- description: Purify SdhABCD and assay succinate-dependent reduction of physiological and analog quinones, while mutating conserved SdhB Fe-S ligands to confirm the electron-transfer path.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

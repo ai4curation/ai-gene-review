@@ -23,8 +23,8 @@ import pandas as pd
 import yaml
 
 # --- score lines look like:  - **Correctness**: 4/5
-_CORR_RE = re.compile(r"Correctness\*\*:\s*([0-5])\s*/\s*5", re.IGNORECASE)
-_COMPL_RE = re.compile(r"Completeness\*\*:\s*([0-5])\s*/\s*5", re.IGNORECASE)
+_CORR_RE = re.compile(r"Correctness\*\*:\s*([1-5])\s*/\s*5", re.IGNORECASE)
+_COMPL_RE = re.compile(r"Completeness\*\*:\s*([1-5])\s*/\s*5", re.IGNORECASE)
 
 
 def find_repo_root(start: Path | None = None) -> Path:
@@ -38,7 +38,12 @@ def find_repo_root(start: Path | None = None) -> Path:
     )
 
 
-def parse_narrative_reviews(kind: str, repo_root: Path | None = None) -> pd.DataFrame:
+def parse_narrative_reviews(
+    kind: str,
+    repo_root: Path | None = None,
+    *,
+    include_excluded: bool = False,
+) -> pd.DataFrame:
     """Parse all BioReason narrative review files of a given ``kind``.
 
     Parameters
@@ -46,6 +51,8 @@ def parse_narrative_reviews(kind: str, repo_root: Path | None = None) -> pd.Data
     kind : 'rl' or 'sft'
     Returns a DataFrame with columns: species, gene, correctness, completeness, path.
     Files without both parseable scores are reported via ``.attrs['skipped']``.
+    RL rows excluded by the benchmark policy are omitted unless
+    ``include_excluded=True``; they remain available in ``.attrs['excluded']``.
     """
     if kind not in {"rl", "sft"}:
         raise ValueError("kind must be 'rl' or 'sft'")
@@ -71,7 +78,19 @@ def parse_narrative_reviews(kind: str, repo_root: Path | None = None) -> pd.Data
         else:
             skipped.append(str(path.relative_to(repo_root)))
     df = pd.DataFrame(rows)
+    excluded: list[dict] = []
+    if kind == "rl" and not df.empty:
+        quality = load_rl_benchmark_quality(repo_root)
+        df = df.merge(quality, on=["species", "gene"], how="left", validate="one_to_one")
+        missing_policy = df["performance_included"].isna()
+        if missing_policy.any():
+            missing = df.loc[missing_policy, ["species", "gene"]].to_dict("records")
+            raise ValueError(f"RL reviews missing from benchmark-quality.csv: {missing}")
+        excluded = df.loc[~df["performance_included"]].to_dict("records")
+        if not include_excluded:
+            df = df.loc[df["performance_included"]].reset_index(drop=True)
     df.attrs["skipped"] = skipped
+    df.attrs["excluded"] = excluded
     df.attrs["kind"] = kind
     return df
 
@@ -85,6 +104,25 @@ def load_rl_benchmark_keys(repo_root: Path | None = None) -> set[tuple[str, str]
             (row["species"], row["symbol"])
             for row in csv.DictReader(handle)
         }
+
+
+def load_rl_benchmark_quality(repo_root: Path | None = None) -> pd.DataFrame:
+    """Load the generated ARGO139 input/reference quality manifest."""
+    repo_root = repo_root or find_repo_root()
+    path = (
+        repo_root
+        / "projects"
+        / "BIOREASON_COMPARISON"
+        / "benchmark-quality.csv"
+    )
+    quality = pd.read_csv(path, keep_default_na=False)
+    quality = quality.rename(columns={"organism": "species"})
+    quality["performance_included"] = quality["performance_included"].astype(str).str.lower().map(
+        {"true": True, "false": False}
+    )
+    if quality["performance_included"].isna().any():
+        raise ValueError("Invalid performance_included value in benchmark-quality.csv")
+    return quality
 
 
 def load_prediction_assessments(repo_root: Path | None = None) -> pd.DataFrame:
@@ -126,7 +164,7 @@ def load_prediction_assessments(repo_root: Path | None = None) -> pd.DataFrame:
 ASSESSMENT_ORDER = ["COR", "CNN", "LSP", "UNC", "PLI", "NPI", "REP"]
 ASSESSMENT_GLOSS = {
     "COR": "Correct novel",
-    "CNN": "Correct but Not Novel (already in GOA)",
+    "CNN": "Correct but Not Novel (established annotation or evidence)",
     "LSP": "Less Precise than existing annotation",
     "UNC": "Uncertain - cannot validate or refute",
     "PLI": "Paralog Incorrect",

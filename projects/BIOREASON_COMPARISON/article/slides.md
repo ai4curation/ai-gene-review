@@ -98,7 +98,7 @@ AIGR is a **complement to**, not a replacement for, CAFA.
 ## The AIGR pipeline
 
 **1 · Evidence assembly** (per gene, cached & reproducible)
-UniProt record · full GO annotation table (QuickGO) · InterPro architecture · cached **full-text** publications · orthogonal deep-research report
+UniProt record · full GO annotation table (QuickGO) · InterPro architecture · cached publications (**full text where available; abstract-level otherwise**) · orthogonal deep-research report
 
 **2 · Curator-agent review** (three phases)
 - *Annotation-level*: each GO term → `ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE / MARK_AS_OVER_ANNOTATED / UNDECIDED` + **verbatim supporting quote**
@@ -123,7 +123,7 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 - **SFT** variant — more mechanistic depth, more hallucination
 - **RL** variant — safer, shallower (never fabricates InterPro)
 
-**Key:** BioReason-Pro does **not** emit its own GO terms — the web app's GO panels are GO-GPT's. It is fundamentally a *narrative* model.
+**Provenance:** the web app's GO panels are upstream GO-GPT output; the HuggingFace catalogue separately documents its structured GO section as BioReason-Pro SFT output.
 
 ---
 
@@ -131,40 +131,44 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 
 - **139 proteins**, 14 species labels
 - Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
-- For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **AIGR curated review as ground truth**
+- For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **agent-adjudicated local AIGR reference**
+- References are not independent expert ground truth: 64 `COMPLETE`, 48 `DRAFT`, 23 `IN_PROGRESS`, 4 `INITIALIZED`
+- ARGO139 is the collected cohort; performance excludes the wrong-input `csr-1` case (n=138) and flags seven 2,000-aa truncations
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
   - **Completeness** — do they span the gene's core biology?
-- Plus a per-gene **InterPro2GO baseline** comparison: novel insight, or restatement?
+- Plus a per-gene **InterPro-label** comparison: novel insight, or restatement? (actual `GO_REF:0000002` annotations: 92/139)
 
 ---
 
 ## Overall scores: safe, but shallow
 
-**Correctness 3.7 / 5 · Completeness 2.9 / 5**
+**Correctness 4.0 / 5 · Completeness 2.9 / 5** (n=138)
 
 | Score | Correctness | Completeness |
 |------:|------------:|-------------:|
-| 5 | 38 (27%) | 1 (1%) |
-| 4 | 48 (35%) | 40 (29%) |
-| 3 | 32 (23%) | 51 (37%) |
-| 2 | 15 (11%) | 40 (29%) |
-| 1 | 6 (4%) | 7 (5%) |
+| 5 | 70 (51%) | 1 (1%) |
+| 4 | 25 (18%) | 40 (29%) |
+| 3 | 22 (16%) | 51 (37%) |
+| 2 | 14 (10%) | 39 (28%) |
+| 1 | 7 (5%) | 7 (5%) |
 
-27% score 5/5 on correctness, but **only one gene** (Uggt1) reaches 5/5 completeness.
+51% score 5/5 on correctness, but **only one gene** (Uggt1) reaches 5/5 completeness.
 The failure tail is small but **structurally distinctive** — not random noise.
+
+Blinded n=20 second review: correctness **80% exact / kappa 0.950**; completeness **55% exact / kappa 0.744**.
 
 ---
 
-## Performance tracks InterPro informativeness
+## Selected-case scores differ by organism
 
 ![h:430](figures/per_organism_scores.png)
 
-Best on **mammals** (mouse 4.7, rat 4.4, human 4.2); worst on ***S. pombe*** (2.8) — gradient follows how diagnostic the InterPro family names are, and training-set representation.
+Mouse has the highest selected-case mean (4.7), followed by ***B. subtilis*** (4.5), rat (4.4), and human (4.3); ***S. pombe*** is lowest (3.2). The panel is deliberately uneven, so this is descriptive, not an organism-level performance estimate.
 
 ---
 
-## Seven reproducible failure modes
+## Eight reproducible model failure modes
 
 Immediately diagnostic to a reader of the narrative.
 
@@ -177,6 +181,7 @@ Immediately diagnostic to a reader of the narrative.
 | 5 | **Neo-functionalisation / moonlighting missed** | Nmnat NAD⁺ enzyme; chaperone role lost |
 | 6 | **Narrative–GO disconnect** | RidA: `protein binding` not deaminase activity |
 | 7 | **Cross-kingdom fold bias** | aprE subtilisin → "human blood coagulation" |
+| 8 | **Generated UniProt-style fabrication** | Slc5a1 → steroid-sulfate transporter |
 
 **The biases are architectural — they predict *where* the model will fail on deployment.**
 
@@ -187,44 +192,44 @@ Immediately diagnostic to a reader of the narrative.
 > **RAS2** *(yeast, 2/5)* — "a Ras-family GTPase … regulating intracellular **vesicle traffic** converging on the vacuole"
 > <span class="bad">✗</span> Actually the primary activator of the **cAMP/PKA** pathway.
 
-> **Epe1** *(S. pombe, 2/5)* — "a nuclear **histone demethylase** … JmjC oxygenase core"
+> **Epe1** *(S. pombe, 1/5)* — "a nuclear **histone demethylase** … JmjC oxygenase core"
 > <span class="bad">✗</span> A **pseudoenzyme** (HVD not HXD); anti-silencing factor via HP1/Swi6.
 
-> **TOR1** *(yeast, 5/5)* — "PIKK serine/threonine kinase … HEAT repeats scaffold regulatory assemblies … integrates nutrient & stress cues"
+> **TOR1** *(yeast, 4/4)* — "PIKK serine/threonine kinase … HEAT repeats scaffold regulatory assemblies … integrates nutrient & stress cues"
 > <span class="good">✓</span> Correct — the **FRB + multi-domain architecture** enabled pathway-level inference.
 
 ---
 
-## Mostly a narrative restatement of InterPro2GO
+## Mostly a narrative restatement of InterPro labels
 
-The dominant mode across 139 genes: **translate InterPro domains into prose**, no new biology. Where InterPro2GO errs, BioReason-Pro **recapitulates and amplifies**.
+The dominant mode across 139 genes: **translate InterPro domains into prose**, no new biology. Where a family label or actual InterPro2GO mapping is misleading, BioReason-Pro can **recapitulate and amplify** it.
 
 **Adds genuine value only when multi-domain architecture is diagnostic:**
 TOR1 · NOTCH1 · PTEN · EGFR · spo0A · (informative family names: Uggt1, KAR2, bst1)
 
-> A method that restates InterPro2GO at 3.7/5 correctness provides **no net annotation value** on top of the existing pipeline — even with a competitive headline $F_{\max}$.
+> A method can average 4.0/5 correctness while providing little net annotation value when it mainly restates supplied domain labels.
 
 ---
 
 ## Supplemental review: GOA agreement ≠ biological validity
 
-GO-GPT run directly on 300 genes; overlap measured against three progressively stricter references:
+GO-GPT run directly on 299 canonical genes; overlap measured against three progressively stricter references:
 
 ![h:380](figures/three_level_overlap.png)
 
-The **5-fold gap** between raw-GOA agreement (11.7%) and curator core-function agreement (2.4%) *is* the difference between "scores well on CAFA" and "predicts the gene's real biology."
+The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (3.8%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
 
 ---
 
-## ARGO95 SFT terms: two-thirds is old news
+## ARGO95 SFT terms: most calls are not novel
 
-955 SFT HF-catalogue terms (95 ARGO139 genes), every COR/NPI verified against primary literature:
+955 SFT HF-catalogue terms (95 ARGO139 genes), audited against current GOA/AIGR and targeted biological review:
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**67.5% CNN** (already in GOA) · **10.6% NPI** (wrong) · **5.4% COR** (novel & correct) · 3.9% LSP · 2.2% REP
+**71.0% CNN** (correct/non-novel; 631 exact GOA) · **15.9% NPI/PLI/REP** · **2.5% COR** · 4.6% LSP · 6.0% UNC
 
-The 5.4% COR are gaps **any knowledgeable curator would also fill**. Across ARGO95: **not one function unknown to the literature.**
+The 2.5% COR are known-literature gaps, not discoveries of previously unknown biology.
 
 ---
 
@@ -287,7 +292,7 @@ A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard 
 | **2 · Expert / agentic review** *(AIGR)* | Per-gene synthesis + taxonomy | **partially automated** | ✓ |
 | **3 · Prospective experiment** | Assays, genetics, microscopy | ✗ no protocol | n/a |
 
-- Tier 1 can't tell "adds new biology" from "restates InterPro2GO."
+- Tier 1 can't tell "adds new biology" from "restates supplied domain labels."
 - Tier 3 doesn't scale — "function" is multi-dimensional & organism-specific.
 - **Tier 2 is the practical level for deployment decisions** — AIGR brings its cost toward Tier 1.
 
@@ -297,10 +302,10 @@ A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard 
 
 ## Conclusions
 
-**BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA hasn't recorded, and **~1 in 9 times something wrong — in predictable, diagnosable ways.**
+**BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA has not recorded, and assigns **15.9% of ARGO95 terms to incorrect classes** in predictable, diagnosable ways.
 
-- Narratives restate InterPro2GO (3.7 / 2.9); **seven architectural failure modes**
-- GO terms: 67.5% not-novel, 10.6% wrong, 5.4% novel-correct in ARGO95; **0 functions unknown to literature**
+- Narratives restate InterPro labels; **eight recurrent model-output failure modes**
+- GO terms: 71.0% not novel, 15.9% NPI/PLI/REP, 2.5% correct and absent from frozen GOA in ARGO95
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
 **The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be reviewed, corrected, combined. Naked GO terms cannot.
