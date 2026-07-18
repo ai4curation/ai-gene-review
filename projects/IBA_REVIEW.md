@@ -2,8 +2,10 @@
 title: "IBA Annotation Quality Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
-species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, NEUCR]
 genes:
+  - cao-1
+  - NQO2
   - Epe1
   - cds1
   - LPL1
@@ -327,7 +329,18 @@ as a secondary function.
 
 **Example - CPT1C (human)** — `GO:0006631` (fatty acid metabolic process), `GO:0009437` (carnitine metabolic process):
 - A **neofunctionalization** case: UniProt's RecName is literally *"Palmitoyl thioesterase CPT1C."* Although it sits in the carnitine O-acyltransferase family (PTHR22589) with CPT1A/B, experimental work shows CPT1C **lacks the canonical carnitine palmitoyltransferase activity** (it binds malonyl-CoA but does not catalyze carnitine-dependent acyl transfer). The IBA propagates the ancestral CPT1A/B fatty-acid/carnitine metabolism that CPT1C no longer performs.
-- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases) leaks substrate terms across specificity boundaries.
+**Example - cao-1 / CAO-1 (*Neurospora crassa*)** — `GO:0010436` (carotenoid dioxygenase activity), `GO:0016121` (carotene catabolic process):
+- CAO-1 sits in PANTHER **PTHR10543** subfamily **SF89** (labelled *"carotenoid 9,10(9',10')-cleavage dioxygenase 1"*), a node that is functionally heterogeneous: it lumps genuine carotenoid cleavers (*Arabidopsis* CCD1, *Synechocystis* apocarotenoid oxygenase, *M. tuberculosis* Rv0654), **stilbenoid/resveratrol cleavers** (*U. maydis* RCO1, *Botrytis* rco1, and CAO-1 itself), and **phenylpropanoid cleavers** (*Pseudomonas* isoeugenol monooxygenase). The carotenoid-dioxygenase IBA propagates from node **`PTN001631894`**, whose `WITH/FROM` includes the *M. tuberculosis* carotenoid cleaver `UniProtKB:P9WPR5`.
+- Direct experimental evidence **refutes carotenoid activity**: heterologously expressed CAO-1 did not convert β-carotene or any carotenoid/apocarotenoid tested, while it cleaves the interphenyl Cα–Cβ double bond of **resveratrol and piceatannol** (PMID:23893079). GOA already carries the corrective experimental **`NOT` carotenoid metabolic process** (GO:0016116, IDA, PMID:23893079). Crystal structures show the conserved four-His non-heme Fe(II) center but a **stilbenoid-adapted substrate cleft** (PMID:28493664).
+- A **blinded OpenScientist** function-assignment run — given only the neutral hypothesis *"cao-1 has carotenoid dioxygenase activity"* — independently returned **"REFUTED (over-annotated)"** and likewise attributed the error to CCO/RPE65 (PTHR10543) family IBA, an independent confirmation of the manual call.
+- Action: **REMOVE** the carotenoid MF IBA; **MODIFY** the carotene-catabolic BP IBA to `GO:0046272` (stilbene catabolic process). The accurate MF (`GO:0016702` dioxygenase) is already present by IDA, and a class-level *stilbenoid α,β-dioxygenase activity* grouping term is proposed. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
+
+**Example - NQO2 (human)** — `GO:0003955` (NAD(P)H dehydrogenase (quinone) activity):
+- NQO2 sits with NQO1 in the NAD(P)H:quinone oxidoreductase family (PANTHER **PTHR10204**). The family IBA transfers `GO:0003955`, which maps to **EC 1.6.5.2** and specifies **NAD(P)H** as the electron donor — but NQO2 characteristically **does not use NAD(P)H**; it uses **dihydronicotinamide riboside (NRH)** (PMID:10945627). The divergence here is in the **cofactor / co-substrate**, not the cleaved-substrate class or the fold.
+- A **blinded OpenScientist** run (neutral hypothesis *"NQO2 has NAD(P)H dehydrogenase (quinone) activity"*) independently returned **over-annotated → the NAD(P)H term is substrate-incorrect**, citing Wu et al. 1997 (PMID:9367528) that NQO2 uses NRH "rather than NAD(P)H," and noting the correct term GO:0001512 is already annotated by IDA.
+- Action: **MODIFY** to the NRH-specific `GO:0001512` (dihydronicotinamide riboside quinone reductase activity; **EC 1.10.5.1**, **RHEA:12364**), already supported by IDA. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
+
+- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase; CAO-1 cleaves stilbenes not carotenoids; NQO2 uses NRH not NAD(P)H), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases; carotenoid+stilbenoid+phenylpropanoid cleavage oxygenases) leaks substrate terms across specificity boundaries — and the leak can be in the **cleaved substrate** (CAO-1) or the **cofactor/co-substrate** (NQO2). Where a subfamily label itself names one specificity (`PTHR10543:SF89` = "carotenoid … cleavage dioxygenase") while spanning several, that label is the mechanical origin of the leak.
 
 ### 12. Mis-Grouping Revealed by the WITH/FROM Column
 
@@ -581,6 +594,8 @@ See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 | HMGCS2 | rat | Paralog-pathway over-annotation (ketogenic; FPP synthesis is HMGCS1) | MEDIUM | COMPLETE |
 | PEX2 | human | Complex over-transfer (peroxisomal E3, not Cdc73/Paf1 complex) | MEDIUM | COMPLETE |
 | AGK | human | Substrate over-propagation (no ceramide/sphingosine kinase activity; 2 papers) | MEDIUM | COMPLETE |
+| cao-1 | NEUCR | Substrate over-propagation (cleaves stilbenes not carotenoids; PTHR10543:SF89 mixes specificities; blinded-confirmed) | MEDIUM | COMPLETE |
+| NQO2 | human | Cofactor over-propagation (uses NRH not NAD(P)H; MODIFY to NRH:quinone reductase; blinded-confirmed) | MEDIUM | COMPLETE |
 | AKTIP | human | Pseudo-enzyme (UniProt CAUTION: lacks catalytic Cys for E2 activity) | HIGH | COMPLETE |
 | DPYSL4 | human | Pseudo-enzyme (CRMP-family metallo-hydrolase, non-catalytic) | HIGH | COMPLETE |
 | SAMD8 | human | Substrate neofunctionalization (CPE synthase, not sphingomyelin synthase) | MEDIUM | COMPLETE |
