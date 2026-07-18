@@ -22,3 +22,14 @@ The sole `rescue of stalled cytosolic ribosome` annotation is accepted because
 it agrees with both the InterPro and Pfam ArfA assignments. No lipoate-related
 annotation is proposed. The discrepancy is in the automated protein name, not
 in the current GOA row.
+
+## OpenScientist assessment
+
+The completed OpenScientist report independently converges on ArfA identity
+and summarizes the established ArfA-RF2 mechanism from proteobacterial
+literature
+[`file:PSEPK/PP_4797/PP_4797-deep-research-openscientist.md`]. It also states
+the key limitation: PP_4797 itself has not been experimentally characterized
+in *P. putida*. The species review therefore retains the immediate
+ribosome-rescue process but does not promote ortholog-derived details about
+RF2 selectivity or autoregulation into additional GO assertions.
