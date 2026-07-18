@@ -22,17 +22,26 @@ WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual
 top-level concepts GO:0048315 + GO:0070787, per-annoton molecular functions, and
 typed connections.
 
-**Member gene reviews — 3/21 complete** (`genes/EMENI/`):
+**Member gene reviews — 7/21 complete** (`genes/EMENI/`):
 
-| Gene | Acc | Annotations reviewed | Notable curation calls |
+| Gene | Acc | Ann. | Notable curation calls |
 |---|---|---|---|
 | brlA | P10069 | 26 | Core C2H2 master TF; GO:0045461 *sterigmatocystin biosynthetic process* flagged **over-annotation** (regulator, not biosynthetic); ST/autolysis/starvation kept non-core |
 | abaA | P20945 | 21 | Core ATTS/TEA TF (binds CATTCY); all ACCEPT — clean phialide/conidiophore regulator |
-| wetA | P22022 | 12 | Core late regulator (spore-wall assembly); GO:0046148 pigment kept non-core; **no MF asserted** (WetA's sequence-specific DNA binding not established) — module annoton corrected to match |
+| wetA | P22022 | 12 | Core late regulator (spore-wall assembly); GO:0046148 pigment non-core; **no MF asserted** (DNA binding not established) — module annoton corrected to match |
+| vosA | Q5BBX1 | 12 | Velvet/NF-κB-like regulator of spore maturation, trehalose, β-glucan gene repression; core MF GO:0003700 **proposed** (not yet in GOA) |
+| velB | C8VTS4 | 18 | Dual-complex velvet regulator; GO:0045461 flagged **over-annotation** → GO:0010914; promotes sexual sporulation, represses conidiation |
+| veA | C8VTV4 | 17 | Founding velvet member; light-dependent nucleocytoplasmic localization (all EXP accepted); no MF asserted; reg-of-sulfur (IEA) non-core (unconfirmed) |
+| laeA | C8VQG9 | 18 | SAM-dependent methyltransferase (automethylation, IDA) + global SM regulator; GO:0051701 host-interaction non-core (loose fit vs fungivory) |
 
-**Tracked follow-ups:** remaining 18 member gene reviews (velvet, Flb, G-protein,
-hydrophobin/pigment genes), module deep research, and the *Neurospora*
-macroconidiation variant (would make the module ABSTRACT with taxon
+**Module MF verification (from reviews):** the velvet structural paper
+[PMID:24391470] confirms VosA/VelB carry an NF-κB-like DNA-binding domain, so the
+module's `GO:0003700` on those annotons holds; WetA (not a velvet protein) had its
+MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
+
+**Tracked follow-ups:** remaining 14 member gene reviews (Flb factors, FluG,
+G-protein gating, hydrophobin/pigment genes), module deep research, and the
+*Neurospora* macroconidiation variant (would make the module ABSTRACT with taxon
 `variant_sets`).
 
 ## 1. What the module is
