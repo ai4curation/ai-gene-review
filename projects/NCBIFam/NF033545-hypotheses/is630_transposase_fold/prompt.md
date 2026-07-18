@@ -1,39 +1,31 @@
-# Hypothesis: is this "uncharacterized" insertion-element protein a DDE transposase?
+# Is this "uncharacterized" IS630-element protein a DDE transposase? (Foldseek fold call only)
 
-You are an independent computational biologist. Decide whether an
-"uncharacterized" protein encoded by a bacterial insertion sequence is a
-**transposase**, and if so of what mechanistic class.
+You are an independent computational biologist. Run **one** decisive analysis and
+report it concisely — do not broaden the investigation.
 
-## What is known (do not assume beyond this)
+## Context (do not assume beyond this)
 
-- NCBI Protein Family **NF033545** (NCBIFAM/PGAP), an *equivalog*, product name
-  "**IS630 family transposase**".
-- This representative, UniProt **P16943** (*Shigella sonnei*, 343 aa), is
-  UniProt-named "**Insertion element IS630 uncharacterized 39 kDa protein**" — the
-  curator did **not** assign transposase activity; it is formally uncharacterized.
-- Many DNA transposases are **DDE/DDD-motif** enzymes with an **RNase H-like
-  (retroviral integrase) fold** and a catalytic acidic triad that coordinates the
-  divalent metals for strand transfer.
+- UniProt **P16943** (*Shigella sonnei*, 343 aa), UniProt-named "Insertion element
+  IS630 **uncharacterized** 39 kDa protein"; NCBIFAM family **NF033545** =
+  "IS630 family transposase" (equivalog). Curator assigned no activity.
+- Many DNA transposases adopt the **RNase H-like (retroviral integrase / DDE)
+  fold** with a catalytic **DDE (Asp-Asp-Glu)** metal-binding triad.
 
-## Representative sequence
-
-UniProt **P16943**, 343 aa:
+## Representative sequence (UniProt P16943, 343 aa)
 
 ```
 MPIIAPISRDERRLMQKAIHKTHDKNYARRLTAMLMLHRGDRVSDVARTLCCARSSVGRWINWFTQSGVEGLKSLPAGRARRWPFEHICTLLRELVKHSPGDFGYQRSRWSTELLAIKINEITGCQLNAGTVRRWLPSAGIVWRRAAPTLRIRDPHKDEKMAAIHKALDECSAEHPVFYEDEVDIHLNPKIGADWQLRGQQKRVVTPGQNEKYYLAGALHSGTGKVSCVGGNSKSSALFISLLKRLKATYRRAKTITLIVDNYIIHKSRETQSWLKENPKFRVIYQPVYSPWVNHVERLWQALHDTITRNHQCSSMWQLLKKVRHFMETVSPFPGGKHGLAKV
 ```
 
-## The decisive question (scope your work to this)
+## The single decisive analysis
 
-**Is P16943 a catalytically competent DDE-type transposase?** Answer by:
-1. Foldseek fold assignment of the AlphaFold model — does the core adopt the
-   **RNase H-like / DDE transposase-integrase fold**, and what are the closest
-   experimentally characterized structural homologs?
-2. Identify the candidate **DDE (Asp-Asp-Glu) catalytic triad** and state whether
-   it is present/intact.
-3. State whether assigning "**transposase activity (GO:0004803)**" to this protein
-   is **supported** by structure, and name the mechanistic class (DDE cut-and-
-   paste, etc.).
+Fetch the AlphaFold model (AF-P16943-F1) and run **Foldseek** against PDB100 /
+AFDB-SwissProt. Report ONLY:
+1. the top structural homologs and whether the catalytic core is the **RNase
+   H-like / DDE transposase-integrase fold** (with confidence);
+2. whether a candidate **DDE (D,D,E) catalytic triad** is present/intact; and
+3. a one-line verdict: is "**transposase activity (GO:0004803)**" structurally
+   supported for P16943?
 
-Keep other analyses light. Give one clear conclusion with confidence and the one
-experiment that would confirm it.
+Do not run disorder, targeting, phylogeny, or literature surveys. One structural
+analysis, one clear verdict, one confirmatory experiment.
