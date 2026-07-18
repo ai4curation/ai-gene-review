@@ -248,7 +248,9 @@ Status as of 2026-07-17:
   exemplars override unsupported provider claims about route dominance,
   redundancy, `PP_4481`, and `PP_3571`.
 - Scoped validation passes, and repository-wide validation reports 3,694/3,694
-  reviews valid with zero errors. The focused draft PR remains to be opened.
+  reviews valid with zero errors. Draft PR
+  [#2178](https://github.com/ai4curation/ai-gene-review/pull/2178) contains the
+  focused module batch.
 
 ## Pilot status: ppu00400 / tryptophan_biosynthesis
 

@@ -123,4 +123,5 @@ condition-specific flux (PMID:31451546).
 - [x] Finish `aruC` research integration and final annotation review.
 - [x] Integrate research evidence and render all gene reviews.
 - [x] Run scoped and repository-wide validation.
-- [ ] Commit, push, and open one draft PR for this module.
+- [x] Commit, push, and open one draft PR for this module:
+  [#2178](https://github.com/ai4curation/ai-gene-review/pull/2178).
