@@ -10,7 +10,8 @@ autolink_gene_symbols: false
 
 This batch tests pantothenate formation and the five-reaction conversion of
 pantothenate to coenzyme A in *Pseudomonas putida* KT2440. The reusable module
-is [Pantothenate and coenzyme A biosynthesis](../../../modules/coenzyme_a_biosynthesis.html).
+is [Pantoate-derived coenzyme A biosynthesis](../../../modules/coenzyme_a_biosynthesis.html)
+and also represents the alternative archaeal PoK/PPS reaction order.
 
 The generated membership table contains 24 candidates because KEGG ppu00770
 overlaps branched-chain-amino-acid synthesis, beta-alanine production,
@@ -23,13 +24,14 @@ review to resolve false-positive or peripheral pathway assignments.
 
 - [x] Fetch all 12 selected genes and their GOA annotations.
 - [x] Complete species-aware module + pathway + taxon OpenScientist research.
-- [x] Rewrite the reusable module as a species-neutral eight-reaction pathway.
+- [x] Rewrite the reusable module as a species-neutral eight-reaction pathway
+  with canonical PanC/PanK and archaeal PoK/PPS route variants.
 - [x] Ground family variants with exact UniProt exemplars and verified PAINT nodes.
-- [ ] Complete generic module OpenScientist research.
+- [x] Complete and assess generic module OpenScientist research.
 - [x] Complete all 12 gene-level OpenScientist reports.
 - [x] Curate and validate all 12 selected gene reviews.
-- [ ] Render the module, genes, and project pages.
-- [ ] Open and shepherd one pull request for this module.
+- [x] Render the module, genes, and project pages.
+- [x] Open and shepherd one pull request for this module.
 
 ## Pathway Satisfiability
 
@@ -45,8 +47,10 @@ review to resolve false-positive or peripheral pathway assignments.
 | 8 | Dephospho-CoA to CoA | `coaE` / PP_0631 / Q88Q65 | Curated | covered by standalone DPCK |
 
 **Module result: `covered`.** KT2440 uses the bacterial CoaX + fused CoaBC +
-standalone CoaD/CoaE architecture. A human-only PANK/PPCS/PPCDC/COASY model
-would create artificial gaps.
+standalone CoaD/CoaE architecture and follows the canonical PanC/PanK branch.
+The alternative PoK/PPS branch prevents the reusable module from creating
+artificial gaps in archaea, while a human-only PANK/PPCS/PPCDC/COASY model
+would create artificial gaps in bacteria.
 
 Beta-alanine is an input to reaction 3 rather than an invariant module step.
 No canonical PanD aspartate decarboxylase was found in KT2440. The encoded
@@ -86,8 +90,7 @@ The machine-generated source table is retained at
 [`ppu00770_coenzyme_a_biosynthesis.tsv`](ppu00770_coenzyme_a_biosynthesis.tsv).
 
 Pull request: [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180)
-(`codex/putida-pantothenate-coa-biosynthesis`, draft while generic module
-research completes).
+(`codex/putida-pantothenate-coa-biosynthesis`).
 
 ## Curation Decisions
 
@@ -128,6 +131,11 @@ research completes).
 - Generic module report: `modules/coenzyme_a_biosynthesis-deep-research-openscientist.md`
 - Gene-level reports: `genes/PSEPK/<gene>/<gene>-deep-research-openscientist.md`
 
+The first generic request exhausted its full 7,200-second provider window
+without returning an artifact. A retry commissioned against the final module
+completed successfully in 1,889.79 seconds; it exposed the archaeal PoK/PPS
+route now represented explicitly in the reusable module.
+
 ## Validation
 
 Checkpoint results on 2026-07-18:
@@ -137,9 +145,8 @@ Checkpoint results on 2026-07-18:
 - The module passes `ModuleReview` LinkML validation and the custom semantic
   validator. The only advisory is that the established `NCBIfam:TIGR00521`
   prefix is not configured for label lookup.
-- Deep-research frontmatter validation passes for all 12 gene reports and the
-  species-aware module/pathway/taxon report.
+- Deep-research frontmatter validation passes for all 12 gene reports, the
+  species-aware module/pathway/taxon report, and the generic module report.
 - All 12 gene pages, the module page, and the project pages render successfully.
-- Draft PR [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180)
-  contains the checkpoint; the correctly scoped generic module report is the
-  remaining research artifact.
+- PR [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180) contains
+  the complete batch and research artifacts.

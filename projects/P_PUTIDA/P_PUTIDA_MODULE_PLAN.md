@@ -326,11 +326,12 @@ Status as of 2026-07-18:
   PP_2325 and PP_2998 PanE overcalls were not imported.
 - OpenScientist PSEPK module+pathway+taxon research complete:
   `projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md`.
-- The generic OpenScientist request reached its full two-hour limit without a
-  result; one correctly scoped retry against the final module is running.
-- The reusable module now models eight ordered reactions with taxon-neutral
-  enzyme-architecture variants, exact cross-taxon UniProt exemplars, and seven
-  verified PAINT IBD function nodes.
+- The first generic OpenScientist request reached its full two-hour limit
+  without a result. A correctly scoped retry completed in 1,889.79 seconds and
+  has been assessed and incorporated.
+- The reusable module now models eight reaction activities, including
+  canonical PanC/PanK and archaeal PoK/PPS reaction-order variants, with exact
+  cross-taxon UniProt exemplars and seven verified PAINT IBD function nodes.
 - Draft PR [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180).
 
 Main curation conclusions from this batch:
