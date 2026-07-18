@@ -436,7 +436,9 @@ response, and mobile elements.</p>
 <li><code>projects/P_PUTIDA/data/psepk_pathway_worklist.manifest.txt</code></li>
 </ul>
 <p>Extract a per-pathway checklist for a PR batch:</p>
-<div class="codehilite"><pre><span></span><code>python3<span class="w"> </span>projects/P_PUTIDA/extract_pathway_batch.py<span class="w"> </span>ppu00400<span class="w"> </span>--module<span class="w"> </span>tryptophan_biosynthesis
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/P_PUTIDA/extract_pathway_batch.py<span class="w"> </span>ppu00400<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--module<span class="w"> </span>tryptophan_biosynthesis<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--research-provider<span class="w"> </span>openscientist
 </code></pre></div>
 
 <p>Default output for the first pilot:</p>
@@ -444,6 +446,8 @@ response, and mobile elements.</p>
 <li><code>projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.tsv</code></li>
 <li><code>projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md</code></li>
 </ul>
+<p>After hand-curating the Markdown page, refresh provider and review statuses<br />
+without replacing it by adding <code>--tsv-only</code>.</p>
 <h2 id="research-provider-policy">Research provider policy</h2>
 <p>Use the cheapest useful source first:</p>
 <ol>
@@ -454,16 +458,19 @@ response, and mobile elements.</p>
 </code></pre></div>
 
 <ol>
-<li>Gene-level first-pass research with Asta. For this organism, simple retrieval<br />
-   is usually enough to identify the relevant primary literature:</li>
+<li>Gene-level first-pass research with OpenScientist. Use a long timeout: a<br />
+   normal run can take 20 minutes or more and should not be treated as a failed<br />
+   smoke test after 180 seconds:</li>
 </ol>
-<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>deep-research-asta<span class="w"> </span>PSEPK<span class="w"> </span>&lt;gene&gt;
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>deep-research-openscientist<span class="w"> </span>PSEPK<span class="w"> </span>&lt;gene&gt;<span class="w"> </span>--timeout<span class="w"> </span><span class="m">7200</span>
 </code></pre></div>
 
 <ol>
-<li>Module-level research with Falcon when a broader pathway synthesis is needed:</li>
+<li>Module-level research with OpenScientist when a broader pathway synthesis is<br />
+   needed. Falcon/Edison may be used again when that service is available, but<br />
+   it is not the current batch provider:</li>
 </ol>
-<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>module-deep-research-falcon<span class="w"> </span>&lt;module&gt;
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>module-deep-research-openscientist<span class="w"> </span>&lt;module&gt;<span class="w"> </span>--timeout<span class="w"> </span><span class="m">7200</span>
 </code></pre></div>
 
 <ol>
@@ -472,14 +479,20 @@ response, and mobile elements.</p>
    satisfiability work and injects local candidate genes from the pathway<br />
    partition table when available:</li>
 </ol>
-<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>module-pathway-deep-research-falcon<span class="w"> </span><span class="s2">&quot;central carbon metabolism&quot;</span><span class="w"> </span>ppu00020<span class="w"> </span>PSEPK
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>module-pathway-deep-research<span class="w"> </span>openscientist<span class="w"> </span><span class="s2">&quot;central carbon metabolism&quot;</span><span class="w"> </span>ppu00020<span class="w"> </span>PSEPK<span class="w"> </span>--timeout<span class="w"> </span><span class="m">7200</span>
 </code></pre></div>
 
 <p>The report is written under the project support folder by default, e.g.<br />
-<code>projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-falcon.md</code>.</p>
+<code>projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-openscientist.md</code>.<br />
+The wrappers pass this timeout through to OpenScientist as well as applying it<br />
+to the local subprocess.</p>
 <ol>
-<li>PaperBLAST remains an optional protein-specific lookup:</li>
+<li>Asta and PaperBLAST remain optional supplemental protein-specific retrieval<br />
+   sources; they are not substitutes for the commissioned OpenScientist report:</li>
 </ol>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>deep-research-asta<span class="w"> </span>PSEPK<span class="w"> </span>&lt;gene&gt;
+</code></pre></div>
+
 <div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/fetch_paperblast.py<span class="w"> </span>&lt;uniprot_accession&gt;
 </code></pre></div>
 
@@ -492,7 +505,7 @@ response, and mobile elements.</p>
 <p>Operational caveat: the repository has a PaperBLAST wrapper, but it depends on<br />
 Playwright and the PaperBLAST website can present a Cloudflare challenge. If the<br />
 script returns a timeout or challenge page, record that in the module checklist<br />
-and use Asta or another fallback rather than pretending PaperBLAST was queried.</p>
+and use an available provider rather than pretending PaperBLAST was queried.</p>
 <p>Never create a fake <code>-deep-research-{provider}.md</code> by hand. If manual notes are<br />
 needed, write them as notes or a clearly named manual research file.</p>
 <h2 id="module-hole-filling-workflow">Module-hole-filling workflow</h2>
@@ -621,6 +634,28 @@ needed, write them as notes or a clearly named manual research file.</p>
 <li>Links to completed gene reviews and validation commands run.</li>
 <li>Notes on GO term gaps, obsolete/broad terms, and cases where a PSEPK enzyme<br />
   fills a pathway step under a different name than the standard model organism.</li>
+<li>One focused pull request containing the module, its selected gene reviews,<br />
+  research artifacts, batch record, rendered outputs, and validation results.</li>
+</ul>
+<h2 id="active-batch-ppu00220-arginine_biosynthesis">Active batch: ppu00220 / arginine_biosynthesis</h2>
+<p>Batch files:</p>
+<ul>
+<li><code>projects/P_PUTIDA/batches/ppu00220_arginine_biosynthesis.tsv</code></li>
+<li><code>projects/P_PUTIDA/batches/ppu00220_arginine_biosynthesis.md</code></li>
+</ul>
+<p>Status as of 2026-07-17:</p>
+<ul>
+<li>A reusable eight-part acetylated-ornithine module covers the linear ArgA/ArgE<br />
+  and cyclic ArgJ implementations through the shared ArgF/ArgG/ArgH trunk.</li>
+<li>12 selected gene reviews are curated: ten preferred pathway genes plus<br />
+<code>argD/PP_4481</code> and <code>PP_3571</code> as boundary/conflict reviews.</li>
+<li>12/12 OpenScientist gene-level reports and the PSEPK<br />
+  module/pathway/taxon report are complete and integrated conservatively.</li>
+<li>Direct KT2440 genetics, local family assignments, and exact UniProt<br />
+  exemplars override unsupported provider claims about route dominance,<br />
+  redundancy, <code>PP_4481</code>, and <code>PP_3571</code>.</li>
+<li>Scoped validation passes, and repository-wide validation reports 3,694/3,694<br />
+  reviews valid with zero errors. The focused draft PR remains to be opened.</li>
 </ul>
 <h2 id="pilot-status-ppu00400-tryptophan_biosynthesis">Pilot status: ppu00400 / tryptophan_biosynthesis</h2>
 <p>Pilot batch files:</p>
