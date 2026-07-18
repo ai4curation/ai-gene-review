@@ -104,6 +104,25 @@ Default output for the first pilot:
 
 ## Research provider policy
 
+**Current provider override (2026-07-18):** while Edison is unavailable, use
+OpenScientist for both gene-level and module-level deep research:
+
+```bash
+just deep-research-openscientist PSEPK <gene> --timeout 7200
+just module-deep-research-openscientist <module> --timeout 7200
+just module-pathway-deep-research openscientist "<module>" <pathway> PSEPK --timeout 7200
+```
+
+OpenScientist jobs commonly take 20 minutes or longer. A short polling window is
+not a failure condition: keep a live client running to completion and allow the
+two-hour timeout. Treat the generated report as retrieval support and verify
+curation-changing claims against UniProt, GOA, PAINT, ontology definitions, and
+primary literature.
+
+The provider ladder below is the baseline policy. While this override is
+active, replace its Asta/Falcon gene, module, and species-aware research steps
+with the OpenScientist commands above.
+
 Use the cheapest useful source first:
 
 1. UniProt metadata, local existing reviews, and module context.
