@@ -70,13 +70,9 @@ def scan_module(
             }
         )
     # new (not-yet-cited) first, then strongest membership signal, then newest.
-    records.sort(
-        key=lambda r: (
-            r["already_cited"],
-            -int(r["membership_score"]),
-            r["publication_date"] or "",
-        )
-    )
+    # europepmc.search returns newest-first (sort="P_PDATE_D desc"); Python's sort
+    # is stable, so omitting publication_date from the key preserves that order.
+    records.sort(key=lambda r: (r["already_cited"], -int(r["membership_score"])))
     return {
         "module_id": entity.id,
         "module_title": entity.title,

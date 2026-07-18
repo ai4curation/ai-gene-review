@@ -6,8 +6,9 @@ import pytest
 import yaml
 
 from ai_gene_review.litscan import module_member
-from ai_gene_review.litscan.europepmc import publication_from_record
+from ai_gene_review.litscan.europepmc import Publication, publication_from_record
 from ai_gene_review.litscan.module_index import (
+    ModuleEntity,
     load_modules,
     module_entity_from_doc,
 )
@@ -188,3 +189,55 @@ def test_render_markdown_marks_new_and_cited():
     assert "[NEW] PMID:99999999" in md
     assert "[cited] PMID:17574030" in md
     assert "novel subunit" in md
+
+
+def _plain_pub(pmid: str, publication_date: str) -> Publication:
+    """A publication with no title/abstract signals (membership_score == 0)."""
+    return Publication(
+        pmid=pmid,
+        doi="",
+        title="",
+        journal="J",
+        publication_date=publication_date,
+        authors="",
+        abstract="",
+        source="MED",
+        record_id=pmid,
+    )
+
+
+def test_scan_module_preserves_newest_first_on_ties(monkeypatch):
+    """When records tie on already_cited and membership_score, the sort must
+    preserve europepmc.search's newest-first ordering (regression: the old
+    tertiary date key sorted oldest-first)."""
+    # Europe PMC returns newest-first; all three tie on already_cited (not cited)
+    # and membership_score (0, since title/abstract carry no membership signals).
+    newest_first = [
+        _plain_pub("30000003", "2026-06-03"),
+        _plain_pub("20000002", "2026-06-02"),
+        _plain_pub("10000001", "2026-06-01"),
+    ]
+    monkeypatch.setattr(
+        module_member.europepmc,
+        "search",
+        lambda *args, **kwargs: (3, newest_first),
+    )
+    entity = ModuleEntity(
+        id="MODULE:demo",
+        title="Demo",
+        path="modules/demo.yaml",
+        terms=["BBSome"],
+        cited_pmids=set(),
+    )
+    result = module_member.scan_module(
+        entity,
+        "2026-06-01",
+        "2026-06-30",
+        max_records=40,
+        max_terms=10,
+        timeout=30.0,
+    )
+    order = [r["pmid"] for r in result["records"]]
+    assert order == ["30000003", "20000002", "10000001"]
+    # Newest publication ranks first after the scan.
+    assert result["records"][0]["publication_date"] == "2026-06-03"
