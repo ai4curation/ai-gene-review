@@ -77,6 +77,16 @@ validate-rhea-mappings:
 	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the TCDB->GO mapping sets (projects/TCDB/tc2go*.sssom.yaml):
+# (1) SSSOM structural validation of both sets, then (2) GO term/label validation on the regenerated
+# nested files (curated seed + machine-generated candidates).
+validate-tcdb-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/TCDB/tc2go.sssom.yaml projects/TCDB/tc2go.generated.sssom.yaml
+	uv run python projects/TCDB/sssom_to_terms.py projects/TCDB/tc2go.sssom.yaml -o projects/TCDB/tc2go.terms.yaml
+	uv run python projects/TCDB/sssom_to_terms.py projects/TCDB/tc2go.generated.sssom.yaml -o projects/TCDB/tc2go.generated.terms.yaml
+	uv run linkml-term-validator validate-data projects/TCDB/tc2go.terms.yaml -s src/ai_gene_review/schema/tcdb_go_mapping.yaml -t TCDBGOMappingSet --labels -c conf/oak_config.yaml
+	uv run linkml-term-validator validate-data projects/TCDB/tc2go.generated.terms.yaml -s src/ai_gene_review/schema/tcdb_go_mapping.yaml -t TCDBGOMappingSet --labels -c conf/oak_config.yaml
+
 # Validate the CAZy->GO mapping sets (projects/GLYCOBIOLOGY/cazy2go*.sssom.yaml):
 # (1) SSSOM structural validation of all three sets, then (2) GO term/label validation on the
 # regenerated nested files (seed, safe propagation set, and full generated derivation).
