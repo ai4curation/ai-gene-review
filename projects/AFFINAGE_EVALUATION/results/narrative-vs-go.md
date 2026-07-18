@@ -63,10 +63,38 @@ reference) tracks these tiers cleanly in the sample: GPX4, CASP3, MAPK1 = `win`
 (entity collision). That field is a ready-made flag for which narratives to trust
 before ingesting them.
 
-## Implication for AIGR
+## Implication for AIGR — largely redundant with deep research
 
-The narrative + structured discoveries — not the GO layer — are the valuable
-**deep-research input** for AIGR reviews (feeding `description`, `core_functions`,
-`proposed_new_terms`), gated by two cheap checks: (a) the `pairwise` self-signal, and
-(b) an entity-collision check comparing `prefetch_data.uniprot.accession` against the
-organism/protein the narrative actually describes.
+The narrative reads well, but as an *input source* it does **not** clearly beat what
+AIGR's existing deep-research step already produces, and most of its apparent
+advantages are trivial to replicate:
+
+- **Biological content** overlaps heavily with our deep research. For well-studied
+  human genes our falcon/perplexity reports already recover the specific mechanism
+  (the falcon GPX4 report independently gives Sec46, the catalytic tetrad, the
+  system xc⁻–GSH–GPX4 axis, ferroptosis) — Affinage adds no new biology.
+- **PMID-anchored citations are not a differentiator.** DOI/`[n]`→PMID resolution is
+  a one-liner (NCBI/EuropePMC ID converter), so the fact that Affinage emits inline
+  PMIDs while falcon/perplexity emit DOIs or footnote numbers is cosmetic.
+- **"More citations" is not value.** For GPX4, Affinage cites 37 PMIDs vs the 10 in
+  our completed review (1 overlap). But curation *selects* the few core papers; the
+  extra 36 skew toward the pleiotropic/recent material a curator prunes (the same
+  recency bias as ADRB2). Count ≠ quality, and the novel PMIDs were not shown to be
+  primary evidence for core function that we lack.
+- **No independent perspective.** Affinage is Claude-generated (Sonnet read + Opus
+  synthesis); AIGR's review agent is also Claude, so ingesting it adds no model
+  diversity and risks amplifying shared biases — unlike our multi-provider ensemble.
+- **Human-only.** AIGR spans 190+ species; Affinage can never touch the non-human
+  majority of reviews.
+
+**Residual (minor) value.** It is a *free, precomputed* artifact for all 19,293 human
+genes, so for the human review backlog it could save the compute of a first-pass
+deep-research run — a convenience, not new capability, and subject to the
+correlated-error and human-only caveats above. Its flag of ~10% of the human proteome
+as mechanistically dark is a weak *prioritization* signal (project-management, not a
+per-review source).
+
+**Recommendation:** do not wire Affinage in as a distinct review source on this
+evidence. The durable output of this exercise is the *evaluation result* (the GO layer
+grounds to the specific function ~0/25 while the prose gets it right), not an
+integration.

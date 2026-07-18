@@ -86,11 +86,13 @@ are complementary:
 - **AIGR (us):** *starts from* GOA's evidence-coded GO annotations → reviews each
   one → keeps/modifies/removes, and authors validated, specific `core_functions`.
 
-So AIGR can act as the **GO-grounding + curation layer** Affinage lacks; and
-Affinage's citation-anchored "current model" is a strong candidate **deep-research
-input** for AIGR reviews (feeding `description` / `proposed_new_terms`), provided
-its free-text claims are re-grounded to GO by our pipeline before they touch
-`existing_annotations` or `core_functions`.
+So AIGR can act as the **GO-grounding + curation layer** Affinage lacks. The reverse
+direction — using Affinage's "current model" as a **deep-research input** to AIGR — is
+weaker than it first appears: on inspection it is **largely redundant** with AIGR's
+existing deep-research step (same biology, no independent perspective since both are
+Claude-generated, human-only, and its apparent citation advantages are trivial to
+replicate). See [The mechanism narrative](#the-mechanism-narrative-the-complement-to-go)
+and [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
 
 ## Methods
 
@@ -244,9 +246,15 @@ break the prose too:* ADA's narrative is the three-entity chimera (§3). Usefull
 Affinage's own `evaluation.pairwise` tracks these tiers — GPX4/CASP3/MAPK1 = `win`,
 ADRB2 = `tie`, ADA = `loss` — a built-in triage flag for which narratives to trust.
 
-**Implication:** the narrative + structured discoveries (not the GO layer) are the
-valuable AIGR deep-research input, gated by the `pairwise` self-signal and an
-accession-vs-narrative entity-collision check.
+**Implication — but do not over-read it as an integration case.** The narrative is
+Affinage's real product, but as an *input source* it is **largely redundant** with
+AIGR's existing deep-research: the biology overlaps, the PMID-anchoring advantage is
+trivial to replicate (DOI/`[n]`→PMID is a converter call), "more citations" is not
+value (GPX4: Affinage 37 vs our review's 10, skewed to material curation prunes), it
+adds no independent perspective (both are Claude), and it is human-only. Its residual
+value is convenience — a free precomputed first pass for the human backlog — plus a
+weak dark-gene prioritization signal. Full argument in
+[`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
 
 ## Next steps
 
@@ -265,5 +273,9 @@ accession-vs-narrative entity-collision check.
 4. **Symbol-collision sweep.** Systematically check `prefetch_data.uniprot.accession`
    vs the organism/protein described in `current_model` to size the ADA-type
    failure across the genome.
-5. **Integration spike.** Prototype Affinage's `current_model` as a `deep-research`
-   provider input for AIGR reviews.
+5. **(Deprioritized) Integration.** A prior idea was to wire Affinage in as a
+   `deep-research` provider; the [narrative analysis](AFFINAGE_EVALUATION/results/narrative-vs-go.md)
+   argues against it (redundant with existing deep research, no independent
+   perspective, human-only). Only worth revisiting as a free first-pass for the human
+   backlog, or if a targeted test shows its retrieval recovers primary core-function
+   evidence our pipeline systematically misses (raw citation count does not show this).
