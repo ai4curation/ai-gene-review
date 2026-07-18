@@ -64,11 +64,16 @@ gene now has a validated review with core functions:
 module's `GO:0003700` on those annotons holds; WetA (not a velvet protein) had its
 MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
 
-**Status: fully reviewed.** Both variants are complete — **28/28** grounded genes have
-validated reviews (21 EMENI + 7 NEUCR; con-10 has no GO annotations to complete). Module
-deep research is present and verified (`conidiation_regulatory_cascade-deep-research-claude.md`).
-Remaining *optional* work: grounding/reviewing the Neurospora stage genes `acon-2`/`acon-3`
-(accessions currently uncertain), and PANTHER PTN ancestral-node grounding (deliberately deferred).
+**Status: fully reviewed and PTN-grounded.** Both variants are complete — **28/28** grounded
+genes have validated reviews (21 EMENI + 7 NEUCR; con-10 has no GO annotations to complete),
+module deep research is present and verified
+(`conidiation_regulatory_cascade-deep-research-claude.md`), and **18 conserved-role annotons now
+carry PANTHER PTN ancestral-node grounding** (FAMILY selectors with a PTHR family term, a verified
+UniProtKB representative, and PAINT `PTN…` nodes resolved from the local IBD index + GOA WITH/FROM,
+`GO_REF:0000033`). Nodes propagating review-flagged terms were excluded (flbD cell-cycle node,
+wA oxidoreductase node); the brlA node/descriptor family split (PTN in PTHR16515 vs family
+PTHR14003) is recorded. Remaining *optional* work: the Neurospora stage genes `acon-2`/`acon-3`
+(accessions currently uncertain).
 
 ## 1. What the module is
 
