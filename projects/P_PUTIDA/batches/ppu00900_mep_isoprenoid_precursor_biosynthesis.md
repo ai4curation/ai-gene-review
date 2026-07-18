@@ -38,7 +38,7 @@ The following KEGG members are outside this module:
 | 2 | `dxr` | PP_1597 | Q88MH4 | GO:0030604 DXP reductoisomerase | OpenScientist complete and assessed |
 | 3 | `ispD` | PP_1614 | Q88MF7 | GO:0050518 MEP cytidylyltransferase | Existing Falcon report assessed |
 | 4 | `ispE` | PP_0723 | Q88PX5 | GO:0050515 CDP-ME kinase | OpenScientist complete and assessed |
-| 5 | `ispF` | PP_1618 | Q88MF3 | GO:0008685 ME-CPP synthase | OpenScientist running |
+| 5 | `ispF` | PP_1618 | Q88MF3 | GO:0008685 ME-CPP synthase | OpenScientist complete and assessed |
 | 6 | `ispG` | PP_0853 | Q88PJ7 | GO:0141197 flavodoxin-coupled HMBPP synthase | OpenScientist running |
 | 7 | `ispH` | PP_0606 | Q88Q89 | GO:0051745 HMBPP reductase | OpenScientist running |
 
@@ -71,7 +71,7 @@ The following KEGG members are outside this module:
 - [ ] Complete and assess PSEPK module + pathway + taxon research.
 - [ ] Reconcile gene reviews, pathway boundary, and module against completed research.
 - [ ] Validate and render all affected artifacts.
-- [ ] Open a draft pull request for this module.
+- [x] Open draft pull request #2182 for this module.
 - [ ] Shepherd the pull request through review and CI to merge readiness.
 
 ## Files
