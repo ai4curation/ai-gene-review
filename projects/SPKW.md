@@ -60,6 +60,7 @@ See [SPKW-METHODOLOGY.md](SPKW/SPKW-METHODOLOGY.md) for detailed SQL queries and
 | **Subclade divergence** | Family keyword ignores subfunctionalization | LCR1 (Arabidopsis DEFL) | REMOVE |
 | **Kratagonist ≠ toxin** | Sequestration ≠ toxin activity | D7 proteins (mosquito) | MODIFY |
 | **Enzyme-class keyword → bare process** | An activity keyword maps to a generic, substrate-less process term; substrate specificity lives on the MF branch | Methyltransferase → methylation (plant MTases: MET1A, EZ1, CCOAOMT, COQ5) | MARK_OVER / MODIFY |
+| **Superseded-identity keyword** | Keyword encodes a pre-structural functional misidentification that later work overturned | `Protease`/`Hydrolase` on *T. maritima* encapsulin ("maritimacin") → peptidase activity / proteolysis | REMOVE (already immunized: kw2go off) |
 
 ## Legitimate SPKW Contributions
 
@@ -76,7 +77,7 @@ Not all SPKW-unique annotations are over-annotations:
 ## Project Status
 
 - **Started**: 2025-12-23
-- **Last updated**: 2026-05-30
+- **Last updated**: 2026-07-18
 - **Total genes reviewed**: 133 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
@@ -128,6 +129,33 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 ---
 
 ## Session Notes
+
+### 2026-07-18
+
+- **New pattern — "superseded-identity" keyword** (bacterial case): *Thermotoga
+  maritima* encapsulin (`THEMA/enc`, Q9WZP2, ENCAP_THEMA), reviewed as the primary
+  experimental seed of the `GO:0140737` (encapsulin nanocompartment) IBAs.
+- The entry carries UniProt keywords **`Protease`** and **`Hydrolase`**, which under the
+  old kw2go/`GO_REF:0000043` pipeline would have produced `GO:0008233` (peptidase activity)
+  + `GO:0006508` (proteolysis) IEAs. These trace to a **1998 misidentification**: the protein
+  was purified as a ">669 kDa homomultimeric protease" and named **"maritimacin" / "Thermotoga
+  bacteriocin"** [PMID:9872409, PMID:11210524] before Sutter et al. crystallized it and showed
+  it is the **encapsulin shell** — an HK97-like capsid fold with no peptidase machinery
+  [PMID:19172747]. Tellingly, the *M. tuberculosis* "29 kDa antigen" and *B. linens*
+  "bacteriocin" (Linocin M18) homologs named in that 1998 paper are **themselves encapsulins**.
+  So the keyword doesn't over-extend a real function (process/regulatory conflation) — it
+  encodes an **obsolete functional identity** the structure overturned.
+- **Retirement-justified, zero collateral damage** (contrast the plant DELLA/patatin cases where
+  retirement dropped *correct* biology): the only fact these keywords carried was wrong, so
+  dropping them lost nothing. Verified clean at source — QuickGO shows all 10 GOA annotations for
+  Q9WZP2 are `GO:0140737` (CC), with **no `GO_REF:0000043` anywhere**; that absence is the
+  fingerprint of the retired kw2go pipeline. Had it still been live we'd be looking at exactly
+  this over-annotation.
+- **No GO curation action required.** Residual cleanup is upstream at UniProt only (retire the
+  `Protease`/`Hydrolase` keywords or demote the legacy `FUNCTION` to a CAUTION). NB the keyword's
+  source at UniProt is a legacy `ECO:0000269` experimental FUNCTION, not a pure electronic
+  inference — the 1998 activity was real *in the tube*; only its **attribution** to the shell
+  subunit is wrong. Cross-ref: `genes/THEMA/enc/enc-ai-review.yaml`.
 
 ### 2026-05-30
 
