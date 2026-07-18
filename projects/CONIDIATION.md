@@ -18,10 +18,10 @@ module with an `EXACTLY_ONE` taxon `variant_set` holding two paradigms:
   cascade with G-protein/FlbA gating; **all 21 member genes have validated reviews**
   under `genes/EMENI/`. Carries the conidiophore-development (GO:0070787) structural concept.
 - **`neurospora_macroconidiation`** — the analogous, largely **non-orthologous** *N. crassa*
-  program, grounded in verified UniProtKB exemplars: the blue-light White Collar Complex
-  (WC-1 `Q01371`, WC-2 `P78714`) + circadian **FRQ** (`P19970`) gating, the fluffy Zn(II)₂Cys₆
-  master TF **FL** (`O13360`), and structural output (EAS/CCG-2 hydrophobin `Q04571`, CON-6
-  `P34762`, CON-10 `P10713`). Full gene reviews for these are a tracked follow-up.
+  program, grounded in verified UniProtKB exemplars **and now fully reviewed** (`genes/NEUCR/`):
+  the blue-light White Collar Complex (WC-1 `Q01371`, WC-2 `P78714`) + circadian **FRQ** (`P19970`)
+  gating, the fluffy Zn(II)₂Cys₆ master TF **FL** (`O13360`), and structural output (EAS/CCG-2
+  hydrophobin `Q04571`, CON-6 `P34762`, CON-10 `P10713`).
 
 Root concept generalized to conidium formation (GO:0048315); context broadened to
 Pezizomycotina. This page remains the design rationale and the source for the two-axis
@@ -64,11 +64,11 @@ gene now has a validated review with core functions:
 module's `GO:0003700` on those annotons holds; WetA (not a velvet protein) had its
 MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
 
-**Tracked follow-ups:** the Aspergillus paradigm is **complete** (21/21 member
-reviews). The *Neurospora* variant is structurally in place and grounded in verified
-exemplars; its full gene reviews (FL, WC-1/2, FRQ, EAS, CON-6/10, plus acon-2/acon-3)
-remain to be done. Module deep research is in progress
-(`conidiation_regulatory_cascade-deep-research-*.md`).
+**Status: fully reviewed.** Both variants are complete — **28/28** grounded genes have
+validated reviews (21 EMENI + 7 NEUCR; con-10 has no GO annotations to complete). Module
+deep research is present and verified (`conidiation_regulatory_cascade-deep-research-claude.md`).
+Remaining *optional* work: grounding/reviewing the Neurospora stage genes `acon-2`/`acon-3`
+(accessions currently uncertain), and PANTHER PTN ancestral-node grounding (deliberately deferred).
 
 ## 1. What the module is
 
