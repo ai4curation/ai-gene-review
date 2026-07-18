@@ -22,7 +22,8 @@ WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual
 top-level concepts GO:0048315 + GO:0070787, per-annoton molecular functions, and
 typed connections.
 
-**Member gene reviews — 13/21 complete** (`genes/EMENI/`):
+**Member gene reviews — 21/21 complete** (`genes/EMENI/`); every module-grounded
+gene now has a validated review with core functions:
 
 | Gene | Acc | Ann. | Notable curation calls |
 |---|---|---|---|
@@ -39,16 +40,24 @@ typed connections.
 | flbD | G5EAY5 | 31 | Myb TF (asexual+sexual). **REMOVED 4 taxon-inappropriate plant ARBA propagations** (stomatal patterning, water homeostasis, salt/water-deprivation response) + over-annotated further animal/plant Myb terms |
 | flbE | Q5BFF9 | 6 | Accessory activator w/ FlbB at hyphal tip; no MF asserted |
 | sfgA | Q3I5F3 | 9 | Zn(II)₂Cys₆ negative regulator (all-IEA); repressor role noted as not-yet-in-GOA |
+| fadA | Q00743 | 29 | Gα; core G protein activity; ST/penicillin **biosynthesis** annotations flagged over-annotation (signaling subunit) |
+| sfaD | Q5BH99 | 13 | Gβ adaptor; negative regulation of conidiation |
+| gpgA | Q5B9N8 | 12 | Gγ; regulation of conidiation |
+| flbA | P38093 | 14 | RGS attenuator of FadA; **GO:0045574 ST catabolic process flagged likely-spurious** (contradicts its ST-positive role) |
+| rodA | P28346 | 8 | Class I rodlet hydrophobin (GO:0005199); spore-wall assembly |
+| dewA | P52750 | 10 | Class I spore-wall hydrophobin (GO:0005199) |
+| wA | Q03149 | 11 | Conidial-pigment PKS. **GO:0052716 laccase activity flagged cross-attribution** (PMID:7050088 is the conidial laccase = yA, not the PKS; `reference_review: WRONG_IDENTIFIER`) |
+| yA | P17489 | 13 | Conidial laccase (GO:0052716, IDA), downstream of wA |
 
 **Module MF verification (from reviews):** the velvet structural paper
 [PMID:24391470] confirms VosA/VelB carry an NF-κB-like DNA-binding domain, so the
 module's `GO:0003700` on those annotons holds; WetA (not a velvet protein) had its
 MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
 
-**Tracked follow-ups:** remaining 8 member gene reviews — G-protein gating
-(FadA, SfaD, GpgA, FlbA) and structural output (RodA, DewA, WA, YA) — plus module
-deep research and the *Neurospora* macroconidiation variant (would make the module
-ABSTRACT with taxon `variant_sets`).
+**Tracked follow-ups:** all 21 member gene reviews are **complete** (module Derived
+QC: 21/21 reviewed, 21 complete). Remaining optional work is module deep research
+and the *Neurospora* macroconidiation variant (would make the module ABSTRACT with
+taxon `variant_sets`).
 
 ## 1. What the module is
 
