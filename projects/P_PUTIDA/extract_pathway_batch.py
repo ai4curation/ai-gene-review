@@ -13,6 +13,11 @@ import yaml
 
 
 DEFAULT_PROJECT_DIR = Path("projects/P_PUTIDA")
+DEFAULT_RESEARCH_PROVIDER = "asta"
+PROVIDER_LABELS = {
+    "asta": "Asta",
+    "openscientist": "OpenScientist",
+}
 _PSEPK_REVIEW_INDEX: tuple[dict[str, Path], dict[str, Path]] | None = None
 
 
@@ -35,6 +40,10 @@ def slugify(text: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9]+", "_", text.strip())
     cleaned = re.sub(r"_+", "_", cleaned).strip("_")
     return cleaned.lower() or "pathway"
+
+
+def provider_label(provider: str) -> str:
+    return PROVIDER_LABELS.get(provider, provider.replace("-", " ").title())
 
 
 def locus_key(row: dict[str, str]) -> tuple[int, str]:
@@ -76,15 +85,24 @@ def locate_review(row: dict[str, str]) -> Path:
     return by_accession.get(accession) or by_symbol.get(gene) or direct
 
 
-def review_status(row: dict[str, str]) -> dict[str, str]:
+def review_status(
+    row: dict[str, str], research_provider: str = DEFAULT_RESEARCH_PROVIDER
+) -> dict[str, str]:
     gene = row.get("suggested_review_name", "")
     review = locate_review(row)
     gene_dir = review.parent
     review_stem = review.name.removesuffix("-ai-review.yaml")
-    asta_candidates = [gene_dir / f"{gene}-deep-research-asta.md"]
+    research_candidates = [
+        gene_dir / f"{gene}-deep-research-{research_provider}.md"
+    ]
     if review_stem != gene:
-        asta_candidates.append(gene_dir / f"{review_stem}-deep-research-asta.md")
-    asta = next((candidate for candidate in asta_candidates if candidate.exists()), asta_candidates[0])
+        research_candidates.append(
+            gene_dir / f"{review_stem}-deep-research-{research_provider}.md"
+        )
+    research = next(
+        (candidate for candidate in research_candidates if candidate.exists()),
+        research_candidates[0],
+    )
     curation = "MISSING"
     if review.exists():
         curation = "CURATED"
@@ -100,18 +118,22 @@ def review_status(row: dict[str, str]) -> dict[str, str]:
                     break
         except Exception:
             curation = "CHECK"
+    research_status_key = f"{research_provider}_research_status"
+    research_file_key = f"{research_provider}_research_file"
     return {
         "gene_dir": gene_dir.as_posix(),
         "review_file": review.as_posix() if review.exists() else "",
         "review_status": "PRESENT" if review.exists() else "MISSING",
         "curation_status": curation,
-        "asta_research_file": asta.as_posix() if asta.exists() else "",
-        "asta_research_status": "PRESENT" if asta.exists() else "MISSING",
+        research_file_key: research.as_posix() if research.exists() else "",
+        research_status_key: "PRESENT" if research.exists() else "MISSING",
     }
 
 
 def pathway_members(
-    project_dir: Path, pathway: str
+    project_dir: Path,
+    pathway: str,
+    research_provider: str = DEFAULT_RESEARCH_PROVIDER,
 ) -> tuple[str, str, list[dict[str, str]]]:
     pathway_id = pathway.replace("kegg:", "").replace("unipathway:", "")
     partition = read_tsv(project_dir / "data" / "psepk_pathway_partition.tsv")
@@ -152,7 +174,7 @@ def pathway_members(
                 if row.get("primary_bucket_id")
                 in {pathway_id, f"kegg:{pathway_id}", f"unipathway:{pathway_id}"}
                 else "false",
-                **review_status(row),
+                **review_status(row, research_provider),
             }
         )
     return pathway_id, pathway_name, sorted(rows, key=locus_key)
@@ -166,11 +188,16 @@ def write_markdown(
     module: str,
     rows: list[dict[str, str]],
     validated: bool,
+    research_provider: str = DEFAULT_RESEARCH_PROVIDER,
 ) -> None:
+    research_status_key = f"{research_provider}_research_status"
     review_present = sum(row["review_status"] == "PRESENT" for row in rows)
     curated_present = sum(row["curation_status"] == "CURATED" for row in rows)
-    asta_present = sum(row["asta_research_status"] == "PRESENT" for row in rows)
+    research_present = sum(
+        row[research_status_key] == "PRESENT" for row in rows
+    )
     primary_count = sum(row["is_primary_for_pathway"] == "true" for row in rows)
+    research_provider_label = provider_label(research_provider)
     lines = [
         "---",
         f'title: "PSEPK {pathway_id} {pathway_name} batch"',
@@ -187,15 +214,15 @@ def write_markdown(
         f"- Primary bucket genes: {primary_count}",
         f"- Existing review files: {review_present}",
         f"- Curated review files: {curated_present}",
-        f"- Existing Asta research files: {asta_present}",
+        f"- Existing {research_provider_label} research files: {research_present}",
         "",
         "## Required Workflow",
         "",
         "- [ ] Curate or update the species-neutral module.",
-        "- [ ] Run module-level Falcon deep research.",
-        "- [ ] Run module + pathway + PSEPK Falcon deep research.",
+        f"- [ ] Run module-level {research_provider_label} deep research.",
+        f"- [ ] Run module + pathway + PSEPK {research_provider_label} deep research.",
         f"- [{'x' if review_present == len(rows) else ' '}] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.",
-        f"- [{'x' if asta_present == len(rows) else ' '}] Run Asta deep research for selected genes.",
+        f"- [{'x' if research_present == len(rows) else ' '}] Run {research_provider_label} deep research for selected genes.",
         f"- [{'x' if curated_present == len(rows) else ' '}] Curate each selected gene review.",
         f"- [{'x' if validated else ' '}] Validate module and gene reviews.",
         "- [ ] Open one PR for this module/pathway.",
@@ -203,14 +230,14 @@ def write_markdown(
         "",
         "## Candidate Genes",
         "",
-        "| Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | Asta research | Protein |",
+        f"| Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | {research_provider_label} research | Protein |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         done = (
             row["review_status"] == "PRESENT"
             and row["curation_status"] == "CURATED"
-            and row["asta_research_status"] == "PRESENT"
+            and row[research_status_key] == "PRESENT"
         )
         lines.append(
             f"| [{'x' if done else ' '}] | "
@@ -220,7 +247,7 @@ def write_markdown(
             f"{row['primary_bucket_id']} | "
             f"{row['review_status']} | "
             f"{row['curation_status']} | "
-            f"{row['asta_research_status']} | "
+            f"{row[research_status_key]} | "
             f"{row['protein_name'].replace('|', '/')[:120]} |"
         )
     lines.extend(
@@ -243,13 +270,27 @@ def main() -> None:
     parser.add_argument("--project-dir", type=Path, default=DEFAULT_PROJECT_DIR)
     parser.add_argument("--output-prefix", type=Path)
     parser.add_argument(
+        "--research-provider",
+        default=DEFAULT_RESEARCH_PROVIDER,
+        help="Deep-research provider used for status columns (default: asta).",
+    )
+    parser.add_argument(
+        "--tsv-only",
+        action="store_true",
+        help="Refresh the TSV without replacing an existing curated Markdown page.",
+    )
+    parser.add_argument(
         "--validated",
         action="store_true",
         help="Mark validation complete in the generated markdown checklist.",
     )
     args = parser.parse_args()
 
-    pathway_id, pathway_name, rows = pathway_members(args.project_dir, args.pathway)
+    pathway_id, pathway_name, rows = pathway_members(
+        args.project_dir,
+        args.pathway,
+        args.research_provider,
+    )
     prefix = args.output_prefix or (
         args.project_dir
         / "batches"
@@ -257,6 +298,8 @@ def main() -> None:
     )
     tsv_path = prefix.with_suffix(".tsv")
     md_path = prefix.with_suffix(".md")
+    research_status_key = f"{args.research_provider}_research_status"
+    research_file_key = f"{args.research_provider}_research_file"
     fields = [
         "suggested_review_name",
         "ordered_locus",
@@ -279,20 +322,23 @@ def main() -> None:
         "review_status",
         "review_file",
         "curation_status",
-        "asta_research_status",
-        "asta_research_file",
+        research_status_key,
+        research_file_key,
     ]
     write_tsv(tsv_path, rows, fields)
-    write_markdown(
-        md_path,
-        pathway_id=pathway_id,
-        pathway_name=pathway_name,
-        module=args.module,
-        rows=rows,
-        validated=args.validated,
-    )
+    if not args.tsv_only:
+        write_markdown(
+            md_path,
+            pathway_id=pathway_id,
+            pathway_name=pathway_name,
+            module=args.module,
+            rows=rows,
+            validated=args.validated,
+            research_provider=args.research_provider,
+        )
     print(f"Wrote {len(rows)} genes to {tsv_path}")
-    print(f"Wrote checklist to {md_path}")
+    if not args.tsv_only:
+        print(f"Wrote checklist to {md_path}")
 
 
 if __name__ == "__main__":
