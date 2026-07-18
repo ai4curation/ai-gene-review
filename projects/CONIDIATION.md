@@ -72,8 +72,15 @@ carry PANTHER PTN ancestral-node grounding** (FAMILY selectors with a PTHR famil
 UniProtKB representative, and PAINT `PTN…` nodes resolved from the local IBD index + GOA WITH/FROM,
 `GO_REF:0000033`). Nodes propagating review-flagged terms were excluded (flbD cell-cycle node,
 wA oxidoreductase node); the brlA node/descriptor family split (PTN in PTHR16515 vs family
-PTHR14003) is recorded. Remaining *optional* work: the Neurospora stage genes `acon-2`/`acon-3`
-(accessions currently uncertain).
+PTHR14003) is recorded.
+
+The Neurospora stage genes `acon-2` and `acon-3` were investigated and added
+(module now **30/30** reviewed): **acon-2** (`U9W570`/NCU00478) is a **cAMP
+phosphodiesterase** (confirmed by PMID:31172300) acting upstream of FL — added to the
+gating tier with PTN grounding (PTHR11347, PTN001682918); **acon-3** (`Q7SB37`/NCU07617,
+"Acr1") is a nuclear **MEDUSA/MedA-family** (PTHR39463) regulator downstream of FL — a new
+stage-regulation tier. The epistasis **acon-2 → FL → acon-3 → con genes** was confirmed
+verbatim from the primary source (PMID:15126394). No further tracked work remains.
 
 ## 1. What the module is
 
