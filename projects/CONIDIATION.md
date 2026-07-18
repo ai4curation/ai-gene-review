@@ -22,7 +22,7 @@ WetA/velvet → structural output, plus G-protein/FlbA repressive gating), dual
 top-level concepts GO:0048315 + GO:0070787, per-annoton molecular functions, and
 typed connections.
 
-**Member gene reviews — 7/21 complete** (`genes/EMENI/`):
+**Member gene reviews — 13/21 complete** (`genes/EMENI/`):
 
 | Gene | Acc | Ann. | Notable curation calls |
 |---|---|---|---|
@@ -33,16 +33,22 @@ typed connections.
 | velB | C8VTS4 | 18 | Dual-complex velvet regulator; GO:0045461 flagged **over-annotation** → GO:0010914; promotes sexual sporulation, represses conidiation |
 | veA | C8VTV4 | 17 | Founding velvet member; light-dependent nucleocytoplasmic localization (all EXP accepted); no MF asserted; reg-of-sulfur (IEA) non-core (unconfirmed) |
 | laeA | C8VQG9 | 18 | SAM-dependent methyltransferase (automethylation, IDA) + global SM regulator; GO:0051701 host-interaction non-core (loose fit vs fungivory) |
+| fluG | P38094 | 15 | GSI-related upstream signal producer; GO:0016787 hydrolase + GO:0045461 ST biosynthesis flagged **over-annotation**; classical GS activity kept non-core (putative per UniProt) |
+| flbB | C8VBM8 | 25 | bZIP TF; DNA binding + distinctive hyphal-tip/nuclear localization; all ACCEPT |
+| flbC | G5EAS8 | 10 | Nuclear C2H2 TF; spore-germination role non-core |
+| flbD | G5EAY5 | 31 | Myb TF (asexual+sexual). **REMOVED 4 taxon-inappropriate plant ARBA propagations** (stomatal patterning, water homeostasis, salt/water-deprivation response) + over-annotated further animal/plant Myb terms |
+| flbE | Q5BFF9 | 6 | Accessory activator w/ FlbB at hyphal tip; no MF asserted |
+| sfgA | Q3I5F3 | 9 | Zn(II)₂Cys₆ negative regulator (all-IEA); repressor role noted as not-yet-in-GOA |
 
 **Module MF verification (from reviews):** the velvet structural paper
 [PMID:24391470] confirms VosA/VelB carry an NF-κB-like DNA-binding domain, so the
 module's `GO:0003700` on those annotons holds; WetA (not a velvet protein) had its
 MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
 
-**Tracked follow-ups:** remaining 14 member gene reviews (Flb factors, FluG,
-G-protein gating, hydrophobin/pigment genes), module deep research, and the
-*Neurospora* macroconidiation variant (would make the module ABSTRACT with taxon
-`variant_sets`).
+**Tracked follow-ups:** remaining 8 member gene reviews — G-protein gating
+(FadA, SfaD, GpgA, FlbA) and structural output (RodA, DewA, WA, YA) — plus module
+deep research and the *Neurospora* macroconidiation variant (would make the module
+ABSTRACT with taxon `variant_sets`).
 
 ## 1. What the module is
 
