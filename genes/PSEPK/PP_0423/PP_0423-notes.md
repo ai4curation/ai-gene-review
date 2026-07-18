@@ -17,8 +17,20 @@
   is proposed in the first pass because substrate direction and physiological
   role remain unresolved.
 - Current module decision: retain PP_0423 as a high-priority uncertain relay
-  candidate. Do not count it as satisfying a relay variant, and do not alter
-  the covered LipB/LipA direct-route call.
+  or salvage candidate. Do not count it as satisfying a relay variant, do not
+  assign a salvage reaction, and do not alter the covered LipB/LipA
+  direct-route call.
+
+## OpenScientist assessment
+
+The gene-level report favors an ATP-dependent LplA-type salvage-ligase
+hypothesis based on sequence similarity, a predicted interaction network, and
+single-domain LplA precedents
+[`file:PSEPK/PP_0423/PP_0423-deep-research-openscientist.md`]. Those are useful
+hypothesis-generating observations, but they do not discriminate the reaction
+experimentally. The report explicitly retains ligase-versus-transferase
+ambiguity, consistent with the family-level evidence above. The first-pass
+review therefore records no specific GO molecular function.
 
 ## Discriminating experiments
 
