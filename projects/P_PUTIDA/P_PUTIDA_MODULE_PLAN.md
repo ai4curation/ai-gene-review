@@ -309,7 +309,44 @@ Main curation conclusions from the current batch:
   oxidation. These reviews are useful first-pass curation, but not every member
   is a core ED/gluconeogenesis module component.
 
-## Current batch: ppu00622 / benzoate_upper_pathway
+## Current batch: ppu00770 / coenzyme_a_biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00770_coenzyme_a_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00770_coenzyme_a_biosynthesis.md`
+
+Status as of 2026-07-18:
+
+- 24 KEGG `ppu00770` membership candidates partitioned, plus the independently
+  identified PP_4452 false-positive ketopantoate-reductase annotation.
+- 12/12 selected review folders present, curated, and validated with no
+  remaining `PENDING` actions.
+- 12/12 OpenScientist gene-level reports present and manually assessed; the
+  PP_2325 and PP_2998 PanE overcalls were not imported.
+- OpenScientist PSEPK module+pathway+taxon research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md`.
+- The generic OpenScientist request reached its full two-hour limit without a
+  result; one correctly scoped retry against the final module is running.
+- The reusable module now models eight ordered reactions with taxon-neutral
+  enzyme-architecture variants, exact cross-taxon UniProt exemplars, and seven
+  verified PAINT IBD function nodes.
+- Draft PR [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180).
+
+Main curation conclusions from this batch:
+
+- KT2440 satisfies all eight reactions with seven proteins because fused
+  `dfp/coaBC` performs the consecutive ligase and decarboxylase steps.
+- Canonical `panE`/PP_1351 satisfies ketopantoate reduction. PP_2325 is the
+  close ortholog of experimentally inactive PaKPR2 and is removed from the
+  pathway; PP_2998 remains unresolved; PP_4452 is an opine-family
+  oxidoreductase rather than a ketopantoate reductase.
+- Beta-alanine supply is an external, taxon-dependent input rather than a fixed
+  PanD module step. KT2440 likely uses reductive pyrimidine degradation.
+- PP_0922 AcpH and MazG are pathway-map spillover involved in carrier-protein
+  turnover and nucleotide-pool turnover, respectively, not CoA synthesis.
+
+## Previous batch: ppu00622 / benzoate_upper_pathway
 
 Batch files:
 

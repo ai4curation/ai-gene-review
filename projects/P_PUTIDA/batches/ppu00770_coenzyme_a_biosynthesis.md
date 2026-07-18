@@ -85,6 +85,10 @@ a species-level question outside this reusable module.
 The machine-generated source table is retained at
 [`ppu00770_coenzyme_a_biosynthesis.tsv`](ppu00770_coenzyme_a_biosynthesis.tsv).
 
+Pull request: [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180)
+(`codex/putida-pantothenate-coa-biosynthesis`, draft while generic module
+research completes).
+
 ## Curation Decisions
 
 - `panE` Q88N64 is the canonical KT2440 ketopantoate reductase and is the only
@@ -126,5 +130,16 @@ The machine-generated source table is retained at
 
 ## Validation
 
-Final validation and rendering results will be recorded here before the pull
-request is marked ready for review.
+Checkpoint results on 2026-07-18:
+
+- All 12 reviews pass schema, GO-term, reference, and best-practice validation.
+- Every fetched GOA row has a reviewed action and no `PENDING` values remain.
+- The module passes `ModuleReview` LinkML validation and the custom semantic
+  validator. The only advisory is that the established `NCBIfam:TIGR00521`
+  prefix is not configured for label lookup.
+- Deep-research frontmatter validation passes for all 12 gene reports and the
+  species-aware module/pathway/taxon report.
+- All 12 gene pages, the module page, and the project pages render successfully.
+- Draft PR [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180)
+  contains the checkpoint; the correctly scoped generic module report is the
+  remaining research artifact.
