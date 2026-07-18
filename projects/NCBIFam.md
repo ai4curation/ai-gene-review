@@ -28,7 +28,7 @@ straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
 | NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
 | NF002326 dGTPase | GO:0008832 dGTPase activity | **456** | 13 ⚠ | **refine** | NCBI gave broad GO:0016793; but all 13 reviewed are cautiously-named "dGTPase-*like*" (see †) |
 | TIGR02791 VirB5 (T4SS) | GO:0043684 type IV secretion system complex | **298** | 4 ✅ | adopt (broad) | 0/298 carry it; **the one clean reviewed gap-fill** — all 4 are *Brucella* VirB5 |
-| NF042963 anti-phage DUF1156 | GO:0051607 defense response to virus | **151** | 0 | adopt NCBI | Anti-phage defense family; but the term is coarse (see ‡) and 0 reviewed entries carry it |
+| NF042963 anti-phage DUF1156 | GO:0051607 defense response to virus | **151** | 0 | adopt NCBI | Anti-phage family; BP term is coarse (see ‡) but mechanism now resolved to a DNA amino-MTase → gains a real MF (see ‡‡) |
 
 **† Verification of the reviewed (Swiss-Prot) gains (2026-07-18).** The *reviewed*
 column is the curation-relevant one, so each nonzero value was checked by pulling the
@@ -58,20 +58,41 @@ corrects the small *reviewed* number, which was the fragile part of the claim.
 
 **‡ "defense response to virus" is coarse — and no better GO term exists yet.** The
 user's instinct is right: NF042963 is *phage-specific*, and GO:0051607 (defense
-response to virus) does not say so. But (a) GO has **no** `defense response to
+response to virus) does not say so. But GO has **no** `defense response to
 bacteriophage` term — the only `defense response to X` children are virus, bacterium,
 symbiont, protozoan, insect, nematode, oomycetes, fungus, parasitic plant (QuickGO,
-2026-07-18); and (b) the **mechanism is unknown**: NF042963 traces to Gao et al. 2020
-*Science* (PMID:32855333, "Diverse enzymatic activities mediate antiviral immunity in
-prokaryotes"), which validated the system by **phage-challenge assays**, but DUF1156
-itself is a Pfam "domain of unknown function" (PF06634) with only a *structural
-prediction* of nucleic-acid binding — no established enzymatic activity to ground a
-mechanism-specific MF term. So GO:0051607 is the least-wrong *existing* term (a phage
-is a virus), but the right deliverable here is a **`proposed_new_terms` entry** for a
-phage-specific child (`defense response to bacteriophage`, is_a GO:0051607), not a
-confident `ncbifam2go` exactMatch. This is a BP row whose value is entirely in
-bacterial TrEMBL (0 reviewed), so it does not carry the "high-value reviewed" claim
-regardless.
+2026-07-18). So GO:0051607 is the least-wrong *existing* BP term (a phage is a virus),
+and the right BP deliverable is a **`proposed_new_terms` entry** for a phage-specific
+child (`defense response to bacteriophage`, is_a GO:0051607), not a confident
+`ncbifam2go` exactMatch. This is a BP row whose value is entirely in bacterial TrEMBL
+(0 reviewed), so it does not carry the "high-value reviewed" claim regardless.
+
+**‡‡ The mechanism is no longer unknown — and it hands the family a real MF.** We
+ran the DUF1156 family through **OpenScientist** as a blinded, structure-scoped
+hypothesis job (representative A0A3B7MFS0, *Thermosynechococcus*, 1002 aa; prompt gave
+only the Gao-2020 phage phenotype + sequence). Its structural analysis and our own
+holdout **agree**: NF042963 is, at its core, an intact **site-specific SAM-dependent
+DNA amino-methyltransferase** (Class I motif I FxGxG + catalytic **DPPY** motif IV,
+converging in one Rossmann SAM pocket in the AlphaFold model), with **no nuclease**
+anywhere in the chain; the DUF1156 module and C-terminal extension are **accessory**
+(target-recognition / scaffolding). The defense mechanism is therefore **modification-
+based self/non-self discrimination in the BREX/DISARM/restriction–modification mould**
+— host DNA is self-marked by methylation, unmethylated phage DNA is excluded, and any
+effector step is supplied *in trans*. This upgrades the row from "DUF of unknown
+function" to a family with a concrete **molecular function**: `GO:0009008
+DNA-methyltransferase activity` (safe parent; amino-MTase confirmed, m5C excluded).
+The **specific target base is UNDECIDED** — OpenScientist confidently called
+N4-cytosine (`GO:0015667`, EC 2.1.1.113) from Foldseek, but the fold cannot
+distinguish amino-MTase subtypes, and the **family-wide annotation favors N6-adenine**
+(`GO:0009007`, EC 2.1.1.72; 19/151 members named adenine-specific, 0 cytosine),
+matching our holdout — so we hold the base open pending LC-MS/MS. This MF goes
+**beyond** NCBI's BP-only `go_terms` for the family, so it is a *proposed enrichment*
+(a `proposed_new_terms` MF), not part of the adopt/refine seed. Full write-up and
+blinded comparison:
+[`NF042963-hypotheses/duf1156_antiphage_mechanism/`](NCBIFam/NF042963-hypotheses/duf1156_antiphage_mechanism/COMPARISON.md).
+It also illustrates an OpenScientist failure mode worth remembering: **a confident
+single-representative Foldseek call (m4C) over-specified past what the fold can
+resolve** — caught only by the family-wide sequence/annotation check.
 
 **The honest caveat that frames all of the above:** the *bulk* of the gain is in
 unreviewed **TrEMBL**, not Swiss-Prot — which is exactly what we should expect and is
