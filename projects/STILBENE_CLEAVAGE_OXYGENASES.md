@@ -6,6 +6,7 @@ species: [NEUCR, NOVAD, SPHPI]
 genes:
   - cao-1
   - cao-2
+  - Saro_0802
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)
@@ -41,7 +42,7 @@ Neurospora `cao-1` review that opened the thread.
 |---|---|---|---|---|
 | **cao-1** | Q7S860 | *Neurospora crassa* (NEUCR) | resveratrol/piceatannol (hydroxystilbene) cleavage | reviewed |
 | cao-2 (contrast) | A7UXI1 | *Neurospora crassa* (NEUCR) | torulene (carotenoid) cleavage — CCO sister | reviewed |
-| **NOV1** | Q2GA76 | *Novosphingobium aromaticivorans* (NOVAD) | resveratrol-cleaving dioxygenase (structure + QM/MM) | planned |
+| **NOV1** (Saro_0802) | Q2GA76 | *Novosphingobium aromaticivorans* (NOVAD) | resveratrol / isoeugenol-cleaving dioxygenase (structure + mechanism) | reviewed |
 | NOV2 | (Novosphingobium) | *Novosphingobium aromaticivorans* | stilbenoid-cleaving CCO | planned |
 | **LSD-I (LsdA)** | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase (founding LSD) | planned |
 | Rco1 | (U. maydis) | *Ustilago maydis* | resveratrol cleavage oxygenase (fungal) | candidate |
@@ -83,6 +84,12 @@ members. The *N. crassa* paralog pair is the decisive positive control: the **sa
 are **wrong for cao-1** (a stilbene cleaver) and **right for cao-2** (a genuine torulene/carotenoid
 cleaver). Getting the family node right — a stilbene-cleavage subfamily annotated with the grouping
 term above — would fix the whole clade at once.
+
+The same error recurs through **automated** pipelines: the bacterial **NOV1** carries the identical
+carotenoid-dioxygenase over-annotation, but via **TreeGrafter** (IEA, GO_REF:0000118) rather than
+manual IBA — so both the phylogenetic-inference and the tree-grafting propagation routes make the
+identical substrate-class mistake on this family. (See also the TreeGrafter Inference Evaluation
+project.)
 
 ## Open questions
 - What is CAO-1's natural physiological stilbenoid substrate (plant-host vs microbial-competitor
