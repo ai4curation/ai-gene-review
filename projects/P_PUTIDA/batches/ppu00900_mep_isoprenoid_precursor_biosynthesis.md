@@ -53,6 +53,17 @@ The following KEGG members are outside this module:
   marked for modification rather than treated as a second core activity.
 - IspH directly supports both GO:0019288 and GO:0050992 because its terminal
   reaction produces both IPP and DMAPP.
+- Species-aware OpenScientist research independently recovered the seven core
+  genes and the same ten out-of-scope bucket members. Its "seven committed
+  steps" wording was not adopted: DXS remains a shared branch-point entry.
+- No native IDI is present in the current KT2440 proteome, but this is not a
+  pathway hole because IspH directly forms both IPP and DMAPP. The `idi` used
+  in PMID:31500633 was cloned from *E. coli*, as stated in the paper's Methods.
+  KEGG M00096 includes a separate K01823 IDI step, so this curated module is
+  intentionally not treated as a literal M00096 transcription.
+- The report's proposed PP_0142/PP_0959 "reannotation" was not propagated:
+  local metadata already assigns these proteins to the ABC-transporter bucket,
+  outside the ppu00900 candidate set.
 - Every module leaf has PSEPK and E. coli UniProt exemplars. Canonical PAINT IBD
   nodes were added for DXS (`PTN000179250`), Dxr (`PTN000776155`), IspD
   (`PTN000781812`), IspE (`PTN000466527`), IspF (`PTN000781796`), and IspH
@@ -68,7 +79,7 @@ The following KEGG members are outside this module:
 - [x] Add exact Rhea reactions, paired UniProt exemplars, and locally verified PAINT nodes.
 - [ ] Complete and assess the remaining gene-level OpenScientist reports.
 - [ ] Complete and assess generic OpenScientist module research.
-- [ ] Complete and assess PSEPK module + pathway + taxon research.
+- [x] Complete and assess PSEPK module + pathway + taxon research.
 - [ ] Reconcile gene reviews, pathway boundary, and module against completed research.
 - [ ] Validate and render all affected artifacts.
 - [x] Open draft pull request #2182 for this module.
