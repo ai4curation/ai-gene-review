@@ -90,7 +90,7 @@ side* (verified: `go:0005215` root returns more entries than the mid-level child
 1. **No pipeline.** The dominant cause here, unlike RHEA. A transporter with no
    EC (most secondary transporters) and no informative InterPro2GO term has no
    automated route to a transport MF term.
-2. **Altitude mismatch (confounder — not a true gap).** The entry may carry a
+2. **Specificity mismatch (confounder — not a true gap).** The entry may carry a
    *more specific* transport MF child, or a transport **BP** term
    (`transmembrane transport`) / channel **CC** term, none of which the exact
    `GO:0005215`-MF-closure count credits.

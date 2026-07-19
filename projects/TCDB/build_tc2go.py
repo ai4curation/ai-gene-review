@@ -11,7 +11,7 @@ member-protein annotations. This script distils the **clean, in-scope slice**:
   3. aggregate the surviving 5-level TC numbers up to the **TC family** (3-level),
      counting how many distinct members support each (family, GO) pair;
   4. emit SSSOM: a family with a single surviving MF term -> ``skos:exactMatch``
-     (mono-specific at GO altitude); a family with several -> ``skos:narrowMatch``
+     (mono-specific: one GO term fits the whole family); a family with several -> ``skos:narrowMatch``
      (poly-specific; the GO term applies to a subfamily).
 
 Mirrors projects/GLYCOBIOLOGY/build_cazy2go.py. **Machine-derived: every row is a
@@ -111,7 +111,7 @@ HEADER = """# TCDB family -> GO molecular-function mapping (SSSOM) -- GENERATED,
 # aggregating 5-level TC numbers up to the TC family (3-level). No row is hand-typed; the hand-curated,
 # review-backed rows live in the sibling tc2go.sssom.yaml.
 #
-# exactMatch = family maps to a single transporter-activity MF term (mono-specific at GO altitude);
+# exactMatch = family maps to a single transporter-activity MF term (mono-specific: one GO term fits the family);
 # narrowMatch = family maps to several (poly-specific; the term applies to a subfamily). These are
 # TCDB's assertions filtered for aspect + obsolescence, NOT a curated pipeline -- review before use.
 """

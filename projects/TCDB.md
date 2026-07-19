@@ -34,7 +34,7 @@ exist:
 
 1. **Forward (what TCDB *does* offer).** TCDB publishes its own per-protein GO
    associations at `https://tcdb.org/cgi-bin/projectv/public/go.py`. Is that dump
-   usable as a `tc2go` seed, and at what quality/altitude?
+   usable as a `tc2go` seed, and at what quality and specificity?
 2. **Reverse (gap).** Where does a UniProtKB entry carry a TCDB cross-reference
    (`DR TCDB;`) but **no GO transmembrane-transporter-activity term at all**?
    With no pipeline, this "falls through the cracks" gap is *structural*, not
@@ -68,12 +68,12 @@ probe script, and the closure caveat.
   have no transport MF term propagated from it.* (Exact-match upper bound on the
   gap; see caveat.) Across all of UniProtKB the TCDB cross-reference count is
   **16,344**.
-- **The gap is a specificity/altitude problem, mirroring RHEA.** A TC *family*
+- **The gap is a specificity problem, mirroring RHEA.** A TC *family*
   (3-level) is frequently poly-specific: the MFS superfamily `2.A.1` alone spreads
   across **49 distinct substrate-specific MF terms** in `go.py`
   (D-glucose, fructose, nitrate, heme, biotin, spermine, …); the APC family
   `2.A.3` across 11. The right GO target lives at the **subfamily** level, not
-  the family — exactly the parent-vs-child altitude lesson RHEA and CAZy already
+  the family — exactly the parent-vs-child specificity lesson RHEA and CAZy already
   learned. Some families *are* cleanly mono-specific (e.g. `2.A.69` auxin efflux
   carrier → `GO:0010329`).
 - **This repo already contains the exemplars.** **353 gene folders** carry a
@@ -127,7 +127,7 @@ transport *process* BP term, or a channel-complex CC term) that a closure-aware,
 cross-branch audit would credit. As in RHEA/CAZy, high gap = **candidate for
 closure-filtered review**, not a confirmed missing annotation.
 
-## Specificity: the TC family is usually the wrong altitude
+## Specificity: the TC family is usually too general
 
 - **TC → GO is a specificity bottleneck.** Poly-specific superfamilies collapse
   many substrates onto one family id: `2.A.1` (MFS) touches 49 distinct
@@ -136,7 +136,7 @@ closure-filtered review**, not a confirmed missing annotation.
   *subfamily* property), not an `exactMatch`.
 - **…but some families are clean.** `2.A.69` (auxin efflux carrier) →
   `GO:0010329 auxin efflux transmembrane transporter activity` and `1.A.8` (MIP)
-  → `GO:0015250 water channel activity` are mono-specific at GO altitude —
+  → `GO:0015250 water channel activity` are mono-specific — one GO term fits the whole family —
   ready-to-add `exactMatch` rows.
 
 The curated seed encodes this distinction directly (below).
@@ -156,7 +156,7 @@ same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
     P29972).
   - `narrowMatch` (GO term is a subfamily property of a poly-specific family):
     `2.A.17` POT/PTR → `GO:0015112 nitrate transmembrane transporter activity`
-    (backing CHL1/NRT1.1 Q05085, IMP — a classic altitude case: a *peptide*
+    (backing CHL1/NRT1.1 Q05085, IMP — a classic too-general-family case: a *peptide*
     transporter family whose plant NPF subfamily moves nitrate); `2.A.18` AAAP →
     `GO:0010328` (AUX1 Q96247, IDA); `2.A.36` CPA1 → `GO:0015385` (SOS1 Q9LKW9);
     `2.A.38` Trk → `GO:0015079` (HKT1 Q84TI7).
@@ -181,13 +181,13 @@ structural validation + GO term/label validation; generated nested views
 | GO aspect | MF (enzyme activity) | MF (enzyme activity) | MF (glycoenzyme) | **MF (transporter activity)** |
 | external2go pipeline | **yes** | **yes** | no (built here from EC) | **no — none at all** |
 | Source GO material | curated mapping | curated mapping | via EC bridge | **noisy multi-aspect `go.py` dump** |
-| Dominant failure mode | altitude | parent-vs-child altitude | poly-specific family | **no pipeline + family altitude + aspect noise** |
+| Dominant failure mode | too-general term | parent-vs-child specificity | poly-specific family | **no pipeline + over-general family + aspect noise** |
 | Emphasis | over-annotation audit | both | gap-filling | **gap-filling (structural half-coverage)** |
 
 TCDB is the most **under-connected** of these sources: its classification is
 IUBMB-endorsed and reaction-grounded, yet it has no route into GO. The expected
 verdict skew is heavily toward **`NEW` / gap-filling**, tempered by the family
-altitude problem (prefer the subfamily-specific child term).
+over-generality problem (prefer the subfamily-specific child term).
 
 ## Curation Recommendations (preliminary)
 
@@ -200,7 +200,7 @@ altitude problem (prefer the subfamily-specific child term).
    families (AEC, MIP-water).
 3. **Filter `go.py` to transporter-activity MF before use.** 87% of the dump is
    CC/BP/generic/noise; only the 13% MF-activity slice is adoptable, and even
-   that needs altitude review.
+   that needs specificity review.
 4. **Always closure-filter (cross-branch) before calling a gap.** The 50.6% is an
    upper bound; subtract entries carrying any transport-related descendant/BP/CC
    term first.
@@ -216,7 +216,7 @@ altitude problem (prefer the subfamily-specific child term).
 | Subfamily-level `tc2go` from `go.py` | Rebuild the generated set at 4/5-level TC ids so poly-specific families resolve to substrate-specific MF children. |
 | Exemplar gene reviews | Run the full review workflow on 2–3 confirmed-gap transporters already in this repo (353 candidates), mirroring the RHEA/UniPathway exemplar pattern. |
 | "No transporter-activity MF at all" family set | The 367 TC families with no MF-activity term in `go.py` → candidates for `proposed_new_terms` or accessory (class 8/9) exclusion. |
-| Propose `tc2go` to GO | The strategic deliverable: a curated, altitude-correct `tc2go` external2go mapping seeded by this project. |
+| Propose `tc2go` to GO | The strategic deliverable: a curated, specificity-correct `tc2go` external2go mapping seeded by this project. |
 
 ## Project Status
 
@@ -239,4 +239,4 @@ altitude problem (prefer the subfamily-specific child term).
   classification that is **structurally disconnected from GO** — no external2go
   mapping, a noisy self-published `go.py` dump, and half of reviewed TC-classified
   transporters carrying no transport MF term. The high-value deliverable is a
-  curated, altitude-correct `tc2go` mapping.
+  curated, specificity-correct `tc2go` mapping.
