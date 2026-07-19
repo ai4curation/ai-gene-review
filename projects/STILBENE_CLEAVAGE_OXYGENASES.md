@@ -7,6 +7,7 @@ genes:
   - cao-1
   - cao-2
   - Saro_0802
+  - lsdB
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)
@@ -44,7 +45,8 @@ Neurospora `cao-1` review that opened the thread.
 | cao-2 (contrast) | A7UXI1 | *Neurospora crassa* (NEUCR) | torulene (carotenoid) cleavage — CCO sister | reviewed |
 | **NOV1** (Saro_0802) | Q2GA76 | *Novosphingobium aromaticivorans* (NOVAD) | resveratrol / isoeugenol-cleaving dioxygenase (structure + mechanism) | reviewed |
 | NOV2 | (Novosphingobium) | *Novosphingobium aromaticivorans* | stilbenoid-cleaving CCO | planned |
-| **LSD-I (LsdA)** | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase (founding LSD) | planned |
+| **LSD-III (lsdB)** | Q52008 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase (founding LSD; EC 1.13.11.43) | reviewed |
+| LSD-I | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase isozyme I | candidate |
 | Rco1 | (U. maydis) | *Ustilago maydis* | resveratrol cleavage oxygenase (fungal) | candidate |
 
 ## Substrate recognition: a two-ring-anchor model
