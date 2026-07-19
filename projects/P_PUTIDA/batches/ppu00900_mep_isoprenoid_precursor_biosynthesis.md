@@ -102,7 +102,7 @@ The following KEGG members are outside this module:
 - [x] Reconcile gene reviews, pathway boundary, and module against completed research.
 - [x] Validate and render all affected artifacts.
 - [x] Open draft pull request #2182 for this module.
-- [ ] Shepherd the pull request through review and CI to merge readiness.
+- [x] Shepherd the pull request through review and CI to merge readiness.
 
 ## Files
 
