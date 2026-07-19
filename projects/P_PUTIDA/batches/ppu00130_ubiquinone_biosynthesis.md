@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 13
 - Existing review files: 13
 - Curated review files: 13
-- Gene-level deep-research jobs running: 4
+- Gene-level deep-research jobs running: 3
 
 ## Required Workflow
 
@@ -36,7 +36,7 @@ autolink_gene_symbols: false
 | [ ] | `ubiX` | PP_0548 | Q88QE6 | kegg:ppu00627 | PRESENT | CURATED | RUNNING | Flavin prenyltransferase UbiX (EC 2.5.1.129) |
 | [ ] | `PP_1218` | PP_1218 | Q88NI9 | kegg:ppu00130 | MISSING | MISSING | MISSING | Acyl-CoA thioesterase (EC 3.1.2.-) |
 | [ ] | `PP_1644` | PP_1644 | Q88MC9 | kegg:ppu00130 | MISSING | MISSING | MISSING | NAD(P)H dehydrogenase (Quinone) (EC 1.6.5.2) |
-| [ ] | `ubiG` | PP_1765 | Q88M10 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Ubiquinone biosynthesis O-methyltransferase (2-polyprenyl-6-hydroxyphenol methylase) (EC 2.1.1.222) (3-demethylubiquinon |
+| [x] | `ubiG` | PP_1765 | Q88M10 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis O-methyltransferase (2-polyprenyl-6-hydroxyphenol methylase) (EC 2.1.1.222) (3-demethylubiquinon |
 | [ ] | `PP_2789` | PP_2789 | Q88J60 | kegg:ppu00130 | MISSING | MISSING | MISSING | Oxidoreductase |
 | [ ] | `hpd` | PP_3433 | Q88HC7 | kegg:ppu00130 | PRESENT | CURATED | MISSING | 4-hydroxyphenylpyruvate dioxygenase (EC 1.13.11.27) |
 | [ ] | `PP_3720` | PP_3720 | Q88GK1 | kegg:ppu00130 | MISSING | MISSING | MISSING | NAD(P)H quinone oxidoreductase |
@@ -83,6 +83,9 @@ OpenScientist status:
   name, while exact PP_5197 regioselectivity and KT2440 complex membership stay
   explicitly inferential. UbiH has also completed; its report supports the
   family-level hydroxylase assignment, but three incorrect locus-to-gene claims
-  in its genomic-context section are explicitly excluded from curation.
+  in its genomic-context section are explicitly excluded from curation. UbiG
+  has also completed; direct E. coli evidence supports both O-methylations, and
+  the carboxylated-substrate GO term is downgraded to over-annotation rather
+  than removed outright.
 
 Generated UTC: 2026-07-15T11:36:12.085521+00:00
