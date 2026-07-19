@@ -14,6 +14,10 @@ sidecars:
   batch3_genes: AFFINAGE_EVALUATION/batch3-genes.txt
   batch3_per_gene: AFFINAGE_EVALUATION/results/batch3/per-gene.json
   batch3_summary_md: AFFINAGE_EVALUATION/results/batch3/summary.md
+  batch4_genes: AFFINAGE_EVALUATION/batch4-genes.txt
+  batch4_per_gene: AFFINAGE_EVALUATION/results/batch4/per-gene.json
+  batch4_summary_md: AFFINAGE_EVALUATION/results/batch4/summary.md
+  hard_cases: AFFINAGE_EVALUATION/results/hard-cases.md
   narrative_vs_go: AFFINAGE_EVALUATION/results/narrative-vs-go.md
 ---
 # Affinage Evaluation Project
@@ -37,14 +41,14 @@ sharply for **ADA**, where the synthesized narrative is about *E. coli* Ada
 (an alkyltransferase/transcription factor) while the record is keyed to human
 adenosine deaminase P00813.
 
-A second 13-gene cohort (enzymes, kinases, TFs, a channel) and a third 5-gene
-stress-test cohort **reproduce the pattern**: across the **combined 30 genes** the
-specific curated primary function is captured just **1/30** — the lone hit being
-**KRAS `GTPase activity`**, whose GO term is simultaneously the specific function
-*and* a common mid-level term. Deep-leaf enzyme functions (ornithine
-carbamoyltransferase, glucose-6-phosphate dehydrogenase) are still collapsed to their
-parent, and small-molecule enzymes are sometimes put on the *wrong* catalytic branch
-(`acting on a protein/DNA`, `ligase` for a transferase).
+Three further cohorts — batch 2 (13 well-characterized genes), a batch-3 stress test
+(5 leaf/hormone cases), and a **batch-4 hard-case set** (12 pseudoenzymes /
+disputed-function / reclassified genes drawn from our own curation docs) — **reproduce
+the pattern**: across the **combined 42 genes** the specific curated primary function
+is captured just **1/42** (KRAS `GTPase activity`, whose GO term is simultaneously the
+specific function *and* a common mid-level term). Deep-leaf enzyme functions are
+collapsed to their parent, and enzymes are sometimes put on the *wrong* catalytic
+branch (`acting on a protein/DNA`, `ligase` for a transferase).
 
 **Crucially, this weakness is specific to the GO layer.** Affinage's free-text
 `mechanistic_narrative` — its actual product — is strong and specific, and recovers
@@ -117,6 +121,7 @@ cd projects/AFFINAGE_EVALUATION
 python compare_affinage.py --genes-file pilot-genes.txt   # writes results/
 python compare_affinage.py --genes-file batch2-genes.txt --out-dir results/batch2
 python compare_affinage.py --genes-file batch3-genes.txt --out-dir results/batch3
+python compare_affinage.py --genes-file batch4-genes.txt --out-dir results/batch4
 ```
 
 The exact-id metric is deliberately strict and **understates** agreement where
@@ -182,9 +187,34 @@ glucose-6-phosphate dehydrogenase) are collapsed to their parent. And for a pept
 **hormone** (INS, function = receptor binding) Affinage grounds *no* molecular activity
 at all — the MF layer has nothing to say about non-enzymatic function.
 
-Across the **combined 30-gene set** the specific curated primary function is captured
-**1/30** (KRAS). The two other nominal matches (pilot AATF, ABL1) are general
-secondary terms, not the primary activity.
+## Hard cases (batch 4, n=12) — pseudoenzymes & disputed functions
+
+Full analysis: [`results/hard-cases.md`](AFFINAGE_EVALUATION/results/hard-cases.md).
+A cohort of human genes our own docs flag as hard to curate — pseudoenzymes (ILK,
+ROR1, CPT1C, CASP12), contested activities (PARK7, UCHL1), reclassifications (HDAC6,
+NDUFA4, PLD3), a GAP mis-typed as a GTPase (RASA1), a moonlighter (GAPDH), and a
+family-label misdirection (KEAP1). GO capture stays low (**1/12**), but the two layers
+split sharply:
+
+- **The narrative is genuinely pseudoenzyme-/reclassification-aware** (literature-grounded,
+  not domain-grounded): it calls ILK a *"bona fide pseudokinase… no detectable activity,"*
+  ROR1 a *"pseudokinase devoid of intrinsic catalytic activity,"* CPT1C's transferase
+  *"weak… 20–300× lower,"* HDAC6 a *non-histone/tubulin* deacetylase, and it *adjudicates*
+  the PARK7 glyoxalase-vs-deglycase dispute. On **KEAP1** it lands on adaptor/sensor/ligase —
+  avoiding the actin-binding error a domain-based tool (BioReason/InterPro2GO) made.
+- **The GO layer is a lossy down-cast that can contradict its own narrative.** For **ROR1**
+  the narrative says *"devoid of intrinsic catalytic activity"* while `mechanism_profile`
+  grounds **`catalytic activity, acting on a protein`**; for **CPT1C** the narrative says
+  *"weak"* while the GO layer states flat `transferase activity`. Where the narrative itself
+  de-emphasises catalysis the GO layer more often avoids the trap (ILK→adaptor, RASA1→regulator,
+  PLD3→DNA-catalytic, KEAP1→adaptor, CASP12→empty).
+- **Controversy handling is mixed:** PARK7's narrative engages and resolves the dispute; UCHL1's
+  omits the contested ubiquitin-ligase activity entirely (the "current model" has no slot for a
+  positive-vs-NOT pair).
+
+Across the **combined 42-gene set** the specific curated primary function is captured
+**1/42** (KRAS). Three other nominal matches (AATF, ABL1, GAPDH) are general/secondary
+terms, not the primary activity.
 
 ## Failure-mode taxonomy (verified by inspection)
 
@@ -290,10 +320,10 @@ weak dark-gene prioritization signal. Full argument in
    distance (using the pinned GO release, as in the BioReason
    [ontology-authority](BIOREASON_COMPARISON/verify_ontology_authority.py)
    approach) to quantify the "general-parent" pattern instead of only counting it.
-2. **Scale the cohort.** 30 genes done (pilot + batch 2 + batch 3); extend to a
-   larger stratified sample (enzymes, TFs, transporters, receptors, structural,
-   uncharacterized) and report per-class capture rates. Test the "capture only when
-   the specific term is a common mid-level GO term" hypothesis (KRAS) directly.
+2. **Scale the cohort.** 42 genes done (pilot + batches 2–4, incl. a hard-case set);
+   extend to a larger stratified sample (enzymes, TFs, transporters, receptors,
+   structural, uncharacterized) and report per-class capture rates. Test the "capture
+   only when the specific term is a common mid-level GO term" hypothesis (KRAS) directly.
 3. **Score the narrative, not just the GO layer.** Qualitative sampling done (see
    [narrative-vs-go.md](AFFINAGE_EVALUATION/results/narrative-vs-go.md)); next apply
    the BioReason correctness/completeness rubric on `mechanistic_narrative` across a

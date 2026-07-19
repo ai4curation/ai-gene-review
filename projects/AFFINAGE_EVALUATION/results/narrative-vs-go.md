@@ -1,7 +1,7 @@
 # The mechanism narrative — the complement to the GO layer
 
 The [GO-overlap analysis](summary.md) evaluates Affinage's `mechanism_profile` GO
-terms and finds them systematically over-general (1/30 specific core-MF captured).
+terms and finds them systematically over-general (1/42 specific core-MF captured).
 But that is Affinage's **weakest** output. Its actual product is the
 citation-anchored **`narrative.mechanistic_narrative`** plus the structured
 `timeline.discoveries`. This note evaluates that layer, because judging Affinage by
@@ -96,5 +96,5 @@ per-review source).
 
 **Recommendation:** do not wire Affinage in as a distinct review source on this
 evidence. The durable output of this exercise is the *evaluation result* (the GO layer
-grounds to the specific function ~1/30 while the prose gets it right), not an
+grounds to the specific function ~1/42 while the prose gets it right), not an
 integration.
