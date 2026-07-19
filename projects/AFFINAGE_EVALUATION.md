@@ -11,6 +11,9 @@ sidecars:
   batch2_genes: AFFINAGE_EVALUATION/batch2-genes.txt
   batch2_per_gene: AFFINAGE_EVALUATION/results/batch2/per-gene.json
   batch2_summary_md: AFFINAGE_EVALUATION/results/batch2/summary.md
+  batch3_genes: AFFINAGE_EVALUATION/batch3-genes.txt
+  batch3_per_gene: AFFINAGE_EVALUATION/results/batch3/per-gene.json
+  batch3_summary_md: AFFINAGE_EVALUATION/results/batch3/summary.md
   narrative_vs_go: AFFINAGE_EVALUATION/results/narrative-vs-go.md
 ---
 # Affinage Evaluation Project
@@ -34,12 +37,14 @@ sharply for **ADA**, where the synthesized narrative is about *E. coli* Ada
 (an alkyltransferase/transcription factor) while the record is keyed to human
 adenosine deaminase P00813.
 
-A second, independent 13-gene cohort (enzymes, kinases, TFs, a channel)
-**reproduces the pattern exactly**: **0/13** specific core-MF captured, and it
-surfaces a sharper variant — several small-molecule metabolic enzymes are grounded
-to the *wrong* catalytic branch (`catalytic activity, acting on a protein/DNA`).
-Across the **combined 25 genes**, the specific curated primary function is captured
-**0/25** times.
+A second 13-gene cohort (enzymes, kinases, TFs, a channel) and a third 5-gene
+stress-test cohort **reproduce the pattern**: across the **combined 30 genes** the
+specific curated primary function is captured just **1/30** — the lone hit being
+**KRAS `GTPase activity`**, whose GO term is simultaneously the specific function
+*and* a common mid-level term. Deep-leaf enzyme functions (ornithine
+carbamoyltransferase, glucose-6-phosphate dehydrogenase) are still collapsed to their
+parent, and small-molecule enzymes are sometimes put on the *wrong* catalytic branch
+(`acting on a protein/DNA`, `ligase` for a transferase).
 
 **Crucially, this weakness is specific to the GO layer.** Affinage's free-text
 `mechanistic_narrative` — its actual product — is strong and specific, and recovers
@@ -111,6 +116,7 @@ hard-coded.
 cd projects/AFFINAGE_EVALUATION
 python compare_affinage.py --genes-file pilot-genes.txt   # writes results/
 python compare_affinage.py --genes-file batch2-genes.txt --out-dir results/batch2
+python compare_affinage.py --genes-file batch3-genes.txt --out-dir results/batch3
 ```
 
 The exact-id metric is deliberately strict and **understates** agreement where
@@ -153,9 +159,32 @@ gene's defining activity is grounded only to a top-level parent:
 | CFTR | intracellularly ATP-gated chloride channel activity | transporter activity |
 | SIRT1 | NAD-dependent protein lysine deacetylase activity | catalytic activity, acting on a protein |
 
-Across the **combined 25-gene set**, the specific curated primary function is
-captured **0/25** (the two nominal core matches in the pilot, AATF and ABL1, are
-general secondary terms, not the primary activity).
+## Stress-test cohort (batch 3, n=5) — *when* does capture happen?
+
+A third cohort ([`batch3-genes.txt`](AFFINAGE_EVALUATION/batch3-genes.txt);
+[results](AFFINAGE_EVALUATION/results/batch3/summary.md)) deliberately picked cases
+that *might* break the pattern — very specific/leaf enzyme functions plus a small
+GTPase and a hormone. Result: **1/5**, and the one hit is the tell.
+
+| Gene | AIGR core MF | Affinage top MF | captured |
+|------|--------------|-----------------|:--------:|
+| KRAS | **GTPase activity** (GO:0003924) | **GTPase activity** | ✅ |
+| CALM1 | calcium ion binding | molecular function regulator / sensor activity | ❌ |
+| OTC | ornithine carbamoyltransferase activity | transferase activity + `ligase activity` (wrong branch) | ❌ |
+| G6PD | glucose-6-phosphate dehydrogenase activity | oxidoreductase activity + `hydrolase activity` (wrong branch) | ❌ |
+| INS | insulin receptor binding | *(empty — no MF grounded at all)* | ❌ |
+
+**The rule this sharpens:** Affinage captures the specific function *only when that
+function's GO term is itself a common, mid-level term* — `GTPase activity` is both the
+specific KRAS function and a frequent annotation, so the frequency-weighted grounding
+lands on it. Deep-leaf enzyme terms (ornithine carbamoyltransferase,
+glucose-6-phosphate dehydrogenase) are collapsed to their parent. And for a peptide
+**hormone** (INS, function = receptor binding) Affinage grounds *no* molecular activity
+at all — the MF layer has nothing to say about non-enzymatic function.
+
+Across the **combined 30-gene set** the specific curated primary function is captured
+**1/30** (KRAS). The two other nominal matches (pilot AATF, ABL1) are general
+secondary terms, not the primary activity.
 
 ## Failure-mode taxonomy (verified by inspection)
 
@@ -212,12 +241,11 @@ accession-anchored GOA review catches.
 Beyond generic-ancestor grounding (mode 1), several small-molecule metabolic
 enzymes are grounded to the **wrong catalytic branch** entirely: SOD1, LDHA and
 PKM receive `catalytic activity, acting on a protein` (GO:0140096), and FASN and
-GSK3B receive `catalytic activity, acting on DNA` (GO:0140097) — none of which act
-on proteins or DNA in the reaction the curated core function describes. This looks
-like literature co-mention of protein/nucleic-acid partners leaking into the
-substrate-class grounding, and it is worse than mere imprecision: the assigned
-parent is not an ancestor of the true term, so even ontology-aware ancestor
-scoring would (correctly) count it as wrong.
+GSK3B receive `catalytic activity, acting on DNA` (GO:0140097), and OTC—a
+transferase—gets `ligase activity` (GO:0016874). None act on those substrates in
+the reaction the curated core function describes. This is worse than mere
+imprecision: the assigned parent is not an ancestor of the true term, so even
+ontology-aware ancestor scoring would (correctly) count it as wrong.
 
 ## The mechanism narrative (the complement to GO)
 
@@ -262,9 +290,10 @@ weak dark-gene prioritization signal. Full argument in
    distance (using the pinned GO release, as in the BioReason
    [ontology-authority](BIOREASON_COMPARISON/verify_ontology_authority.py)
    approach) to quantify the "general-parent" pattern instead of only counting it.
-2. **Scale the cohort.** 25 genes done (pilot + batch 2); extend to a larger
-   stratified sample (enzymes, TFs, transporters, receptors, structural,
-   uncharacterized) and report per-class capture rates.
+2. **Scale the cohort.** 30 genes done (pilot + batch 2 + batch 3); extend to a
+   larger stratified sample (enzymes, TFs, transporters, receptors, structural,
+   uncharacterized) and report per-class capture rates. Test the "capture only when
+   the specific term is a common mid-level GO term" hypothesis (KRAS) directly.
 3. **Score the narrative, not just the GO layer.** Qualitative sampling done (see
    [narrative-vs-go.md](AFFINAGE_EVALUATION/results/narrative-vs-go.md)); next apply
    the BioReason correctness/completeness rubric on `mechanistic_narrative` across a
