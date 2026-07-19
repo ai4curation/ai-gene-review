@@ -40,7 +40,7 @@ The following KEGG members are outside this module:
 | 4 | `ispE` | PP_0723 | Q88PX5 | GO:0050515 CDP-ME kinase | OpenScientist complete and assessed |
 | 5 | `ispF` | PP_1618 | Q88MF3 | GO:0008685 ME-CPP synthase | OpenScientist complete and assessed |
 | 6 | `ispG` | PP_0853 | Q88PJ7 | GO:0141197 flavodoxin-coupled HMBPP synthase | OpenScientist running |
-| 7 | `ispH` | PP_0606 | Q88Q89 | GO:0051745 HMBPP reductase | OpenScientist running |
+| 7 | `ispH` | PP_0606 | Q88Q89 | GO:0051745 HMBPP reductase | OpenScientist complete and assessed |
 
 ## Curation Findings
 
