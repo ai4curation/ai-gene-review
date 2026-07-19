@@ -48,9 +48,12 @@ The following KEGG members are outside this module:
   hole is apparent in the first pass.
 - DXS is a route-entry enzyme rather than a committed MEP step because DXP is a
   branch-point metabolite.
-- For IspG, Rhea 43604 and the reviewed UniProt record support the
-  flavodoxin-specific GO:0141197 term. The ferredoxin-specific GO:0046429 IEA is
-  marked for modification rather than treated as a second core activity.
+- For PSEPK IspG, Rhea 43604 and the reviewed UniProt record support the
+  flavodoxin-specific GO:0141197 term. The unsupported ferredoxin-specific IEA
+  is removed rather than modified because the exact flavodoxin annotation is
+  already independently present. The reusable module separately models the
+  ferredoxin-coupled implementation with GO:0046429, Rhea 26119, and the
+  reviewed cyanobacterial exemplar UniProtKB:Q3AK30.
 - IspH directly supports both GO:0019288 and GO:0050992 because its terminal
   reaction produces both IPP and DMAPP.
 - Species-aware OpenScientist research independently recovered the seven core
@@ -64,11 +67,21 @@ The following KEGG members are outside this module:
 - The report's proposed PP_0142/PP_0959 "reannotation" was not propagated:
   local metadata already assigns these proteins to the ABC-transporter bucket,
   outside the ppu00900 candidate set.
-- Every module leaf has PSEPK and E. coli UniProt exemplars. Canonical PAINT IBD
-  nodes were added for DXS (`PTN000179250`), Dxr (`PTN000776155`), IspD
+- The PSEPK implementation of every required step has paired PSEPK and E. coli
+  UniProt exemplars, and the alternate ferredoxin-coupled IspG leaf has a
+  reviewed cyanobacterial exemplar. Canonical PAINT IBD nodes were added for
+  DXS (`PTN000179250`), Dxr (`PTN000776155`), IspD
   (`PTN000781812`), IspE (`PTN000466527`), IspF (`PTN000781796`), and IspH
   (`PTN000764789`). The IspG PAINT node supports the ferredoxin sibling term,
-  not the flavodoxin term used here, so it was deliberately not asserted.
+  but does not cleanly separate the carrier-specific subfamilies, so it was
+  deliberately not asserted.
+- Generic OpenScientist module research supported the seven-reaction order,
+  the DXS/Dxr boundary, direct dual output by IspH, and electron-carrier
+  variation at IspG. Its claims that MEP and MVA are universally mutually
+  exclusive, that DXS is universally rate-limiting, and that all seven steps
+  are obligatory in every biological context were not adopted. MEP-intermediate
+  signaling, detailed Fe-S mechanism, and downstream metabolism remain outside
+  this module's core.
 
 ## Workflow Status
 
@@ -78,7 +91,7 @@ The following KEGG members are outside this module:
 - [x] Build and validate a species-neutral seven-part module.
 - [x] Add exact Rhea reactions, paired UniProt exemplars, and locally verified PAINT nodes.
 - [ ] Complete and assess the remaining gene-level OpenScientist reports.
-- [ ] Complete and assess generic OpenScientist module research.
+- [x] Complete and assess generic OpenScientist module research.
 - [x] Complete and assess PSEPK module + pathway + taxon research.
 - [ ] Reconcile gene reviews, pathway boundary, and module against completed research.
 - [ ] Validate and render all affected artifacts.
