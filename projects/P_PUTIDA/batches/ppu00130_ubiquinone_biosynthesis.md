@@ -13,8 +13,8 @@ autolink_gene_symbols: false
 - Accessory genes recovered outside KEGG map membership: 3
 - Primary bucket genes: 13
 - Existing review files: 13
-- Curated review files: 12
-- Gene-level deep-research jobs running: 8
+- Curated review files: 13
+- Gene-level deep-research jobs running: 7
 
 ## Required Workflow
 
@@ -42,7 +42,7 @@ autolink_gene_symbols: false
 | [ ] | `PP_3720` | PP_3720 | Q88GK1 | kegg:ppu00130 | MISSING | MISSING | MISSING | NAD(P)H quinone oxidoreductase |
 | [ ] | `ubiE` | PP_5011 | Q88D17 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Ubiquinone/menaquinone biosynthesis C-methyltransferase UbiE (EC 2.1.1.163) (EC 2.1.1.201) (2-methoxy-6-polyprenyl-1,4-b |
 | [x] | `ubiJ` | PP_5012 | Q88D16 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiJ |
-| [ ] | `ubiB` | PP_5013 | A0A140FWS4 | outside ppu00130 | PRESENT | PENDING | RUNNING | Probable protein kinase UbiB |
+| [x] | `ubiB` | PP_5013 | A0A140FWS4 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Probable protein kinase UbiB |
 | [ ] | `visC` | PP_5197 | Q88CI4 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Predicted aerobic UbiI/VisC-type ubiquinone hydroxylase |
 | [ ] | `ubiH` | PP_5199 | Q88CI2 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 2-octaprenyl-6-methoxyphenyl hydroxylase |
 | [ ] | `ubiD` | PP_5213 | Q88CG8 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98) (Polyprenyl p-hydroxybenzoate decarboxylase) |
@@ -56,7 +56,7 @@ First-pass boundary:
 
 - Core aerobic ubiquinone biosynthesis: `ubiC` supplies 4-hydroxybenzoate from chorismate; `ubiA` attaches the polyprenyl side chain; `ubiD` performs the prFMN-dependent decarboxylation; `visC`, `ubiH`, `coq7`, `ubiG`, and `ubiE` carry the complementary ring hydroxylation/methylation steps.
 - Cofactor context: `ubiX` makes prenylated FMN for UbiD-family decarboxylases. It is not a direct ubiquinone-substrate conversion, but it is included as UbiD activation context in the reusable module.
-- Assembly/regulatory context missed by the KEGG membership list: `ubiJ`, `ubiK`, and `ubiB`. The `ubiE-ubiJ-ubiB` gene cluster provides additional species-level support; these factors are optional context in the reusable module, not extra ring reactions.
+- Assembly/accessory context missed by the KEGG membership list: `ubiJ`, `ubiK`, and `ubiB`. The `ubiE-ubiJ-ubiB` gene cluster provides additional species-level support; these factors are optional context in the reusable module, not extra ring reactions. UbiB is modeled conservatively as a kinase-like ATP-dependent accessory factor rather than a demonstrated UbiI regulator.
 - KEGG map spillover / neighboring processes to scrutinize: `hpd` is already curated as homogentisate-pathway tyrosine/phenylalanine catabolism, while `PP_1218`, `PP_1644`, `PP_2789`, and `PP_3720` look like acyl-CoA thioesterase or generic quinone reductase entries rather than required ubiquinone-biosynthesis steps.
 
 This PR began as a module-first light pass. The nine selected catalytic/cofactor
@@ -72,6 +72,9 @@ OpenScientist status:
 - Generic and species-aware reports completed successfully. The species audit
   recovered `ubiJ`, `ubiK`, and `ubiB`; three additional gene reports were
   started with the same 7200-second timeout. `ubiA`, `ubiC`, and `ubiK` are
-  complete; `ubiJ` has now also completed, leaving eight gene jobs in progress.
+  complete; `ubiJ` and `ubiB` have now also completed, leaving seven gene jobs
+  in progress. UbiB curation replaces the transferred canonical protein-kinase
+  call with family-supported ATP hydrolysis and keeps the exact bacterial
+  molecular output as a knowledge gap.
 
 Generated UTC: 2026-07-15T11:36:12.085521+00:00
