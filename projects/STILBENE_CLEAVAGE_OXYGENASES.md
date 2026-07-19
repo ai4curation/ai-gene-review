@@ -2,12 +2,15 @@
 title: "Stilbene Cleavage Oxygenases (SCO / lignostilbene α,β-dioxygenase family)"
 maturity: SCOPING
 tags: [ENZYME_FAMILY]
-species: [NEUCR, NOVAD, SPHPI]
+species: [NEUCR, NOVAD, SPHPI, MYCMD]
 genes:
   - cao-1
   - cao-2
   - Saro_0802
+  - Saro_2809
   - lsdB
+  - Q53353
+  - RCO1
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)
@@ -44,10 +47,10 @@ Neurospora `cao-1` review that opened the thread.
 | **cao-1** | Q7S860 | *Neurospora crassa* (NEUCR) | resveratrol/piceatannol (hydroxystilbene) cleavage | reviewed |
 | cao-2 (contrast) | A7UXI1 | *Neurospora crassa* (NEUCR) | torulene (carotenoid) cleavage — CCO sister | reviewed |
 | **NOV1** (Saro_0802) | Q2GA76 | *Novosphingobium aromaticivorans* (NOVAD) | resveratrol / isoeugenol-cleaving dioxygenase (structure + mechanism) | reviewed |
-| NOV2 | (Novosphingobium) | *Novosphingobium aromaticivorans* | stilbenoid-cleaving CCO | planned |
+| NOV2 (Saro_2809) | Q2G4H8 | *Novosphingobium aromaticivorans* (NOVAD) | stilbenoid-cleaving CCO (assayed with resveratrol/piceatannol) | reviewed |
 | **LSD-III (lsdB)** | Q52008 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase (founding LSD; EC 1.13.11.43) | reviewed |
-| LSD-I | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase isozyme I | candidate |
-| Rco1 | (U. maydis) | *Ustilago maydis* | resveratrol cleavage oxygenase (fungal) | candidate |
+| LSD-I | Q53353 | *Sphingomonas paucimobilis* (SPHPI) | lignostilbene α,β-dioxygenase isozyme I | reviewed |
+| **Rco1** | A0A0D1E6L2 | *Ustilago maydis* (MYCMD) | resveratrol cleavage oxygenase (fungal; no carotenoid activity) | reviewed |
 
 ## Substrate recognition: a two-ring-anchor model
 
@@ -87,11 +90,23 @@ are **wrong for cao-1** (a stilbene cleaver) and **right for cao-2** (a genuine 
 cleaver). Getting the family node right — a stilbene-cleavage subfamily annotated with the grouping
 term above — would fix the whole clade at once.
 
-The same error recurs through **automated** pipelines: the bacterial **NOV1** carries the identical
-carotenoid-dioxygenase over-annotation, but via **TreeGrafter** (IEA, GO_REF:0000118) rather than
-manual IBA — so both the phylogenetic-inference and the tree-grafting propagation routes make the
-identical substrate-class mistake on this family. (See also the TreeGrafter Inference Evaluation
-project.)
+The same error recurs across the whole clade and through **multiple propagation routes**. Every SCO
+reviewed here carries the carotenoid-dioxygenase over-annotation:
+
+- **manual IBA** (GO_REF:0000033): cao-1, Rco1 — both experimentally refuted stilbene cleavers;
+- **automated TreeGrafter IEA** (GO_REF:0000118): NOV1, NOV2, LSD-I, LSD-III.
+
+For the two LSD isozymes the contradiction is starkest — the automated carotenoid terms sit alongside
+the genes' **own experimental (IDA)** lignostilbene-dioxygenase and lignin-catabolism annotations. So
+phylogenetic inference *and* tree-grafting make the identical substrate-class mistake on this family,
+because it mixes carotenoid and stilbene cleavers. (See also the TreeGrafter Inference Evaluation and
+IBA_REVIEW projects.)
+
+**Paralog positive controls in two organisms.** The carotenoid/stilbene split appears as a paralog pair
+in both reviewed fungi: *Neurospora* **CAO-2 (carotenoid/torulene) vs cao-1 (stilbene)**, and
+*Ustilago maydis* **Cco1 (β-carotene) vs Rco1 (stilbene)**. In each, the same family annotation is
+correct for the carotenoid paralog and wrong for the stilbene paralog — only target-specific
+experimental evidence separates them.
 
 ## Open questions
 - What is CAO-1's natural physiological stilbenoid substrate (plant-host vs microbial-competitor
