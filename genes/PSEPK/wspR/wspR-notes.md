@@ -15,3 +15,7 @@
   - `GO:0000160 phosphorelay signal transduction system` -> keep
   - `GO:0006355 regulation of DNA-templated transcription` -> over-annotation; downstream phenotype is indirect via c-di-GMP and FleQ/FleN
   - `GO:0005886 plasma membrane` -> remove; WspR itself is not membrane-spanning
+
+## 2026-07-19 evidence reconciliation
+
+- Retained the review's `ISS`/`IMP` evidence coding. For `GO:0090606 single-species surface biofilm formation`, PMID:39589111 is the more specific original reference because it directly compares the KT2440 `delta-wspR` mutant with wild type. [PMID:39589111 Tetracycline induces wsp operon expression to promote biofilm formation in Pseudomonas putida, "Besides, the biofilm formation of ΔwspR was the lowest among the tested strains, with the average biomass of ΔwspR being approximately 1/3 of that of WT"]
