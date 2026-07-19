@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 13
 - Existing review files: 13
 - Curated review files: 13
-- Gene-level deep-research jobs running: 3
+- Gene-level deep-research jobs running: 1
 
 ## Required Workflow
 
@@ -33,14 +33,14 @@ autolink_gene_symbols: false
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | Gene research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [ ] | `coq7` | PP_0427 | Q88QR1 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 3-demethoxyubiquinol 3-hydroxylase (DMQ hydroxylase) (EC 1.14.99.60) (2-nonaprenyl-3-methyl-6-methoxy-1,4-benzoquinol hy |
-| [ ] | `ubiX` | PP_0548 | Q88QE6 | kegg:ppu00627 | PRESENT | CURATED | RUNNING | Flavin prenyltransferase UbiX (EC 2.5.1.129) |
+| [x] | `ubiX` | PP_0548 | Q88QE6 | kegg:ppu00627 | PRESENT | CURATED | COMPLETE | Flavin prenyltransferase UbiX (EC 2.5.1.129) |
 | [ ] | `PP_1218` | PP_1218 | Q88NI9 | kegg:ppu00130 | MISSING | MISSING | MISSING | Acyl-CoA thioesterase (EC 3.1.2.-) |
 | [ ] | `PP_1644` | PP_1644 | Q88MC9 | kegg:ppu00130 | MISSING | MISSING | MISSING | NAD(P)H dehydrogenase (Quinone) (EC 1.6.5.2) |
 | [x] | `ubiG` | PP_1765 | Q88M10 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis O-methyltransferase (2-polyprenyl-6-hydroxyphenol methylase) (EC 2.1.1.222) (3-demethylubiquinon |
 | [ ] | `PP_2789` | PP_2789 | Q88J60 | kegg:ppu00130 | MISSING | MISSING | MISSING | Oxidoreductase |
 | [ ] | `hpd` | PP_3433 | Q88HC7 | kegg:ppu00130 | PRESENT | CURATED | MISSING | 4-hydroxyphenylpyruvate dioxygenase (EC 1.13.11.27) |
 | [ ] | `PP_3720` | PP_3720 | Q88GK1 | kegg:ppu00130 | MISSING | MISSING | MISSING | NAD(P)H quinone oxidoreductase |
-| [ ] | `ubiE` | PP_5011 | Q88D17 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Ubiquinone/menaquinone biosynthesis C-methyltransferase UbiE (EC 2.1.1.163) (EC 2.1.1.201) (2-methoxy-6-polyprenyl-1,4-b |
+| [x] | `ubiE` | PP_5011 | Q88D17 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone/menaquinone biosynthesis C-methyltransferase UbiE (EC 2.1.1.163) (EC 2.1.1.201) (2-methoxy-6-polyprenyl-1,4-b |
 | [x] | `ubiJ` | PP_5012 | Q88D16 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiJ |
 | [x] | `ubiB` | PP_5013 | A0A140FWS4 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Probable protein kinase UbiB |
 | [x] | `visC` | PP_5197 | Q88CI4 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Predicted aerobic UbiI/VisC-type ubiquinone hydroxylase |
@@ -86,6 +86,10 @@ OpenScientist status:
   in its genomic-context section are explicitly excluded from curation. UbiG
   has also completed; direct E. coli evidence supports both O-methylations, and
   the carboxylated-substrate GO term is downgraded to over-annotation rather
-  than removed outright.
+  than removed outright. UbiE has also completed; menaquinone biosynthesis is
+  removed as unsatisfiable in KT2440, while the conserved demethylmenaquinone
+  molecular activity is retained only as an over-annotation. UbiX has also
+  completed; direct ortholog biochemistry confirms prFMN cofactor synthesis and
+  refutes the propagated carboxy-lyase activity on UbiX itself.
 
 Generated UTC: 2026-07-15T11:36:12.085521+00:00
