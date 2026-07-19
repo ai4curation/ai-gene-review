@@ -349,11 +349,11 @@ The curation deliverable mirrors RHEA's [`rhea2go.sssom.yaml`](RHEA/rhea2go.ssso
 GO mapping **we propose for ingestion** — *not* a transcription of NCBI's
 `hmm_PGAP.tsv go_terms`. Each is backed by the model's `family_type`,
 `product_name`, EC, and PMIDs, plus the live UniProtKB propagation gain. A
-**28-mapping seed** spanning all three GO aspects (MF, BP, CC — NCBIFAM is a
-whole-protein family resource, not enzyme-only) is in place, with predicate classes
-parallel to RHEA:
+**30-row seed** (28 families; the dGTPase family is now 3 rows after the clade split
+below) spanning all three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family
+resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
 
-- **`skos:exactMatch`** (26 rows) — the GO term *is* the family's function; a
+- **`skos:exactMatch`** (27 rows) — the GO term *is* the family's function; a
   ready-to-add `ncbifam2go` row. The enzyme majority are **EC-bridge supported**
   (verified live: `ec2go(EC)` = this GO term, e.g. formamidase EC
   3.5.1.49→`GO:0004328`, β-lactamase EC 3.5.2.6→`GO:0008800`, uridine kinase EC
@@ -363,6 +363,13 @@ parallel to RHEA:
   IS630 transposase → `GO:0004803` (18,874 entries missing it), an encapsulin-shell
   CC term, and an anti-phage defense BP term. **Five of these rows propose our own
   *specific* term to replace an NCBI value that was too broad** (see below).
+- **`skos:narrowMatch`** (2 rows) — the **dGTPase family split** (NF002326). Structural
+  verification showed this one accession is substrate-heterogeneous, so its family-level
+  `exactMatch` is the common parent `GO:0016793` (triphosphoric monoester hydrolase, true
+  for all members) and the two specific sub-clade activities — strict `GO:0008832` dGTPase
+  and broad `GO:0106375` deoxynucleoside-triphosphate hydrolase — are recorded as
+  `narrowMatch` (resolve per-member, don't blanket-propagate). See the split rationale under
+  "Structural verification" (‡‡ neighbourhood) above.
 - **`skos:broadMatch`** (1 row) — reserved for the case where **no more-specific GO
   term exists to adopt**: VirB5 → `type IV secretion system complex` (a subunit
   `part_of` the whole complex, no VirB5-specific CC term).
@@ -419,7 +426,7 @@ CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 
-The 28-row seed is hand-reviewed; the **EC bridge** lets us scale the *same evidence
+The 30-row seed is hand-reviewed; the **EC bridge** lets us scale the *same evidence
 standard* to the whole collection with no per-row human judgement, because the
 agreement of two independent curated resources (NCBI's `go_terms` and GO's `ec2go`)
 *is* the verification. [`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)
@@ -517,9 +524,10 @@ over-annotation.
 - **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
-  28-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
-  generated at collection scale, and the **member-DB attribution re-join done** on the
-  repo's annotations.
+  30-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
+  generated at collection scale, the **member-DB attribution re-join done** on the
+  repo's annotations, and **four seed rows structurally verified via OpenScientist**
+  (DUF1156, dGTPase, IS630, encapsulin).
 - **Computed live** (via [`NCBIFam/ncbifam_cdd_probe.py`](NCBIFam/ncbifam_cdd_probe.py)
   and [`ncbifam_go_gain.py`](NCBIFam/ncbifam_go_gain.py)):
   `interpro2go` = 30,200 rows / 14,799 InterPro ids (GO `2026-04-28`); NCBIFAM PGAP
@@ -530,8 +538,9 @@ over-annotation.
   5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
   repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 28 verified SSSOM rows (27 exactMatch ready-to-add, incl. 5 proposing our own
+  — 30 verified SSSOM rows (27 exactMatch ready-to-add, incl. 5 proposing our own
   specific term over NCBI's broad one and 1 — FtsX — declining a too-specific term;
+  2 narrowMatch, the dGTPase NF002326 clade split after structural verification;
   1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with
   live propagation gain; **passes** `just validate-ncbifam-mappings`.
 - **Scaled candidates**: [`NCBIFam/ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv)
