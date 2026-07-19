@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QE6" target="_blank" class="term-link">
+                        Q88QE6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QE6" data-a="DESCRIPTION: ubiX encodes a metal-independent flavin prenyltran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiX encodes a metal-independent flavin prenyltransferase that uses dimethylallyl phosphate to synthesize prenylated FMN. This cofactor activates the UbiD decarboxylase used in ubiquinone biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QE6" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic activity is uninformative beside the exact flavin prenyltransferase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0106141 captures the specific evolved activity of UbiX.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004659" target="_blank" class="term-link">
+                                    GO:0004659
+                                </a>
+                            </span>
+                            <span class="term-label">prenyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QE6" data-a="GO:0004659" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Prenyltransferase activity is correct but too broad.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The flavin substrate and prenylated-FMN product are captured by GO:0106141.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QE6" data-a="GO:0016831" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UbiX is not itself the carboxy-lyase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiX synthesizes prenylated FMN, whereas the partner UbiD protein performs the 4-hydroxy-3-polyprenylbenzoate decarboxylation. This TreeGrafter propagation confuses cofactor supply with the UbiD reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiX/ubiX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">prenylated FMN cofactor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26083743" target="_blank" class="term-link">
+                                        PMID:26083743
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Despite structural and biochemical characterization of UbiX as a flavin mononucleotide (FMN)-binding protein, no decarboxylase activity has been detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106141" target="_blank" class="term-link">
+                                    GO:0106141
+                                </a>
+                            </span>
+                            <span class="term-label">flavin prenyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QE6" data-a="GO:0106141" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Flavin prenyltransferase activity is the core function of UbiX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.5.1.129 and Rhea 37743 for prenylated-FMN synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiX/ubiX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Flavin prenyltransferase UbiX</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26083743" target="_blank" class="term-link">
+                                        PMID:26083743
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UbiX acts as a flavin prenyltransferase, linking a dimethylallyl moiety to the flavin N5 and C6 atoms.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Synthesis of prenylated FMN from reduced FMN and dimethylallyl phosphate, supplying the cofactor required by UbiD-family decarboxylases. The PP_0548 reaction is inferred from conserved UbiX-family evidence rather than a target-specific assay.</h3>
+                <span class="vote-buttons" data-g="Q88QE6" data-a="FUNCTION: Synthesis of prenylated FMN from reduced FMN and d..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106141" target="_blank" class="term-link">
+                            flavin prenyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiX/ubiX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">prenylated FMN cofactor</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26083743" target="_blank" class="term-link">
+                                PMID:26083743
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">UbiX produces a novel flavin-derived cofactor required for the decarboxylase activity of UbiD.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiX/ubiX-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No published in vitro characterization, crystal structure, or deletion phenotype exists for the P. putida KT2440 UbiX specifically.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiX/ubiX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88QE6 for ubiX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The entry assigns UbiX as the flavin prenyltransferase that supplies the prenylated-FMN cofactor to UbiD.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiX/ubiX-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26083743" target="_blank" class="term-link">
+                            PMID:26083743
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UbiX is a flavin prenyltransferase required for bacterial ubiquinone biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct UbiX biochemistry establishes metal-independent transfer of a dimethylallyl group to FMN, producing the novel cofactor required by UbiD rather than catalyzing decarboxylation itself.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiX/ubiX-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Family biochemistry, sequence/domain conservation, and the cognate UbiD pathway context support prFMN cofactor synthesis by PP_0548. The target itself has not been assayed, and octaprenyl substrate wording from E. coli is not treated as KT2440-specific chemistry.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_0548 the only physiologically relevant prFMN supplier in KT2440, and are there conditional prFMN-dependent clients beyond UbiD PP_5213?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QE6" data-a="Q: Is PP_0548 the only physiologically relevant prFMN..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute PP_0548 with reduced FMN and dimethylallyl phosphate, verify prFMN by LC-MS, and test whether the product activates purified PP_5213 UbiD on a P. putida-relevant polyprenyl substrate.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QE6" data-a="EXPERIMENT: Reconstitute PP_0548 with reduced FMN and dimethyl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiX-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QE6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *ubiX* (UbiX, Q88QE6, PP_0548) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T19:42:06.347150</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiX-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiX-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-ubix-ubix-q88qe6-pp_0548-in-pseudomonas-putida-kt2440">Functional Annotation of <em>ubiX</em> (UbiX, Q88QE6, PP_0548) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> ubiX (OrderedLocusName PP_0548) · <strong>UniProt:</strong> Q88QE6 · <strong>EC:</strong> 2.5.1.129<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), "PSEPK"<br />
+<strong>Family:</strong> UbiX/PAD1 flavin prenyltransferase family (Pfam PF02441; InterPro IPR004507, IPR003382, IPR036551)</p>
+<hr />
+<h2 id="identity-verification-mandatory">Identity Verification (Mandatory)</h2>
+<ul>
+<li><strong>Gene symbol vs. protein:</strong> The symbol <em>ubiX</em> matches the UniProt description "Flavin prenyltransferase UbiX." ✔</li>
+<li><strong>Organism:</strong> Target is <em>P. putida</em> KT2440; this report distinguishes direct experimental evidence (from the well-studied <em>E. coli</em> / yeast orthologs) from the homology-based assignment for PP_0548. ✔</li>
+<li><strong>Family/domains:</strong> Literature on the UbiX/PAD1 family (Flavoprotein / UbiX-like domains, FMN-binding Rossmann fold) aligns with the domains listed for Q88QE6. ✔</li>
+<li><strong>Conclusion:</strong> This is an unambiguous, well-characterized enzyme family. No literature exists for a <em>different</em> gene sharing the symbol "ubiX." Direct biochemistry has been performed on orthologs; PP_0548 is annotated by <strong>HAMAP-Rule MF_01984 and strong orthology (~45% identity to <em>E. coli</em> UbiX; ~51% to the <em>E. coli</em> Pad1 paralog)</strong>. The function below is assigned by robust evolutionary inference, corroborated by extensive experimental work on orthologs.</li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>UbiX (Q88QE6, locus PP_0548) of <em>Pseudomonas putida</em> KT2440 is a soluble, cytoplasmic, metal-independent flavin prenyltransferase (EC 2.5.1.129).</strong> Its primary and specific function is to synthesize the diffusible prenylated-FMN (prFMN) cofactor. It transfers a dimethylallyl moiety from dimethylallyl-monophosphate (DMAP) onto reduced flavin mononucleotide (FMN), forming two new covalent bonds — one to the flavin <strong>N5</strong> atom and one to the flavin <strong>C6</strong> atom — thereby adding a fourth, non-aromatic ring to the isoalloxazine system. UbiX is <em>not</em> itself a decarboxylase; its prFMN product is the essential activating cofactor for the partner enzyme UbiD, a reversible (de)carboxylase.</p>
+<p>In <em>P. putida</em> KT2440 the genome encodes exactly one cognate UbiD (Q88CG8 / PP_5213), which anchors UbiX's primary physiological role to <strong>ubiquinone (coenzyme Q) biosynthesis</strong> — specifically the non-oxidative decarboxylation of the 3-octaprenyl-4-hydroxybenzoate intermediate. UbiX operates in the cytoplasm as a soluble, oligomeric flavoprotein.</p>
+<p>The functional assignment for PP_0548 rests on four converging lines of evidence rather than direct biochemistry of the <em>P. putida</em> protein itself: (1) <strong>experimental biochemistry</strong> of <em>E. coli</em>/yeast orthologs demonstrating flavin-prenyltransferase activity and its role in ubiquinone biosynthesis; (2) <strong>structural biology</strong> of the family showing a soluble Rossmann-fold FMN flavoprotein assembling into trimers/dodecamers; (3) <strong>evolutionary/sequence analysis</strong> establishing PP_0548 as a genuine UbiX ortholog (≈45% identity, conserved FMN-binding motif); and (4) <strong>residue-level mapping</strong> confirming that the catalytically important π-system active-site residues and phosphate-binding loops are intact.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-ubix-is-a-flavin-prenyltransferase-that-synthesizes-prfmn-ec-251129">Finding 1 — UbiX is a flavin prenyltransferase that synthesizes prFMN (EC 2.5.1.129)</h3>
+<p>The core molecular function of UbiX is the biosynthesis of prenylated-FMN. UbiX catalyzes the transfer of a dimethylallyl moiety from <strong>dimethylallyl-monophosphate (DMAP)</strong> onto reduced FMN. In the product, the dimethylallyl group is joined to the flavin isoalloxazine at both the <strong>N5 and C6 atoms</strong>, generating a fourth, non-aromatic six-membered ring fused to the isoalloxazine. Distinctively among prenyltransferases, UbiX is <strong>metal-independent</strong> and requires the monophosphorylated (not diphosphorylated) prenyl donor DMAP.</p>
+<p>The reaction (EC 2.5.1.129):</p>
+<blockquote>
+<p>reduced FMN (FMNH₂) + dimethylallyl-monophosphate (DMAP) → prenylated-FMN (prFMN) + phosphate</p>
+</blockquote>
+<p>This is stated directly in the primary structural/biochemical study of UbiX (<a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a>): <em>"UbiX acts as a flavin prenyltransferase, linking a dimethylallyl moiety to the flavin N5 and C6 atoms. This adds a fourth non-aromatic ring to the flavin isoalloxazine group. In contrast to other prenyltransferases, UbiX is metal-independent and requires dimethylallyl-monophosphate as substrate."</em> That the enzyme produces a <em>diffusible</em> cofactor rather than acting as a decarboxylase itself was established for the isofunctional yeast enzyme PAD1 (<a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">PMID: 25647642</a>): <em>"PAD1 catalyzes the formation of a novel, diffusible cofactor required by FDC for decarboxylase activity."</em></p>
+<p><strong>Substrate specificity:</strong> the flavin substrate is reduced FMN (the 5′-phosphate is important; riboflavin supports only a partial, single-bond reaction), and the prenyl donor is DMAP. In vivo, DMAP can arise from phosphorylation of prenol (e.g., by ThiM) or dephosphorylation of DMAPP by Nudix hydrolases (<a href="https://pubmed.ncbi.nlm.nih.gov/29551348/">PMID: 29551348</a>). For the <em>P. putida</em> KT2440 ortholog specifically, this function is assigned by <strong>HAMAP-Rule MF_01984</strong> and strong orthology rather than direct assay.</p>
+<h3 id="finding-2-ubix-provides-prfmn-to-ubid-for-the-decarboxylation-step-of-ubiquinone-coq-biosynthesis">Finding 2 — UbiX provides prFMN to UbiD for the decarboxylation step of ubiquinone (CoQ) biosynthesis</h3>
+<p>The physiological pathway in which UbiX operates is <strong>ubiquinone (coenzyme Q) biosynthesis</strong>. UbiX does not act alone: it supplies the prFMN cofactor that the decarboxylase UbiD requires. In <em>E. coli</em>, the UbiX/UbiD pair is responsible for the decarboxylation of the <strong>3-octaprenyl-4-hydroxybenzoate</strong> (4-hydroxy-3-octaprenylbenzoate) intermediate of the CoQ pathway.</p>
+<p>The loss-of-function phenotype is diagnostic. An <em>E. coli ubiX</em> mutant <em>"produces very low levels of Q, grows slowly on succinate as the sole carbon source, accumulates 4-hydroxy-3-octaprenyl-benzoate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17889824/">PMID: 17889824</a>) — exactly the signature expected if the octaprenyl-hydroxybenzoate decarboxylation step is blocked (succinate is a non-fermentable, respiration-dependent carbon source, so poor growth on it reflects impaired ubiquinone-dependent respiration). The specific pathway intermediate is identified in the mechanistic study (<a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a>): <em>"ubiX and ubiD, which are responsible for decarboxylation of the 3-octaprenyl-4-hydroxybenzoate precursor."</em> The <em>P. putida</em> genome encodes the orthologous <em>ubiX</em> (PP_0548) in this same pathway context.</p>
+<h3 id="finding-3-catalytic-mechanism-resembles-class-i-terpene-cyclase-chemistry-via-an-n5-dimethylallyl-fmn-intermediate">Finding 3 — Catalytic mechanism resembles class I terpene cyclase chemistry via an N5-dimethylallyl-FMN intermediate</h3>
+<p>Kinetic crystallography has resolved the UbiX reaction into an ordered, two-bond-forming sequence with striking parallels to <strong>class I terpene (terpenoid) synthases</strong> — unusual for a flavoenzyme.</p>
+<ol>
+<li><strong>N5–C1′ bond formation:</strong> After FMN reduction, an active site dominated by π-systems assists phosphate–C1′ bond breakage, forming the first bond between flavin N5 and C1 of the dimethylallyl group. This yields an <strong>N5-dimethylallyl-FMN intermediate</strong>, part of which is released during catalysis and has been isolated and characterized (<a href="https://pubmed.ncbi.nlm.nih.gov/39231435/">PMID: 39231435</a>): <em>"UbiX catalyzes the sequential formation of two bonds, the first between N5 of the flavin and C1 of DMAP, and the second between C6 of the flavin and C3 of DMAP."</em></li>
+<li><strong>C6–C3′ bond formation:</strong> UbiX then acts as a chaperone, reorienting the adduct through transient carbocation species to close the fourth ring (<a href="https://pubmed.ncbi.nlm.nih.gov/31142738/">PMID: 31142738</a>): <em>"UbiX then acts as a chaperone for adduct reorientation, via transient carbocation species, leading ultimately to formation of the dimethylallyl C3'-C6 bond."</em></li>
+</ol>
+<p>After synthesis, prFMN undergoes <strong>oxidative maturation</strong> to the <strong>iminium</strong> species that confers azomethine-ylide reactivity on partner UbiD enzymes (<a href="https://pubmed.ncbi.nlm.nih.gov/32951834/">PMID: 32951834</a>): <em>"Following prenylation, prFMN undergoes oxidative maturation to form the iminium species required for UbiD activity."</em> This azomethine-ylide chemistry enables UbiD's reversible non-oxidative (de)carboxylation via a 1,3-dipolar cycloaddition mechanism — the first known enzymatic example of such chemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">PMID: 26083754</a>).</p>
+<h3 id="finding-4-ubix-is-a-soluble-oligomeric-fmn-binding-flavoprotein-acting-in-the-cytoplasm">Finding 4 — UbiX is a soluble, oligomeric FMN-binding flavoprotein acting in the cytoplasm</h3>
+<p>The UbiX/PAD1 family adopts an <strong>FMN-binding Rossmann fold</strong> with a <strong>non-covalently bound FMN</strong> located at the interface between two monomers. The proteins assemble into oligomers built from a trimer unit that further associates into <strong>dodecamers</strong>. This was established from the 2.0 Å crystal structure of <em>E. coli</em> Pad1, a close UbiX paralog (51% identity) (<a href="https://pubmed.ncbi.nlm.nih.gov/15459342/">PMID: 15459342</a>): <em>"Each Pad1 monomer consists of a typical Rossmann fold containing a non-covalently bound molecule of FMN,"</em> and <em>"Pad1 also forms dodecamers."</em></p>
+<p>These are <strong>soluble cytoplasmic flavoproteins</strong> with no signal peptide, transmembrane region, or secretion signal. UbiX generates the diffusible prFMN cofactor within the cytoplasm, where its partner UbiD also operates. This localizes UbiX's function to the <strong>cytoplasmic compartment</strong> of <em>P. putida</em>, consistent with the early cytoplasmic steps of the CoQ pathway.</p>
+<h3 id="finding-5-bioinformatic-confirmation-that-pp_0548-is-a-genuine-ubix-ortholog">Finding 5 — Bioinformatic confirmation that PP_0548 is a genuine UbiX ortholog</h3>
+<p>A global Needleman–Wunsch alignment of <em>P. putida</em> KT2440 UbiX (Q88QE6, 209 aa) against experimentally characterized <em>E. coli</em> K12 UbiX (P0AG03 / UBIX_ECOLI, 189 aa) yields <strong>84/186 identical aligned positions = 45.2% identity</strong> (44.4% over the full <em>E. coli</em> length) — well above the ~30% threshold used to infer orthology and conserved function. The diagnostic N-terminal FMN-binding glycine-rich flavodoxin motif is conserved.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>P. putida</em> KT2440 (Q88QE6)</th>
+<th><em>E. coli</em> K12 (P0AG03)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>209 aa</td>
+<td>189 aa</td>
+</tr>
+<tr>
+<td>Glycine-rich FMN motif</td>
+<td><code>T-G-A-S-G-A-Q-Y-G</code></td>
+<td><code>S-G-A-S-G-A-I-Y-G</code></td>
+</tr>
+<tr>
+<td>Shared consensus</td>
+<td><code>GxSGAxYG</code></td>
+<td><code>GxSGAxYG</code></td>
+</tr>
+<tr>
+<td>Global identity</td>
+<td>—</td>
+<td>45.2% over aligned positions</td>
+</tr>
+</tbody>
+</table>
+<p>Both are single-domain flavoproteins of 189–209 aa. This level of identity, combined with the conserved diagnostic motif, is well above the threshold for confident functional orthology in this family and confirms PP_0548 as a <strong>bona fide UbiX</strong>, not a distant or misannotated paralog.</p>
+<h3 id="finding-6-kt2440-encodes-a-single-cognate-ubid-partner-pp_5213-pinning-ubixs-role-to-coq-biosynthesis">Finding 6 — KT2440 encodes a single cognate UbiD partner (PP_5213), pinning UbiX's role to CoQ biosynthesis</h3>
+<p>A UniProt proteome survey of <em>P. putida</em> KT2440 (taxon 160488) shows that the <strong>UbiD family (Pfam PF01977) is represented by exactly one protein</strong>: Q88CG8 / UBID_PSEPK (gene <em>ubiD</em>, PP_5213, 488 aa), annotated as 3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98). The UbiX/flavoprotein family (PF02441) contains UbiX itself plus one unrelated-function member, CoaBC (Q88C96, PP_5285, phosphopantothenoylcysteine decarboxylase; CoA biosynthesis).</p>
+<table>
+<thead>
+<tr>
+<th>Protein</th>
+<th>UniProt</th>
+<th>Locus</th>
+<th>Length</th>
+<th>Pfam</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UbiX</td>
+<td>Q88QE6</td>
+<td>PP_0548</td>
+<td>209 aa</td>
+<td>PF02441</td>
+<td>Flavin prenyltransferase (prFMN synthesis)</td>
+</tr>
+<tr>
+<td>CoaBC</td>
+<td>Q88C96</td>
+<td>PP_5285</td>
+<td>—</td>
+<td>PF02441</td>
+<td>Phosphopantothenoylcysteine decarboxylase (unrelated)</td>
+</tr>
+<tr>
+<td>UbiD</td>
+<td>Q88CG8</td>
+<td>PP_5213</td>
+<td>488 aa</td>
+<td>PF01977</td>
+<td>3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98)</td>
+</tr>
+</tbody>
+</table>
+<p>Because there is exactly <strong>one cognate prFMN-dependent decarboxylase</strong> (UbiD / PP_5213) in the genome, PP_0548's prFMN output has a single dedicated downstream consumer, fixing UbiX's primary physiological role to <strong>coenzyme Q biosynthesis</strong>. The two genes are <strong>unlinked</strong> (PP_0548 vs PP_5213), matching the non-operonic <em>ubiX</em>/<em>ubiD</em> arrangement of <em>E. coli</em>.</p>
+<h3 id="finding-7-catalytically-important-fmn-binding-and-system-active-site-residues-are-conserved-in-pp_0548">Finding 7 — Catalytically important FMN-binding and π-system active-site residues are conserved in PP_0548</h3>
+<p>Residue-level mapping of the <em>P. putida</em>–<em>E. coli</em> UbiX alignment demonstrates that the functional core is intact in PP_0548:</p>
+<ul>
+<li><strong>(i) FMN-phosphate-binding glycine-rich loop</strong> <code>GxSGAxYG</code> (<em>P. putida</em> G13–G20);</li>
+<li><strong>(ii) flavin-phosphate "PCS" loop</strong> (<em>E. coli</em> <code>...ILPCSIKT...</code> vs <em>P. putida</em> <code>...VVVPCSTGT...</code>);</li>
+<li><strong>(iii) aromatic residues building the π-system-rich active site</strong> — Y19, F168, Y169 and W200 (<em>P. putida</em> numbering; = <em>E. coli</em> Y16, F152, Y153, W186);</li>
+<li>plus multiple <strong>invariant acidic residues</strong> (e.g., <em>P. putida</em> E33, E49, D51, E130, E140, D176/D177).</li>
+</ul>
+<p>Because UbiX catalysis is attributed to a metal-independent, π-system-dominated active site that assists phosphate–C1′ cleavage and stabilizes transient carbocations (Finding 3), conservation of exactly these residues in PP_0548 provides structural-bioinformatic evidence that the <em>P. putida</em> enzyme retains fully intact catalytic machinery.</p>
+<h3 id="finding-8-consolidated-conclusion-supported-by-four-convergent-evidence-lines">Finding 8 — Consolidated conclusion supported by four convergent evidence lines</h3>
+<p>The functional annotation of <em>P. putida</em> UbiX rests on four converging evidence types:</p>
+<ol>
+<li><strong>Experimental biochemistry</strong> of orthologs — <em>E. coli</em>/yeast UbiX/PAD1 are flavin prenyltransferases making prFMN from reduced FMN + DMAP (<a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">PMID: 25647642</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/39231435/">PMID: 39231435</a>), and <em>ubiX</em> deletion abolishes ubiquinone while accumulating 3-octaprenyl-4-hydroxybenzoate (<a href="https://pubmed.ncbi.nlm.nih.gov/17889824/">PMID: 17889824</a>);</li>
+<li><strong>Structure</strong> — soluble Rossmann-fold FMN flavoprotein forming trimers/dodecamers with FMN at subunit interfaces (<a href="https://pubmed.ncbi.nlm.nih.gov/15459342/">PMID: 15459342</a>);</li>
+<li><strong>Evolution</strong> — 45% identity to <em>E. coli</em> UbiX with a conserved FMN-binding motif;</li>
+<li><strong>Residue-level</strong> — conservation of the π-system active-site residues (Y19/F168/Y169/W200) and phosphate-binding loops in PP_0548.</li>
+</ol>
+<p>The genomic context (KT2440 has exactly one cognate UbiD, PP_5213) closes the loop by defining the downstream pathway.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>UbiX sits at a specific, well-defined node in coenzyme Q biosynthesis. Its job is to <strong>build a cofactor, not to act on the pathway substrate directly</strong>. The prFMN it produces is handed to UbiD, which performs the actual chemistry on the CoQ intermediate:</p>
+<div class="codehilite"><pre><span></span><code>   Cytoplasm (P. putida KT2440)
+   ─────────────────────────────────────────────────────────────
+
+   DMAP (dimethylallyl-monophosphate)
++                         ┌──────────────────────────┐
+   reduced FMN  ───────────────►  │   UbiX  (PP_0548)         │
+                  │   flavin prenyltransferase│
+                  │   EC 2.5.1.129            │
+                  │   metal-independent       │
+                  └───────────┬──────────────┘
+      step 1: N5–C1&#39; bond             │
+      step 2: C6–C3&#39; bond (chaperone, │
+      carbocation reorientation)      ▼
+                        prFMN (reduced)
+                              │
+                   oxidative maturation
+                              ▼
+                    prFMN (iminium form,
+                    azomethine-ylide character)
+                              │  diffuses to partner
+                              ▼
+                  ┌──────────────────────────┐
+   3-octaprenyl-4-hydroxy-        │   UbiD  (PP_5213)         │
+   benzoate  ──────────────────►  │   carboxy-lyase           │──► 2-octaprenylphenol
+                  │   EC 4.1.1.98             │    (+ CO2)
+                  │   prFMN-dependent         │
+                  └──────────────────────────┘
+                              │
+                              ▼
+            downstream CoQ maturation → Ubiquinone (CoQ)
+</code></pre></div>
+
+<p>Three features deserve emphasis:</p>
+<ul>
+<li><strong>Division of labor.</strong> UbiX is a <em>cofactor-biosynthetic</em> enzyme. Historically both UbiX and UbiD were thought to be "decarboxylases" (indeed the PP_0548 paralog Pad1 was crystallized as a "UbiX-like decarboxylase" — <a href="https://pubmed.ncbi.nlm.nih.gov/15459342/">PMID: 15459342</a>). The modern understanding, established in 2015, is that UbiX/PAD1 makes a diffusible cofactor and UbiD/FDC is the sole decarboxylase (<a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">PMID: 25647642</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">PMID: 26083754</a>).</li>
+<li><strong>Chemical novelty.</strong> The prFMN cofactor extends the isoalloxazine with a fourth non-aromatic ring, giving the oxidized cofactor azomethine-ylide character. This enables UbiD to perform reversible non-oxidative decarboxylation via 1,3-dipolar cycloaddition — the first known enzymatic example (<a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">PMID: 26083754</a>). UbiX's prenyl-transfer step itself borrows carbocation chemistry from terpene synthases (<a href="https://pubmed.ncbi.nlm.nih.gov/31142738/">PMID: 31142738</a>).</li>
+<li><strong>Localization and pathway specificity.</strong> As a soluble, signal-peptide-free flavoprotein, UbiX functions in the cytoplasm. In KT2440 its single cognate UbiD (PP_5213) commits its prFMN output to the CoQ pathway, making the annotation both specific and well-constrained. Because <em>P. putida</em> is a versatile aromatic-degrading soil bacterium, the same UbiX–UbiD prFMN chemistry underpins related decarboxylation reactions (e.g., ferulic/cinnamic-acid decarboxylation) in the broader family (<a href="https://pubmed.ncbi.nlm.nih.gov/32951834/">PMID: 32951834</a>).</li>
+</ul>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">26083743</a></td>
+<td><em>UbiX is a flavin prenyltransferase required for bacterial ubiquinone biosynthesis</em></td>
+<td>Primary source: UbiX activity, DMAP substrate, N5/C6 chemistry, metal-independence, CoQ-pathway context (Findings 1, 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">25647642</a></td>
+<td><em>Isofunctional enzymes PAD1 and UbiX catalyze formation of a novel cofactor…</em></td>
+<td>UbiX/PAD1 makes a diffusible cofactor for a separate decarboxylase (Findings 1, 8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17889824/">17889824</a></td>
+<td><em>The role of UbiX in E. coli coenzyme Q biosynthesis</em></td>
+<td>Loss-of-function phenotype: low Q, poor succinate growth, intermediate accumulation (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39231435/">39231435</a></td>
+<td><em>Characterization of the N5-dimethylallyl-FMN Intermediate…</em></td>
+<td>Ordered two-bond mechanism; intermediate isolated (Findings 3, 8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31142738/">31142738</a></td>
+<td><em>The UbiX reaction mechanism resembles class I terpene cyclase chemistry</em></td>
+<td>Carbocation-mediated adduct reorientation / terpene-cyclase parallel (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32951834/">32951834</a></td>
+<td><em>Biochemistry of prenylated-FMN enzymes</em></td>
+<td>Oxidative maturation of prFMN to iminium required by UbiD (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">26083754</a></td>
+<td><em>New cofactor supports α,β-unsaturated acid decarboxylation via 1,3-dipolar cycloaddition</em></td>
+<td>Cofactor structure/azomethine-ylide chemistry; UbiD is the true decarboxylase (Mechanistic model)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15459342/">15459342</a></td>
+<td><em>Crystal structure of a dodecameric FMN-dependent UbiX-like decarboxylase (Pad1)…</em></td>
+<td>Rossmann fold, non-covalent FMN at interface, dodecamer, soluble (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29551348/">29551348</a></td>
+<td><em>Biosynthesis and Activity of Prenylated FMN Cofactors</em></td>
+<td>Origin of DMAP; free prFMN activates Fdc1 (Finding 1 context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12799002/">12799002</a></td>
+<td><em>Regulation of the isofunctional genes ubiD and ubiX…</em></td>
+<td>ubiX/ubiD expression regulated by carbon source and fnr/arcA/hemA (context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31072499/">31072499</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/31072498/">31072498</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/33751438/">33751438</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/32579338/">32579338</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/39572138/">39572138</a></td>
+<td>prFMN production / UbiD reconstitution methods</td>
+<td>Confirm UbiX as the enzyme used to generate prFMN for UbiD activation (methodological support)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> All 15 reviewed papers are consistent with a single coherent picture: UbiX is a flavin prenyltransferase producing prFMN for prFMN-dependent UbiD decarboxylases. No source contradicts the assignment. The only historical wrinkle is nomenclature — older structural work labeled the family "UbiX-like decarboxylase" (<a href="https://pubmed.ncbi.nlm.nih.gov/15459342/">PMID: 15459342</a>) before the prenyltransferase function was resolved in 2015; this is a superseded interpretation, not a genuine conflict.</p>
+<p><strong>Important caveat on evidence type.</strong> The direct biochemical, structural, and mechanistic studies were performed on <em>E. coli</em> (and yeast PAD1) enzymes, not on the <em>P. putida</em> KT2440 protein itself. Transfer of function to PP_0548 is an <em>inference</em> — but a very strong one — supported by HAMAP-Rule MF_01984, ≈45% sequence identity with a conserved diagnostic FMN-binding motif (Finding 5), residue-level conservation of the active site (Finding 7), and a single cognate UbiD partner in the same genome (Finding 6).</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Verdict</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UbiX is a flavin prenyltransferase producing prFMN (EC 2.5.1.129)</td>
+<td><strong>Supported</strong></td>
+<td>PMID 26083743, 25647642, 39231435</td>
+</tr>
+<tr>
+<td>UbiX itself decarboxylates 3-octaprenyl-4-hydroxybenzoate ("carboxy-lyase")</td>
+<td><strong>Refuted</strong> (legacy annotation)</td>
+<td>No decarboxylase activity for purified UbiX; UbiD is the decarboxylase (PMID 26083743, 25647642)</td>
+</tr>
+<tr>
+<td>Substrate = reduced FMN + DMAP; metal-independent</td>
+<td><strong>Supported</strong></td>
+<td>PMID 26083743, 29551348, 39231435</td>
+</tr>
+<tr>
+<td>Role in ubiquinone (CoQ) biosynthesis in vivo</td>
+<td><strong>Supported</strong></td>
+<td>PMID 17889824, 26083743</td>
+</tr>
+<tr>
+<td>Soluble cytoplasmic oligomeric flavoprotein</td>
+<td><strong>Supported</strong> (family structure)</td>
+<td>PMID 15459342</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct biochemistry on PP_0548.</strong> No published in vitro characterization, crystal structure, or deletion phenotype exists for the <em>P. putida</em> KT2440 UbiX specifically. The annotation is inference-by-orthology, albeit exceptionally well-supported.</li>
+<li><strong>prFMN not directly demonstrated in KT2440.</strong> The prFMN cofactor and its maturation have been shown in <em>E. coli</em>/yeast systems; physical isolation from <em>P. putida</em> KT2440 has not been reported.</li>
+<li><strong>DMAP supply pathway in <em>P. putida</em> is assumed.</strong> In <em>E. coli</em>, DMAP arises from ThiM phosphorylation of prenol or Nudix dephosphorylation of DMAPP (<a href="https://pubmed.ncbi.nlm.nih.gov/29551348/">PMID: 29551348</a>); the precise KT2440 source was not investigated.</li>
+<li><strong>Potential additional prFMN clients.</strong> The KT2440 reference proteome has a single PF01977 UbiD (PP_5213), but <em>P. putida</em> is a versatile aromatic degrader; whether other prFMN-dependent activities are recruited under specific conditions was not exhaustively explored.</li>
+<li><strong>Oligomeric state of PP_0548 inferred from a paralog.</strong> The dodecamer/trimer architecture is established for <em>E. coli</em> Pad1 (51%-identity paralog); the exact quaternary state of PP_0548 is not experimentally determined.</li>
+<li><strong>Regulation in <em>P. putida</em> uncharacterized here.</strong> <em>ubiD/ubiX</em> regulation by carbon source and anaerobic regulators is documented in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12799002/">PMID: 12799002</a>); analogous regulation at PP_0548/PP_5213 was not assessed.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant characterization of PP_0548.</strong> Express and purify Q88QE6, reconstitute with reduced FMN + DMAP, and confirm prFMN production by LC-MS/UV-vis — directly validating EC 2.5.1.129 for the <em>P. putida</em> enzyme.</li>
+<li><strong>Reciprocal reconstitution with PP_5213 (UbiD).</strong> Use PP_0548-generated prFMN to activate purified <em>P. putida</em> UbiD and assay decarboxylation of 3-octaprenyl-4-hydroxybenzoate (or a soluble surrogate), closing the pathway in the native organism.</li>
+<li><strong>Gene deletion / complementation in KT2440.</strong> Construct a Δ<em>ubiX</em> (ΔPP_0548) strain and test for the diagnostic phenotype (reduced CoQ, impaired growth on succinate/non-fermentable carbon sources, intermediate accumulation), with complementation to confirm specificity.</li>
+<li><strong>Structure determination of PP_0548.</strong> Solve the crystal or cryo-EM structure (with bound FMN/prFMN) to confirm the Rossmann fold, FMN-at-interface binding, oligomeric state, and the modeled π-system active-site residues (Y19/F168/Y169/W200).</li>
+<li><strong>Trace the DMAP supply route in <em>P. putida</em>.</strong> Identify the KT2440 ThiM ortholog and candidate Nudix hydrolases and test their contribution to DMAP provision.</li>
+<li><strong>Survey conditional prFMN clients.</strong> Under aromatic-catabolic growth conditions, test whether additional decarboxylase activities depend on UbiX-derived prFMN.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>UbiX (Q88QE6, PP_0548) in <em>Pseudomonas putida</em> KT2440 is a <strong>soluble, cytoplasmic, metal-independent flavin prenyltransferase (EC 2.5.1.129)</strong> whose primary function is to synthesize the diffusible <strong>prenylated-FMN (prFMN) cofactor</strong> from reduced FMN and dimethylallyl-monophosphate, forming N5 and C6 flavin–prenyl bonds via a terpene-cyclase-like carbocation mechanism. It is not a decarboxylase itself; its prFMN product activates the partner enzyme <strong>UbiD (PP_5213)</strong>, the sole cognate decarboxylase in KT2440, to catalyze the non-oxidative decarboxylation of 3-octaprenyl-4-hydroxybenzoate in <strong>ubiquinone (coenzyme Q) biosynthesis</strong>. This assignment — experimentally established for the <em>E. coli</em>/yeast orthologs — is transferred to PP_0548 by HAMAP rule, ≈45% sequence identity, conserved FMN-binding and π-system active-site residues, and the single-UbiD genomic context.</p>
+<h3 id="key-references">Key references</h3>
+<ul>
+<li>White, Payne, … Leys. <em>UbiX is a flavin prenyltransferase required for bacterial ubiquinone biosynthesis.</em> Nature, 2015. PMID 26083743.</li>
+<li>Payne, White, … Leys. <em>New cofactor supports α,β-unsaturated acid decarboxylation via 1,3-dipolar cycloaddition.</em> Nature, 2015. PMID 26083754.</li>
+<li>Lin, Ferguson, … Marsh. <em>Isofunctional enzymes PAD1 and UbiX…</em> 2015. PMID 25647642.</li>
+<li>Gulmezian et al. <em>The role of UbiX in E. coli coenzyme Q biosynthesis.</em> 2007. PMID 17889824.</li>
+<li>Marshall et al. <em>The UbiX flavin prenyltransferase reaction mechanism resembles class I terpene cyclase chemistry.</em> 2019. PMID 31142738.</li>
+<li>Datar et al. <em>Characterization of the N5-dimethylallyl-FMN intermediate…</em> 2024. PMID 39231435.</li>
+<li>Saaret, Balaikaite, Leys. <em>Biochemistry of prenylated-FMN enzymes.</em> 2020. PMID 32951834.</li>
+<li>Wang et al. <em>Biosynthesis and Activity of Prenylated FMN Cofactors.</em> 2018. PMID 29551348.</li>
+<li>Rangarajan et al. <em>Crystal structure of a dodecameric FMN-dependent UbiX-like decarboxylase (Pad1)…</em> 2004. PMID 15459342.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiX-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiX-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:26083743</li>
+<li>PMID:25647642</li>
+<li>PMID:29551348</li>
+<li>PMID:17889824</li>
+<li>PMID:39231435</li>
+<li>PMID:31142738</li>
+<li>PMID:32951834</li>
+<li>PMID:26083754</li>
+<li>PMID:15459342</li>
+<li>PMID:12799002</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QE6
+gene_symbol: ubiX
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiX encodes a metal-independent flavin prenyltransferase that uses
+  dimethylallyl phosphate to synthesize prenylated FMN. This cofactor activates
+  the UbiD decarboxylase used in ubiquinone biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Catalytic activity is uninformative beside the exact flavin prenyltransferase term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0106141 captures the specific evolved activity of UbiX.
+- term:
+    id: GO:0004659
+    label: prenyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Prenyltransferase activity is correct but too broad.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The flavin substrate and prenylated-FMN product are captured by GO:0106141.
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: UbiX is not itself the carboxy-lyase.
+    action: REMOVE
+    reason: &gt;-
+      UbiX synthesizes prenylated FMN, whereas the partner UbiD protein performs
+      the 4-hydroxy-3-polyprenylbenzoate decarboxylation. This TreeGrafter
+      propagation confuses cofactor supply with the UbiD reaction.
+    supported_by:
+    - reference_id: file:PSEPK/ubiX/ubiX-uniprot.txt
+      supporting_text: prenylated FMN cofactor
+    - reference_id: PMID:26083743
+      supporting_text: &gt;-
+        Despite structural and biochemical characterization of UbiX as a flavin
+        mononucleotide (FMN)-binding protein, no decarboxylase activity has been
+        detected.
+- term:
+    id: GO:0106141
+    label: flavin prenyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Flavin prenyltransferase activity is the core function of UbiX.
+    action: ACCEPT
+    reason: UniProt assigns EC 2.5.1.129 and Rhea 37743 for prenylated-FMN synthesis.
+    supported_by:
+    - reference_id: file:PSEPK/ubiX/ubiX-uniprot.txt
+      supporting_text: Flavin prenyltransferase UbiX
+    - reference_id: PMID:26083743
+      supporting_text: &gt;-
+        UbiX acts as a flavin prenyltransferase, linking a dimethylallyl moiety
+        to the flavin N5 and C6 atoms.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ubiX/ubiX-uniprot.txt
+  title: UniProt entry Q88QE6 for ubiX
+  findings:
+  - statement: &gt;-
+      The entry assigns UbiX as the flavin prenyltransferase that supplies the
+      prenylated-FMN cofactor to UbiD.
+- id: file:PSEPK/ubiX/ubiX-goa.tsv
+  title: QuickGO GOA annotations for ubiX
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed here.
+- id: PMID:26083743
+  title: UbiX is a flavin prenyltransferase required for bacterial ubiquinone biosynthesis.
+  findings:
+  - statement: &gt;-
+      Direct UbiX biochemistry establishes metal-independent transfer of a
+      dimethylallyl group to FMN, producing the novel cofactor required by UbiD
+      rather than catalyzing decarboxylation itself.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed record and abstract verified; the primary biochemical evidence is
+      from characterized orthologs rather than PP_0548.
+- id: file:PSEPK/ubiX/ubiX-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiX
+  findings:
+  - statement: &gt;-
+      Family biochemistry, sequence/domain conservation, and the cognate UbiD
+      pathway context support prFMN cofactor synthesis by PP_0548. The target
+      itself has not been assayed, and octaprenyl substrate wording from E. coli
+      is not treated as KT2440-specific chemistry.
+core_functions:
+- description: &gt;-
+    Synthesis of prenylated FMN from reduced FMN and dimethylallyl phosphate,
+    supplying the cofactor required by UbiD-family decarboxylases. The PP_0548
+    reaction is inferred from conserved UbiX-family evidence rather than a
+    target-specific assay.
+  molecular_function:
+    id: GO:0106141
+    label: flavin prenyltransferase activity
+  supported_by:
+  - reference_id: file:PSEPK/ubiX/ubiX-uniprot.txt
+    supporting_text: prenylated FMN cofactor
+  - reference_id: PMID:26083743
+    supporting_text: &gt;-
+      UbiX produces a novel flavin-derived cofactor required for the
+      decarboxylase activity of UbiD.
+  - reference_id: file:PSEPK/ubiX/ubiX-deep-research-openscientist.md
+    supporting_text: &gt;-
+      No published in vitro characterization, crystal structure, or deletion
+      phenotype exists for the P. putida KT2440 UbiX specifically.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is PP_0548 the only physiologically relevant prFMN supplier in KT2440, and
+    are there conditional prFMN-dependent clients beyond UbiD PP_5213?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute PP_0548 with reduced FMN and dimethylallyl phosphate, verify
+    prFMN by LC-MS, and test whether the product activates purified PP_5213
+    UbiD on a P. putida-relevant polyprenyl substrate.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

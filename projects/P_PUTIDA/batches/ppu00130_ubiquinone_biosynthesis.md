@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [x] Fetch selected high-priority genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist deep research for selected genes selected for full review.
 - [x] Curate selected gene reviews.
-- [ ] Validate module and touched gene reviews.
+- [x] Validate module and touched gene reviews.
 - [x] Open one PR for this module/pathway: [#2137](https://github.com/ai4curation/ai-gene-review/pull/2137).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 

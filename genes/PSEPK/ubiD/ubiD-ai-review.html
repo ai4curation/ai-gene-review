@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CG8" target="_blank" class="term-link">
+                        Q88CG8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CG8" data-a="DESCRIPTION: ubiD encodes a prenylated-FMN- and manganese-depen..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiD encodes a prenylated-FMN- and manganese-dependent decarboxylase that converts 4-hydroxy-3-polyprenylbenzoate to 2-polyprenylphenol during ubiquinone biosynthesis. It is a peripheral inner-membrane enzyme acting from the cytoplasmic side on the prenylated aromatic intermediate generated by UbiA.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CG8" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is redundant with the more specific cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The record also carries cytosol and plasma-membrane annotations; the broad cytoplasm parent adds no useful localization information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CG8" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic exposure is plausible for this peripheral membrane enzyme and a soluble pool is possible, but this is not the primary target-specific localization call.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns peripheral association with the cytoplasmic side of the membrane. The cytosol call is phylogenetically transferred and has not been tested for PP_5213; notably, UbiD is not a member of the defined seven-protein E. coli Ubi metabolon.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CG8" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UbiD is peripherally associated with the bacterial cell membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record explicitly assigns a peripheral cell-membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiD/ubiD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peripheral membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CG8" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the core process for UbiD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiD decarboxylates the prenylated 4-hydroxybenzoate pathway intermediate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiD/ubiD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ubiquinone biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">No purified-enzyme kinetics (kcat, Km), crystal structure, or gene-knockout phenotype has been reported specifically for the KT2440 protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008694" target="_blank" class="term-link">
+                                    GO:0008694
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxy-3-polyprenylbenzoate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CG8" data-a="GO:0008694" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the substrate-specific core molecular function of UbiD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 4.1.1.98 and Rhea 41680 for this decarboxylation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiD/ubiD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Polyprenyl p-hydroxybenzoate decarboxylase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The 3-polyprenyl-4-hydroxybenzoate decarboxylase (UbiD) catalyzes the conversion of 3-polyprenyl-4-hydroxybenzoate to 2-polyprenylphenol in the biosynthesis of ubiquinone</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CG8" data-a="GO:0016831" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carboxy-lyase activity is correct but less informative than the substrate-specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008694 captures the exact UbiD reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Prenylated-FMN-dependent decarboxylation of 4-hydroxy-3-polyprenylbenzoate to 2-polyprenylphenol at the membrane during ubiquinone biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88CG8" data-a="FUNCTION: Prenylated-FMN-dependent decarboxylation of 4-hydr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008694" target="_blank" class="term-link">
+                            4-hydroxy-3-polyprenylbenzoate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiD/ubiD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Polyprenyl p-hydroxybenzoate decarboxylase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No purified-enzyme kinetics (kcat, Km), crystal structure, or gene-knockout phenotype has been reported specifically for the KT2440 protein.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiD/ubiD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88CG8 for ubiD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed entry assigns a peripheral-membrane, prenylated-FMN- and manganese-dependent UbiD decarboxylase in ubiquinone biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiD/ubiD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the six annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ortholog biochemistry and the target UniProt record support the prFMN-dependent UbiD reaction. The report also distinguishes the generic polyprenyl reaction from legacy E. coli octaprenyl naming and notes the absence of direct PP_5213 experiments. Its placement of UbiD inside the defined soluble Ubi metabolon is not adopted because the experimentally recovered seven-protein complex does not contain UbiD.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Q88CG8 preferentially process the expected nonaprenyl P. putida intermediate, and how does it partition between membrane-associated and soluble cellular pools?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CG8" data-a="Q: Does Q88CG8 preferentially process the expected no..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88CG8 with UbiX-supplied prFMN, compare decarboxylation of defined polyprenyl-chain substrates, and test PP_5213-dependent ubiquinone and intermediate profiles in a complemented P. putida deletion strain.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CG8" data-a="EXPERIMENT: Purify Q88CG8 with UbiX-supplied prFMN, compare de..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CG8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *ubiD* (Q88CG8, PP_5213) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T18:59:11.032947</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ubid-q88cg8-pp_5213-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>ubiD</em> (Q88CG8, PP_5213) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>ubiD</strong> (UniProt <strong>Q88CG8</strong>; ordered locus <strong>PP_5213</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>3-octaprenyl-4-hydroxybenzoate carboxy-lyase</strong> (<strong>EC 4.1.1.98</strong>), also called polyprenyl <em>p</em>-hydroxybenzoate decarboxylase. This is a <strong>prenylated-FMN (prFMN)-dependent, UbiD-family enzyme</strong> that catalyzes the <strong>non-oxidative decarboxylation of 3-polyprenyl-4-hydroxybenzoate to 2-polyprenylphenol plus CO₂</strong> (RHEA:41680), a committed step in the biosynthesis of <strong>ubiquinone (coenzyme Q)</strong>. The gene symbol, protein description, UbiD-family domain architecture, and single-copy status in the KT2440 genome are all fully consistent with the UniProt-provided identity; there is no ambiguity in the assignment. This report describes the enzyme's function with high confidence, drawing on direct biochemical characterization of orthologs in <em>Escherichia coli</em> and <em>Pseudomonas aeruginosa</em> together with UniProt curation of Q88CG8 itself.</p>
+<p>The enzyme is catalytically inert as a bare apoprotein. Its activity strictly depends on a remarkable modified flavin cofactor, <strong>prenylated FMN (prFMN)</strong>, which bears a fourth non-aromatic ring formed by linking a dimethylallyl moiety to the FMN N5 and C6 atoms. prFMN is synthesized by the partner flavin prenyltransferase <strong>UbiX</strong>; <em>P. putida</em> KT2440 encodes a cognate UbiX (<strong>Q88QE6</strong>), so the genome contains a complete, functional UbiX–UbiD prFMN-dependent decarboxylation module. Catalysis proceeds through a chemically unusual, <strong>reversible 1,3-dipolar cycloaddition</strong> between the substrate and the azomethine-ylide form of oxidized prFMN — the first known enzymatic example of this cycloaddition chemistry. UbiD is a <strong>homohexamer</strong>, binding <strong>one prFMN per subunit</strong>, with an active-site proton donor and a conserved divalent metal (annotated as Mn/Mg) adjacent to the catalytic cleft.</p>
+<p>Functionally, UbiD acts on the <strong>cytoplasmic side of the inner (cell) membrane</strong> as a <strong>peripheral membrane protein</strong>, and more precisely operates as a component of a <strong>soluble cytoplasmic "Ubi metabolon"</strong> — a ~1-MDa multienzyme complex that carries out the terminal reactions of ubiquinone biosynthesis in the cytosol. Because <em>Pseudomonas</em> uses <strong>ubiquinone-9 (Q-9)</strong> as its respiratory quinone, the physiological substrate in <em>P. putida</em> carries a <strong>C45 nonaprenyl (9-isoprene) tail</strong> rather than the octaprenyl chain in the <em>E. coli</em>-derived enzyme name; that is, the reaction in this organism is the decarboxylation of 3-nonaprenyl-4-hydroxybenzoate to 2-nonaprenylphenol.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-ubid-is-3-octaprenyl-4-hydroxybenzoate-carboxy-lyase-in-ubiquinone-biosynthesis">Finding 1 — UbiD is 3-octaprenyl-4-hydroxybenzoate carboxy-lyase in ubiquinone biosynthesis</h3>
+<p>UbiD (Q88CG8 / PP_5213) catalyzes the <strong>non-oxidative decarboxylation of 3-polyprenyl-4-hydroxybenzoate to 2-polyprenylphenol</strong>, a committed and essential step in the bacterial ubiquinone (coenzyme Q) biosynthetic pathway. This assignment is codified by HAMAP-Rule MF_01636 (which defines the UbiD family) and by the enzyme classification <strong>EC 4.1.1.98</strong>. The reaction was directly characterized in orthologs from <em>E. coli</em> and <em>P. aeruginosa</em>, and PP_5213 is the canonical single-copy <em>ubiD</em> ortholog in <em>P. putida</em> KT2440.</p>
+<p>The mechanistic role is stated explicitly in the literature: "The 3-polyprenyl-4-hydroxybenzoate decarboxylase (UbiD) catalyzes the conversion of 3-polyprenyl-4-hydroxybenzoate to 2-polyprenylphenol in the biosynthesis of ubiquinone" <a href="https://pubmed.ncbi.nlm.nih.gov/23671667/">PMID: 23671667</a>. A second study confirms the specific ubiquinone context: "ubiX and ubiD, which are responsible for decarboxylation of the 3-octaprenyl-4-hydroxybenzoate precursor" <a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a>. Loss-of-function studies of the pathway reinforce this: an <em>E. coli</em> strain defective in the UbiX/UbiD decarboxylation step "accumulates 4-hydroxy-3-octaprenyl-benzoate" and produces very low levels of Q <a href="https://pubmed.ncbi.nlm.nih.gov/17889824/">PMID: 17889824</a>, pinpointing the decarboxylation step catalyzed by UbiD as the metabolic bottleneck.</p>
+<h3 id="finding-2-activity-requires-the-prenylated-fmn-prfmn-cofactor-produced-by-ubix">Finding 2 — Activity requires the prenylated-FMN (prFMN) cofactor produced by UbiX</h3>
+<p>UbiD is catalytically inactive as an apoprotein. It requires <strong>prenylated FMN (prFMN)</strong>, a modified flavin bearing a <strong>fourth non-aromatic ring</strong> formed by covalently linking a dimethylallyl moiety to the FMN N5 and C6 atoms. This cofactor is synthesized by the partner enzyme <strong>UbiX</strong>, a flavin prenyltransferase that transfers the dimethylallyl group from dimethylallyl-monophosphate (DMAP) or dimethylallyl-pyrophosphate (DMAPP) to FMN.</p>
+<p>The discovery paper establishes both the enzymatic source and chemical structure of the cofactor: "UbiX produces a novel flavin-derived cofactor required for the decarboxylase activity of UbiD. UbiX acts as a flavin prenyltransferase, linking a dimethylallyl moiety to the flavin N5 and C6 atoms. This adds a fourth non-aromatic ring to the flavin isoalloxazine group" <a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a>. After prenylation, the cofactor must undergo an activation step: "Following prenylation, prFMN undergoes oxidative maturation to form the iminium species required for UbiD activity" <a href="https://pubmed.ncbi.nlm.nih.gov/32951834/">PMID: 32951834</a>. The same modified cofactor was shown to be shared between the ubiquinone pathway (UbiX/UbiD) and the aromatic-acid decarboxylases (PAD1/FDC), and endogenous UbiX can activate FDC — implying "the same cofactor is required for decarboxylation of 4-hydroxy-3-polyprenylbenzoic acid by UbiD" <a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">PMID: 25647642</a>.</p>
+<h3 id="finding-3-catalysis-proceeds-via-a-reversible-13-dipolar-cycloaddition-on-prfmn">Finding 3 — Catalysis proceeds via a reversible 1,3-dipolar cycloaddition on prFMN</h3>
+<p>Atomic-resolution crystal structures of the UbiD-family model enzyme <strong>Fdc1</strong> show that oxidized prFMN adopts <strong>azomethine ylide (1,3-dipole)</strong> character. Substrate binding positions the reactive (dipolarophile) group directly above this ylide, enabling a <strong>1,3-dipolar cycloaddition</strong> that underpins the reversible (de)carboxylation chemistry. This was proposed as the first known enzymatic example of such a reaction: "we propose that this presents the first example, to our knowledge, of an enzymatic 1,3-dipolar cycloaddition reaction" <a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">PMID: 26083754</a>. The structural basis is described directly: "Substrate binding positions the dipolarophile enoic acid group directly above the azomethine ylide group" <a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">PMID: 26083754</a>.</p>
+<p>It is worth noting that the precise mechanism may vary across the family — for example, quantum-chemical work on the UbiD-family enzyme HmfF (furandicarboxylic acid decarboxylase) proposes a nucleophilic attack rather than a concerted cycloaddition <a href="https://pubmed.ncbi.nlm.nih.gov/40343387/">PMID: 40343387</a> — but the cycloaddition model is the canonical mechanism for prFMN-dependent (de)carboxylation.</p>
+<h3 id="finding-4-ubiquinone-synthesis-including-the-ubid-step-occurs-in-a-soluble-cytoplasmic-ubi-metabolon">Finding 4 — Ubiquinone synthesis, including the UbiD step, occurs in a soluble cytoplasmic Ubi metabolon</h3>
+<p>Rather than being a strictly membrane-embedded process, the terminal reactions of ubiquinone biosynthesis are carried out by a <strong>soluble, cytoplasmic multienzyme complex</strong>. In <em>E. coli</em>, "seven Ubi proteins form the Ubi complex, a stable metabolon that catalyzes the last six reactions of the UQ biosynthetic pathway" <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>. Critically, the complex was purified from the cytosol and shown to be functional there: "We purify the Ubi complex from cytoplasmic extracts and demonstrate that UQ biosynthesis occurs in this fraction, challenging the current thinking of a membrane-associated biosynthetic process" <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>. The hydrophobic polyprenyl-tailed intermediates are chaperoned within the complex by the SCP2 lipid-binding domain of UbiJ, allowing water-soluble handling of otherwise membrane-partitioning substrates <a href="https://pubmed.ncbi.nlm.nih.gov/36142227/">PMID: 36142227</a>. This locates the UbiD reaction on the cytoplasmic side of the cell, within a soluble metabolon, even though the final product (ubiquinone) resides in the membrane.</p>
+<h3 id="finding-5-three-domain-ubid-architecture-and-family-diversity">Finding 5 — Three-domain UbiD architecture and family diversity</h3>
+<p>Crystal structures of UbiD-family members — including <em>P. aeruginosa</em> <strong>PA0254</strong> and <em>E. coli</em> UbiD — reveal a conserved <strong>three-domain subunit</strong>: "an N-terminal α/β domain, a split β-barrel with a similar fold of a family of flavin reductases and a C-terminal α/β domain with a topology characteristic for the UbiD protein family" <a href="https://pubmed.ncbi.nlm.nih.gov/23671667/">PMID: 23671667</a>. The central split β-barrel is the flavin/prFMN-binding module (a flavin-reductase-like fold), and the C-terminal domain is diagnostic of the family. The family is functionally diverse: "considerable variation exists in the many branches of the UbiD family tree" <a href="https://pubmed.ncbi.nlm.nih.gov/28754323/">PMID: 28754323</a>. The canonical ubiquinone-pathway UbiD (to which Q88CG8 belongs) is distinct from other branches catalyzing (de)carboxylation of ferulate, phenazine-1-carboxylate, furandicarboxylate, and other aromatic/unsaturated acids used in lignin and aromatic-compound biotransformation.</p>
+<h3 id="finding-6-curated-structuralcatalytic-specifics-of-q88cg8">Finding 6 — Curated structural/catalytic specifics of Q88CG8</h3>
+<p>UniProt curation of Q88CG8 provides the following organism-specific annotations, consistent with the family: <strong>Function</strong> — "Catalyzes the decarboxylation of 3-octaprenyl-4-hydroxy benzoate to 2-octaprenylphenol, an intermediate step in ubiquinone biosynthesis"; <strong>Cofactor</strong> — "Binds 1 prenylated FMN per subunit"; <strong>Subunit</strong> — "Homohexamer"; an annotated <strong>Active Site</strong> functioning as a "Proton donor"; and family assignment to <strong>UbiD</strong>. The catalyzed reaction is mapped to <strong>RHEA:41680</strong> (3-octaprenyl-4-hydroxybenzoate = 2-octaprenylphenol + CO₂), <strong>EC 4.1.1.98</strong>.</p>
+<h3 id="finding-7-ubid-decarboxylation-is-reversible-with-broad-substrate-scope">Finding 7 — UbiD (de)carboxylation is reversible with broad substrate scope</h3>
+<p>UbiD-family enzymes catalyze <strong>reversible</strong> (de)carboxylation of aromatic and aliphatic/acrylic substrates via prFMN. The reverse (carboxylation) direction is physiologically relevant: "It has been proposed that the first step in anaerobic microbial degradation of recalcitrant aromatic compounds is a UbiD-mediated carboxylation" <a href="https://pubmed.ncbi.nlm.nih.gov/32719558/">PMID: 32719558</a>, and these enzymes are exploited for enzymatic C–H carboxylation. The family is enormous — "There are now ∼35 000 protein sequences annotated as hypothetical UbiD-like enzymes" <a href="https://pubmed.ncbi.nlm.nih.gov/38837123/">PMID: 38837123</a> — spanning dozens of decarboxylase subfamilies. Substrate handling differs by chemistry: turnover of bulky aromatic substrates requires <strong>prFMN-binding-domain motion</strong>, since "during aromatic acid decarboxylation, substantial rearrangement of the substrate aromatic moiety associated with covalent catalysis presents a molecular dynamic challenge" <a href="https://pubmed.ncbi.nlm.nih.gov/34417452/">PMID: 34417452</a>, whereas smaller acrylic substrates react within a closed active site. This domain dynamics is directly relevant to UbiD, whose physiological substrate carries a very bulky polyprenyl-hydroxybenzoate moiety.</p>
+<h3 id="finding-8-q88cg8-localizes-to-the-cytoplasmic-face-of-the-cell-membrane-and-binds-a-metal-ion">Finding 8 — Q88CG8 localizes to the cytoplasmic face of the cell membrane and binds a metal ion</h3>
+<p>UniProt curated keywords for Q88CG8 place its subcellular location at the <strong>Cell membrane</strong> — specifically, HAMAP-Rule MF_01636 annotates UbiD as a <strong>peripheral membrane protein on the cytoplasmic side</strong>. Additional keywords include <strong>Manganese</strong>, <strong>Metal-binding</strong>, <strong>FMN</strong>, <strong>Decarboxylase</strong>, and <strong>Ubiquinone biosynthesis</strong>. Structurally, the <em>P. aeruginosa</em> PA0254 UbiD structure shows a conserved <strong>divalent-metal site</strong> (Mg²⁺, ligated by invariant His and Glu residues) adjacent to the active-site cleft <a href="https://pubmed.ncbi.nlm.nih.gov/23671667/">PMID: 23671667</a>. This peripheral, cytoplasmic-side localization is fully consistent with the finding that UQ biosynthesis (including UbiD) is executed by a soluble cytoplasmic Ubi metabolon <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>.</p>
+<h3 id="finding-9-p-putida-kt2440-encodes-a-cognate-ubix-q88qe6-that-supplies-prfmn">Finding 9 — <em>P. putida</em> KT2440 encodes a cognate UbiX (Q88QE6) that supplies prFMN</h3>
+<p>A UniProt query of <em>P. putida</em> KT2440 (taxon 160488) returns <strong>Q88QE6 "Flavin prenyltransferase UbiX"</strong>, the partner enzyme that synthesizes prFMN. Because UbiD (Q88CG8) is catalytically inert without prFMN, the presence of a cognate UbiX in the same genome establishes a <strong>complete, functional UbiX–UbiD prFMN-dependent decarboxylation module</strong> in <em>P. putida</em>. This mirrors the tightly linked UbiX/UbiD systems characterized in <em>E. coli</em> and yeast <a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">PMID: 25647642</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a>.</p>
+<h3 id="finding-10-pseudomonas-uses-ubiquinone-9-so-the-physiological-substrate-carries-a-nonaprenyl-chain">Finding 10 — <em>Pseudomonas</em> uses ubiquinone-9, so the physiological substrate carries a nonaprenyl chain</h3>
+<p>Chemotaxonomic data show that <strong>ubiquinone-9 (Q-9)</strong> is the characteristic respiratory quinone of <em>Pseudomonas</em> and its close relatives. For a Pseudomonadales isolate whose closest cultivated neighbor is <em>Pseudomonas putida</em> R43, "The only respiratory quinone detected was ubiquinone-9 (Q-9)" <a href="https://pubmed.ncbi.nlm.nih.gov/27054961/">PMID: 27054961</a>. Therefore, although the enzyme name and annotation use "octaprenyl" (inherited from <em>E. coli</em>, which makes Q-8), the physiological substrate and product in <em>P. putida</em> bear a <strong>C45 nonaprenyl (9-isoprene) tail</strong>. The reaction in this organism is precisely: <strong>decarboxylation of 3-nonaprenyl-4-hydroxybenzoate → 2-nonaprenylphenol + CO₂</strong>. The enzyme's catalytic chemistry is identical; only the chain length of the isoprenoid tail differs.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>UbiD occupies a single, well-defined position in the bacterial ubiquinone (coenzyme Q) biosynthetic pathway: it removes the carboxyl group from the aromatic ring of the polyprenylated 4-hydroxybenzoate intermediate. The following diagram places UbiD in its pathway context (chain length shown for <em>P. putida</em>, which makes Q-9):</p>
+<div class="codehilite"><pre><span></span><code>   4-hydroxybenzoate (4-HB)
+    |
+    |  UbiA (polyprenyltransferase; attaches C45 nonaprenyl tail)
+    v
+   3-nonaprenyl-4-hydroxybenzoate  ────────────────┐
+    |                                        │  prFMN cofactor
+    |  UbiD  (Q88CG8, PP_5213)               │  supplied by
+    |  EC 4.1.1.98                           │  UbiX (Q88QE6)
+    |  requires prFMN (1 per subunit)        │  via FMN + DMAP/DMAPP
+    v                                        │
+   2-nonaprenylphenol  +  CO2  &lt;────────────────────┘
+    |
+    |  UbiG, UbiH, UbiE, UbiF ... (ring hydroxylations/methylations)
+    v
+   Ubiquinone-9 (Coenzyme Q9)  →  inserted into inner membrane
+                           → respiratory electron transport
+</code></pre></div>
+
+<p><strong>Cofactor logic.</strong> The unusual chemistry of a non-oxidative decarboxylation on an aromatic ring is made possible by prFMN. UbiX first builds prFMN by prenylating FMN (adding a fourth ring across N5–C6); oxidative maturation then generates the iminium/azomethine-ylide species. In the mature cofactor, the ylide behaves as a 1,3-dipole. The substrate's reactive group docks over the ylide, and a reversible 1,3-dipolar cycloaddition forms a covalent substrate–cofactor adduct; CO₂ is then eliminated and the product released. Because the cycloaddition is reversible, UbiD-family enzymes can run in either the decarboxylation or carboxylation direction depending on conditions — the basis for both their physiological reverse-direction roles in anaerobic aromatic degradation and their biocatalytic exploitation.</p>
+<p><strong>Spatial logic.</strong> Although the end product ubiquinone is a membrane lipid and UbiD is annotated as a peripheral membrane protein on the cytoplasmic side, the enzyme physically works within a <strong>soluble cytoplasmic metabolon</strong>. This resolves an apparent paradox: the substrate is extremely hydrophobic (a C45 isoprenoid tail), yet the reaction runs in the aqueous cytosol. The metabolon's UbiJ SCP2 lipid-binding domain sequesters the hydrophobic tail, presenting the reactive aromatic head group to the successive Ubi enzymes — including UbiD — in an assembly-line fashion. UbiD's own bulky substrate additionally demands prFMN-domain motion, consistent with the "molecular dynamic challenge" observed for aromatic decarboxylation across the family.</p>
+<p>The table below summarizes the enzyme's key properties as they apply to Q88CG8:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene / locus</td>
+<td><em>ubiD</em> / PP_5213</td>
+<td>UniProt Q88CG8</td>
+</tr>
+<tr>
+<td>Enzyme name</td>
+<td>3-octaprenyl-4-hydroxybenzoate carboxy-lyase</td>
+<td>UniProt / HAMAP MF_01636</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>4.1.1.98</td>
+<td>UniProt / HAMAP</td>
+</tr>
+<tr>
+<td>Reaction (RHEA)</td>
+<td>3-octaprenyl-4-hydroxybenzoate → 2-octaprenylphenol + CO₂ (RHEA:41680)</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Physiological substrate in <em>P. putida</em></td>
+<td>3-<strong>nonaprenyl</strong>-4-hydroxybenzoate (Q-9 organism)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27054961/">PMID: 27054961</a></td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>1 prenylated FMN (prFMN) per subunit</td>
+<td>UniProt; <a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a></td>
+</tr>
+<tr>
+<td>Cofactor supplier</td>
+<td>UbiX (Q88QE6 in KT2440)</td>
+<td>UniProt; <a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">PMID: 26083743</a></td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>Reversible 1,3-dipolar cycloaddition</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">PMID: 26083754</a></td>
+</tr>
+<tr>
+<td>Metal</td>
+<td>Divalent metal (Mn/Mg), His/Glu-ligated</td>
+<td>UniProt; <a href="https://pubmed.ncbi.nlm.nih.gov/23671667/">PMID: 23671667</a></td>
+</tr>
+<tr>
+<td>Oligomeric state</td>
+<td>Homohexamer</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td>N-terminal α/β + central split β-barrel + C-terminal α/β</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23671667/">PMID: 23671667</a></td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Peripheral membrane protein, cytoplasmic side; functions in soluble Ubi metabolon</td>
+<td>UniProt; <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a></td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Ubiquinone (coenzyme Q) biosynthesis</td>
+<td>Multiple</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23671667/">23671667</a></td>
+<td><em>Structural insights into the UbiD family from PA0254 (P. aeruginosa)</em></td>
+<td>Direct structure of a <em>Pseudomonas</em> UbiD ortholog; defines the three-domain fold, the reaction (3-polyprenyl-4-HB → 2-polyprenylphenol), and the conserved divalent-metal site. Strongest structural evidence for the family in the target genus.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26083743/">26083743</a></td>
+<td><em>UbiX is a flavin prenyltransferase required for bacterial ubiquinone biosynthesis</em></td>
+<td>Establishes prFMN as the UbiX-made cofactor required for UbiD activity, its chemical structure, and the UbiX/UbiD role in decarboxylating the octaprenyl-4-hydroxybenzoate precursor.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26083754/">26083754</a></td>
+<td><em>New cofactor supports unsaturated acid decarboxylation via 1,3-dipolar cycloaddition</em></td>
+<td>Provides the catalytic mechanism (azomethine ylide / 1,3-dipolar cycloaddition) and the structural basis for reversible (de)carboxylation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32951834/">32951834</a></td>
+<td><em>Biochemistry of prenylated-FMN enzymes</em></td>
+<td>Confirms oxidative maturation of prFMN to the active iminium species required by UbiD.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25647642/">25647642</a></td>
+<td><em>Isofunctional PAD1 and UbiX catalyze formation of a novel cofactor</em></td>
+<td>Shows the same modified-FMN cofactor is shared by UbiD (ubiquinone) and FDC (aromatic acids); links UbiX activity to 4-hydroxy-3-polyprenylbenzoate decarboxylation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17889824/">17889824</a></td>
+<td><em>Role of UbiX in E. coli coenzyme Q biosynthesis</em></td>
+<td>Genetic loss-of-function: disrupting the UbiX/UbiD decarboxylation step causes accumulation of 4-hydroxy-3-octaprenyl-benzoate and low Q, localizing UbiD's step in the pathway.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">30686758</a></td>
+<td><em>A Soluble Metabolon Synthesizes the Isoprenoid Lipid Ubiquinone</em></td>
+<td>Demonstrates that UQ biosynthesis (including UbiD) occurs in a soluble cytoplasmic ~1-MDa metabolon, defining the enzyme's operational localization.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36142227/">36142227</a></td>
+<td><em>Functional role of UbiJ-UbiK</em></td>
+<td>Explains how the SCP2 domain of UbiJ solubilizes hydrophobic UQ intermediates within the cytosolic complex.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28754323/">28754323</a></td>
+<td><em>The UbiX-UbiD system</em></td>
+<td>Reviews family diversity; distinguishes the ubiquinone branch from aromatic-acid decarboxylase branches.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34417452/">34417452</a></td>
+<td><em>UbiD domain dynamics underpins aromatic decarboxylation</em></td>
+<td>Shows bulky aromatic substrates require prFMN-domain motion — relevant to UbiD's large polyprenyl substrate.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32719558/">32719558</a></td>
+<td><em>Enzymatic C-H activation through CO2 fixation</em></td>
+<td>Documents reversibility and the physiologically relevant carboxylation direction.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38837123/">38837123</a></td>
+<td><em>Surveying aromatic decarboxylations by prFMN enzymes</em></td>
+<td>Quantifies the ~35,000-sequence breadth of the UbiD family and its substrate diversity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27054961/">27054961</a></td>
+<td><em>Ventosimonas gracilis (Pseudomonadales)</em></td>
+<td>Chemotaxonomic evidence that Q-9 is the respiratory quinone of Pseudomonas relatives, fixing the isoprenoid chain length of the UbiD substrate in <em>P. putida</em>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40343387/">40343387</a></td>
+<td><em>QM study of furandicarboxylic acid decarboxylase (HmfF)</em></td>
+<td>Cautionary note: some UbiD-family members may use nucleophilic-attack rather than concerted cycloaddition mechanisms.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Identity verification.</strong> All mandatory verification checks pass. The gene symbol <em>ubiD</em> matches the protein description (3-octaprenyl-4-hydroxybenzoate carboxy-lyase); the organism is <em>P. putida</em> KT2440; the UbiD-family domains (IPR002830, IPR023677, etc.) align with the three-domain architecture reported in structural literature; and no conflicting literature for a different gene with the same symbol was encountered. The assignment is unambiguous.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No enzyme-specific biochemistry for Q88CG8 itself.</strong> The functional assignment for <em>P. putida</em> PP_5213 rests on (a) UniProt/HAMAP curation and (b) direct characterization of orthologs (<em>E. coli</em> UbiD, <em>P. aeruginosa</em> PA0254, and the model enzyme Fdc1). No purified-enzyme kinetics (kcat, Km), crystal structure, or gene-knockout phenotype has been reported specifically for the KT2440 protein. The inference is strong by homology but not directly demonstrated.</p>
+</li>
+<li>
+<p><strong>Substrate chain length inferred, not measured.</strong> The conclusion that the physiological substrate carries a nonaprenyl (Q-9) tail is inferred from <em>Pseudomonas</em> chemotaxonomy rather than from a direct assay of the KT2440 enzyme with defined-chain substrates. UbiD is known to be relatively permissive about tail length, so this is a well-supported inference but remains indirect.</p>
+</li>
+<li>
+<p><strong>Mechanistic universality.</strong> The 1,3-dipolar cycloaddition model derives chiefly from Fdc1 and related aromatic-acid decarboxylases. At least one computational study (HmfF) argues for an alternative nucleophilic mechanism, so the exact microscopic mechanism for the polyprenyl-hydroxybenzoate substrate has not been experimentally resolved for UbiD.</p>
+</li>
+<li>
+<p><strong>Metal identity.</strong> UniProt keywords list both Manganese and generic metal-binding, while the PA0254 structure modeled Mg²⁺. The physiologically relevant divalent metal for the <em>P. putida</em> enzyme is not firmly established.</p>
+</li>
+<li>
+<p><strong>Metabolon composition in Pseudomonas.</strong> The soluble Ubi metabolon was characterized in <em>E. coli</em>. Whether <em>P. putida</em> assembles an identical complex (including UbiJ/UbiK orthologs and the same stoichiometry) has not been directly shown, though the pathway is conserved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct biochemical characterization of PP_5213.</strong> Heterologously express and purify Q88CG8 (co-expressing UbiX Q88QE6 to load prFMN, or reconstituting with purified prFMN), then measure decarboxylation of synthetic 3-prenyl-4-hydroxybenzoate analogs of varying chain length to confirm activity and probe chain-length preference (nonaprenyl vs. octaprenyl vs. short-chain surrogates).</p>
+</li>
+<li>
+<p><strong>Genetic complementation / knockout.</strong> Delete <em>ubiD</em> (PP_5213) in KT2440 and test for (a) loss of Q-9, (b) accumulation of 3-nonaprenyl-4-hydroxybenzoate, and (c) a respiratory/succinate growth defect; complement with the wild-type gene to confirm causality — mirroring the <em>E. coli</em> UbiX study <a href="https://pubmed.ncbi.nlm.nih.gov/17889824/">PMID: 17889824</a>.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the crystal or cryo-EM structure of the KT2440 UbiD homohexamer with bound prFMN (and, ideally, a substrate/inhibitor) to confirm the divalent-metal identity, the proton-donor active-site residue, and the domain-dynamics required for the bulky polyprenyl substrate.</p>
+</li>
+<li>
+<p><strong>Metabolon reconstitution.</strong> Test whether <em>P. putida</em> forms a soluble Ubi metabolon by co-purification/pull-down of UbiD with UbiJ/UbiK/UbiH/UbiG orthologs from cytoplasmic extracts, quantifying UQ synthesis in the soluble fraction as done for <em>E. coli</em> <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>.</p>
+</li>
+<li>
+<p><strong>Reverse-reaction / biocatalysis assessment.</strong> Given the family's reversible chemistry and biotechnological interest, test whether the KT2440 enzyme can catalyze carboxylation of 2-prenylphenol analogs under CO₂-rich conditions, informing potential use in enzymatic C–H carboxylation <a href="https://pubmed.ncbi.nlm.nih.gov/32719558/">PMID: 32719558</a>.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report compiled from 5 iterations of autonomous investigation; 10 confirmed findings; 27 papers reviewed. All functional claims are anchored to UniProt curation of Q88CG8 and to primary/structural literature on directly characterized UbiD-family orthologs.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:23671667</li>
+<li>PMID:26083743</li>
+<li>PMID:17889824</li>
+<li>PMID:32951834</li>
+<li>PMID:25647642</li>
+<li>PMID:26083754</li>
+<li>PMID:40343387</li>
+<li>PMID:30686758</li>
+<li>PMID:36142227</li>
+<li>PMID:28754323</li>
+<li>PMID:32719558</li>
+<li>PMID:38837123</li>
+<li>PMID:34417452</li>
+<li>PMID:27054961</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CG8
+gene_symbol: ubiD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiD encodes a prenylated-FMN- and manganese-dependent decarboxylase that
+  converts 4-hydroxy-3-polyprenylbenzoate to 2-polyprenylphenol during
+  ubiquinone biosynthesis. It is a peripheral inner-membrane enzyme acting from
+  the cytoplasmic side on the prenylated aromatic intermediate generated by
+  UbiA.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is redundant with the more specific cytosol annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The record also carries cytosol and plasma-membrane annotations; the
+      broad cytoplasm parent adds no useful localization information.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic exposure is plausible for this peripheral membrane enzyme and
+      a soluble pool is possible, but this is not the primary target-specific
+      localization call.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt assigns peripheral association with the cytoplasmic side of the
+      membrane. The cytosol call is phylogenetically transferred and has not
+      been tested for PP_5213; notably, UbiD is not a member of the defined
+      seven-protein E. coli Ubi metabolon.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: UbiD is peripherally associated with the bacterial cell membrane.
+    action: ACCEPT
+    reason: The reviewed UniProt record explicitly assigns a peripheral cell-membrane location.
+    supported_by:
+    - reference_id: file:PSEPK/ubiD/ubiD-uniprot.txt
+      supporting_text: Peripheral membrane protein
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Ubiquinone biosynthesis is the core process for UbiD.
+    action: ACCEPT
+    reason: UbiD decarboxylates the prenylated 4-hydroxybenzoate pathway intermediate.
+    supported_by:
+    - reference_id: file:PSEPK/ubiD/ubiD-uniprot.txt
+      supporting_text: ubiquinone biosynthesis
+    - reference_id: file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+      supporting_text: &gt;-
+        No purified-enzyme kinetics (kcat, Km), crystal structure, or
+        gene-knockout phenotype has been reported specifically for the KT2440
+        protein.
+- term:
+    id: GO:0008694
+    label: 4-hydroxy-3-polyprenylbenzoate decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the substrate-specific core molecular function of UbiD.
+    action: ACCEPT
+    reason: UniProt assigns EC 4.1.1.98 and Rhea 41680 for this decarboxylation.
+    supported_by:
+    - reference_id: file:PSEPK/ubiD/ubiD-uniprot.txt
+      supporting_text: Polyprenyl p-hydroxybenzoate decarboxylase
+    - reference_id: file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The 3-polyprenyl-4-hydroxybenzoate decarboxylase (UbiD) catalyzes the
+        conversion of 3-polyprenyl-4-hydroxybenzoate to 2-polyprenylphenol in
+        the biosynthesis of ubiquinone
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Carboxy-lyase activity is correct but less informative than the substrate-specific term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008694 captures the exact UbiD reaction.
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ubiD/ubiD-uniprot.txt
+  title: UniProt entry Q88CG8 for ubiD
+  findings:
+  - statement: &gt;-
+      The reviewed entry assigns a peripheral-membrane, prenylated-FMN- and
+      manganese-dependent UbiD decarboxylase in ubiquinone biosynthesis.
+- id: file:PSEPK/ubiD/ubiD-goa.tsv
+  title: QuickGO GOA annotations for ubiD
+  findings:
+  - statement: The fetched GOA table contains the six annotations reviewed here.
+- id: file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiD
+  findings:
+  - statement: &gt;-
+      Ortholog biochemistry and the target UniProt record support the
+      prFMN-dependent UbiD reaction. The report also distinguishes the generic
+      polyprenyl reaction from legacy E. coli octaprenyl naming and notes the
+      absence of direct PP_5213 experiments. Its placement of UbiD inside the
+      defined soluble Ubi metabolon is not adopted because the experimentally
+      recovered seven-protein complex does not contain UbiD.
+core_functions:
+- description: &gt;-
+    Prenylated-FMN-dependent decarboxylation of
+    4-hydroxy-3-polyprenylbenzoate to 2-polyprenylphenol at the membrane during
+    ubiquinone biosynthesis.
+  molecular_function:
+    id: GO:0008694
+    label: 4-hydroxy-3-polyprenylbenzoate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/ubiD/ubiD-uniprot.txt
+    supporting_text: Polyprenyl p-hydroxybenzoate decarboxylase
+  - reference_id: file:PSEPK/ubiD/ubiD-deep-research-openscientist.md
+    supporting_text: &gt;-
+      No purified-enzyme kinetics (kcat, Km), crystal structure, or
+      gene-knockout phenotype has been reported specifically for the KT2440
+      protein.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does Q88CG8 preferentially process the expected nonaprenyl P. putida
+    intermediate, and how does it partition between membrane-associated and
+    soluble cellular pools?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88CG8 with UbiX-supplied prFMN, compare decarboxylation of defined
+    polyprenyl-chain substrates, and test PP_5213-dependent ubiquinone and
+    intermediate profiles in a complemented P. putida deletion strain.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
