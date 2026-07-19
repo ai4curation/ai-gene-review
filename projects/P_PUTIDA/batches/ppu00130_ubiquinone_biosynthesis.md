@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 13
 - Existing review files: 13
 - Curated review files: 13
-- Gene-level deep-research jobs running: 7
+- Gene-level deep-research jobs running: 6
 
 ## Required Workflow
 
@@ -45,7 +45,7 @@ autolink_gene_symbols: false
 | [x] | `ubiB` | PP_5013 | A0A140FWS4 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Probable protein kinase UbiB |
 | [ ] | `visC` | PP_5197 | Q88CI4 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Predicted aerobic UbiI/VisC-type ubiquinone hydroxylase |
 | [ ] | `ubiH` | PP_5199 | Q88CI2 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 2-octaprenyl-6-methoxyphenyl hydroxylase |
-| [ ] | `ubiD` | PP_5213 | Q88CG8 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98) (Polyprenyl p-hydroxybenzoate decarboxylase) |
+| [x] | `ubiD` | PP_5213 | Q88CG8 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | 3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98) (Polyprenyl p-hydroxybenzoate decarboxylase) |
 | [x] | `ubiK` | PP_5235 | Q88CE6 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiK |
 | [x] | `ubiC` | PP_5317 | Q88C66 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Probable chorismate pyruvate-lyase (CL) (CPL) (EC 4.1.3.40) |
 | [x] | `ubiA` | PP_5318 | Q88C65 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | 4-hydroxybenzoate polyprenyltransferase (EC 2.5.1.39) |
@@ -75,6 +75,9 @@ OpenScientist status:
   complete; `ubiJ` and `ubiB` have now also completed, leaving seven gene jobs
   in progress. UbiB curation replaces the transferred canonical protein-kinase
   call with family-supported ATP hydrolysis and keeps the exact bacterial
-  molecular output as a knowledge gap.
+  molecular output as a knowledge gap. UbiD has also completed; its report
+  confirms the prFMN-dependent reaction. Curation retains peripheral
+  inner-membrane localization and rejects the report's unsupported placement of
+  UbiD inside the defined seven-protein soluble Ubi metabolon.
 
 Generated UTC: 2026-07-15T11:36:12.085521+00:00
