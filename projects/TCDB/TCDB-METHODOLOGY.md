@@ -10,10 +10,11 @@ title: "TCDB -> GO Methodology Notes"
 
 Two separate things are easy to conflate:
 
-1. **A curated TC↔GO correspondence inside the ontology — this exists.** GO
-   curators attach TC references to molecular-function terms, both as term-level
-   `xref: TC:` clauses and as definition dbxrefs (`def: "…" [TC:…]`). Extract it
-   from `go-basic.obo`:
+1. **TC references on GO terms — these exist, but are neglected leads.** GO
+   carries TC references on molecular-function terms, as term-level `xref: TC:`
+   clauses and as definition dbxrefs (`def: "…" [TC:…]`). These are largely
+   neglected and the term-vs-definition distinction is not meaningful, so treat
+   both alike, as **sources**. Extract them from `go-basic.obo`:
 
    ```bash
    uv run python extract_go_tc_xrefs.py --stats
@@ -21,8 +22,13 @@ Two separate things are easy to conflate:
    uv run python extract_go_tc_xrefs.py -o tc2go.from_go.sssom.yaml
    ```
 
-   This is the authoritative, high-quality (if small) TC→GO mapping — the seed a
-   real `tc2go` should build on.
+   Every emitted row is `skos:relatedMatch` + `semapv:UnspecifiedMatching` — an
+   unreviewed lead. Whether it is safe to **propagate** (a protein with the TC id
+   inheriting the GO term) is curated by hand, per entry, in `tc2go.sssom.yaml`,
+   whose header documents the propagation rule: `exactMatch` when the member set
+   is mono-specific at the cited TC level (usually a 5-level system, e.g.
+   `TC:2.A.22.1.1` SERT → `GO:0005335`), `narrowMatch` when the GO term is only a
+   subfamily property (usually a 3-level family) and must not propagate wholesale.
 
 2. **An `external2go` *annotation pipeline* — this does not exist.** Every other
    source-audit project here hangs off a public mapping file (`ec2go`, `rhea2go`,
