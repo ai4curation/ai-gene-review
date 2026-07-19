@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 13
 - Existing review files: 13
 - Curated review files: 13
-- Gene-level deep-research jobs running: 5
+- Gene-level deep-research jobs running: 4
 
 ## Required Workflow
 
@@ -44,7 +44,7 @@ autolink_gene_symbols: false
 | [x] | `ubiJ` | PP_5012 | Q88D16 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiJ |
 | [x] | `ubiB` | PP_5013 | A0A140FWS4 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Probable protein kinase UbiB |
 | [x] | `visC` | PP_5197 | Q88CI4 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Predicted aerobic UbiI/VisC-type ubiquinone hydroxylase |
-| [ ] | `ubiH` | PP_5199 | Q88CI2 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 2-octaprenyl-6-methoxyphenyl hydroxylase |
+| [x] | `ubiH` | PP_5199 | Q88CI2 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | 2-octaprenyl-6-methoxyphenyl hydroxylase |
 | [x] | `ubiD` | PP_5213 | Q88CG8 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | 3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98) (Polyprenyl p-hydroxybenzoate decarboxylase) |
 | [x] | `ubiK` | PP_5235 | Q88CE6 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiK |
 | [x] | `ubiC` | PP_5317 | Q88C66 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Probable chorismate pyruvate-lyase (CL) (CPL) (EC 4.1.3.40) |
@@ -81,6 +81,8 @@ OpenScientist status:
   UbiD inside the defined seven-protein soluble Ubi metabolon. VisC has also
   completed; the E. coli UbiI evidence corrects the legacy "anaerobic" product
   name, while exact PP_5197 regioselectivity and KT2440 complex membership stay
-  explicitly inferential.
+  explicitly inferential. UbiH has also completed; its report supports the
+  family-level hydroxylase assignment, but three incorrect locus-to-gene claims
+  in its genomic-context section are explicitly excluded from curation.
 
 Generated UTC: 2026-07-15T11:36:12.085521+00:00
