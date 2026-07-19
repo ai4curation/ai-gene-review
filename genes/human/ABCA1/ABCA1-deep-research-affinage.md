@@ -105,4 +105,3 @@ _Recorded for reference. The AIGR evaluation found this grounding is coarse (col
 - PMID:32428234
 - PMID:35974019
 - PMID:39901180
-- PMID:23376685
