@@ -26,7 +26,7 @@ autolink_gene_symbols: false
 - [x] Curate selected gene reviews.
 - [x] Validate module and touched gene reviews.
 - [x] Open one PR for this module/pathway: [#2137](https://github.com/ai4curation/ai-gene-review/pull/2137).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
