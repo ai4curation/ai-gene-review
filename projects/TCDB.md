@@ -18,37 +18,49 @@ five-level **TC number** (`class.subclass.family.subfamily.system`, e.g.
 `2.A.69.1.1`) that is the transport analogue of an EC number.
 
 The defining fact of this project — and what makes it different from RHEA and EC
-— is a **coverage gap at the pipeline level**:
+— is a **missing annotation pipeline, not a missing mapping**:
 
-> **There is no `tc2go` external2go mapping.** TCDB is *absent* from GO's
-> `external2go` directory (which ships `ec2go`, `rhea2go`, `interpro2go`,
-> `pfam2go`, `uniprotkb_kw2go`, … but no `tc2go`). Unlike EC (`GO_REF:0000003`)
-> and RHEA (`GO_REF:0000116`), a TCDB classification does **not** propagate into
-> GOA through a curated pipeline. Confirmed live against
-> `http://current.geneontology.org/ontology/external2go/` (GO release
-> `2026-05-19`).
+> **GO already curates TCDB cross-references on its terms, but there is no
+> `tc2go` external2go *annotation pipeline*.** GO curators have attached TC
+> references to **170 non-obsolete molecular-function terms** (via `xref: TC:`
+> clauses and definition dbxrefs) — a real, high-quality *partial* TC→GO mapping
+> that lives inside the ontology. What is missing is the propagation half: TCDB
+> is *absent* from GO's `external2go` directory (which ships `ec2go`, `rhea2go`,
+> `interpro2go`, … but no `tc2go`), so unlike EC (`GO_REF:0000003`) and RHEA
+> (`GO_REF:0000116`) a protein's TCDB classification is **not** turned into a GAF
+> annotation. The correspondence exists on the *terms*; it just isn't applied to
+> *proteins*. Both facts confirmed live (GO release `2026-05-19`; `go-basic.obo`).
 
-So, like RHEA, the analysis runs in **two directions**, but with a heavier
-emphasis on the reverse (gap) direction because the forward pipeline does not
-exist:
+So the analysis runs in **two directions**:
 
-1. **Forward (what TCDB *does* offer).** TCDB publishes its own per-protein GO
-   associations at `https://tcdb.org/cgi-bin/projectv/public/go.py`. Is that dump
-   usable as a `tc2go` seed, and at what quality and specificity?
+1. **Forward (what already maps).** GO's own 170 curator-authored TC xrefs are the
+   authoritative seed. TCDB *also* publishes a per-protein GO dump
+   (`https://tcdb.org/cgi-bin/projectv/public/go.py`), which is noisier but
+   extends candidate coverage. How much do they cover, and how do they compare?
 2. **Reverse (gap).** Where does a UniProtKB entry carry a TCDB cross-reference
    (`DR TCDB;`) but **no GO transmembrane-transporter-activity term at all**?
-   With no pipeline, this "falls through the cracks" gap is *structural*, not
-   incidental.
+   Because GO's xrefs sit on terms and are never propagated to proteins, this
+   "falls through the cracks" gap is *structural*, not incidental.
 
 See [TCDB-METHODOLOGY.md](TCDB/TCDB-METHODOLOGY.md) for queries, the reproducible
 probe script, and the closure caveat.
 
 ## Key Findings (scoping pass)
 
-- **No `tc2go` pipeline exists.** TCDB is not in GO's `external2go` directory —
-  the single most important structural finding. EC and RHEA reach GO through
-  curated external2go mappings; TCDB does not.
-- **TCDB *does* publish a raw GO dump, but it is noisy and multi-aspect.** The
+- **GO already curates a partial TC→GO mapping (the correction to the headline).**
+  GO terms carry curator-authored TC references: **202 references on 170
+  non-obsolete molecular-function terms**, spanning **63 TC families / 185 TC
+  systems** — 61 as term-level `xref: TC:` clauses (52 terms) and 141 as
+  definition dbxrefs (`def: "…" [TC:…]`). Extracted live from `go-basic.obo` by
+  [`extract_go_tc_xrefs.py`](TCDB/extract_go_tc_xrefs.py). This is a genuine,
+  high-quality mapping — the right seed for a `tc2go` — and it is **all**
+  molecular function.
+- **What is actually missing is the annotation pipeline.** TCDB is not in GO's
+  `external2go` directory, so those curated term-xrefs are **never propagated to
+  the proteins** that carry the TC number. EC and RHEA turn a classification into
+  a GAF annotation (`GO_REF`); TCDB does not. That, not the absence of a mapping,
+  is the structural gap.
+- **TCDB *also* publishes a raw GO dump, but it is noisy and multi-aspect.** The
   `go.py` file has **34,497 rows** mapping **4,943 distinct TC systems**
   (5-level) across **589 TC families** (3-level) to **3,518 distinct GO terms** —
   but only **13% of rows (4,557) and 12% of GO terms (424) are actually
@@ -80,6 +92,34 @@ probe script, and the closure caveat.
   `DR TCDB;` cross-reference (e.g. PIN1, AUX1, SOS1, HKT1, CHL1/NRT1.1, AQP1),
   several with *experimental* transport-activity GO terms — ready-made backing for
   a curated `tc2go` seed and for closure-filtered gap review.
+
+## GO already curates TCDB cross-references (the authoritative seed)
+
+GO curators have referenced TCDB directly on molecular-function terms. Extracted
+live from `go-basic.obo` ([`extract_go_tc_xrefs.py`](TCDB/extract_go_tc_xrefs.py),
+obsolete terms excluded):
+
+| | Count |
+|---|---:|
+| TC references on GO terms | 202 |
+| …term-level `xref: TC:` clauses | 61 (on 52 terms) |
+| …definition dbxrefs `def "…" [TC:…]` | 141 |
+| Distinct GO terms (all molecular function) | 170 |
+| Distinct TC systems (5-level) | 185 |
+| Distinct TC families (3-level) | 63 |
+
+These are the highest-quality TC↔GO correspondences available and are keyed at
+the **specific TC system** (e.g. `GO:0005335 serotonin:sodium:chloride symporter
+activity ← TC:2.A.22.1.1`), i.e. at the right level, not the over-general family.
+They are shipped, inverted to TC→GO, as
+[`tc2go.from_go.sssom.yaml`](TCDB/tc2go.from_go.sssom.yaml) (`xref:` →
+`skos:closeMatch`, definition dbxref → `skos:relatedMatch`).
+
+**But they cover only 63 of TCDB's 2,235 families (3%)**, and — being ontology
+annotations, not an `external2go` mapping — they are **not propagated to
+proteins**. So GO's curated mapping is real but small, and does not close the
+reverse gap below. The `go.py` dump and the generated set extend candidate
+coverage beyond these 63 families.
 
 ## TCDB's own `go.py` dump: usable seed, but only after filtering
 
@@ -116,10 +156,12 @@ that slice into an SSSOM candidate set (below).
 
 Computed live against the UniProtKB REST API (`database:tcdb AND reviewed:true`,
 GO-closure-expanded on the GO side) by [`tcdb_go_probe.py`](TCDB/tcdb_go_probe.py)
-(`--gap`). Because there is no `tc2go`, the only routes by which these transporters
-*could* get a transport MF term are EC/`ec2go` (many transporters have no EC),
-InterPro/`interpro2go`, or manual curation — so a structural half-coverage is
-unsurprising, and is precisely the gap a `tc2go` pipeline would close.
+(`--gap`). GO's curated term-xrefs do **not** help here — they sit on GO terms,
+not on the proteins — so the only routes by which these transporters *could* get a
+transport MF term are EC/`ec2go` (many transporters have no EC),
+InterPro/`interpro2go`, or manual curation. A structural half-coverage is
+therefore unsurprising, and is precisely the gap a `tc2go` propagation pipeline
+would close.
 
 **Closure caveat (mandatory).** The 50.6% is an **exact-match upper bound**: some
 entries carry a transport-related term *outside* the `GO:0005215` MF branch (a
@@ -143,14 +185,27 @@ The curated seed encodes this distinction directly (below).
 
 ## Curated mappings (SSSOM)
 
-Filling the gap is a curation deliverable, not just an audit. Two SSSOM files,
+Filling the gap is a curation deliverable, not just an audit. Three SSSOM files,
 same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
 [CAZy](GLYCOBIOLOGY.md):
 
+- **[`tc2go.from_go.sssom.yaml`](TCDB/tc2go.from_go.sssom.yaml)** — the
+  **authoritative base**: GO's own 202 curated TC references (170 MF terms, 63
+  families), extracted from `go-basic.obo` and inverted to TC→GO. Not hand-typed;
+  every row is a GO curator's assertion. This is the core a real `tc2go` should
+  start from.
+- **[`tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml)** — a
+  **machine-derived coverage extension** (154 families, 477 rows) from TCDB's
+  `go.py` × QuickGO (see below). **110 of its 154 families are *not* in GO's
+  xrefs** — the genuine coverage it adds — but it is noisier and family-level, so
+  it needs review before adoption.
 - **[`tc2go.sssom.yaml`](TCDB/tc2go.sssom.yaml)** — a **hand-curated seed** of TC
   family → GO transporter-activity mappings, each backed by a **reviewed
   Swiss-Prot transporter** (five of the six are reviewed *in this repo* with
-  experimental evidence):
+  experimental evidence). It doubles as a cross-check: **4 of its 6 families
+  (`2.A.17`, `2.A.18`, `2.A.36`, `2.A.38`) are already GO-xref'd** (independent
+  confirmation), while `1.A.8` (MIP→water) and `2.A.69` (AEC→auxin efflux) are
+  not yet in GO's xrefs:
   - `exactMatch` (mono-specific, ready-to-add): `2.A.69` AEC → `GO:0010329`
     (backing PIN1 Q9C6B8, IDA/IMP); `1.A.8` MIP → `GO:0015250` (backing AQP1
     P29972).
@@ -169,23 +224,29 @@ same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
   + obsolescence, and must be reviewed before adoption.
 
 Every GO id/label is validated non-obsolete and molecular-function; the GO object
-is bound to the MF branch. Validate with `just validate-tcdb-mappings` (SSSOM
-structural validation + GO term/label validation; generated nested views
+is bound to the MF branch. Validate all three with `just validate-tcdb-mappings`
+(SSSOM structural validation + GO term/label validation; generated nested views
 [`tc2go.terms.yaml`](TCDB/tc2go.terms.yaml),
-[`tc2go.generated.terms.yaml`](TCDB/tc2go.generated.terms.yaml)).
+[`tc2go.generated.terms.yaml`](TCDB/tc2go.generated.terms.yaml),
+[`tc2go.from_go.terms.yaml`](TCDB/tc2go.from_go.terms.yaml)).
+
+Across all three sources, **173 of TCDB's 2,235 families (8%)** have at least one
+candidate GO transporter-activity mapping.
 
 ## How this differs from EC, RHEA, and CAZy
 
 | | EC (`ec2go`) | RHEA (`GO_REF:0000116`) | CAZy | **TCDB** |
 |---|---|---|---|---|
 | GO aspect | MF (enzyme activity) | MF (enzyme activity) | MF (glycoenzyme) | **MF (transporter activity)** |
-| external2go pipeline | **yes** | **yes** | no (built here from EC) | **no — none at all** |
-| Source GO material | curated mapping | curated mapping | via EC bridge | **noisy multi-aspect `go.py` dump** |
-| Dominant failure mode | too-general term | parent-vs-child specificity | poly-specific family | **no pipeline + over-general family + aspect noise** |
+| external2go **annotation** pipeline | **yes** | **yes** | no (built here from EC) | **no** |
+| Curated mapping in the ontology (term xrefs) | some | some | some | **yes — 170 MF terms / 63 families** |
+| Source GO material | curated mapping | curated mapping | via EC bridge | **GO's term xrefs + noisy `go.py` dump** |
+| Dominant failure mode | too-general term | parent-vs-child specificity | poly-specific family | **no propagation pipeline + over-general family + go.py aspect noise** |
 | Emphasis | over-annotation audit | both | gap-filling | **gap-filling (structural half-coverage)** |
 
-TCDB is the most **under-connected** of these sources: its classification is
-IUBMB-endorsed and reaction-grounded, yet it has no route into GO. The expected
+TCDB is the most **under-connected** of these sources: it has a real, curated
+term-level correspondence to GO, but no pipeline to propagate it to proteins, so
+half of TC-classified transporters still lack a transport MF term. The expected
 verdict skew is heavily toward **`NEW` / gap-filling**, tempered by the family
 over-generality problem (prefer the subfamily-specific child term).
 
@@ -216,27 +277,36 @@ over-generality problem (prefer the subfamily-specific child term).
 | Subfamily-level `tc2go` from `go.py` | Rebuild the generated set at 4/5-level TC ids so poly-specific families resolve to substrate-specific MF children. |
 | Exemplar gene reviews | Run the full review workflow on 2–3 confirmed-gap transporters already in this repo (353 candidates), mirroring the RHEA/UniPathway exemplar pattern. |
 | "No transporter-activity MF at all" family set | The 367 TC families with no MF-activity term in `go.py` → candidates for `proposed_new_terms` or accessory (class 8/9) exclusion. |
-| Propose `tc2go` to GO | The strategic deliverable: a curated, specificity-correct `tc2go` external2go mapping seeded by this project. |
+| Propose a `tc2go` **propagation pipeline** to GO | The strategic deliverable: GO already curates 170 TC↔GO term-xrefs — package them (plus reviewed extensions) as an `external2go` mapping so a protein's TC number yields a GAF annotation. |
+| Extend GO's 63 xref'd families | Promote the 110 novel `go.py`-generated families (and the 16 GO-xref families `go.py` misses) toward curated term-xrefs. |
 
 ## Project Status
 
 - **Started**: 2026-07-18
-- **Maturity**: SCOPING — the absence of a `tc2go` pipeline confirmed; TCDB's
-  `go.py` dump characterised and filtered; the structural reverse gap quantified;
-  curated seed + machine-generated candidate SSSOM built and validated.
-- **Computed live** (2026-07-18): no `tc2go` in `external2go` (GO release
-  `2026-05-19`); `go.py` = 34,497 rows → 4,943 TC systems / 589 families / 3,518
-  GO terms, of which 13% rows / 12% terms are transporter-activity MF; reverse gap
-  4,431 / 8,758 (50.6%) reviewed TCDB entries with no transport MF term
-  (16,344 all-UniProtKB TCDB xrefs); 353 local gene folders carry a TCDB xref.
-- **Reproducible scripts**: [`TCDB/tcdb_go_probe.py`](TCDB/tcdb_go_probe.py)
+- **Maturity**: SCOPING — GO's existing curated TC term-xrefs extracted and
+  shipped as the base mapping; the missing piece identified as the *annotation
+  pipeline*, not the mapping; TCDB's `go.py` dump characterised as a noisy
+  coverage-extension; the structural reverse gap quantified; three SSSOM sets
+  built and validated.
+- **Computed live** (2026-07-18): GO curates **202 TC references on 170
+  non-obsolete MF terms / 63 families** (`go-basic.obo`); no `tc2go` in
+  `external2go` (GO release `2026-05-19`); `go.py` = 34,497 rows → 4,943 TC
+  systems / 589 families / 3,518 GO terms, of which 13% rows / 12% terms are
+  transporter-activity MF; reverse gap 4,431 / 8,758 (50.6%) reviewed TCDB entries
+  with no transport MF term (16,344 all-UniProtKB TCDB xrefs); 353 local gene
+  folders carry a TCDB xref; **173 / 2,235 TCDB families (8%) mapped across all
+  three sources**.
+- **Reproducible scripts**: [`TCDB/extract_go_tc_xrefs.py`](TCDB/extract_go_tc_xrefs.py)
+  (GO's own TC xrefs → SSSOM), [`TCDB/tcdb_go_probe.py`](TCDB/tcdb_go_probe.py)
   (dump characterisation + reverse gap),
   [`TCDB/build_tc2go.py`](TCDB/build_tc2go.py) (generated SSSOM).
-- **Curated mappings**: [`TCDB/tc2go.sssom.yaml`](TCDB/tc2go.sssom.yaml) — 6
-  review-backed seed rows; [`TCDB/tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml)
-  — 477 machine-derived candidate rows; `just validate-tcdb-mappings`.
-- **Current conclusion**: TCDB is a high-quality, IUBMB-endorsed transporter
-  classification that is **structurally disconnected from GO** — no external2go
-  mapping, a noisy self-published `go.py` dump, and half of reviewed TC-classified
-  transporters carrying no transport MF term. The high-value deliverable is a
-  curated, specificity-correct `tc2go` mapping.
+- **Curated mappings**: [`TCDB/tc2go.from_go.sssom.yaml`](TCDB/tc2go.from_go.sssom.yaml)
+  — 202 GO-curated base rows; [`TCDB/tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml)
+  — 477 machine-derived extension rows; [`TCDB/tc2go.sssom.yaml`](TCDB/tc2go.sssom.yaml)
+  — 6 review-backed seed rows; `just validate-tcdb-mappings`.
+- **Current conclusion**: TCDB *does* have a curated, high-quality correspondence
+  to GO — 170 molecular-function terms carry TC xrefs — but it covers only 3% of
+  TCDB families and, lacking an `external2go` pipeline, is never propagated to
+  proteins, leaving half of reviewed TC-classified transporters with no transport
+  MF term. The high-value deliverable is a **`tc2go` propagation pipeline** built
+  on GO's existing xrefs plus reviewed extensions.

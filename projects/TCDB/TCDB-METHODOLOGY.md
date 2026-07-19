@@ -6,24 +6,40 @@ title: "TCDB -> GO Methodology Notes"
 
 **Parent project:** [TCDB.md](../TCDB.md)
 
-## The pipeline that isn't there
+## What exists, and what doesn't
 
-Every other source-audit project in this repo hangs off a public `external2go`
-mapping (`ec2go`, `rhea2go`, `interpro2go`, …). **TCDB has none.** The first,
-load-bearing check is a negative one:
+Two separate things are easy to conflate:
 
-```bash
-# TCDB is absent from this directory listing (ec2go, rhea2go, ... are present; tc2go is not)
-curl -sL http://current.geneontology.org/ontology/external2go/ | grep -o 'external2go/[a-z0-9_]*' | sort -u
-# and the file 404s / AccessDenied:
-curl -sIL http://current.geneontology.org/ontology/external2go/tc2go   # no such file
-```
+1. **A curated TC↔GO correspondence inside the ontology — this exists.** GO
+   curators attach TC references to molecular-function terms, both as term-level
+   `xref: TC:` clauses and as definition dbxrefs (`def: "…" [TC:…]`). Extract it
+   from `go-basic.obo`:
 
-So a TCDB (`DR TCDB;` in UniProt, or a bare TC number) classification has **no
-curated route into GOA**. That reframes the whole project: there is no forward
-`GO_REF` volume to audit (as there is for RHEA's `GO_REF:0000116`); instead we
-(a) characterise the raw material TCDB *does* publish and (b) measure the
-resulting structural gap.
+   ```bash
+   uv run python extract_go_tc_xrefs.py --stats
+   # 202 TC references on 170 non-obsolete MF terms / 185 TC systems / 63 families
+   uv run python extract_go_tc_xrefs.py -o tc2go.from_go.sssom.yaml
+   ```
+
+   This is the authoritative, high-quality (if small) TC→GO mapping — the seed a
+   real `tc2go` should build on.
+
+2. **An `external2go` *annotation pipeline* — this does not exist.** Every other
+   source-audit project here hangs off a public mapping file (`ec2go`, `rhea2go`,
+   `interpro2go`, …); TCDB has none:
+
+   ```bash
+   # ec2go, rhea2go, ... are present; tc2go is not
+   curl -sL http://current.geneontology.org/ontology/external2go/ | grep -o 'external2go/[a-z0-9_]*' | sort -u
+   curl -sIL http://current.geneontology.org/ontology/external2go/tc2go   # no such file
+   ```
+
+So GO's curated term-xrefs are **never propagated to the proteins** that carry a
+`DR TCDB;` cross-reference — there is no forward `GO_REF` volume (as there is for
+RHEA's `GO_REF:0000116`). That reframes the project: the mapping partly exists,
+but the *pipeline* is missing, so we (a) extract GO's existing xrefs, (b)
+characterise the extra material TCDB publishes in `go.py`, and (c) measure the
+structural protein-level gap that the missing pipeline leaves behind.
 
 ## Direction 1 — What TCDB publishes: the `go.py` dump
 
