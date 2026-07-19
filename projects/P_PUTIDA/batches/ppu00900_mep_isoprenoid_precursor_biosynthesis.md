@@ -39,7 +39,7 @@ The following KEGG members are outside this module:
 | 3 | `ispD` | PP_1614 | Q88MF7 | GO:0050518 MEP cytidylyltransferase | Existing Falcon report assessed |
 | 4 | `ispE` | PP_0723 | Q88PX5 | GO:0050515 CDP-ME kinase | OpenScientist complete and assessed |
 | 5 | `ispF` | PP_1618 | Q88MF3 | GO:0008685 ME-CPP synthase | OpenScientist complete and assessed |
-| 6 | `ispG` | PP_0853 | Q88PJ7 | GO:0141197 flavodoxin-coupled HMBPP synthase | OpenScientist running |
+| 6 | `ispG` | PP_0853 | Q88PJ7 | GO:0141197 flavodoxin-coupled HMBPP synthase | OpenScientist complete and assessed |
 | 7 | `ispH` | PP_0606 | Q88Q89 | GO:0051745 HMBPP reductase | OpenScientist complete and assessed |
 
 ## Curation Findings
@@ -82,6 +82,12 @@ The following KEGG members are outside this module:
   are obligatory in every biological context were not adopted. MEP-intermediate
   signaling, detailed Fe-S mechanism, and downstream metabolism remain outside
   this module's core.
+- IspG OpenScientist research supports the family-level ME-CPP-to-HMBPP
+  reaction and conserved [4Fe-4S] architecture but found no direct biochemical,
+  structural, or knockout study of Q88PJ7. Ortholog mechanism, claimed
+  essentiality, and inferred cytoplasmic localization were not promoted as
+  target-specific evidence; the native KT2440 flavodoxin/reductase partners
+  remain unresolved.
 
 ## Workflow Status
 
@@ -90,11 +96,11 @@ The following KEGG members are outside this module:
 - [x] Complete an initial manual review of every GOA row.
 - [x] Build and validate a species-neutral seven-part module.
 - [x] Add exact Rhea reactions, paired UniProt exemplars, and locally verified PAINT nodes.
-- [ ] Complete and assess the remaining gene-level OpenScientist reports.
+- [x] Complete and assess the remaining gene-level OpenScientist reports.
 - [x] Complete and assess generic OpenScientist module research.
 - [x] Complete and assess PSEPK module + pathway + taxon research.
-- [ ] Reconcile gene reviews, pathway boundary, and module against completed research.
-- [ ] Validate and render all affected artifacts.
+- [x] Reconcile gene reviews, pathway boundary, and module against completed research.
+- [x] Validate and render all affected artifacts.
 - [x] Open draft pull request #2182 for this module.
 - [ ] Shepherd the pull request through review and CI to merge readiness.
 
