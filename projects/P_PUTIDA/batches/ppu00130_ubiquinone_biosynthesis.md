@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 13
 - Existing review files: 13
 - Curated review files: 13
-- Gene-level deep-research jobs running: 1
+- Gene-level deep-research jobs running: 0
 
 ## Required Workflow
 
@@ -22,8 +22,8 @@ autolink_gene_symbols: false
 - [x] Run module-level OpenScientist deep research.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch selected high-priority genes with `just fetch-gene PSEPK <gene>`.
-- [ ] Run OpenScientist deep research for selected genes selected for full review.
-- [ ] Curate selected gene reviews.
+- [x] Run OpenScientist deep research for selected genes selected for full review.
+- [x] Curate selected gene reviews.
 - [ ] Validate module and touched gene reviews.
 - [x] Open one PR for this module/pathway: [#2137](https://github.com/ai4curation/ai-gene-review/pull/2137).
 - [ ] Shepherd PR through review, CI, and merge readiness.
@@ -32,7 +32,7 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | Gene research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [ ] | `coq7` | PP_0427 | Q88QR1 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 3-demethoxyubiquinol 3-hydroxylase (DMQ hydroxylase) (EC 1.14.99.60) (2-nonaprenyl-3-methyl-6-methoxy-1,4-benzoquinol hy |
+| [x] | `coq7` | PP_0427 | Q88QR1 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | 3-demethoxyubiquinol 3-hydroxylase (DMQ hydroxylase) (EC 1.14.99.60) (2-nonaprenyl-3-methyl-6-methoxy-1,4-benzoquinol hy |
 | [x] | `ubiX` | PP_0548 | Q88QE6 | kegg:ppu00627 | PRESENT | CURATED | COMPLETE | Flavin prenyltransferase UbiX (EC 2.5.1.129) |
 | [ ] | `PP_1218` | PP_1218 | Q88NI9 | kegg:ppu00130 | MISSING | MISSING | MISSING | Acyl-CoA thioesterase (EC 3.1.2.-) |
 | [ ] | `PP_1644` | PP_1644 | Q88MC9 | kegg:ppu00130 | MISSING | MISSING | MISSING | NAD(P)H dehydrogenase (Quinone) (EC 1.6.5.2) |
@@ -66,30 +66,20 @@ species-level audit found no required ubiquinone-biosynthesis role for them.
 
 OpenScientist status:
 
-- Attempted generic module research and module + ppu00130 + PSEPK research on 2026-07-15. Both jobs failed at the provider/API layer (`521` while polling submitted jobs, then `522` at the OpenScientist health check on retry). No provider output files were created.
-- Fresh generic, species-aware, and nine gene-level OpenScientist jobs were
-  started on 2026-07-18 with 7200-second client timeouts.
-- Generic and species-aware reports completed successfully. The species audit
-  recovered `ubiJ`, `ubiK`, and `ubiB`; three additional gene reports were
-  started with the same 7200-second timeout. `ubiA`, `ubiC`, and `ubiK` are
-  complete; `ubiJ` and `ubiB` have now also completed, leaving seven gene jobs
-  in progress. UbiB curation replaces the transferred canonical protein-kinase
-  call with family-supported ATP hydrolysis and keeps the exact bacterial
-  molecular output as a knowledge gap. UbiD has also completed; its report
-  confirms the prFMN-dependent reaction. Curation retains peripheral
-  inner-membrane localization and rejects the report's unsupported placement of
-  UbiD inside the defined seven-protein soluble Ubi metabolon. VisC has also
-  completed; the E. coli UbiI evidence corrects the legacy "anaerobic" product
-  name, while exact PP_5197 regioselectivity and KT2440 complex membership stay
-  explicitly inferential. UbiH has also completed; its report supports the
-  family-level hydroxylase assignment, but three incorrect locus-to-gene claims
-  in its genomic-context section are explicitly excluded from curation. UbiG
-  has also completed; direct E. coli evidence supports both O-methylations, and
-  the carboxylated-substrate GO term is downgraded to over-annotation rather
-  than removed outright. UbiE has also completed; menaquinone biosynthesis is
-  removed as unsatisfiable in KT2440, while the conserved demethylmenaquinone
-  molecular activity is retained only as an over-annotation. UbiX has also
-  completed; direct ortholog biochemistry confirms prFMN cofactor synthesis and
-  refutes the propagated carboxy-lyase activity on UbiX itself.
+- Initial generic and species-aware attempts on 2026-07-15 failed at the
+  provider/API layer. Fresh jobs with long client timeouts completed on
+  2026-07-18, producing generic, species-aware, and all 12 selected gene-level
+  reports plus their provider artifacts.
+- The species audit recovered `ubiJ`, `ubiK`, and `ubiB` outside KEGG map
+  membership and excluded five map-spillover genes from the de novo pathway.
+- Gene-level integration was deliberately adversarial: UbiX carboxy-lyase and
+  UbiB protein-kinase transfers were corrected; UbiE menaquinone process was
+  removed while family-level demethylmenaquinone activity was retained only as
+  over-annotation; unsupported target-strain metabolon, locus, exact side-chain,
+  and membrane-orientation claims were not propagated.
+- The final Coq7 report is anchored by direct complementation of an E. coli
+  `ubiF` mutant by a Pseudomonas aeruginosa Coq7 ortholog. PP_0427 remains an
+  explicitly homology- and pathway-supported assignment because the KT2440
+  protein itself has not been assayed.
 
-Generated UTC: 2026-07-15T11:36:12.085521+00:00
+Generated UTC: 2026-07-19T02:51:10Z
