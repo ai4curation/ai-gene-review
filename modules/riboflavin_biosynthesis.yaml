@@ -4,10 +4,11 @@ description: >-
   Species-neutral bacterial pathway for making the riboflavin ring de novo from
   GTP and ribulose 5-phosphate and then converting riboflavin to the active
   flavin cofactors FMN and FAD. The ring pathway has two converging branches:
-  a GTP-derived pyrimidine branch made by GTP cyclohydrolase II and the RibD
-  deaminase/reductase activities, and a ribulose-5-phosphate branch made by
-  3,4-dihydroxy-2-butanone 4-phosphate synthase. These branches converge at
-  lumazine synthase, followed by riboflavin synthase. In bacteria, riboflavin
+  a GTP-derived pyrimidine branch made by GTP cyclohydrolase II, the RibD
+  deaminase/reductase activities, and pyrimidine-intermediate dephosphorylation,
+  and a ribulose-5-phosphate branch made by 3,4-dihydroxy-2-butanone 4-phosphate
+  synthase. These branches converge at lumazine synthase, followed by
+  riboflavin synthase. In bacteria, riboflavin
   kinase and FMN adenylyltransferase are frequently combined in a bifunctional
   RibF/RibC-family enzyme, connecting vitamin B2 synthesis to FMN and FAD supply.
 status: DRAFT
@@ -27,6 +28,11 @@ evidence:
     statement: >-
       GO biological-process term for adenylylation of FMN to FAD, represented
       here as the terminal flavin-cofactor activation step.
+  - source_id: GO:0043726
+    title: 5-amino-6-(5-phosphoribitylamino)uracil phosphatase activity
+    statement: >-
+      GO molecular-function term for the required dephosphorylation between the
+      RibD reductase product and the dephosphorylated RibH substrate.
   - source_id: KEGG:map00740
     title: Riboflavin metabolism
     statement: >-
@@ -61,7 +67,9 @@ notes: >-
   downstream FMN/FAD activation step is included because bacterial RibF-family
   enzymes often connect riboflavin synthesis directly to active flavin-cofactor
   supply; animal-only uptake of dietary riboflavin is covered separately by
-  modules/flavin_cofactor_biosynthesis.yaml. In the Pseudomonas putida KT2440
+  modules/flavin_cofactor_biosynthesis.yaml. Human RFK and FLAD1 are included
+  below only as cross-organism representatives of the shared activation
+  activities, not as members of the bacterial de novo route. In the Pseudomonas putida KT2440
   instantiation, OpenScientist flagged ribAB-I and ribAB-II as RibBX-like DHBP
   synthase candidates with apparently degenerate C-terminal GTP-CHII-fold
   domains, so this module does not use them as GTP cyclohydrolase II
@@ -205,13 +213,69 @@ module:
                       id: GO:0008703
                       label: 5-amino-6-(5-phosphoribosylamino)uracil reductase activity
                     substrates:
+                      - preferred_term: 5-amino-6-(5-phospho-D-ribosylamino)uracil
                       - preferred_term: NADPH
                     products:
+                      - preferred_term: 5-amino-6-(5-phospho-D-ribitylamino)uracil
                       - preferred_term: NADP(+)
                     evidence:
                       - source_id: EC:1.1.1.193
                         statement: HTP reductase.
                   role_description: Reduces the ribosylamino side chain before lumazine assembly.
+          - order: 4
+            role: pyrimidine-intermediate dephosphorylation
+            node:
+              id: phosphoribitylaminouracil_phosphatase_step
+              label: Pyrimidine-intermediate dephosphorylation
+              module_type: REACTION
+              description: >-
+                Removes the phosphate from the RibD reductase product before
+                condensation by lumazine synthase.
+              annotons:
+                - id: phosphoribitylaminouracil_phosphatase_activity
+                  label: 5-amino-6-(5-phosphoribitylamino)uracil phosphatase
+                  participant:
+                    selector_type: ANY_WITH_FUNCTION
+                    required_function:
+                      preferred_term: 5-amino-6-(5-phosphoribitylamino)uracil phosphatase activity
+                      term:
+                        id: GO:0043726
+                        label: 5-amino-6-(5-phosphoribitylamino)uracil phosphatase activity
+                    description: >-
+                      The required activity is defined, but the enzyme that
+                      supplies it in Pseudomonas putida KT2440 is unassigned.
+                  function:
+                    preferred_term: 5-amino-6-(5-phosphoribitylamino)uracil phosphatase activity
+                    term:
+                      id: GO:0043726
+                      label: 5-amino-6-(5-phosphoribitylamino)uracil phosphatase activity
+                    substrates:
+                      - preferred_term: 5-amino-6-(5-phospho-D-ribitylamino)uracil
+                      - preferred_term: water
+                    products:
+                      - preferred_term: 5-amino-6-(D-ribitylamino)uracil
+                      - preferred_term: phosphate
+                    evidence:
+                      - source_id: GO:0043726
+                        statement: >-
+                          GO defines the phosphatase reaction connecting the
+                          phosphorylated RibD product to the RibH substrate.
+                  role_description: Supplies the dephosphorylated pyrimidine substrate used by RibH.
+              knowledge_gaps:
+                - gap_statement: >-
+                    The protein responsible for GO:0043726 activity in
+                    Pseudomonas putida KT2440 has not been assigned.
+                  boundary: >-
+                    The reaction is chemically required and has a specific GO
+                    molecular-function term; the unresolved point is the KT2440
+                    gene product that performs it.
+                  gap_kind:
+                    - BIOLOGY
+                    - CURATION
+                  resolution: >-
+                    Screen candidate soluble phosphatases genetically and
+                    biochemically for conversion of the RibD product to the RibH
+                    substrate.
     - order: 2
       role: Ribulose-5-phosphate donor branch
       node:
@@ -448,8 +512,16 @@ module:
       target: ribd_reductase_step
       connection_type: PRECEDES
     - source: ribd_reductase_step
+      target: phosphoribitylaminouracil_phosphatase_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: >-
+        RibD produces the phosphorylated pyrimidine substrate for the required
+        dephosphorylation step.
+    - source: phosphoribitylaminouracil_phosphatase_step
       target: lumazine_synthase_step
       connection_type: PROVIDES_INPUT_FOR
+      description: >-
+        Dephosphorylation supplies 5-amino-6-(D-ribitylamino)uracil to RibH.
     - source: dhbp_branch
       target: lumazine_synthase_step
       connection_type: PROVIDES_INPUT_FOR
