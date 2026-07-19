@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 13
 - Existing review files: 13
 - Curated review files: 13
-- Gene-level deep-research jobs running: 6
+- Gene-level deep-research jobs running: 5
 
 ## Required Workflow
 
@@ -43,7 +43,7 @@ autolink_gene_symbols: false
 | [ ] | `ubiE` | PP_5011 | Q88D17 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Ubiquinone/menaquinone biosynthesis C-methyltransferase UbiE (EC 2.1.1.163) (EC 2.1.1.201) (2-methoxy-6-polyprenyl-1,4-b |
 | [x] | `ubiJ` | PP_5012 | Q88D16 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiJ |
 | [x] | `ubiB` | PP_5013 | A0A140FWS4 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Probable protein kinase UbiB |
-| [ ] | `visC` | PP_5197 | Q88CI4 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | Predicted aerobic UbiI/VisC-type ubiquinone hydroxylase |
+| [x] | `visC` | PP_5197 | Q88CI4 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | Predicted aerobic UbiI/VisC-type ubiquinone hydroxylase |
 | [ ] | `ubiH` | PP_5199 | Q88CI2 | kegg:ppu00130 | PRESENT | CURATED | RUNNING | 2-octaprenyl-6-methoxyphenyl hydroxylase |
 | [x] | `ubiD` | PP_5213 | Q88CG8 | kegg:ppu00130 | PRESENT | CURATED | COMPLETE | 3-octaprenyl-4-hydroxybenzoate carboxy-lyase (EC 4.1.1.98) (Polyprenyl p-hydroxybenzoate decarboxylase) |
 | [x] | `ubiK` | PP_5235 | Q88CE6 | outside ppu00130 | PRESENT | CURATED | COMPLETE | Ubiquinone biosynthesis accessory factor UbiK |
@@ -78,6 +78,9 @@ OpenScientist status:
   molecular output as a knowledge gap. UbiD has also completed; its report
   confirms the prFMN-dependent reaction. Curation retains peripheral
   inner-membrane localization and rejects the report's unsupported placement of
-  UbiD inside the defined seven-protein soluble Ubi metabolon.
+  UbiD inside the defined seven-protein soluble Ubi metabolon. VisC has also
+  completed; the E. coli UbiI evidence corrects the legacy "anaerobic" product
+  name, while exact PP_5197 regioselectivity and KT2440 complex membership stay
+  explicitly inferential.
 
 Generated UTC: 2026-07-15T11:36:12.085521+00:00
