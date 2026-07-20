@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dxs - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dxs</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QG7" target="_blank" class="term-link">
+                        Q88QG7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dxs";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QG7" data-a="DESCRIPTION: dxs encodes thiamine-diphosphate-dependent 1-deoxy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>dxs encodes thiamine-diphosphate-dependent 1-deoxy-D-xylulose-5-phosphate synthase. It condenses pyruvate with glyceraldehyde 3-phosphate to form DXP, the entry metabolite for the methylerythritol phosphate route to isoprenoid precursors and a shared precursor used in thiamine biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding is required cofactor context for Dxs catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records one bound Mg2+ per subunit, but the specific DXP synthase activity is the evolved core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization is plausible cellular context for bacterial Dxs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The localization does not describe the catalytic role and is retained as non-core context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005829	cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008661" target="_blank" class="term-link">
+                                    GO:0008661
+                                </a>
+                            </span>
+                            <span class="term-label">1-deoxy-D-xylulose-5-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0008661" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DXP synthase activity is the specific catalytic function of Dxs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.2.1.7 and Rhea 12605 for condensation of pyruvate and glyceraldehyde 3-phosphate to DXP and carbon dioxide.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the acyloin condensation reaction between C atoms 2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **_dxs_ (Q88QG7, locus PP_0527)** of *Pseudomonas putida* KT2440 encodes **1-deoxy-D-xylulose-5-phosphate synthase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009228" target="_blank" class="term-link">
+                                    GO:0009228
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0009228" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dxs directly supplies DXP to thiamine biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DXP is a shared branch-point metabolite used in both the MEP isoprenoid route and thiamine biosynthesis. The latter remains a core biological role of Dxs even though it lies outside this module boundary.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Thiamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016114" target="_blank" class="term-link">
+                                    GO:0016114
+                                </a>
+                            </span>
+                            <span class="term-label">terpenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0016114" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Terpenoid biosynthesis is correct but broader than the annotated MEP route.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0019288 captures the specific isoprenoid-precursor pathway in which Dxs acts, making this broad parent redundant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016114	terpenoid biosynthetic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016744" target="_blank" class="term-link">
+                                    GO:0016744
+                                </a>
+                            </span>
+                            <span class="term-label">transketolase or transaldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0016744" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The transketolase-family activity term is true at a broad mechanistic level.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Dxs belongs to the transketolase family, but GO:0008661 identifies its exact physiological condensation reaction and should carry the core call.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the transketolase family. DXPS subfamily.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019288" target="_blank" class="term-link">
+                                    GO:0019288
+                                </a>
+                            </span>
+                            <span class="term-label">isopentenyl diphosphate biosynthetic process, methylerythritol phosphate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0019288" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The MEP-pathway IPP biosynthesis process is the core pathway role of Dxs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Dxs forms DXP from central-carbon substrates at the entry to the methylerythritol phosphate pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0019288	isopentenyl diphosphate biosynthetic process, methylerythritol phosphate pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">In *P. putida* KT2440 specifically, the isoprenoid precursors IPP and DMAPP are produced **exclusively via the MEP pathway** from central-metabolism substrates.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030976" target="_blank" class="term-link">
+                                    GO:0030976
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine pyrophosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QG7" data-a="GO:0030976" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Thiamine diphosphate binding is required mechanistic context for Dxs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records one thiamine pyrophosphate per subunit, but cofactor binding is subordinate to the specific synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dxs/dxs-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 thiamine pyrophosphate per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DXP synthase that condenses pyruvate and glyceraldehyde 3-phosphate to form the entry metabolite of the methylerythritol phosphate pathway.</h3>
+                <span class="vote-buttons" data-g="Q88QG7" data-a="FUNCTION: DXP synthase that condenses pyruvate and glycerald..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008661" target="_blank" class="term-link">
+                            1-deoxy-D-xylulose-5-phosphate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019288" target="_blank" class="term-link">
+                                isopentenyl diphosphate biosynthetic process, methylerythritol 4-phosphate pathway
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009228" target="_blank" class="term-link">
+                                thiamine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dxs/dxs-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the acyloin condensation reaction between C atoms 2</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dxs/dxs-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Thiamine biosynthesis</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dxs/dxs-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88QG7 for dxs</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88QG7 as the Mg2+- and thiamine-diphosphate-dependent DXP synthase that condenses pyruvate and glyceraldehyde 3-phosphate.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dxs/dxs-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for dxs</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the eight annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dxs/dxs-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research report for dxs</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the DXP synthase assignment, conserved thiamine-diphosphate-dependent chemistry, and placement at the entry to the KT2440 MEP route.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report&#39;s description of DXS as a committed MEP step is not adopted: DXP is a branch-point metabolite also used outside isoprenoid precursor biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dxs-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QG7" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *dxs* (1-Deoxy-D-xylulose-5-phosphate Synthase) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T16:35:35.708230</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dxs-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dxs-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-dxs-1-deoxy-d-xylulose-5-phosphate-synthase-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>dxs</em> (1-Deoxy-D-xylulose-5-phosphate Synthase) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88QG7 | <strong>Gene:</strong> <em>dxs</em> | <strong>Locus:</strong> PP_0527 | <strong>EC:</strong> 2.2.1.7<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong><em>dxs</em> (Q88QG7, locus PP_0527)</strong> of <em>Pseudomonas putida</em> KT2440 encodes <strong>1-deoxy-D-xylulose-5-phosphate synthase (DXPS / DXS; EC 2.2.1.7)</strong>, a thiamine-diphosphate (ThDP)- and Mg²⁺-dependent enzyme of the transketolase family (DXPS subfamily). Its primary and defining function is to catalyze the <strong>decarboxylative acyloin (carboligation) condensation of pyruvate with D-glyceraldehyde-3-phosphate (D-GAP)</strong> to yield <strong>1-deoxy-D-xylulose-5-phosphate (DXP)</strong> plus CO₂. In this reaction pyruvate acts as the 2-hydroxyethyl (C2) donor and D-GAP as the aldehyde acceptor. This is the <strong>first, committed, and rate-limiting step of the mevalonate-independent 2-C-methyl-D-erythritol-4-phosphate (MEP) pathway</strong>, which in <em>P. putida</em> is the organism's sole route to the universal isoprenoid precursors isopentenyl diphosphate (IPP) and dimethylallyl diphosphate (DMAPP).</p>
+<p>Beyond isoprenoids, the DXP product is a <strong>metabolic branch point</strong> feeding two additional essential routes: <strong>thiamine diphosphate (vitamin B1)</strong> and <strong>pyridoxal-5′-phosphate (vitamin B6)</strong> biosynthesis. Because DXP cannot be produced by any bypass in <em>P. putida</em>, and because the downstream isoprenoids (ubiquinone-9 respiratory quinone, carotenoids, prenylated products) and vitamins are indispensable, <em>dxs</em> is a physiologically <strong>essential gene</strong>. The enzyme functions in the <strong>cytoplasm</strong> as a <strong>soluble homodimer</strong> (~70 kDa subunits; 631 aa in <em>P. putida</em>) with a three-domain transketolase-like fold; uniquely among ThDP enzymes, its active site lies <strong>within a single monomer</strong> at the interface of domains I and II rather than at the dimer interface.</p>
+<p>Mechanistically, DXS is distinctive: it stabilizes the pre-decarboxylation intermediate <strong>C2α-lactyl-ThDP (LThDP)</strong> in the absence of the acceptor and uses a <strong>ligand-gated, random-sequential mechanism</strong> in which binding of D-GAP triggers a <strong>≥600-fold acceleration</strong> of LThDP decarboxylation. The functional assignment for Q88QG7 rests on strong convergent evidence: UniProt/HAMAP curation directly on the <em>P. putida</em> sequence confirms an intact ThDP/Mg²⁺ active site, and the enzyme is <strong>62% identical</strong> to the structurally and mechanistically characterized <em>E. coli</em> DXS with <strong>complete conservation of every catalytic and cofactor-binding residue</strong>, licensing confident orthology-based transfer of the well-established DXS function to this protein.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before proceeding it was confirmed that Q88QG7 corresponds to the intended target. The gene symbol <em>dxs</em>, the protein description (1-deoxy-D-xylulose-5-phosphate synthase, EC 2.2.1.7), the organism (<em>P. putida</em> KT2440), the family (transketolase family, DXPS subfamily), and the diagnostic domains (Dxylulose-5-P_synthase IPR005477; THDP-binding IPR029061; Transketo_C/PFOR_II IPR009014; Transketolase-like_Pyr-bd IPR005475; Transketolase_BS IPR020826) are all mutually consistent and match the DXS literature used here. Care was taken to exclude literature on same-symbol <em>DXS</em> genes from plants and other organisms; all functional claims below derive either from the <em>P. putida</em> sequence itself, from congeneric <em>Pseudomonas</em> studies, or from the well-characterized <em>E. coli</em> ortholog to which Q88QG7 is 62% identical. The identity is unambiguous.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-dxs-encodes-dxp-synthase-catalyzing-thdp-dependent-condensation-of-pyruvate-and-d-gap-to-form-dxp">Finding 1 — <em>dxs</em> encodes DXP synthase catalyzing ThDP-dependent condensation of pyruvate and D-GAP to form DXP</h3>
+<p>UniProt Q88QG7 (<em>P. putida</em> KT2440, gene <em>dxs</em>, locus PP_0527) is annotated as <strong>1-deoxy-D-xylulose-5-phosphate synthase</strong>, a member of the transketolase family / DXPS subfamily, with enzyme classification <strong>EC 2.2.1.7</strong>. The catalyzed reaction is the <strong>thiamine-diphosphate (ThDP)-dependent decarboxylative condensation of pyruvate and D-glyceraldehyde-3-phosphate (D-GAP)</strong> to yield 1-deoxy-D-xylulose-5-phosphate (DXP) plus CO₂, and it requires both <strong>Mg²⁺ and ThDP</strong> as cofactors.</p>
+<p>The reaction chemistry is well established in the primary literature. A comprehensive review states directly that "1-deoxy-d-xylulose 5-phosphate (DXP) synthase is a thiamine diphosphate (ThDP)-dependent enzyme that catalyzes the decarboxylative condensation of pyruvate and d-glyceraldehyde 3-phosphate (d-GAP) to form DXP" (<a href="https://pubmed.ncbi.nlm.nih.gov/30203647/">PMID: 30203647</a>). Mechanistic kinetics work further clarifies the roles of the two substrates: "1-deoxy-D-xylulose 5-phosphate (DXP) synthase carries out the condensation of pyruvate as a 2-hydroxyethyl donor with d-glyceraldehyde-3-phosphate (d-GAP) as acceptor forming DXP" (<a href="https://pubmed.ncbi.nlm.nih.gov/23072514/">PMID: 23072514</a>). Thus <strong>pyruvate is the C2 (2-hydroxyethyl) donor</strong> and <strong>D-GAP is the aldehyde acceptor</strong> — the substrate specificity is precise and physiologically defined.</p>
+<p><strong>Reaction:</strong></p>
+<div class="codehilite"><pre><span></span><code>   Pyruvate  +  D-glyceraldehyde-3-phosphate  +  H⁺
+│                    │
+│  (ThDP, Mg²⁺)      │
+▼                    ▼
+   1-deoxy-D-xylulose-5-phosphate (DXP)  +  CO₂
+</code></pre></div>
+
+<h3 id="finding-2-dxs-is-the-first-rate-limiting-enzyme-of-the-mep-pathway-dxp-is-a-branch-point-metabolite-feeding-isoprenoid-b1-and-b6-biosynthesis">Finding 2 — DXS is the first, rate-limiting enzyme of the MEP pathway; DXP is a branch-point metabolite feeding isoprenoid, B1, and B6 biosynthesis</h3>
+<p>DXP synthase catalyzes the <strong>first committed and rate-limiting step</strong> of the mevalonate-independent MEP (2-C-methyl-D-erythritol-4-phosphate) pathway. This has been established repeatedly and independently: a recent structural review states that "1-deoxy-D-xylulose 5-phosphate synthase (DXPS) is the first and rate-limiting enzyme of this pathway" (<a href="https://pubmed.ncbi.nlm.nih.gov/40784416/">PMID: 40784416</a>), and an earlier structural study concurs that "1-Deoxy-D-xylulose 5-phosphate synthase (DXS) catalyzes the first and the rate-limiting step of the mevalonate-independent pathway" (<a href="https://pubmed.ncbi.nlm.nih.gov/17135236/">PMID: 17135236</a>).</p>
+<p>Critically, the DXP product is not dedicated solely to isoprenoids — it is a <strong>three-way metabolic branch point</strong>. As stated in the review by the Freel Meyers group, DXP "feeds into three separate essential pathways for bacterial central metabolism: ThDP synthesis, pyridoxal phosphate (PLP) synthesis, and the MEP pathway for isoprenoid synthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/30203647/">PMID: 30203647</a>). This central, non-redundant position — supplying both isoprenoid precursors and two essential vitamin cofactors (B1 and B6) — is the primary reason DXS is regarded as an attractive, human-target-free antibacterial target and why the gene is essential in organisms lacking the mevalonate pathway.</p>
+<div class="codehilite"><pre><span></span><code>          ┌─────────────────►  Thiamine diphosphate (Vitamin B1)
+          │
+  Pyruvate + D-GAP ──► DXP ─────────────────►  Pyridoxal-5′-phosphate (Vitamin B6)
+       (DXS)            │
+          └──► MEP pathway ──►  IPP / DMAPP ──► isoprenoids
+                (dxr, idi...)                    (ubiquinone-9,
+                                                  carotenoids, etc.)
+</code></pre></div>
+
+<h3 id="finding-3-dxs-uses-a-distinctive-ligand-gated-random-sequential-mechanism-via-a-stabilized-lthdp-intermediate">Finding 3 — DXS uses a distinctive ligand-gated, random-sequential mechanism via a stabilized LThDP intermediate</h3>
+<p>DXS is mechanistically unlike other ThDP-dependent decarboxylases. Rather than decarboxylating its first covalent intermediate immediately, it <strong>stabilizes the pre-decarboxylation intermediate C2α-lactyl-ThDP (LThDP)</strong> in the absence of the acceptor substrate. Binding of D-GAP (or a small-molecule "trigger") then <strong>gates the reaction</strong>, activating LThDP decarboxylation to form the reactive carbanion/enamine that condenses with the acceptor. As described in recent mechanistic work, "DXPS uses a ligand-gated mechanism in which binding of a small molecule 'trigger' activates the first enzyme-bound intermediate, C2α-lactylThDP (LThDP), to form the reactive carbanion via LThDP decarboxylation" (<a href="https://pubmed.ncbi.nlm.nih.gov/39268973/">PMID: 39268973</a>).</p>
+<p>The magnitude of this gating effect is striking. Direct kinetic measurement of the thiamin-bound intermediates showed that "addition of D-GAP enhanced the rate of decarboxylation by at least 600-fold" (<a href="https://pubmed.ncbi.nlm.nih.gov/23072514/">PMID: 23072514</a>) — the acceptor substrate does not merely participate in the second half-reaction but actively controls the timing of the first. The enzyme also follows unusual steady-state kinetics: "DXP synthase follows a unique random sequential mechanism and possesses an unusually large active site" (<a href="https://pubmed.ncbi.nlm.nih.gov/28636325/">PMID: 28636325</a>). Active-site residues that bind the D-GAP phosphate/acceptor were identified by mutagenesis: studies "predict that Arg420 and Arg478 are involved in binding of the acceptor substrate, GraP" (<a href="https://pubmed.ncbi.nlm.nih.gov/24767541/">PMID: 24767541</a>), with Tyr392 contributing to D-GAP affinity. This ligand-gated behaviour underlies DXS's distinctive place in ThDP enzymology and shapes ongoing antibacterial inhibitor-design efforts.</p>
+<h3 id="finding-4-dxs-is-a-soluble-cytoplasmic-homodimer-with-a-three-domain-transketolase-like-fold-the-active-site-lies-within-a-single-monomer">Finding 4 — DXS is a soluble cytoplasmic homodimer with a three-domain transketolase-like fold; the active site lies within a single monomer</h3>
+<p>Crystal structures of DXS from <em>E. coli</em> and <em>Deinococcus radiodurans</em> reveal that the enzyme is a <strong>homodimer of ~70 kDa subunits</strong>, each composed of <strong>three domains (I, II, III)</strong> that are individually homologous to the domains of transketolase and the pyruvate dehydrogenase E1 subunit. However, the domains are arranged differently: "the active site of DXS is located at the interface of domains I and II in the same monomer, whereas that of transketolase is located at the interface of the dimer" (<a href="https://pubmed.ncbi.nlm.nih.gov/17135236/">PMID: 17135236</a>). This <strong>intramonomeric active-site architecture</strong> is a defining structural feature of the DXPS subfamily.</p>
+<p>The enzyme's solubility and oligomeric state are consistent with cytoplasmic localization. A characterized ortholog was described as follows: "The purified HiDXS was a soluble dimeric 70-kDa protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/20808315/">PMID: 20808315</a>). ThDP is largely buried within the fold with its reactive thiazolium C2 exposed to the substrate pocket. There is no signal peptide or membrane-spanning region — DXS is a bona fide <strong>soluble cytoplasmic enzyme</strong> that carries out its catalysis in the bacterial cytosol where its substrates (pyruvate, D-GAP from glycolysis) and cofactors reside. Congeneric structural work on <em>Pseudomonas aeruginosa</em> and <em>Klebsiella pneumoniae</em> DXPS reinforces this picture and adds mechanistic detail, showing that "the absence of the cofactor thiamine diphosphate results in conformational changes that lead to disordered loops close to the active site" (<a href="https://pubmed.ncbi.nlm.nih.gov/37567475/">PMID: 37567475</a>) — of direct relevance to <em>P. putida</em> as a close <em>Pseudomonas</em> relative.</p>
+<h3 id="finding-5-in-p-putida-kt2440-dxs-supplies-isoprenoid-precursors-via-the-mep-pathway-overexpression-boosts-isoprenoid-output">Finding 5 — In <em>P. putida</em> KT2440, <em>dxs</em> supplies isoprenoid precursors via the MEP pathway; overexpression boosts isoprenoid output</h3>
+<p>In <em>P. putida</em> KT2440 specifically, the isoprenoid precursors IPP and DMAPP are produced <strong>exclusively via the MEP pathway</strong> from central-metabolism substrates. A metabolic-engineering study of this exact strain states that "In P. putida and most other bacteria, these precursors are produced from pyruvate and glyceraldehyde 3-phosphate by the methylerythritol 4-phosphate (MEP) pathway" (<a href="https://pubmed.ncbi.nlm.nih.gov/31500633/">PMID: 31500633</a>). This confirms that <em>dxs</em> (PP_0527), <em>dxr</em>, and <em>idi</em> constitute the organism's sole isoprenoid-precursor supply route — there is no mevalonate pathway to compensate.</p>
+<p>Functionally, engineering the precursor supply — including MEP-pathway genes such as <em>dxs</em> — has a large effect on isoprenoid output. Using lycopene as a read-out, the same study reported that "The most successful combination led to a 50-fold increase in lycopene levels, indicating that P. putida can be successfully engineered to substantially increase the supply" (<a href="https://pubmed.ncbi.nlm.nih.gov/31500633/">PMID: 31500633</a>). This directly demonstrates that DXS acts as a <strong>flux-controlling entry point</strong> for isoprenoid biosynthesis in KT2440, consistent with its designation as the rate-limiting step.</p>
+<h3 id="finding-6-uniprothamap-curation-of-q88qg7-directly-confirms-dxps-function-and-maps-cofactor-binding-residues-on-the-p-putida-sequence">Finding 6 — UniProt/HAMAP curation of Q88QG7 directly confirms DXPS function and maps cofactor-binding residues on the <em>P. putida</em> sequence</h3>
+<p>The functional assignment is not merely inferred from the family name — it is supported by direct curation on the target sequence. UniProt Q88QG7 (<strong>631 aa, homodimer</strong>) is curated under HAMAP rule MF_00315 as catalyzing the acyloin condensation of pyruvate and D-glyceraldehyde-3-phosphate to DXP (reaction: <strong>D-GAP + pyruvate + H⁺ = DXP + CO₂</strong>), and is assigned to the pathway "1-deoxy-D-xylulose 5-phosphate biosynthesis … step 1/1." The curated cofactors are <strong>Mg²⁺ and thiamine diphosphate</strong>.</p>
+<p>The curation maps specific binding-site residues onto the <em>P. putida</em> sequence:</p>
+<table>
+<thead>
+<tr>
+<th>Residue(s)</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>His87; Gly128–His129–Ser130; Gly160–Ala161; Phe295; Glu377</td>
+<td>Thiamine diphosphate binding</td>
+</tr>
+<tr>
+<td>Asp159; Asn188</td>
+<td>Mg²⁺ coordination (Asn188 also contacts ThDP)</td>
+</tr>
+</tbody>
+</table>
+<p>These residues correspond to the conserved DXPS/transketolase ThDP–Mg²⁺ binding motif — the invariant Asp/Asn divalent-metal pair and the conserved Glu that contacts the aminopyrimidine N1′ of ThDP. The presence of the intact canonical active site directly on the <em>P. putida</em> sequence provides strong, sequence-specific evidence that Q88QG7 is a fully functional DXP synthase.</p>
+<h3 id="finding-7-q88qg7-is-62-identical-to-the-characterized-e-coli-dxs-with-full-conservation-of-all-active-site-residues">Finding 7 — Q88QG7 is 62% identical to the characterized <em>E. coli</em> DXS with full conservation of all active-site residues</h3>
+<p>To validate transfer of the extensive <em>E. coli</em>/<em>D. radiodurans</em> structural and mechanistic data to Q88QG7, a global (Needleman–Wunsch, BLOSUM62) alignment was performed between Q88QG7 (631 aa) and <em>E. coli</em> DXS (P77488, 620 aa). The result: <strong>62.1% identity over 618 aligned residue pairs (384/618)</strong> — well above the ~40% threshold generally considered sufficient for reliable functional transfer among enzymes, and firmly in the range where fold, mechanism, and substrate specificity are conserved.</p>
+<p>Every UniProt-curated cofactor-binding residue of the <em>P. putida</em> enzyme is conserved in <em>E. coli</em>:</p>
+<table>
+<thead>
+<tr>
+<th><em>P. putida</em> (Q88QG7)</th>
+<th><em>E. coli</em> (P77488)</th>
+<th>Role</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>His87</td>
+<td>His80</td>
+<td>ThDP</td>
+<td>Conserved</td>
+</tr>
+<tr>
+<td>His129</td>
+<td>His122</td>
+<td>ThDP</td>
+<td>Conserved</td>
+</tr>
+<tr>
+<td>Asp159</td>
+<td>Asp152</td>
+<td>Mg²⁺/ThDP</td>
+<td>Conserved</td>
+</tr>
+<tr>
+<td>Gly160</td>
+<td>Gly153</td>
+<td>ThDP</td>
+<td>Conserved</td>
+</tr>
+<tr>
+<td>Asn188</td>
+<td>Asn181</td>
+<td>Mg²⁺/ThDP</td>
+<td>Conserved</td>
+</tr>
+<tr>
+<td>Phe295</td>
+<td>Tyr288</td>
+<td>ThDP contact</td>
+<td>Conservative (aromatic)</td>
+</tr>
+<tr>
+<td>Glu377</td>
+<td>Glu370</td>
+<td>ThDP</td>
+<td>Conserved</td>
+</tr>
+</tbody>
+</table>
+<p>The single substitution (Phe295↔Tyr288) is a conservative aromatic-for-aromatic change at a ThDP contact and does not alter function. Because the <em>E. coli</em> enzyme is the reference for DXS crystal structures (<a href="https://pubmed.ncbi.nlm.nih.gov/17135236/">PMID: 17135236</a>) and the detailed ligand-gated mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/23072514/">PMID: 23072514</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/39268973/">PMID: 39268973</a>), the high identity and complete active-site conservation license confident transfer of these orthologous data to Q88QG7.</p>
+<h3 id="finding-8-dxs-initiated-mep-flux-supplies-precursors-for-pseudomonas-ubiquinone-9-and-carotenoids-making-dxs-physiologically-essential">Finding 8 — DXS-initiated MEP flux supplies precursors for <em>Pseudomonas</em> ubiquinone-9 and carotenoids, making <em>dxs</em> physiologically essential</h3>
+<p>The physiological essentiality of <em>dxs</em> follows from what its product supplies. The genus <em>Pseudomonas</em> characteristically uses <strong>ubiquinone-9 (Q-9)</strong> as its main respiratory quinone — a chemotaxonomic marker of the genus. A recent species description confirms that "the main respiratory quinone of the RP23018ST strain was ubiquinone-9 (Q-9), which is a typical chemotaxonomic characteristic of the genus Pseudomonas" (<a href="https://pubmed.ncbi.nlm.nih.gov/42012699/">PMID: 42012699</a>). The C₄₅ nonaprenyl (nine-isoprene) tail of Q-9, along with the carotenoid backbones produced by pseudomonad <em>crt</em> genes, are constructed from IPP/DMAPP — which in <em>P. putida</em> are made <strong>solely</strong> by the MEP pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/31500633/">PMID: 31500633</a>).</p>
+<p>Because DXS is the first, rate-limiting MEP step, and because DXP additionally feeds essential thiamine (B1) and pyridoxal-5′-phosphate (B6) synthesis (<a href="https://pubmed.ncbi.nlm.nih.gov/30203647/">PMID: 30203647</a>), <strong>loss of <em>dxs</em> cannot be bypassed</strong>. The MEP pathway is broadly essential across bacteria that lack the mevalonate route: it is "in charge of the essential biosynthesis of isoprenoids" (<a href="https://pubmed.ncbi.nlm.nih.gov/21366531/">PMID: 21366531</a>). Consistent with this, no viable <em>dxs</em> knockout of <em>P. putida</em> has been reported. The enzyme therefore sits at an essential, non-redundant, non-bypassable node of central metabolism.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the eight findings yields a coherent picture of DXS as the gatekeeper of the MEP pathway in <em>P. putida</em> KT2440:</p>
+<p><strong>1. Substrate sourcing (cytoplasm).</strong> DXS draws its two substrates directly from central carbon metabolism: <strong>pyruvate</strong> (glycolysis/gluconeogenesis end product) and <strong>D-glyceraldehyde-3-phosphate</strong> (a glycolytic triose phosphate). Both are cytosolic, matching the soluble cytoplasmic localization of the enzyme.</p>
+<p><strong>2. Catalysis (ligand-gated ThDP chemistry).</strong> ThDP, held in place by His87, His129, Gly160, Phe295, Glu377 and coordinated to Mg²⁺ via Asp159/Asn188, attacks pyruvate to form the LThDP intermediate. Uniquely, DXS <em>pauses</em> here — LThDP is stable until D-GAP binds (via Arg420, Arg478, Tyr392). D-GAP binding gates decarboxylation, accelerating it ≥600-fold, generating the enamine/carbanion that attacks the D-GAP aldehyde to build the new C–C bond of DXP.</p>
+<p><strong>3. Product distribution (branch point).</strong> DXP is released into the cytosol where it is partitioned among three destinations — the MEP pathway (→ IPP/DMAPP → ubiquinone-9, carotenoids, prenyl products), thiamine (B1) biosynthesis, and pyridoxal-phosphate (B6) biosynthesis.</p>
+<p><strong>4. Physiological consequence (essentiality and flux control).</strong> As the first and rate-limiting step, DXS sets the overall flux into all three downstream branches. This dual role — flux controller and essential-metabolite gatekeeper — is why (a) overexpression boosts isoprenoid (lycopene) yields ~50-fold in engineered KT2440 and (b) the gene cannot be deleted.</p>
+<div class="codehilite"><pre><span></span><code>   CENTRAL METABOLISM (cytoplasm)
+   ┌───────────────────────────────────────────────┐
+   │  Glycolysis → Pyruvate      D-GAP              │
+   └────────────────┬───────────────┬──────────────┘
+    │               │
+    ▼               ▼
+┌────────────────────────────────────────┐
+│   DXS (Q88QG7 / PP_0527)                │
+│   soluble cytoplasmic homodimer         │
+│   ThDP + Mg²⁺, 3-domain TK fold         │
+│   active site within one monomer        │
+│   ligand-gated (D-GAP triggers decarb.) │
+└───────────────────┬────────────────────┘
+            │  RATE-LIMITING, FIRST STEP
+            ▼
+    ┌──────────────┐
+    │     DXP      │  (branch-point metabolite)
+    └──┬────────┬──┴───────┐
+       ▼        ▼          ▼
+  MEP pathway  Thiamine   Pyridoxal-P
+  (dxr, idi…)  (B1)       (B6)
+       ▼
+  IPP / DMAPP
+       ▼
+      Ubiquinone-9, carotenoids,
+      other isoprenoids  →  ESSENTIAL
+</code></pre></div>
+
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title / Focus</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30203647/">30203647</a></td>
+<td><em>Toward Understanding the Chemistry and Biology of DXP Synthase</em> (review)</td>
+<td>States the catalyzed reaction, cofactor (ThDP), and substrates; establishes DXP as a branch point feeding ThDP, PLP, and MEP pathways</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40784416/">40784416</a></td>
+<td><em>DXPS: structural perspectives on an essential enzyme</em> (review)</td>
+<td>States DXPS is the first, rate-limiting enzyme of the MEP pathway</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17135236/">17135236</a></td>
+<td><em>Crystal structure of DXS</em></td>
+<td>Three-domain transketolase-like fold; unique intramonomer active site; first/rate-limiting role; reference <em>E. coli</em> structure</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23072514/">23072514</a></td>
+<td><em>Thiamin-bound intermediates; 600-fold rate acceleration</em></td>
+<td>Defines donor/acceptor roles; quantifies ≥600-fold D-GAP-triggered decarboxylation acceleration</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39268973/">39268973</a></td>
+<td><em>Aldehyde-based activation of LThDP decarboxylation</em></td>
+<td>Describes the ligand-gated LThDP mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28636325/">28636325</a></td>
+<td><em>Alkylacetylphosphonates as probes of DXP synthase</em></td>
+<td>Establishes random-sequential kinetics and unusually large active site</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24767541/">24767541</a></td>
+<td><em>Critical residues for substrate binding</em></td>
+<td>Identifies Arg420/Arg478 as acceptor (D-GAP)-binding residues</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20808315/">20808315</a></td>
+<td><em>Ketoclomazone inhibits DXS; H. influenzae</em></td>
+<td>Establishes soluble dimeric 70-kDa nature of a DXS ortholog</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31500633/">31500633</a></td>
+<td><em>Engineering P. putida for isoprenoid production</em></td>
+<td>Confirms MEP-only precursor synthesis in KT2440; 50-fold isoprenoid increase via precursor engineering</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21366531/">21366531</a></td>
+<td><em>MEP pathway as anti-TB drug target</em> (review)</td>
+<td>Supports essentiality of the MEP pathway for isoprenoid biosynthesis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42012699/">42012699</a></td>
+<td><em>Pseudomonas gebzensis sp. nov.</em></td>
+<td>Establishes ubiquinone-9 as the characteristic <em>Pseudomonas</em> respiratory quinone (MEP/DXS-dependent tail)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37567475/">37567475</a></td>
+<td><em>DXPS from P. aeruginosa &amp; K. pneumoniae</em></td>
+<td>Congeneric structural confirmation of DXPS fold, cofactor-induced conformational changes, and rate-limiting/branch-point role</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29784878/">29784878</a></td>
+<td><em>Oxidative decarboxylation of pyruvate by DXP synthase</em></td>
+<td>Reinforces the ThDP mechanism and central metabolic role of DXP synthase</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is internally consistent: multiple independent lines (direct UniProt/HAMAP sequence curation, high-identity orthology to the crystallographically and kinetically characterized <em>E. coli</em> enzyme, congeneric <em>Pseudomonas aeruginosa</em> structural data, and strain-specific <em>P. putida</em> metabolic-engineering results) all converge on the same functional assignment. No paper in the reviewed literature contradicts the DXP synthase annotation for Q88QG7.</p>
+<p><strong>Note on citation hygiene:</strong> Several papers surfaced during literature searches (e.g., plant DXS studies, protoplast methods, algicidal quorum-sensing work) concern DXS orthologs in other organisms or unrelated topics and were correctly excluded from the functional claims for the <em>P. putida</em> bacterial enzyme.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of Q88QG7 itself.</strong> The functional assignment rests on (a) sequence-level curation and (b) orthology transfer from <em>E. coli</em> DXS. While the 62% identity and complete active-site conservation make this transfer highly reliable, the <em>P. putida</em> enzyme has not, to our knowledge, been purified, kinetically characterized (kcat/Km for pyruvate and D-GAP), or crystallized. Direct enzymology would remove all residual inference.</p>
+</li>
+<li>
+<p><strong>Essentiality is inferred, not directly demonstrated in KT2440.</strong> No viable <em>dxs</em> knockout has been reported and the MEP pathway is essential across mevalonate-lacking bacteria, but a formal conditional-lethal / complementation demonstration specific to <em>P. putida</em> PP_0527 has not been documented in the reviewed literature. Genome-wide essentiality/Tn-seq datasets for KT2440 exist but were not specifically confirmed for PP_0527 here.</p>
+</li>
+<li>
+<p><strong>Regulation and expression are uncharacterized.</strong> How <em>dxs</em> transcription/translation and DXS activity are regulated in <em>P. putida</em> (feedback by downstream isoprenoids, IPP/DMAPP; post-translational control; cofactor availability) remains unexplored in this investigation.</p>
+</li>
+<li>
+<p><strong>Localization is inferred from biochemistry.</strong> Cytoplasmic localization is confidently inferred from the soluble dimeric nature of orthologs and the absence of signal/membrane sequences, but no direct localization experiment (e.g., fractionation, GFP fusion) for <em>P. putida</em> DXS was found.</p>
+</li>
+<li>
+<p><strong>Quantitative flux control coefficient is approximate.</strong> The "rate-limiting" designation and ~50-fold engineering result indicate strong flux control, but the precise flux control coefficient of DXS relative to other MEP enzymes (e.g., <em>dxr</em>, <em>ispG/H</em>) in <em>P. putida</em> has not been rigorously partitioned.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology of Q88QG7.</strong> Express, purify, and kinetically characterize <em>P. putida</em> DXS: determine kcat, Km(pyruvate), Km(D-GAP), Mg²⁺/ThDP dependence, and confirm the ligand-gated LThDP behaviour predicted from the <em>E. coli</em> ortholog. This directly validates substrate specificity and mechanism for the actual target protein.</p>
+</li>
+<li>
+<p><strong>Conditional-lethal essentiality test.</strong> Construct a <em>dxs</em> conditional/depletion strain (e.g., inducible promoter or CRISPRi against PP_0527) and confirm that growth arrest is rescued by DXP or by simultaneous supplementation of downstream products (isoprenoid precursors + B1 + B6). This formally establishes essentiality and the non-bypassable branch-point logic in KT2440.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Crystallize or cryo-EM the <em>P. putida</em> DXS (leveraging the truncation strategy from <a href="https://pubmed.ncbi.nlm.nih.gov/33421767/">PMID: 33421767</a> that improved DXS crystallizability) to confirm the three-domain fold and intramonomer active site at atomic resolution.</p>
+</li>
+<li>
+<p><strong>Flux-control quantification.</strong> Perform ¹³C metabolic flux analysis with graded <em>dxs</em> over-/under-expression to measure DXS's flux control coefficient over ubiquinone-9, carotenoid, and vitamin B1/B6 pools, refining the "rate-limiting" designation quantitatively.</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Use subcellular fractionation or a functional fluorescent fusion to directly confirm cytoplasmic localization of PP_0527 in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Inhibitor susceptibility.</strong> Test DXS-directed inhibitors (e.g., ketoclomazone, alkylacetylphosphonates) against purified <em>P. putida</em> DXS and whole cells to assess the enzyme as an antibacterial target in this species and to probe active-site conservation functionally.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <em>dxs</em> (Q88QG7, PP_0527) of <em>Pseudomonas putida</em> KT2440 encodes <strong>1-deoxy-D-xylulose-5-phosphate synthase (EC 2.2.1.7)</strong>, a soluble cytoplasmic, ThDP- and Mg²⁺-dependent homodimeric enzyme that catalyzes the decarboxylative acyloin condensation of pyruvate (donor) with D-glyceraldehyde-3-phosphate (acceptor) to form DXP + CO₂. This is the first, rate-limiting, committed step of the essential MEP isoprenoid pathway and a branch point additionally feeding thiamine (B1) and pyridoxal-5′-phosphate (B6) biosynthesis, rendering the gene essential and non-bypassable. The assignment is supported by direct sequence curation, a distinctive well-characterized ligand-gated mechanism, a three-domain transketolase-like fold with an intramonomer active site, and 62% identity with complete active-site conservation to the crystallographically and kinetically characterized <em>E. coli</em> enzyme.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dxs-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dxs-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:30203647</li>
+<li>PMID:23072514</li>
+<li>PMID:40784416</li>
+<li>PMID:17135236</li>
+<li>PMID:39268973</li>
+<li>PMID:28636325</li>
+<li>PMID:24767541</li>
+<li>PMID:20808315</li>
+<li>PMID:37567475</li>
+<li>PMID:31500633</li>
+<li>PMID:42012699</li>
+<li>PMID:21366531</li>
+<li>PMID:33421767</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QG7
+gene_symbol: dxs
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  dxs encodes thiamine-diphosphate-dependent 1-deoxy-D-xylulose-5-phosphate
+  synthase. It condenses pyruvate with glyceraldehyde 3-phosphate to form DXP,
+  the entry metabolite for the methylerythritol phosphate route to isoprenoid
+  precursors and a shared precursor used in thiamine biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Magnesium binding is required cofactor context for Dxs catalysis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt records one bound Mg2+ per subunit, but the specific DXP synthase
+      activity is the evolved core function.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+      supporting_text: Binds 1 Mg(2+) ion per subunit.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosolic localization is plausible cellular context for bacterial Dxs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The localization does not describe the catalytic role and is retained as
+      non-core context.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-goa.tsv
+      supporting_text: &#34;GO:0005829\tcytosol&#34;
+- term:
+    id: GO:0008661
+    label: 1-deoxy-D-xylulose-5-phosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: DXP synthase activity is the specific catalytic function of Dxs.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 2.2.1.7 and Rhea 12605 for condensation of pyruvate
+      and glyceraldehyde 3-phosphate to DXP and carbon dioxide.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the acyloin condensation reaction between C atoms 2
+    - reference_id: file:PSEPK/dxs/dxs-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **_dxs_ (Q88QG7, locus PP_0527)** of *Pseudomonas putida*
+        KT2440 encodes **1-deoxy-D-xylulose-5-phosphate synthase
+- term:
+    id: GO:0009228
+    label: thiamine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Dxs directly supplies DXP to thiamine biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      DXP is a shared branch-point metabolite used in both the MEP isoprenoid
+      route and thiamine biosynthesis. The latter remains a core biological
+      role of Dxs even though it lies outside this module boundary.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+      supporting_text: Thiamine biosynthesis
+- term:
+    id: GO:0016114
+    label: terpenoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Terpenoid biosynthesis is correct but broader than the annotated MEP route.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0019288 captures the specific isoprenoid-precursor pathway in which
+      Dxs acts, making this broad parent redundant.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-goa.tsv
+      supporting_text: &#34;GO:0016114\tterpenoid biosynthetic process&#34;
+- term:
+    id: GO:0016744
+    label: transketolase or transaldolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: The transketolase-family activity term is true at a broad mechanistic level.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Dxs belongs to the transketolase family, but GO:0008661 identifies its
+      exact physiological condensation reaction and should carry the core call.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+      supporting_text: Belongs to the transketolase family. DXPS subfamily.
+- term:
+    id: GO:0019288
+    label: isopentenyl diphosphate biosynthetic process, methylerythritol phosphate
+      pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: The MEP-pathway IPP biosynthesis process is the core pathway role of Dxs.
+    action: ACCEPT
+    reason: &gt;-
+      Dxs forms DXP from central-carbon substrates at the entry to the
+      methylerythritol phosphate pathway.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-goa.tsv
+      supporting_text: &gt;-
+        GO:0019288	isopentenyl diphosphate biosynthetic process, methylerythritol
+        phosphate pathway
+    - reference_id: file:PSEPK/dxs/dxs-deep-research-openscientist.md
+      supporting_text: &gt;-
+        In *P. putida* KT2440 specifically, the isoprenoid precursors IPP and
+        DMAPP are produced **exclusively via the MEP pathway** from
+        central-metabolism substrates.
+- term:
+    id: GO:0030976
+    label: thiamine pyrophosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Thiamine diphosphate binding is required mechanistic context for Dxs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt records one thiamine pyrophosphate per subunit, but cofactor
+      binding is subordinate to the specific synthase activity.
+    supported_by:
+    - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+      supporting_text: Binds 1 thiamine pyrophosphate per subunit.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/dxs/dxs-uniprot.txt
+  title: UniProt entry Q88QG7 for dxs
+  findings:
+  - statement: &gt;-
+      UniProt identifies Q88QG7 as the Mg2+- and thiamine-diphosphate-dependent
+      DXP synthase that condenses pyruvate and glyceraldehyde 3-phosphate.
+- id: file:PSEPK/dxs/dxs-goa.tsv
+  title: QuickGO GOA annotations for dxs
+  findings:
+  - statement: The fetched GOA table contains the eight annotations reviewed here.
+- id: file:PSEPK/dxs/dxs-deep-research-openscientist.md
+  title: OpenScientist gene research report for dxs
+  findings:
+  - statement: &gt;-
+      The report supports the DXP synthase assignment, conserved
+      thiamine-diphosphate-dependent chemistry, and placement at the entry to
+      the KT2440 MEP route.
+  - statement: &gt;-
+      The report&#39;s description of DXS as a committed MEP step is not adopted:
+      DXP is a branch-point metabolite also used outside isoprenoid precursor
+      biosynthesis.
+core_functions:
+- description: &gt;-
+    DXP synthase that condenses pyruvate and glyceraldehyde 3-phosphate to form
+    the entry metabolite of the methylerythritol phosphate pathway.
+  molecular_function:
+    id: GO:0008661
+    label: 1-deoxy-D-xylulose-5-phosphate synthase activity
+  directly_involved_in:
+  - id: GO:0019288
+    label: isopentenyl diphosphate biosynthetic process, methylerythritol 4-phosphate pathway
+  - id: GO:0009228
+    label: thiamine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+    supporting_text: &gt;-
+      Catalyzes the acyloin condensation reaction between C atoms 2
+  - reference_id: file:PSEPK/dxs/dxs-uniprot.txt
+    supporting_text: Thiamine biosynthesis
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

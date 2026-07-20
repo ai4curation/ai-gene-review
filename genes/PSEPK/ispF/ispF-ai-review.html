@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ispF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ispF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MF3" target="_blank" class="term-link">
+                        Q88MF3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ispF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MF3" data-a="DESCRIPTION: ispF encodes 2-C-methyl-D-erythritol 2,4-cyclodiph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ispF encodes 2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase, the divalent-metal-dependent MEP-pathway enzyme that cyclizes CDP-ME 2-phosphate to methylerythritol 2,4-cyclodiphosphate with release of CMP. This reaction supplies the substrate for the terminal reductive steps that form isopentenyl and dimethylallyl diphosphate.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008685" target="_blank" class="term-link">
+                                    GO:0008685
+                                </a>
+                            </span>
+                            <span class="term-label">2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MF3" data-a="GO:0008685" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ME-CPP synthase activity is the specific catalytic function of IspF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 4.6.1.12 and Rhea 23864 for cyclization of CDP-ME 2-phosphate to ME-CPP with release of CMP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ispF/ispF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the conversion of 4-diphosphocytidyl-2-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ispF/ispF-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **_ispF_** (ordered locus **PP_1618**; UniProt **Q88MF3**) of *Pseudomonas putida* strain KT2440 encodes **2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016114" target="_blank" class="term-link">
+                                    GO:0016114
+                                </a>
+                            </span>
+                            <span class="term-label">terpenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MF3" data-a="GO:0016114" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Terpenoid biosynthesis is correct but broader than the MEP pathway term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0019288 captures the specific precursor-biosynthesis route in which IspF acts, so this broad parent adds no independent information.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ispF/ispF-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016114	terpenoid biosynthetic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019288" target="_blank" class="term-link">
+                                    GO:0019288
+                                </a>
+                            </span>
+                            <span class="term-label">isopentenyl diphosphate biosynthetic process, methylerythritol phosphate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MF3" data-a="GO:0019288" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The methylerythritol phosphate pathway is the core process for IspF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places IspF at step 4 of the six-reaction route from DXP to isopentenyl diphosphate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ispF/ispF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">isopentenyl diphosphate biosynthesis via DXP pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ispF/ispF-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">*P. putida* KT2440, like most bacteria, produces IPP and DMAPP **exclusively via the MEP pathway**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ME-CPP synthase that cyclizes CDP-ME 2-phosphate with release of CMP in the methylerythritol phosphate pathway.</h3>
+                <span class="vote-buttons" data-g="Q88MF3" data-a="FUNCTION: ME-CPP synthase that cyclizes CDP-ME 2-phosphate w..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008685" target="_blank" class="term-link">
+                            2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019288" target="_blank" class="term-link">
+                                isopentenyl diphosphate biosynthetic process, methylerythritol 4-phosphate pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ispF/ispF-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the conversion of 4-diphosphocytidyl-2-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ispF/ispF-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88MF3 for ispF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88MF3 as the divalent-metal-dependent ME-CPP synthase at step 4 of the DXP/MEP route from DXP to IPP.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ispF/ispF-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ispF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the three annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ispF/ispF-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research report for ispF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the CDP-ME 2-phosphate cyclization reaction, the fifth position in the seven-enzyme route, and homotrimeric IspF-family assignment.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct biochemical or genetic characterization of Q88MF3 was found. Essentiality, dual-metal details, feedback regulation, and ME-CPP stress signaling are ortholog- or lineage-derived and are not added as core PSEPK annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ispF-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MF3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *ispF* (PP_1618, UniProt Q88MF3) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T16:51:53.910592</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ispF-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ispF-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-ispf-pp_1618-uniprot-q88mf3-in-pseudomonas-putida-kt2440">Functional Annotation of <em>ispF</em> (PP_1618, UniProt Q88MF3) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong><em>ispF</em></strong> (ordered locus <strong>PP_1618</strong>; UniProt <strong>Q88MF3</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase</strong> (abbreviated <strong>IspF</strong>, <strong>MECDP-synthase</strong>, <strong>MECPS</strong>; <strong>EC 4.6.1.12</strong>). This is a soluble, cytoplasmic, homotrimeric, metal-dependent <strong>phosphorus–oxygen lyase</strong> that catalyzes the <strong>fifth of seven enzymatic steps</strong> of the <strong>methylerythritol phosphate (MEP; non-mevalonate) pathway</strong> for isoprenoid precursor biosynthesis. Specifically, IspF converts <strong>4-diphosphocytidyl-2-C-methyl-D-erythritol 2-phosphate (CDP-ME2P)</strong> into <strong>2-C-methyl-D-erythritol 2,4-cyclodiphosphate (MEcPP/MECDP)</strong>, releasing <strong>cytidine 5′-monophosphate (CMP)</strong> in a Mg²⁺-dependent intramolecular transphosphorylation that forms the unusual eight-membered cyclodiphosphate ring.</p>
+<p>The functional assignment is exceptionally well supported by four converging lines of evidence: (1) a rich body of structural and mechanistic literature on bacterial orthologues (<em>E. coli</em>, <em>Thermus thermophilus</em>, <em>Burkholderia pseudomallei</em>) that defines the reaction, the dual-metal (Zn²⁺/Mg²⁺ or Mn²⁺) catalytic chemistry, and the homotrimeric interfacial active-site architecture; (2) strict conservation in Q88MF3 (71.3% identity to the structurally characterized <em>E. coli</em> enzyme) of every catalytic zinc ligand and feedback-pocket residue; (3) database annotation (KEGG K01770 / EC 4.6.1.12, terpenoid-backbone pathway ppu00900, Pfam <strong>YgbB/MECDP_synthase</strong>); and (4) biophysical analysis of the Q88MF3 sequence showing no signal peptide or transmembrane segment, consistent with cytosolic localization.</p>
+<p>IspF operates in the cytoplasm as part of the only pathway available to <em>P. putida</em> for producing the universal isoprenoid precursors <strong>isopentenyl diphosphate (IPP)</strong> and <strong>dimethylallyl diphosphate (DMAPP)</strong> — precursors of respiratory quinones, carotenoids, and the undecaprenyl carriers essential for cell-envelope biosynthesis. Because <em>P. putida</em> lacks the alternative mevalonate route, IspF is expected to be <strong>essential</strong>, mirroring the demonstrated essentiality of its <em>E. coli</em> orthologue. The MEP pathway's absence from humans makes IspF a validated <strong>broad-spectrum antimicrobial and herbicide target</strong>. Notably, the IspF product <strong>MEcPP is more than a metabolic intermediate</strong>: it is a conserved stress-signaling metabolite that acts as a plastid-to-nucleus retrograde signal in plants and modulates biofilm formation in <em>E. coli</em>, placing IspF at a nexus of primary metabolism and stress signaling.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the identity of the target was confirmed against the UniProt reference to guard against gene-symbol ambiguity:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Reference (UniProt Q88MF3)</th>
+<th>Verification outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><em>ispF</em></td>
+<td>✔ Matches MEP-pathway nomenclature</td>
+</tr>
+<tr>
+<td>Locus tag</td>
+<td>PP_1618</td>
+<td>✔ Confirmed in KEGG (ppu:PP_1618)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>4.6.1.12</td>
+<td>✔ Confirmed (KEGG K01770)</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>IspF family</td>
+<td>✔ Pfam YgbB / MECDP_synthase (PF02542)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440</td>
+<td>✔ Genome position 1,814,613–1,815,086 (+)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>157 aa</td>
+<td>✔ Consistent with orthologues (~155–160 aa)</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <em>ispF</em>, the protein description, the organism, and the domain architecture are <strong>mutually consistent</strong>. The literature retrieved describes the same enzyme family (IspF / MECDP synthase) across bacteria, and the <em>P. putida</em> sequence aligns unambiguously to characterized orthologues. <strong>There is no ambiguity</strong> in this assignment. Where direct experimental characterization of the <em>P. putida</em> KT2440 protein itself is unavailable, the report relies on orthologue biochemistry combined with sequence conservation — explicitly flagged as inference in the relevant sections.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-ispf-catalyzes-step-5-of-the-mep-pathway-cdp-me2p-mecpp-cmp">Finding 1 — IspF catalyzes step 5 of the MEP pathway: CDP-ME2P → MEcPP + CMP</h3>
+<p>IspF (Q88MF3) is a lyase (EC 4.6.1.12) that carries out the fifth committed step of the non-mevalonate isoprenoid pathway. The enzyme converts <strong>4-diphosphocytidyl-2-C-methyl-D-erythritol 2-phosphate (CDP-ME2P)</strong> into <strong>2-C-methyl-D-erythritol 2,4-cyclodiphosphate (MEcPP)</strong> with concomitant release of <strong>CMP</strong>. Mechanistically, the reaction is an <strong>intramolecular transphosphorylation</strong>: the 2-phosphate group of the substrate performs a nucleophilic attack on the β-phosphate of the CDP moiety, expelling CMP and closing the strained eight-membered <strong>cyclodiphosphate ring</strong> — a highly unusual chemical feature among natural metabolites. The reaction is strictly <strong>Mg²⁺-dependent</strong> (with Mn²⁺ able to substitute in vitro).</p>
+<p>This assignment rests on primary structural and biochemical studies of orthologues. Steinbacher and colleagues, characterizing the <em>E. coli</em> enzyme, established that IspF "catalyzes the conversion of 4-diphosphocytidyl-2-C-methyl-D-erythritol 2-phosphate (CDP-ME2P) to MECDP, a highly unusual cyclodiphosphate-containing intermediate on the mevalonate-independent pathway to isopentenyl diphosphate and dimethylallyl diphosphate" (<a href="https://pubmed.ncbi.nlm.nih.gov/11786530/">PMID: 11786530</a>). Independently, Kemp et al. confirmed that the enzyme "converts 4-diphosphocytidyl-2C-methyl-d-erythritol 2-phosphate into 2C-methyl-d-erythritol 2,4-cyclodiphosphate and CMP in a Mg-dependent reaction" (<a href="https://pubmed.ncbi.nlm.nih.gov/11829504/">PMID: 11829504</a>). High-resolution (1.6 Å) crystallography of the <em>Thermus thermophilus</em> enzyme co-crystallized with substrate captured CMP as the product in the active site and resolved the catalytic magnesium ions (<a href="https://pubmed.ncbi.nlm.nih.gov/12499535/">PMID: 12499535</a>).</p>
+<h3 id="finding-2-ispf-is-a-homotrimeric-metalloenzyme-with-three-interfacial-active-sites-requiring-zn2-and-mg2mn2">Finding 2 — IspF is a homotrimeric metalloenzyme with three interfacial active sites requiring Zn²⁺ and Mg²⁺/Mn²⁺</h3>
+<p>The functional enzyme is a <strong>homotrimer</strong> organized around a <strong>central β-prism / hydrophobic cavity</strong>, bearing <strong>three active sites</strong>, each located in a cleft at the interface between two adjacent subunits — so catalysis is intrinsically dependent on quaternary assembly. Each active site coordinates one <strong>Zn²⁺</strong> ion in tetrahedral geometry (via Asp8, His10, and His42 in the <em>E. coli</em> numbering) that binds and activates the substrate, together with a second divalent metal (<strong>Mn²⁺</strong> or <strong>Mg²⁺</strong>) in octahedral geometry positioned between the α- and β-phosphates. The two metals act in concert to align and polarize the substrate diphosphate for the cyclization chemistry.</p>
+<p>Steinbacher et al. describe "a homotrimer, built around a beta prism, carrying three active sites, each of which is formed in a cleft between pairs of subunits. Residues from two subunits recognize and bind the nucleotide in an active site that contains a Zn(2+) with tetrahedral coordination. A Mn(2+), with octahedral geometry, is positioned between the alpha and beta phosphates acting in concert with the Zn(2+) to align and polarize the substrate for catalysis" (<a href="https://pubmed.ncbi.nlm.nih.gov/11997478/">PMID: 11997478</a>). This is corroborated by the observation that "the protein adopts a homotrimeric quaternary structure built around a central hydrophobic cavity and three externally facing active sites… each of these active sites is located between two adjacent monomers" (<a href="https://pubmed.ncbi.nlm.nih.gov/11786530/">PMID: 11786530</a>).</p>
+<h3 id="finding-3-ispf-binds-isoprenoid-diphosphates-in-its-central-cavity-implicating-feedback-regulation">Finding 3 — IspF binds isoprenoid diphosphates in its central cavity, implicating feedback regulation</h3>
+<p>Beyond its catalytic active sites, IspF possesses a distinct ligand-binding pocket in the <strong>central cavity at the trimer interface</strong> that binds <strong>diphosphate-containing isoprenoids</strong> (e.g., IPP, DMAPP, GPP, FPP — downstream and end-products of the pathway). In <em>E. coli</em>, Arg142 and Glu144 mediate this interaction, with three Arg142 residues (one from each subunit) contacting the ligand's terminal phosphate. Because these ligands are pathway products/downstream metabolites bound at a site separate from the catalytic clefts, this architecture strongly suggests a mechanism of <strong>feedback regulation</strong> of MEP-pathway flux.</p>
+<p>Kemp and Hunter noted that "the recent exciting finding that the enzyme actually binds diphosphate-containing isoprenoids at the interface formed by the three subunits that constitute the active protein suggests the possibility of feedback regulation of MECP synthase" (<a href="https://pubmed.ncbi.nlm.nih.gov/16511114/">PMID: 16511114</a>). This adds a regulatory dimension to IspF beyond simple catalysis, positioning it as a potential control point coupling isoprenoid demand to precursor supply.</p>
+<h3 id="finding-4-ispf-is-essential-and-a-validated-antimicrobialherbicide-target-absent-from-humans">Finding 4 — IspF is essential and a validated antimicrobial/herbicide target absent from humans</h3>
+<p>IspF is <strong>essential</strong> in <em>E. coli</em> and is conserved across eubacteria and apicomplexan parasites. Critically, the entire MEP pathway is <strong>absent in mammals and archaea</strong> (which use the mevalonate route), so its enzymes are <strong>selective, druggable targets</strong> with an inherently favorable selectivity window. IspF's catalytic zinc has been exploited for structure-based inhibitor design: zinc-binding-group compounds such as 2-amino-4-hydroxypyrimidine-5-carboxylates show antibacterial activity and bind IspF (validated by thermal shift and STD-NMR).</p>
+<p>Steinbacher et al. state that "this enzyme is essential in E. coli and participates in the nonmevalonate pathway of isoprenoid biosynthesis, a critical pathway present in some bacterial and apicomplexans but distinct from that used by mammals" (<a href="https://pubmed.ncbi.nlm.nih.gov/11997478/">PMID: 11997478</a>). Work on the <em>Burkholderia pseudomallei</em> orthologue confirms that "the fifth enzyme in the pathway, 2-C-methyl-d-erythritol-2,4-cyclodiphosphate synthase (IspF), contains a catalytically important zinc ion in the active site" and that zinc-binding-group compounds were "evaluated for antibacterial activity and interaction with IspF" (<a href="https://pubmed.ncbi.nlm.nih.gov/31521478/">PMID: 31521478</a>). A pathway-wide review confirms that "the individual enzymes represent new, validated targets for broad spectrum antimicrobial drug and herbicide development" (<a href="https://pubmed.ncbi.nlm.nih.gov/17442674/">PMID: 17442674</a>).</p>
+<h3 id="finding-5-the-ispf-product-mecpp-is-a-conserved-stress-signaling-metabolite">Finding 5 — The IspF product MEcPP is a conserved stress-signaling metabolite</h3>
+<p>An important, distinctive feature of IspF is that its product <strong>MEcPP is not merely a pathway intermediate but a bona fide signaling molecule</strong>. In plants, MEcPP is a <strong>plastid-to-nucleus retrograde stress signal</strong> — it accumulates under oxidative, high-light, wounding, and biotic stress and reprograms nuclear gene expression. In bacteria, elevated MEcPP has regulatory consequences: in <em>E. coli</em> K-12 it inhibits biofilm formation by modulating the global regulator H-NS and reducing fimbriae. Recent work further shows MEcPP acts as a <strong>feedback signal</strong> that directly inhibits the upstream MEP enzyme MCT (methylerythritol cytidylyltransferase).</p>
+<p>Xiao and colleagues showed that "methylerythritol cyclodiphosphate (MEcPP) is an intermediate in the biosynthesis of isoprenoids in plant plastids and in bacteria, and acts as a stress signal in plants… MEcPP regulates biofilm formation in Escherichia coli K-12 MG1655" (<a href="https://pubmed.ncbi.nlm.nih.gov/39572562/">PMID: 39572562</a>). In plants, "under stress conditions, leading to its accumulation, MEcPP mediates retrograde signaling that alters the nuclear gene expression" (<a href="https://pubmed.ncbi.nlm.nih.gov/40073740/">PMID: 40073740</a>). The dual role of MEcPP is elaborated further in studies establishing it as an initiator of systemic stress responses (<a href="https://pubmed.ncbi.nlm.nih.gov/34859454/">PMID: 34859454</a>) and, most recently, as a metabolite that directly modulates enzyme activity to link stress with biosynthetic regulation (<a href="https://pubmed.ncbi.nlm.nih.gov/41637453/">PMID: 41637453</a>).</p>
+<h3 id="finding-6-in-p-putida-kt2440-the-mep-pathway-including-ispf-is-the-sole-route-to-isoprenoid-precursors">Finding 6 — In <em>P. putida</em> KT2440, the MEP pathway (including <em>ispF</em>) is the sole route to isoprenoid precursors</h3>
+<p><em>P. putida</em> KT2440, like most bacteria, produces IPP and DMAPP <strong>exclusively via the MEP pathway</strong> from pyruvate and glyceraldehyde-3-phosphate (the seven enzymes dxs, dxr/ispC, ispD, ispE, <strong>ispF</strong>, ispG, ispH). It <strong>lacks the mevalonate route</strong> entirely. This means IspF is the only enzyme performing the CDP-ME2P → MEcPP conversion, with no metabolic bypass. Metabolic-engineering studies of KT2440 for isoprenoid (lycopene) production confirmed that boosting output requires manipulating MEP-pathway precursor supply, achieving up to ~50-fold increases.</p>
+<p>As reported by Loeschcke et al., "in P. putida and most other bacteria, these precursors are produced from pyruvate and glyceraldehyde 3-phosphate by the methylerythritol 4-phosphate (MEP) pathway, whereas other bacteria synthesize the same precursors from acetyl-CoA using the unrelated mevalonate (MVA) pathway" (<a href="https://pubmed.ncbi.nlm.nih.gov/31500633/">PMID: 31500633</a>). The absence of a redundant pathway is the primary basis for inferring that <em>ispF</em>/PP_1618 is <strong>essential</strong> in this organism.</p>
+<h3 id="finding-7-all-catalytic-and-feedback-residues-are-strictly-conserved-in-p-putida-ispf-q88mf3">Finding 7 — All catalytic and feedback residues are strictly conserved in <em>P. putida</em> IspF (Q88MF3)</h3>
+<p>A pairwise global (Needleman–Wunsch) alignment of Q88MF3 (157 aa) against the experimentally characterized <em>E. coli</em> IspF (P62617, 159 aa) yielded <strong>71.3% sequence identity</strong> over 157 aligned positions. Critically, <strong>every catalytically essential residue is strictly conserved at the equivalent position</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Functional role</th>
+<th><em>E. coli</em> residue</th>
+<th><em>P. putida</em> Q88MF3</th>
+<th>Conserved?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zn²⁺ ligand</td>
+<td>Asp8</td>
+<td>Asp8</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Zn²⁺ ligand</td>
+<td>His10</td>
+<td>His10</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Zn²⁺ ligand</td>
+<td>His42</td>
+<td>His42</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Isoprenoid feedback pocket</td>
+<td>Arg142</td>
+<td>Arg142</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Isoprenoid feedback pocket</td>
+<td>Glu144</td>
+<td>Glu144</td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
+<p>The family signature motifs of the MECDP_synthase domain (e.g., HSDGDV, GADSR, VNVKATTTEKLGFTGR) are also present. This near-complete conservation of the entire catalytic and regulatory apparatus provides strong sequence-based evidence that Q88MF3 performs the identical reaction, with the same dual-metal mechanism and the same product-feedback capability, as the structurally characterized orthologues.</p>
+<h3 id="finding-8-genomic-context-pp_1618-is-a-standalone-gene-likely-translationally-coupled-to-trud">Finding 8 — Genomic context: PP_1618 is a standalone gene, likely translationally coupled to <em>truD</em></h3>
+<p>KEGG assigns ppu:PP_1618 to <strong>K01770 / EC 4.6.1.12</strong> in pathway <strong>ppu00900 "Terpenoid backbone biosynthesis"</strong>. The EC hierarchy places it in Class 4 Lyases → 4.6 Phosphorus–oxygen lyases → 4.6.1.12. The gene occupies genome positions 1,814,613–1,815,086 (+ strand), 474 bp / 157 aa, with a Pfam <strong>YgbB</strong> domain. Unlike <em>E. coli</em>, where <em>ispF</em> is part of an <em>ispDF</em> operon, the <em>P. putida</em> flanking genes are <strong>functionally unrelated</strong>: upstream lie PP_1616 (<em>frmA</em>) and PP_1617 (<em>frmC</em>), involved in glutathione-dependent formaldehyde detoxification; immediately downstream is PP_1619 (<em>truD</em>), a tRNA pseudouridine synthase. Notably, <em>ispF</em> (ending at 1,815,086) and <em>truD</em> (starting at 1,815,083) lie on the same strand and <strong>overlap by 4 nucleotides</strong>, an arrangement consistent with <strong>translational coupling / co-transcription</strong> — implying <em>ispF</em> expression may be linked to that of <em>truD</em> in KT2440 rather than to the other MEP-pathway genes, which are dispersed around the genome.</p>
+<h3 id="finding-9-q88mf3-is-a-soluble-cytoplasmic-protein-with-no-signal-peptide-or-transmembrane-segment">Finding 9 — Q88MF3 is a soluble cytoplasmic protein with no signal peptide or transmembrane segment</h3>
+<p>Kyte–Doolittle hydropathy analysis of the 157-aa Q88MF3 sequence found a <strong>maximum 19-residue window hydropathy of 1.51</strong>, below the ~1.6 threshold typically required for a transmembrane α-helix — so <strong>no membrane-spanning segment</strong> is predicted. The N-terminal 30 residues are <strong>hydrophilic</strong> (mean hydropathy −0.30) with no hydrophobic signal-peptide core, ruling out secretion or membrane targeting. The protein is mildly acidic (16 K+R vs. 19 D+E; net charge ≈ −3). These features are fully consistent with the <strong>cytoplasmic</strong> localization expected for a soluble metabolic enzyme, matching the localization of its characterized orthologues.</p>
+<h3 id="finding-10-consolidated-convergent-annotation">Finding 10 — Consolidated, convergent annotation</h3>
+<p>Four independent evidence streams converge on a single, robust functional assignment for <em>ispF</em>/PP_1618 (Q88MF3): <strong>(1) Literature</strong> — orthologue crystal structures and mechanistic studies define the CDP-ME2P → MEcPP + CMP reaction, dual Zn²⁺/Mg²⁺ catalysis, homotrimeric interfacial active sites, essentiality, and drug-target status. <strong>(2) Sequence</strong> — 71.3% identity to <em>E. coli</em> IspF with strict conservation of all catalytic zinc ligands and feedback residues. <strong>(3) Databases</strong> — KEGG K01770 / EC 4.6.1.12, terpenoid-backbone pathway ppu00900, Pfam YgbB. <strong>(4) Biophysics</strong> — no signal peptide or TM segment; a soluble 157-aa cytosolic protein. Additionally, the product MEcPP is a conserved stress-signaling metabolite.</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<h3 id="position-in-the-mep-pathway">Position in the MEP pathway</h3>
+<p>IspF catalyzes the fifth of the seven steps that convert central-carbon-metabolism precursors into the universal isoprenoid building blocks:</p>
+<div class="codehilite"><pre><span></span><code>Pyruvate + G3P
+     │  DXS (dxs)
+     ▼
+1-deoxy-D-xylulose 5-phosphate (DXP)
+     │  DXR/IspC (dxr)
+     ▼
+2-C-methyl-D-erythritol 4-phosphate (MEP)
+     │  IspD (ispD)      + CTP
+     ▼
+4-diphosphocytidyl-2-C-methyl-D-erythritol (CDP-ME)
+     │  IspE (ispE)      + ATP
+     ▼
+4-diphosphocytidyl-2-C-methyl-D-erythritol 2-phosphate (CDP-ME2P)
+     │
+     │  ┌─────────────────────────────────────────────┐
+     │  │  IspF  (PP_1618 / Q88MF3)   EC 4.6.1.12       │  ◄── THIS ENZYME
+     │  │  Zn²⁺ + Mg²⁺/Mn²⁺, homotrimer                 │
+     │  │  intramolecular transphosphorylation          │
+     │  └─────────────────────────────────────────────┘
+     ▼
+2-C-methyl-D-erythritol 2,4-cyclodiphosphate (MEcPP)  + CMP
+     │  IspG (ispG)  [Fe-S]
+     ▼
+(E)-4-hydroxy-3-methylbut-2-enyl diphosphate (HMBPP)
+     │  IspH (ispH)  [Fe-S]
+     ▼
+IPP  +  DMAPP   ──►  quinones, carotenoids, undecaprenyl-P (cell envelope), etc.
+</code></pre></div>
+
+<h3 id="reaction-chemistry">Reaction chemistry</h3>
+<p>The IspF reaction is an intramolecular cyclization. The substrate CDP-ME2P carries both a <strong>2-phosphate</strong> and a <strong>cytidine diphosphate (CDP)</strong> moiety. Held in the interfacial active site, the substrate's diphosphate is coordinated by the active-site <strong>Zn²⁺</strong> (bound by Asp8/His10/His42) and a bridging <strong>Mg²⁺/Mn²⁺</strong> between the α- and β-phosphates. The 2-phosphate oxygen attacks the β-phosphorus of the CDP group, displacing <strong>CMP</strong> and forming the strained <strong>eight-membered cyclodiphosphate ring</strong> that defines the product MEcPP. The two metals collaborate to orient and electronically polarize the reacting phosphates, lowering the transition-state energy for ring closure.</p>
+<h3 id="quaternary-structure-as-a-functional-requirement">Quaternary structure as a functional requirement</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">Subunit</span><span class="w"> </span><span class="n">A</span>
+<span class="w">  </span><span class="o">/</span><span class="w">  </span><span class="err">\</span>
+<span class="w"> </span><span class="o">/</span><span class="w">    </span><span class="err">\</span><span class="w">        </span><span class="err">←</span><span class="w"> </span><span class="n">β</span><span class="o">-</span><span class="n">prism</span><span class="w"> </span><span class="n">core</span><span class="p">;</span><span class="w"> </span><span class="n">central</span><span class="w"> </span><span class="n">cavity</span><span class="w"> </span><span class="n">binds</span>
+<span class="w">   </span><span class="o">[</span><span class="n">site3</span><span class="o">]</span><span class="w">    </span><span class="o">[</span><span class="n">site1</span><span class="o">]</span><span class="w">     </span><span class="n">isoprenoid</span><span class="w"> </span><span class="n">diphosphates</span><span class="w"> </span><span class="p">(</span><span class="n">IPP</span><span class="o">/</span><span class="n">DMAPP</span><span class="o">/</span><span class="n">FPP</span><span class="p">)</span>
+<span class="err">\</span><span class="w">      </span><span class="o">/</span><span class="w">          </span><span class="n">via</span><span class="w"> </span><span class="n">Arg142</span><span class="o">/</span><span class="n">Glu144</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">feedback</span><span class="w"> </span><span class="n">regulation</span>
+<span class="w">   </span><span class="n">Subunit</span><span class="w"> </span><span class="n">C</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">Subunit</span><span class="w"> </span><span class="n">B</span>
+<span class="w">  </span><span class="o">[</span><span class="n">site2</span><span class="o">]</span>
+
+<span class="w">  </span><span class="err">•</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">sites</span><span class="p">,</span><span class="w"> </span><span class="k">each</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">A</span><span class="err">–</span><span class="n">B</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">B</span><span class="err">–</span><span class="n">C</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">C</span><span class="err">–</span><span class="n">A</span><span class="w"> </span><span class="n">interface</span>
+<span class="w">  </span><span class="err">•</span><span class="w"> </span><span class="k">Each</span><span class="w"> </span><span class="nl">site</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">Zn²</span><span class="err">⁺</span><span class="w"> </span><span class="p">(</span><span class="n">tetrahedral</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">Mg²</span><span class="err">⁺</span><span class="o">/</span><span class="n">Mn²</span><span class="err">⁺</span><span class="w"> </span><span class="p">(</span><span class="n">octahedral</span><span class="p">)</span>
+<span class="w">  </span><span class="err">•</span><span class="w"> </span><span class="n">Central</span><span class="w"> </span><span class="nl">cavity</span><span class="p">:</span><span class="w"> </span><span class="n">separate</span><span class="w"> </span><span class="n">product</span><span class="o">/</span><span class="n">effector</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="n">pocket</span>
+</code></pre></div>
+
+<p>Because each catalytic site is built from residues contributed by <strong>two subunits</strong>, IspF has no meaningful monomeric activity — trimerization is obligatory. The central cavity provides a structurally elegant means of <strong>feedback control</strong>: downstream isoprenoid diphosphates accumulate and dock in the trimer core, potentially tuning flux through the enzyme in response to product demand.</p>
+<h3 id="physiological-role-in-p-putida-kt2440">Physiological role in <em>P. putida</em> KT2440</h3>
+<p>In KT2440, IspF sits on the <strong>sole, non-redundant route</strong> to IPP and DMAPP. These C₅ precursors are indispensable for:</p>
+<ul>
+<li><strong>Respiratory quinones</strong> (ubiquinone/menaquinone) — essential for aerobic and anaerobic respiration in this metabolically versatile soil bacterium;</li>
+<li><strong>Undecaprenyl phosphate</strong> — the lipid carrier for peptidoglycan and LPS/O-antigen assembly (cell-envelope integrity);</li>
+<li><strong>Carotenoids and other terpenoids</strong> — membrane and stress-protective functions.</li>
+</ul>
+<p>The lack of a mevalonate bypass, combined with strict conservation of the catalytic machinery, makes IspF <strong>predicted-essential</strong> in KT2440. Its product MEcPP additionally links this housekeeping pathway to <strong>stress physiology</strong>, giving IspF a potential regulatory footprint beyond precursor supply.</p>
+<h3 id="localization">Localization</h3>
+<p>All evidence points to a <strong>cytoplasmic</strong> location: no signal peptide, no transmembrane helix, a hydrophilic surface, and a soluble globular fold typical of its orthologues. IspF performs its chemistry in the cytosol where its substrate CDP-ME2P and its metal cofactors are available.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution to this annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11786530/">11786530</a></td>
+<td>Structure/mechanism of MECDP synthase (<em>E. coli</em>)</td>
+<td>Defines substrate (CDP-ME2P), product (MECDP), pathway position; homotrimer with interfacial active sites</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11997478/">11997478</a></td>
+<td>Structure of MECDP synthase; drug target</td>
+<td>Homotrimer/β-prism, dual Zn²⁺/Mn²⁺ catalysis, essentiality in <em>E. coli</em>, absence from mammals</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11829504/">11829504</a></td>
+<td>Structure of MECDP synthase</td>
+<td>Confirms CDP-ME2P → MEcPP + CMP, Mg-dependent reaction</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12499535/">12499535</a></td>
+<td><em>T. thermophilus</em> MECDP synthase, 1.6 Å</td>
+<td>High-resolution structure with substrate/product; positions of catalytic Mg²⁺</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16511114/">16511114</a></td>
+<td>Double mutant / isoprenoid diphosphate binding</td>
+<td>Establishes central-cavity binding of isoprenoid diphosphates → feedback regulation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31521478/">31521478</a></td>
+<td>Inhibitors of <em>B. pseudomallei</em> IspF</td>
+<td>IspF is 5th enzyme; catalytic zinc; zinc-binding-group antibacterials</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17442674/">17442674</a></td>
+<td>The non-mevalonate pathway</td>
+<td>MEP-pathway enzymes are validated broad-spectrum drug/herbicide targets</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15197467/">15197467</a></td>
+<td>Biosynthesis via non-mevalonate pathway</td>
+<td>Pathway is essential in eubacteria/plants/apicomplexa, absent in archaea/animals</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31500633/">31500633</a></td>
+<td>Engineering <em>P. putida</em> for isoprenoids</td>
+<td><em>P. putida</em> uses MEP pathway (contains <em>ispF</em>), lacks MVA route</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39572562/">39572562</a></td>
+<td>MEcPP inhibits biofilm in <em>E. coli</em></td>
+<td>Product MEcPP is a bacterial signaling metabolite (biofilm/H-NS)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40073740/">40073740</a></td>
+<td>MEP intermediate MEcPP retrograde signaling</td>
+<td>MEcPP is a plant plastid-to-nucleus stress signal</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34859454/">34859454</a></td>
+<td>Plastidial retrograde signal (SSR)</td>
+<td>MEcPP initiates systemic stress response signaling cascades</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41637453/">41637453</a></td>
+<td>Metabolite control of enzyme activity</td>
+<td>MEcPP is a dual-function metabolite that feedback-inhibits upstream MCT</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21619509/">21619509</a></td>
+<td>Isoprenoid precursor biosynthesis as drug targets</td>
+<td>Pathway structural/mechanistic overview; drug-target validation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence fits together:</strong> The direct biochemical and structural literature (rows 1–6, 8) is derived from bacterial orthologues (<em>E. coli</em>, <em>T. thermophilus</em>, <em>B. pseudomallei</em>) — not from the <em>P. putida</em> protein itself. The bridge to Q88MF3 is provided by <strong>sequence conservation</strong> (Finding 7): 71.3% identity and 100% conservation of all catalytic/feedback residues means the orthologue mechanism transfers with high confidence. Database annotation (KEGG/Pfam) and biophysical prediction (hydropathy) independently corroborate the enzymatic and localization assignments. The MEcPP-signaling literature (rows 10–13) is drawn largely from plants and <em>E. coli</em>; it establishes the broader biological importance of the IspF product but has <strong>not</strong> been directly demonstrated in <em>P. putida</em>.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the KT2440 protein.</strong> There is no published crystal structure, kinetic study, or gene-knockout of <em>P. putida</em> PP_1618 specifically. The functional assignment is an inference — albeit a very strong one — from orthologue biochemistry plus sequence conservation. Kinetic parameters (Kₘ for CDP-ME2P, kcat, metal preferences) for the <em>P. putida</em> enzyme are unknown.</p>
+</li>
+<li>
+<p><strong>Essentiality is inferred, not demonstrated in this strain.</strong> Essentiality is established for <em>E. coli</em> IspF and is strongly implied by the absence of a mevalonate bypass in <em>P. putida</em>, but a direct transposon/CRISPRi essentiality confirmation for PP_1618 in KT2440 was not located in this investigation.</p>
+</li>
+<li>
+<p><strong>Feedback regulation not tested for Q88MF3.</strong> The central-cavity isoprenoid-diphosphate binding (and its regulatory significance) was demonstrated in <em>E. coli</em>. Although Arg142/Glu144 are conserved in Q88MF3, whether feedback binding measurably modulates <em>P. putida</em> IspF activity has not been shown.</p>
+</li>
+<li>
+<p><strong>MEcPP signaling in <em>P. putida</em> is unexplored.</strong> The signaling roles of MEcPP are documented in plants and <em>E. coli</em> K-12. Whether MEcPP produced by <em>P. putida</em> IspF exerts analogous regulatory effects (e.g., on biofilm, stress adaptation) in this species is an open question.</p>
+</li>
+<li>
+<p><strong>Operon/regulatory structure is inferred from genome coordinates.</strong> The proposed translational coupling of <em>ispF</em> with downstream <em>truD</em> (4-nt overlap) is a bioinformatic inference; transcriptional mapping (RNA-seq/operon prediction confirmation) would be needed to establish co-transcription.</p>
+</li>
+<li>
+<p><strong>Localization is predicted, not measured.</strong> Cytoplasmic localization is based on hydropathy/sequence features and orthologue behavior, not on experimental fractionation or imaging in KT2440.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Express and purify His-tagged PP_1618 from KT2440 and measure steady-state kinetics (Kₘ, kcat) for CDP-ME2P, together with metal-dependence (Zn²⁺ requirement; Mg²⁺ vs. Mn²⁺), to confirm the transferred mechanism quantitatively.</p>
+</li>
+<li>
+<p><strong>Structural confirmation.</strong> Solve a crystal structure (or generate a validated AlphaFold model) of Q88MF3 to verify the homotrimeric β-prism fold, the Zn²⁺ site geometry (Asp8/His10/His42), and the central-cavity feedback pocket (Arg142/Glu144).</p>
+</li>
+<li>
+<p><strong>Essentiality test.</strong> Attempt a clean deletion or CRISPRi knockdown of PP_1618 in KT2440; if inviable without isoprenoid supplementation, this directly confirms essentiality. Complement with the <em>E. coli</em> orthologue to test cross-species rescue.</p>
+</li>
+<li>
+<p><strong>Feedback-regulation assay.</strong> Test whether IPP/DMAPP/FPP inhibit purified <em>P. putida</em> IspF and whether Arg142/Glu144 point mutants abolish this effect, establishing physiological relevance of the central-cavity binding.</p>
+</li>
+<li>
+<p><strong>MEcPP signaling in <em>P. putida</em>.</strong> Engineer conditional MEcPP accumulation (e.g., IspG limitation) and profile transcriptome/biofilm phenotypes to determine whether MEcPP has a signaling role in KT2440 analogous to <em>E. coli</em>.</p>
+</li>
+<li>
+<p><strong>Transcriptional mapping.</strong> Use RNA-seq / 5′-RACE / operon analysis to confirm whether <em>ispF</em> is co-transcribed with <em>truD</em> and to define its promoter and regulatory context.</p>
+</li>
+<li>
+<p><strong>Inhibitor cross-testing.</strong> Evaluate whether zinc-binding-group IspF inhibitors developed against <em>E. coli</em>/<em>B. pseudomallei</em> also inhibit the <em>P. putida</em> enzyme, informing broad-spectrum antimicrobial potential.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>ispF</em> (PP_1618, UniProt Q88MF3) in <em>Pseudomonas putida</em> KT2440 encodes <strong>2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase (IspF; EC 4.6.1.12)</strong>, a soluble cytoplasmic, homotrimeric, dual-metal (Zn²⁺ + Mg²⁺/Mn²⁺) phosphorus–oxygen lyase catalyzing the fifth step of the MEP pathway — the intramolecular cyclization of CDP-ME2P to 2-C-methyl-D-erythritol 2,4-cyclodiphosphate (MEcPP) with release of CMP. As the MEP pathway is the organism's only source of the universal isoprenoid precursors IPP and DMAPP, IspF is expected to be essential and represents a selective antimicrobial target absent from humans. Its product MEcPP additionally functions as a conserved stress-signaling metabolite. This assignment is supported by convergent structural/mechanistic literature on orthologues, strict conservation of all catalytic and feedback residues (71% identity to <em>E. coli</em> IspF), consistent database annotation, and biophysical evidence for cytoplasmic localization.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ispF-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ispF-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11786530</li>
+<li>PMID:11829504</li>
+<li>PMID:12499535</li>
+<li>PMID:11997478</li>
+<li>PMID:16511114</li>
+<li>PMID:31521478</li>
+<li>PMID:17442674</li>
+<li>PMID:39572562</li>
+<li>PMID:40073740</li>
+<li>PMID:34859454</li>
+<li>PMID:41637453</li>
+<li>PMID:31500633</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MF3
+gene_symbol: ispF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ispF encodes 2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase, the
+  divalent-metal-dependent MEP-pathway enzyme that cyclizes CDP-ME
+  2-phosphate to methylerythritol 2,4-cyclodiphosphate with release of CMP.
+  This reaction supplies the substrate for the terminal reductive steps that
+  form isopentenyl and dimethylallyl diphosphate.
+existing_annotations:
+- term:
+    id: GO:0008685
+    label: 2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ME-CPP synthase activity is the specific catalytic function of IspF.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 4.6.1.12 and Rhea 23864 for cyclization of CDP-ME
+      2-phosphate to ME-CPP with release of CMP.
+    supported_by:
+    - reference_id: file:PSEPK/ispF/ispF-uniprot.txt
+      supporting_text: Catalyzes the conversion of 4-diphosphocytidyl-2-
+    - reference_id: file:PSEPK/ispF/ispF-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **_ispF_** (ordered locus **PP_1618**; UniProt **Q88MF3**) of
+        *Pseudomonas putida* strain KT2440 encodes **2-C-methyl-D-erythritol
+        2,4-cyclodiphosphate synthase**
+- term:
+    id: GO:0016114
+    label: terpenoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Terpenoid biosynthesis is correct but broader than the MEP pathway term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0019288 captures the specific precursor-biosynthesis route in which
+      IspF acts, so this broad parent adds no independent information.
+    supported_by:
+    - reference_id: file:PSEPK/ispF/ispF-goa.tsv
+      supporting_text: &#34;GO:0016114\tterpenoid biosynthetic process&#34;
+- term:
+    id: GO:0019288
+    label: isopentenyl diphosphate biosynthetic process, methylerythritol phosphate
+      pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: The methylerythritol phosphate pathway is the core process for IspF.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt places IspF at step 4 of the six-reaction route from DXP to
+      isopentenyl diphosphate.
+    supported_by:
+    - reference_id: file:PSEPK/ispF/ispF-uniprot.txt
+      supporting_text: isopentenyl diphosphate biosynthesis via DXP pathway
+    - reference_id: file:PSEPK/ispF/ispF-deep-research-openscientist.md
+      supporting_text: &gt;-
+        *P. putida* KT2440, like most bacteria, produces IPP and DMAPP
+        **exclusively via the MEP pathway**
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ispF/ispF-uniprot.txt
+  title: UniProt entry Q88MF3 for ispF
+  findings:
+  - statement: &gt;-
+      UniProt identifies Q88MF3 as the divalent-metal-dependent ME-CPP
+      synthase at step 4 of the DXP/MEP route from DXP to IPP.
+- id: file:PSEPK/ispF/ispF-goa.tsv
+  title: QuickGO GOA annotations for ispF
+  findings:
+  - statement: The fetched GOA table contains the three annotations reviewed here.
+- id: file:PSEPK/ispF/ispF-deep-research-openscientist.md
+  title: OpenScientist gene research report for ispF
+  findings:
+  - statement: &gt;-
+      The report supports the CDP-ME 2-phosphate cyclization reaction, the
+      fifth position in the seven-enzyme route, and homotrimeric IspF-family
+      assignment.
+  - statement: &gt;-
+      No direct biochemical or genetic characterization of Q88MF3 was found.
+      Essentiality, dual-metal details, feedback regulation, and ME-CPP stress
+      signaling are ortholog- or lineage-derived and are not added as core
+      PSEPK annotations.
+core_functions:
+- description: &gt;-
+    ME-CPP synthase that cyclizes CDP-ME 2-phosphate with release of CMP in the
+    methylerythritol phosphate pathway.
+  molecular_function:
+    id: GO:0008685
+    label: 2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase activity
+  directly_involved_in:
+  - id: GO:0019288
+    label: isopentenyl diphosphate biosynthetic process, methylerythritol 4-phosphate pathway
+  supported_by:
+  - reference_id: file:PSEPK/ispF/ispF-uniprot.txt
+    supporting_text: Catalyzes the conversion of 4-diphosphocytidyl-2-
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
