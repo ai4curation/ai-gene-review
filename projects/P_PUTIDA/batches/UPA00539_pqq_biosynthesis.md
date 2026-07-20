@@ -91,3 +91,7 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
   PqqA-chaperone role, but swaps the KT2440 pqqC and pqqE locus assignments and
   reports an alignment without retaining a reproducible artifact. The review
   records that report as miscited and leaves those claims out of the curation.
+- The PqqD2 report correctly identifies the distant PP_2681 neighborhood but
+  overinterprets proximity and STRING associations as Ped-system
+  specialization. Without pqqD2-specific expression, genetics, or binding
+  evidence, that remains a suggested experiment rather than a module claim.
