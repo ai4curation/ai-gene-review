@@ -13,7 +13,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 7
 - Existing review files: 8
 - Curated review files: 8
-- Existing OpenScientist research files: 3
+- Existing OpenScientist research files: 5
 
 ## Scope
 
@@ -48,13 +48,13 @@ PqqF reaction or the conserved module core.
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [x] | `PP_0375` (`pqqG` candidate) | PP_0375 | Q88QV9 | orphan:domain_only_no_pathway | PRESENT | CURATED | COMPLETE | Prolyl oligopeptidase family protein |
-| [x] | `pqqE` | PP_0376 | Q88QV8 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | PqqA peptide cyclase (EC 1.21.98.4) |
+| [x] | `pqqE` | PP_0376 | Q88QV8 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | PqqA peptide cyclase (EC 1.21.98.4) |
 | [x] | `pqqD1` | PP_0377 | Q88QV7 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | PqqA binding protein 1 |
 | [x] | `pqqC` | PP_0378 | Q88QV6 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | Pyrroloquinoline-quinone synthase (EC 1.3.3.11) |
 | [x] | `pqqB` | PP_0379 | Q88QV5 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein B |
 | [x] | `pqqA` | PP_0380 | Q88QV4 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein A |
 | [x] | `pqqF` | PP_0381 | Q88QV3 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | Coenzyme PQQ synthesis protein F (EC 3.4.24.-) |
-| [x] | `pqqD2` | PP_2681 | Q88JG8 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | PqqA binding protein 2 |
+| [x] | `pqqD2` | PP_2681 | Q88JG8 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | PqqA binding protein 2 |
 
 ## Notes
 
