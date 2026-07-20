@@ -9,7 +9,8 @@ experimentally implicated Pseudomonas fluorescens B16 PqqG/PqqM protein
 ## Method
 
 The script downloads PP_0375 and two comparison proteins from UniProt and NCBI
-and compares them with MMseqs2 `easy-search`:
+and compares them with MMseqs2 `easy-search`. The recorded run used MMseqs2
+18-8cc5c; the script writes the installed build to `results/MMSEQS_VERSION.txt`:
 
 ```bash
 ./compare_pqqg_ortholog.sh results

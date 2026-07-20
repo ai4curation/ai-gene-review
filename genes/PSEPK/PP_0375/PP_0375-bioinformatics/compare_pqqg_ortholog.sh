@@ -7,6 +7,8 @@ mkdir -p "$output_dir"
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/pqqg-ortholog.XXXXXX")"
 trap 'rm -rf "$tmp_dir"' EXIT
 
+mmseqs version > "$output_dir/MMSEQS_VERSION.txt"
+
 curl -fsSL 'https://rest.uniprot.org/uniprotkb/Q88QV9.fasta' \
   -o "$tmp_dir/Q88QV9.fasta"
 curl -fsSL \
