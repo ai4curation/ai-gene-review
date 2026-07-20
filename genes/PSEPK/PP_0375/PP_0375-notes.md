@@ -13,8 +13,9 @@
 - The Pseudomonas fluorescens B16 homolog is named PqqG/PqqM. The primary full
   text says that Tn3-gusA insertions in every named ORF, including `pqqM`,
   abolished PQQ production [PMID:18055583, "the Tn3-gusA insertions in each ORF
-  abolished PQQ production"]. This supports a PQQ-biosynthesis annotation by
-  orthology but does not identify the PqqM substrate or reaction.
+  abolished PQQ production"]. The study assayed culture filtrate, so it cannot
+  distinguish failed formation from failed export and does not support a
+  PQQ-biosynthetic-process annotation by itself.
 - A reproducible MMseqs2 comparison in `PP_0375-bioinformatics/` found 66.0%
   identity over a 606-residue alignment to B16 PqqG/PqqM AAX10035.1, with
   nearly complete coverage of both proteins.
@@ -32,9 +33,10 @@
 
 ## Curation boundary
 
-The sequence and locus evidence support PP_0375 as a PQQ-pathway-associated
-PqqG/PqqM ortholog and support the existing broad serine-peptidase annotations.
-They do not establish the native substrate. In particular, PP_0375 must not be
-treated as equivalent to the unrelated M16B PqqG partner characterized in the
-Methylorubrum PqqF/PqqG complex. Direct PqqA-derived peptide cleavage and a role
-in PQQ excretion are distinct, unresolved hypotheses.
+The sequence and locus evidence support PP_0375 as a PqqG/PqqM candidate linked
+to PQQ-related biology and support the existing broad serine-peptidase
+annotations. They do not establish a biosynthetic-process role or the native
+substrate. In particular, PP_0375 must not be treated as equivalent to the
+unrelated M16B PqqG partner characterized in the Methylorubrum PqqF/PqqG
+complex. Direct PqqA-derived peptide cleavage and a role in PQQ excretion are
+distinct, unresolved hypotheses.

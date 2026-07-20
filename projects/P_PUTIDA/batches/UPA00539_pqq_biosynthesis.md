@@ -78,6 +78,7 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
   overstate a precise PqqB reaction or a fixed PqqF-to-PqqB handoff.
 - Hole filling moved PP_0375 from the domain-only orphan queue into this batch.
   PMID:27287323 names it as the KT2440 `pqqG` candidate and places it on the
-  `pqqCDEG` transcript; ortholog evidence supports pathway association, but its
-  direct substrate and relationship to the unrelated M16B PqqG proteins remain
-  open questions.
+  `pqqCDEG` transcript. B16 and PA1990 homolog phenotypes were measured using
+  extracellular PQQ, so PP_0375 remains a follow-up candidate rather than a new
+  PQQ-biosynthetic-process annotation. Its direct substrate and relationship to
+  the unrelated M16B PqqG proteins remain open questions.

@@ -29,16 +29,18 @@ Q88QV9 aligned to the *Pseudomonas aeruginosa* PA1990/PqqH protein Q9I2B9 at
 
 ## Interpretation
 
-The nearly full-length, high-identity match supports transfer of broad
-PqqG/PqqM pathway association by sequence similarity. It does not establish
-the native PP_0375 substrate or prove that this S9 peptidase directly processes
-PqqA. Those mechanistic questions remain open.
+The nearly full-length, high-identity match supports treating PP_0375 as a
+PqqG/PqqM pathway candidate for follow-up. It does not establish the native
+PP_0375 substrate, prove that this S9 peptidase directly processes PqqA, or
+justify a PQQ-biosynthetic-process annotation by itself. Those mechanistic
+questions remain open.
 
 The NCBI protein record names AAX10035.1 as the *Pseudomonas fluorescens* B16
 `pqqG` gene product, a dipeptidyl aminopeptidase/acylaminoacyl-peptidase. The
 B16 full text names `pqqM` among 11 ORFs and states that "the Tn3-gusA
 insertions in each ORF abolished PQQ production" [PMID:18055583;
-PMCID:PMC2245851]. This supplies gene-specific pathway genetics but does not
+PMCID:PMC2245851]. The measured material was culture filtrate, so this result
+does not distinguish failed PQQ formation from failed export and does not
 identify the PqqM substrate or biochemical reaction. The KT2440 operon study
 independently names PP_0375 as putative `pqqG` based on conserved locus and
 sequence [PMID:27287323].
@@ -46,5 +48,5 @@ sequence [PMID:27287323].
 The PA1990 study reports that disruption of this S9-family ortholog eliminated
 PQQ excretion into the culture supernatant, whereas a separate `pqqF` mutant
 could not produce PQQ [PMID:19902179]. Thus, close homologs support a conserved
-PQQ-pathway association but do not establish whether PP_0375 acts in precursor
-maturation, PQQ export, or both.
+association with PQQ-related biology but do not establish whether PP_0375 acts
+in precursor maturation, PQQ export, or both.
