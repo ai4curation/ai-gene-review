@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lipB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lipB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DM4" target="_blank" class="term-link">
+                        Q88DM4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lipB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DM4" data-a="DESCRIPTION: lipB encodes the octanoyltransferase that initiate..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>lipB encodes the octanoyltransferase that initiates endogenous protein lipoylation. It transfers an octanoyl group from octanoyl-acyl carrier protein to a conserved lysine in lipoyl domains, producing the protein-bound octanoyl intermediate that LipA converts to the mature lipoyl cofactor.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is plausible context for bacterial LipB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places the protein in the cytoplasm, but localization is secondary to its specific octanoyltransferase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipB/lipB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000255|HAMAP-Rule:MF_00013}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                    GO:0009249
+                                </a>
+                            </span>
+                            <span class="term-label">protein lipoylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM4" data-a="GO:0009249" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein lipoylation is the immediate biological process for LipB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LipB performs step 1 of the endogenous route by transferring an octanoyl group to lipoyl-domain lysine residues before LipA sulfur insertion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipB/lipB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- PATHWAY: Protein modification; protein lipoylation via endogenous</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM4" data-a="GO:0016746" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic acyltransferase activity is true but redundant.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific lipoyl(octanoyl) transferase term captures the substrates and biological chemistry of LipB.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipB/lipB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipB/lipB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">LipB (UniProt Q88DM4; ordered locus PP_4801) is the octanoyltransferase (EC 2.3.1.181) that catalyzes the first committed step of de novo lipoic-acid cofactor biosynthesis in *Pseudomonas putida* KT2440.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033819" target="_blank" class="term-link">
+                                    GO:0033819
+                                </a>
+                            </span>
+                            <span class="term-label">lipoyl(octanoyl) transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM4" data-a="GO:0033819" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lipoyl(octanoyl) transferase activity is the specific LipB function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the EC 2.3.1.181/Rhea reaction transferring octanoyl from octanoyl-ACP to lysyl protein substrates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipB/lipB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Octanoyltransferase that transfers an octanoyl group from octanoyl-ACP to lipoyl-domain lysine residues during endogenous protein lipoylation.</h3>
+                <span class="vote-buttons" data-g="Q88DM4" data-a="FUNCTION: Octanoyltransferase that transfers an octanoyl gro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033819" target="_blank" class="term-link">
+                            lipoyl(octanoyl) transferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                protein lipoylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lipB/lipB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lipB/lipB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88DM4 for lipB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88DM4 as the octanoyltransferase in endogenous protein lipoylation.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lipB/lipB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for lipB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the LipB transferase and protein-lipoylation annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lipB/lipB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research report for lipB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the octanoyl-ACP:protein transferase assignment and direct placement before LipA using family, structural, and ortholog evidence.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct biochemical characterization of Q88DM4 was identified, so kinetic and detailed substrate claims remain inferred from orthologs.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay purified Q88DM4 with octanoyl-ACP and defined Pseudomonas putida GcvH and E2 lipoyl-domain acceptors to confirm activity and physiological substrate range.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DM4" data-a="EXPERIMENT: Assay purified Q88DM4 with octanoyl-ACP and define..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Delete lipB and quantify client-protein lipoylation and rescue by lipoate or octanoate to test the direct route and any salvage capacity in KT2440.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DM4" data-a="EXPERIMENT: Delete lipB and quantify client-protein lipoylatio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lipB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DM4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">LipB (Q88DM4 / PP_4801) in *Pseudomonas putida* KT2440: Octanoyltransferase Initiating De Novo Lipoic-Acid Cofactor Assembly</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T16:10:48.023246</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lipB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lipB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="lipb-q88dm4-pp_4801-in-pseudomonas-putida-kt2440-octanoyltransferase-initiating-de-novo-lipoic-acid-cofactor-assembly">LipB (Q88DM4 / PP_4801) in <em>Pseudomonas putida</em> KT2440: Octanoyltransferase Initiating De Novo Lipoic-Acid Cofactor Assembly</h1>
+<p><strong>Target:</strong> UniProt <strong>Q88DM4</strong> (LIPB_PSEPK) · Gene <strong>lipB</strong> · OrderedLocusName <strong>PP_4801</strong> · EC <strong>2.3.1.181</strong><br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / <strong>KT2440</strong>)<br />
+<strong>Report date:</strong> 2026-07-18</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>LipB (UniProt Q88DM4; ordered locus PP_4801) is the octanoyltransferase (EC 2.3.1.181) that catalyzes the first committed step of de novo lipoic-acid cofactor biosynthesis in <em>Pseudomonas putida</em> KT2440.</strong> It transfers the eight-carbon octanoyl chain from octanoyl-acyl-carrier-protein (octanoyl-ACP), an intermediate diverted from the fatty-acid biosynthetic pool, onto the ε-amino group of a specific, conserved lysine residue in the lipoyl domains of its cognate acceptor proteins. The reaction is <code>octanoyl-[ACP] + L-lysyl-[protein] → N6-octanoyl-L-lysyl-[protein] + holo-[ACP] + H+</code> (Rhea:17665), and it corresponds to step 1 of 2 in the UniPathway route "protein N6-(lipoyl)lysine from octanoyl-[ACP]" (UPA00538/UER00592). Its immediate product is the substrate of the adjacent lipoyl synthase LipA (PP_4800), which inserts two sulfur atoms to complete the mature lipoyl cofactor.</p>
+<p>The enzyme operates in the <strong>cytoplasm</strong> and acts on the lipoyl domains of the E2 subunits of the 2-oxoacid dehydrogenase complexes (pyruvate dehydrogenase, 2-oxoglutarate dehydrogenase, and the branched-chain 2-oxoacid/2-oxoisovalerate dehydrogenase) and on the glycine cleavage system H protein (GcvH). These are the central and branched-chain metabolic hubs whose activity requires a covalently bound lipoyl arm. LipB thus sits at the origin of protein lipoylation and is essential for endogenous activation of all of these complexes; loss-of-function of the orthologous gene renders bacteria auxotrophic for lipoate or octanoate.</p>
+<p>Mechanistically, LipB is a member of the LipB/BPL/LPL catalytic superfamily and uses a <strong>Cys–Lys catalytic dyad</strong> with a covalent thioester acyl-enzyme intermediate. In Q88DM4, Cys169 is the nucleophile that forms the octanoyl-cysteine thioester, and residue Lys135 lowers the Cys thiol pKa to activate it. The AlphaFold model of Q88DM4 (mean pLDDT 95.2) places the Lys135 Nζ atom 3.10 Å from the Cys169 sulfur — a hydrogen-bond/ion-pair distance — structurally validating this dyad. Because the <em>P. putida</em> enzyme itself has not been characterized biochemically, its functional assignment rests on strong orthology to the experimentally defined <em>Escherichia coli</em> LipB (54.8% identity, identical catalytic-Cys sequence motif <code>RINPCGYAG</code>), conserved domain architecture, and pathway/genomic context (lipB–lipA adjacency). Confidence in the annotation is very high.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-lipb-catalyzes-the-first-committed-step-of-de-novo-lipoic-acid-biosynthesis">F001 — LipB catalyzes the first committed step of de novo lipoic-acid biosynthesis</h3>
+<p>UniProt Q88DM4, governed by HAMAP rule MF_00013, annotates LipB as an octanoyltransferase (EC 2.3.1.181) catalyzing the reaction octanoyl-[ACP] + L-lysyl-[protein] → N6-octanoyl-L-lysyl-[protein] + holo-[ACP] + H+ (Rhea:17665). This is the first of the two committed reactions that build the lipoyl cofactor directly on target proteins, and it corresponds to UniPathway UPA00538/UER00592 (step 1/2).</p>
+<p>The role is anchored by experimental work on the orthologous <em>E. coli</em> enzyme. As stated by Cronan and colleagues, <em>"LipB is responsible for octanoylation of the E2 components of 2-oxoacid dehydrogenases to provide the substrates of LipA, an S-adenosyl-L-methionine radical enzyme that inserts two sulfur atoms into the octanoyl moiety to give the active lipoylated dehydrogenase complexes"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21209092/">PMID: 21209092</a>). The two-step logic of the pathway is likewise explicit in the lipoyl-synthase literature: <em>"The lipoyl cofactor is synthesized de novo in two committed steps, involving the LipB-catalyzed transfer of an octanoyl chain derived from fatty acid biosynthesis to a lipoyl carrier protein and the LipA-catalyzed insertion of sulfur atoms at C6 and C8 of the octanoyl chain"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26841001/">PMID: 26841001</a>). LipB therefore performs the acyl-transfer step, and LipA performs the subsequent sulfur-insertion step.</p>
+<h3 id="f002-substrate-octanoyl-acp-with-documented-selectivity-for-the-c8-acyl-chain">F002 — Substrate: octanoyl-ACP, with documented selectivity for the C8 acyl chain</h3>
+<p>The physiological acyl donor is octanoyl-ACP. UniProt notes that "octanoyl-ACP is likely to be the physiological substrate," although lipoyl-ACP can also serve. The enzyme's preference for the eight-carbon chain is not incidental: LipB has a <em>"well-documented substrate selectivity, indicating a mechanism of octanoic acid recognition"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/34704050/">PMID: 34704050</a>). Bartholow et al. (2021) established that this selectivity is mediated by specific protein–protein interactions between LipB and ACP that position and recognize the octanoate chain: <em>"In bacteria, octanoic acid is transferred from the acyl carrier protein (ACP) to the lipoylated target protein by the octanoyltransferase LipB."</em> Complementary NMR/biochemical work reinforces that LipB primarily recognizes the C8 chain length (<a href="https://pubmed.ncbi.nlm.nih.gov/35764173/">PMID: 35764173</a>). This chain-length specificity is what commits precisely an eight-carbon precursor — the correct length for later sulfur insertion at C6 and C8 — to the lipoylation pathway.</p>
+<h3 id="f003-cyslys-catalytic-dyad-and-a-thioester-acyl-enzyme-intermediate">F003 — Cys–Lys catalytic dyad and a thioester acyl-enzyme intermediate</h3>
+<p>LipB is a two-step (ping-pong) acyltransferase that proceeds through a covalent octanoyl-cysteine thioester intermediate. UniProt Q88DM4 annotates the active site as ACT_SITE 169 ("Acyl-thioester intermediate") and SITE 135 ("Lowers pKa of active site Cys"), with substrate-binding residues at positions 71–78, 138–140, and 151–153, all within the BPL/LPL catalytic domain (residues 32–207) that adopts the Class-II aminoacyl-tRNA-synthetase/biotin-synthetase-like fold (SSF55681). The Cronan group established that the LipB/LipL family uses a catalytic cysteine and forms a thioester-linked acyl-enzyme: structural comparison showed that <em>"although the active site cysteine residues of LipL and LipB are located in different positions within the polypeptide chains, alignment of their structures show these residues occupy similar positions"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21338421/">PMID: 21338421</a>). This confirms that the <em>P. putida</em> ACT_SITE Cys169 is the acyl-transfer nucleophile.</p>
+<h3 id="f004-cytoplasmic-localization-acceptors-are-e2-lipoyl-domains-and-gcvh">F004 — Cytoplasmic localization; acceptors are E2 lipoyl domains and GcvH</h3>
+<p>UniProt assigns LipB to the cytoplasm (GO:0005737), consistent with its soluble substrates and the intracellular fatty-acid synthesis pathway that supplies octanoyl-ACP. Its physiological acyl acceptors are the lipoyl domains of the 2-oxoacid dehydrogenase E2 subunits and the glycine cleavage H protein. In <em>E. coli</em>, LipB co-purifies with intact 2-oxoacid dehydrogenase complexes: <em>"We report that the intact pyruvate and 2-oxoglutarate dehydrogenase complexes specifically copurify with both LipB and LipA"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21209092/">PMID: 21209092</a>), and the binding surface spans both the lipoyl domain and the E2 subunit itself. In organisms with a dedicated octanoyltransferase, the glycine cleavage H protein is a defined target — <em>"We report that LipM specifically modifies the glycine cleavage system protein, GcvH"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21338421/">PMID: 21338421</a>) — a route that is also physiologically relevant to glycine oxidation in <em>Pseudomonas</em>.</p>
+<h3 id="f005-essentiality-lipb-nulls-are-lipoateoctanoate-auxotrophs">F005 — Essentiality: lipB nulls are lipoate/octanoate auxotrophs</h3>
+<p>LipB is required for endogenous lipoylation. Hermes and Cronan showed that <em>"strains containing null mutations in lipB are auxotrophic for either lipoic acid or octanoic acid"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19684135/">PMID: 19684135</a>), and that suppression required salvage-ligase (LplA) variants with a reduced Km for free octanoate — i.e., only an alternate route into the pathway can bypass the loss of LipB. This defines LipB as the sole entry point for de novo (biosynthetic) lipoylation; in its absence, cells depend entirely on scavenging lipoate/octanoate from the environment.</p>
+<h3 id="f006-p-putida-lipb-is-a-bona-fide-ortholog-of-experimentally-characterized-e-coli-lipb">F006 — P. putida LipB is a bona fide ortholog of experimentally characterized E. coli LipB</h3>
+<p>A global Needleman–Wunsch alignment of Q88DM4 (216 aa) against <em>E. coli</em> LipB (P60720, 213 aa) yields <strong>54.8% identity</strong> (119/217 aligned positions). Critically, the active-site cysteine sequence context is strictly conserved and identical between the two proteins: <strong><code>RINPCGYAG</code></strong> (Cys169 in both). Both proteins are assigned to COG0321 and are governed by HAMAP rule MF_00013. This level of identity, combined with an identical catalytic motif and shared domain architecture, licenses transfer of the well-established <em>E. coli</em> function to the <em>P. putida</em> enzyme with high confidence.</p>
+<h3 id="f007-lipoate-is-uniquely-assembled-directly-on-its-cognate-enzymes">F007 — Lipoate is uniquely assembled directly on its cognate enzymes</h3>
+<p>Unlike most cofactors — which are synthesized and then attached — lipoic acid is built in place on the very enzymes that require it. Authoritative reviews make this explicit: <em>"the cofactor is assembled on its cognate proteins rather than being assembled and subsequently attached as in the typical pathway, like that of biotin attachment. The first lipoate biosynthetic pathway determined was that of Escherichia coli, which utilizes two enzymes to form the active lipoylated protein from a fatty acid biosynthetic intermediate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27074917/">PMID: 27074917</a>). LipB catalyzes the first of these two on-protein steps, transferring octanoate from the fatty-acid intermediate octanoyl-ACP onto the acceptor lysine (<a href="https://pubmed.ncbi.nlm.nih.gov/30236800/">PMID: 30236800</a>).</p>
+<h3 id="f008-alphafold-structurally-validates-the-cys169lys135-dyad-in-q88dm4">F008 — AlphaFold structurally validates the Cys169–Lys135 dyad in Q88DM4</h3>
+<p>The AlphaFold model AF-Q88DM4-F1 is of very high quality (mean pLDDT 95.2; pLDDT 98.1 at Lys135, 83.4 at Cys169). In the folded model, the ε-amino nitrogen (Nζ) of Lys135 lies <strong>3.10 Å</strong> from the sulfur (Sγ) of Cys169 — a hydrogen-bond/ion-pair distance — and no other basic residue is within 8 Å of the Cys thiol. This geometry independently confirms UniProt's functional annotation: Cys169 is the thioester-forming nucleophile and Lys135 is positioned precisely to lower its pKa and activate it for catalysis.</p>
+<h3 id="f009-lipb-supplies-the-lipoyl-cofactor-to-multiple-lipoate-dependent-complexes-in-p-putida">F009 — LipB supplies the lipoyl cofactor to multiple lipoate-dependent complexes in P. putida</h3>
+<p><em>P. putida</em> runs several lipoyl-dependent multienzyme systems, all of which depend on LipB-initiated lipoylation: pyruvate dehydrogenase, 2-oxoglutarate dehydrogenase, the branched-chain 2-oxoacid dehydrogenase, and the glycine cleavage system. The branched-chain complex is particularly well documented in this organism — its E1 component was crystallized from <em>P. putida</em>: <em>"The crystal structure of a heterotetrameric (alpha2beta2) E1, 2-oxoisovalerate dehydrogenase from Pseudomonas putida, reveals a tightly packed arrangement of the four subunits"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10426958/">PMID: 10426958</a>). Uniquely, <em>P. putida</em> expresses two distinct lipoamide dehydrogenases (E3): <em>"Pseudomonas putida produces two lipoamide dehydrogenases with molecular weights of 49,000 and 56,000 designated LPD-val and LPD-glc"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/6546487/">PMID: 6546487</a>), with LPD-val serving branched-chain 2-oxoacid oxidation and LPD-glc serving glucose/glycine oxidation. Every one of these lipoyl-arm-bearing systems lies downstream of LipB.</p>
+<h3 id="f010-genomic-organization-lipb-pp_4801-adjacent-to-lipa-pp_4800">F010 — Genomic organization: lipB (PP_4801) adjacent to lipA (PP_4800)</h3>
+<p>In <em>P. putida</em> KT2440, lipB (PP_4801) is immediately adjacent to lipA (PP_4800, Q88DM5; lipoyl synthase, EC 2.8.1.8). This gene pairing mirrors the lipBA operon organization documented in other γ-proteobacteria — for example the <em>Shewanella</em> lipBA operon, which is regulated by cAMP-CRP (<a href="https://pubmed.ncbi.nlm.nih.gov/25611823/">PMID: 25611823</a>). The physical adjacency of the two committed de novo lipoylation genes reflects their sequential, obligately coupled roles: LipB makes the octanoyl-protein that LipA then converts to lipoyl-protein.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-de-novo-lipoylation-pathway-and-lipbs-place-in-it">The de novo lipoylation pathway and LipB's place in it</h3>
+<div class="codehilite"><pre><span></span><code>  Fatty-acid synthesis (FAS II)
+    │
+    ▼
+      octanoyl-ACP  ──────────┐  (C8 acyl donor; selectively recognized)
+              │
+    ┌─────────▼───────────┐
+    │   LipB (PP_4801)     │   STEP 1  EC 2.3.1.181
+    │  octanoyltransferase │   Cys169–Lys135 dyad
+    │  thioester intermed. │   octanoyl-S-Cys169 acyl-enzyme
+    └─────────┬───────────┘
+              │  transfers octanoyl → ε-NH2 of acceptor Lys
+              ▼
+N6-octanoyl-[lysyl-protein]  (octanoyl-E2 / octanoyl-GcvH)
+              │
+    ┌─────────▼───────────┐
+    │   LipA (PP_4800)     │   STEP 2  EC 2.8.1.8
+    │   lipoyl synthase    │   radical-SAM; +2 S at C6,C8
+    └─────────┬───────────┘
+              ▼
+N6-(lipoyl)-[lysyl-protein]  = MATURE, ACTIVE cofactor
+              │
+      ┌───────────────┬───────┴────────┬──────────────────┐
+      ▼               ▼                ▼                  ▼
+  Pyruvate DH     2-oxoglutarate   Branched-chain      Glycine
+  (E2)            DH (E2)          2-oxoacid DH (E2)   cleavage (GcvH)
+</code></pre></div>
+
+<h3 id="reaction-chemistry">Reaction chemistry</h3>
+<p>LipB is a ping-pong (double-displacement) acyltransferase. The catalytic cysteine (Cys169), activated by the adjacent lysine (Lys135) that lowers its thiol pKa, attacks the thioester of octanoyl-ACP to form a covalent <strong>octanoyl-S-Cys169 acyl-enzyme intermediate</strong>, releasing holo-ACP. In the second half-reaction, the ε-amino group of the acceptor lysine (in an E2 lipoyl domain or GcvH) attacks the acyl-enzyme, transferring octanoate to form the amide-linked N6-octanoyl-lysyl product and regenerating free enzyme. The 3.1 Å Cys169–Lys135 geometry seen in the AlphaFold model is exactly what this chemistry requires.</p>
+<h3 id="why-on-protein-assembly-matters">Why "on-protein" assembly matters</h3>
+<p>Lipoate is not synthesized as a free molecule and later attached. Instead, LipB installs the eight-carbon precursor directly on the target lysine, and LipA then completes the cofactor in situ. This unusual strategy explains why LipB substrate selectivity for the C8 chain is essential: only an eight-carbon chain places carbons 6 and 8 where LipA's radical-SAM chemistry can insert the two sulfur atoms that create the functional dithiolane ring.</p>
+<h3 id="comparison-of-the-p-putida-and-e-coli-enzymes">Comparison of the P. putida and E. coli enzymes</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th><em>P. putida</em> LipB (Q88DM4)</th>
+<th><em>E. coli</em> LipB (P60720)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>216 aa</td>
+<td>213 aa</td>
+</tr>
+<tr>
+<td>Sequence identity</td>
+<td>—</td>
+<td>54.8% (vs Q88DM4)</td>
+</tr>
+<tr>
+<td>Catalytic Cys motif</td>
+<td><code>RINPCGYAG</code> (Cys169)</td>
+<td><code>RINPCGYAG</code> (Cys169)</td>
+</tr>
+<tr>
+<td>Catalytic dyad</td>
+<td>Cys169 / Lys135</td>
+<td>Cys / Lys</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>2.3.1.181</td>
+<td>2.3.1.181</td>
+</tr>
+<tr>
+<td>Orthology group</td>
+<td>COG0321 / HAMAP MF_00013</td>
+<td>COG0321 / HAMAP MF_00013</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td>lipB (PP_4801)–lipA (PP_4800)</td>
+<td>lipB–lipA</td>
+</tr>
+<tr>
+<td>Biochemical characterization</td>
+<td>Inferred (not yet assayed)</td>
+<td>Experimentally established</td>
+</tr>
+</tbody>
+</table>
+<h3 id="downstream-metabolic-dependence-in-p-putida">Downstream metabolic dependence in P. putida</h3>
+<table>
+<thead>
+<tr>
+<th>Lipoyl-dependent system</th>
+<th>Lipoyl-bearing component</th>
+<th>Metabolic role</th>
+<th>E3 partner in <em>P. putida</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pyruvate dehydrogenase</td>
+<td>E2 (AceF-type) lipoyl domain</td>
+<td>Pyruvate → acetyl-CoA</td>
+<td>LPD-glc</td>
+</tr>
+<tr>
+<td>2-Oxoglutarate dehydrogenase</td>
+<td>E2 (SucB-type) lipoyl domain</td>
+<td>TCA cycle</td>
+<td>LPD-glc</td>
+</tr>
+<tr>
+<td>Branched-chain 2-oxoacid DH</td>
+<td>E2 lipoyl domain</td>
+<td>Val/Leu/Ile catabolism</td>
+<td>LPD-val</td>
+</tr>
+<tr>
+<td>Glycine cleavage system</td>
+<td>GcvH H protein</td>
+<td>Glycine/one-carbon metabolism</td>
+<td>LPD-glc</td>
+</tr>
+</tbody>
+</table>
+<p>Because all four systems require a lipoyl arm, and because LipB is the sole entry into de novo lipoylation, LipB activity is a single upstream determinant of central carbon metabolism (PDH, OGDH), branched-chain amino-acid catabolism (BCKDH), and one-carbon/glycine metabolism (GCS) in <em>P. putida</em>.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21209092/">21209092</a></td>
+<td><em>Protein–protein interactions in assembly of lipoic acid on the 2-oxoacid dehydrogenases</em></td>
+<td>Defines LipB's catalytic role (octanoylation of E2 to feed LipA) and shows LipB co-purifies with intact PDH/OGDH complexes (F001, F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26841001/">26841001</a></td>
+<td><em>Characterization of Lipoyl Synthase from Mycobacterium tuberculosis</em></td>
+<td>States the two-step de novo pathway: LipB octanoyl transfer, then LipA sulfur insertion at C6/C8 (F001).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34704050/">34704050</a></td>
+<td><em>Protein–protein interaction based substrate control in octanoyltransfer</em></td>
+<td>Documents LipB substrate selectivity and octanoic-acid recognition via ACP interactions (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35764173/">35764173</a></td>
+<td><em>Lipoate protein ligase B primarily recognizes the C8 chain</em></td>
+<td>Reinforces C8 chain-length recognition by LipB (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21338421/">21338421</a></td>
+<td><em>A novel amidotransferase required for lipoic acid cofactor assembly in B. subtilis</em></td>
+<td>Establishes the LipB/LipL family catalytic cysteine and identifies GcvH as a target of the octanoyltransfer step (F003, F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19684135/">19684135</a></td>
+<td><em>Scavenging of cytosolic octanoic acid by mutant LplA ... lacking LipB</em></td>
+<td>Shows lipB nulls are lipoate/octanoate auxotrophs; defines essentiality (F005).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27074917/">27074917</a></td>
+<td><em>Assembly of Lipoic Acid on Its Cognate Enzymes</em></td>
+<td>Authoritative review: lipoate is built on cognate proteins via LipB+LipA from a fatty-acid intermediate (F007).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30236800/">30236800</a></td>
+<td><em>Advances in synthesis of biotin and assembly of lipoic acid</em></td>
+<td>Review context for on-protein lipoate assembly (F007).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10426958/">10426958</a></td>
+<td><em>Crystal structure of 2-oxoisovalerate dehydrogenase (P. putida)</em></td>
+<td>Confirms P. putida possesses a branched-chain 2-oxoacid DH requiring lipoylation (F009).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6546487/">6546487</a></td>
+<td><em>Oxidation of glycine by Pseudomonas putida requires a specific lipoamide dehydrogenase</em></td>
+<td>Establishes P. putida's two lipoamide dehydrogenases (LPD-val, LPD-glc) and its multiple lipoate-dependent systems (F009).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25611823/">25611823</a></td>
+<td><em>A new regulatory mechanism for bacterial lipoic acid synthesis</em></td>
+<td>Documents lipBA operon organization and cAMP-CRP regulation in γ-proteobacteria (F010).</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting/contextual literature also reviewed: LipM/LipL two-gene octanoyltransfer in <em>B. subtilis</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21338420/">PMID: 21338420</a>); archaeal LplA-N/LplA-C lipoylation (<a href="https://pubmed.ncbi.nlm.nih.gov/23116157/">PMID: 23116157</a>); yeast Lip3 (<a href="https://pubmed.ncbi.nlm.nih.gov/23960015/">PMID: 23960015</a>); GcvH NMR assignments (<a href="https://pubmed.ncbi.nlm.nih.gov/29335837/">PMID: 29335837</a>); metabolic engineering of free lipoic acid (<a href="https://pubmed.ncbi.nlm.nih.gov/36639019/">PMID: 36639019</a>); review of lipoic acid attachment (<a href="https://pubmed.ncbi.nlm.nih.gov/38624243/">PMID: 38624243</a>); human E3 structure (<a href="https://pubmed.ncbi.nlm.nih.gov/15946682/">PMID: 15946682</a>); <em>P. aeruginosa</em> branched-chain oxo-acid DH (<a href="https://pubmed.ncbi.nlm.nih.gov/3085653/">PMID: 3085653</a>).</p>
+<p><strong>Gene-identity note.</strong> No literature was found for a <em>different</em> gene sharing the symbol "lipB" that would create an identification conflict. All evidence is consistent with Q88DM4 being the octanoyltransferase LipB of the de novo lipoate pathway. The gene identity is confirmed, not ambiguous.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of the P. putida enzyme.</strong> The functional assignment for Q88DM4 rests on strong orthology (54.8% identity, identical catalytic-Cys motif) to the experimentally defined <em>E. coli</em> LipB, plus HAMAP/COG family membership, structural inference (AlphaFold dyad geometry), and pathway context — not on direct enzyme assays of the <em>P. putida</em> protein. No published kinetic parameters (kcat, Km for octanoyl-ACP or acceptor domains) exist for Q88DM4 specifically.</p>
+</li>
+<li>
+<p><strong>No experimental structure.</strong> The Cys169–Lys135 dyad is validated by an AlphaFold model (very high confidence, mean pLDDT 95.2), not by an experimental crystal or cryo-EM structure of the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Acceptor specificity in P. putida is inferred.</strong> The identification of PDH-E2, OGDH-E2, BCKDH-E2, and GcvH as LipB acceptors in <em>P. putida</em> is drawn from the general bacterial paradigm and from the known presence of these complexes in <em>P. putida</em>, not from direct demonstration of LipB modifying each one in this organism.</p>
+</li>
+<li>
+<p><strong>Regulation is not directly established.</strong> The lipBA operon and cAMP-CRP regulation are documented in <em>Shewanella</em> and other γ-proteobacteria; whether PP_4801/PP_4800 are co-transcribed and identically regulated in <em>P. putida</em> KT2440 has not been experimentally confirmed here.</p>
+</li>
+<li>
+<p><strong>Salvage-pathway interplay.</strong> Whether <em>P. putida</em> possesses a functional LplA-type salvage ligase capable of bypassing LipB (as in <em>E. coli</em>), and the relative flux through de novo vs. salvage routes under different growth conditions, was not assessed.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>In vitro enzymatic assay of recombinant Q88DM4.</strong> Express and purify <em>P. putida</em> LipB and measure octanoyltransferase activity using octanoyl-ACP donor and a purified lipoyl domain (or GcvH) acceptor. Determine kcat and Km, and confirm the C8 chain-length preference against C6/C10 acyl-ACPs.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Generate C169A and K135A/K135Q variants and confirm loss of activity, directly testing the predicted Cys–Lys dyad and thioester mechanism. Trap and detect the octanoyl-Cys169 acyl-enzyme intermediate by mass spectrometry.</p>
+</li>
+<li>
+<p><strong>Genetic complementation / essentiality.</strong> Construct a PP_4801 deletion in <em>P. putida</em> KT2440 and test for lipoate/octanoate auxotrophy; complement with <em>E. coli</em> lipB and with the native gene to confirm functional equivalence.</p>
+</li>
+<li>
+<p><strong>Acceptor mapping in P. putida.</strong> Use anti-lipoyl Western blotting and MS on the lipB deletion vs. wild type to confirm which endogenous proteins (PDH-E2, OGDH-E2, BCKDH-E2, GcvH) lose lipoylation, directly establishing acceptor specificity in this organism.</p>
+</li>
+<li>
+<p><strong>Operon and regulation analysis.</strong> Perform RT-PCR/RNA-seq and promoter mapping to test whether PP_4801–PP_4800 form a lipBA operon and whether cAMP-CRP or catabolite status modulates their expression, as seen in <em>Shewanella</em>.</p>
+</li>
+<li>
+<p><strong>Experimental structure determination.</strong> Solve a crystal or cryo-EM structure of <em>P. putida</em> LipB, ideally with an octanoyl/acyl-ACP or lipoyl-domain complex, to validate the AlphaFold-predicted dyad geometry and the ACP-recognition surface underlying substrate selectivity.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated from a 5-iteration autonomous investigation. Gene identity (lipB / Q88DM4 / PP_4801, Pseudomonas putida KT2440) was verified against UniProt, orthology, structural, and pathway evidence; no gene-symbol ambiguity was found.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lipB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lipB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:21209092</li>
+<li>PMID:26841001</li>
+<li>PMID:34704050</li>
+<li>PMID:35764173</li>
+<li>PMID:21338421</li>
+<li>PMID:19684135</li>
+<li>PMID:27074917</li>
+<li>PMID:30236800</li>
+<li>PMID:10426958</li>
+<li>PMID:6546487</li>
+<li>PMID:25611823</li>
+<li>PMID:21338420</li>
+<li>PMID:23116157</li>
+<li>PMID:23960015</li>
+<li>PMID:29335837</li>
+<li>PMID:36639019</li>
+<li>PMID:38624243</li>
+<li>PMID:15946682</li>
+<li>PMID:3085653</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lipB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DM4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lipb-curation-notes">lipB curation notes</h1>
+<p>LipB/Q88DM4 is the endogenous-pathway octanoyltransferase. UniProt records<br />
+transfer of octanoate from octanoyl-ACP to lipoyl-domain lysine residues<br />
+[file:PSEPK/lipB/lipB-uniprot.txt, "CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid"].<br />
+The entry belongs to the LipB octanoyltransferase family<br />
+[file:PSEPK/lipB/lipB-uniprot.txt, "DR   InterPro; IPR000544; Octanoyltransferase."].</p>
+<p>For module boundaries, LipB supplies the protein-bound octanoyl intermediate<br />
+used by LipA. Lipoate-dependent dehydrogenase complexes and the glycine-cleavage<br />
+system are downstream clients, not catalytic parts of the lipoylation module.</p>
+<h2 id="initial-annotation-decisions">Initial annotation decisions</h2>
+<p>The specific lipoyl(octanoyl) transferase activity and protein-lipoylation<br />
+process are accepted. Cytoplasmic localization is retained as non-core context.<br />
+The generic acyltransferase parent is marked over-annotated because it adds no<br />
+information beside the substrate-specific term.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The completed report supports the LipB identity, reaction, active-site family,<br />
+and direct LipB-to-LipA pathway order<br />
+[<code>file:PSEPK/lipB/lipB-deep-research-openscientist.md</code>]. It found no direct<br />
+biochemical study of Q88DM4 itself; confidence instead comes from the exact<br />
+HAMAP/InterPro assignment, conserved catalytic architecture, and strong<br />
+orthology to characterized LipB proteins. Claims about the detailed client<br />
+range, regulation, and salvage interplay remain hypotheses for KT2440 and are<br />
+not promoted into GO assertions.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DM4
+gene_symbol: lipB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  lipB encodes the octanoyltransferase that initiates endogenous protein
+  lipoylation. It transfers an octanoyl group from octanoyl-acyl carrier
+  protein to a conserved lysine in lipoyl domains, producing the
+  protein-bound octanoyl intermediate that LipA converts to the mature lipoyl
+  cofactor.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is plausible context for bacterial LipB.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt places the protein in the cytoplasm, but localization is
+      secondary to its specific octanoyltransferase activity.
+    supported_by:
+    - reference_id: file:PSEPK/lipB/lipB-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000255|HAMAP-Rule:MF_00013}.&#39;
+- term:
+    id: GO:0009249
+    label: protein lipoylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Protein lipoylation is the immediate biological process for LipB.
+    action: ACCEPT
+    reason: &gt;-
+      LipB performs step 1 of the endogenous route by transferring an octanoyl
+      group to lipoyl-domain lysine residues before LipA sulfur insertion.
+    supported_by:
+    - reference_id: file:PSEPK/lipB/lipB-uniprot.txt
+      supporting_text: &#39;CC   -!- PATHWAY: Protein modification; protein lipoylation via endogenous&#39;
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Generic acyltransferase activity is true but redundant.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The specific lipoyl(octanoyl) transferase term captures the substrates
+      and biological chemistry of LipB.
+    supported_by:
+    - reference_id: file:PSEPK/lipB/lipB-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid&#39;
+    - reference_id: file:PSEPK/lipB/lipB-deep-research-openscientist.md
+      supporting_text: &gt;-
+        LipB (UniProt Q88DM4; ordered locus PP_4801) is the
+        octanoyltransferase (EC 2.3.1.181) that catalyzes the first committed
+        step of de novo lipoic-acid cofactor biosynthesis in *Pseudomonas
+        putida* KT2440.
+- term:
+    id: GO:0033819
+    label: lipoyl(octanoyl) transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Lipoyl(octanoyl) transferase activity is the specific LipB function.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records the EC 2.3.1.181/Rhea reaction transferring octanoyl from
+      octanoyl-ACP to lysyl protein substrates.
+    supported_by:
+    - reference_id: file:PSEPK/lipB/lipB-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid&#39;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/lipB/lipB-uniprot.txt
+  title: UniProt entry Q88DM4 for lipB
+  findings:
+  - statement: &gt;-
+      UniProt identifies Q88DM4 as the octanoyltransferase in endogenous
+      protein lipoylation.
+    supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid&#39;
+- id: file:PSEPK/lipB/lipB-goa.tsv
+  title: QuickGO GOA annotations for lipB
+  findings:
+  - statement: &gt;-
+      The fetched GOA table contains the LipB transferase and
+      protein-lipoylation annotations reviewed here.
+- id: file:PSEPK/lipB/lipB-deep-research-openscientist.md
+  title: OpenScientist gene research report for lipB
+  findings:
+  - statement: &gt;-
+      The report supports the octanoyl-ACP:protein transferase assignment and
+      direct placement before LipA using family, structural, and ortholog
+      evidence.
+  - statement: &gt;-
+      No direct biochemical characterization of Q88DM4 was identified, so
+      kinetic and detailed substrate claims remain inferred from orthologs.
+core_functions:
+- description: &gt;-
+    Octanoyltransferase that transfers an octanoyl group from octanoyl-ACP to
+    lipoyl-domain lysine residues during endogenous protein lipoylation.
+  molecular_function:
+    id: GO:0033819
+    label: lipoyl(octanoyl) transferase activity
+  directly_involved_in:
+  - id: GO:0009249
+    label: protein lipoylation
+  supported_by:
+  - reference_id: file:PSEPK/lipB/lipB-uniprot.txt
+    supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the transfer of endogenously produced octanoic acid&#39;
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments:
+- description: &gt;-
+    Assay purified Q88DM4 with octanoyl-ACP and defined Pseudomonas putida GcvH
+    and E2 lipoyl-domain acceptors to confirm activity and physiological
+    substrate range.
+- description: &gt;-
+    Delete lipB and quantify client-protein lipoylation and rescue by lipoate
+    or octanoate to test the direct route and any salvage capacity in KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
