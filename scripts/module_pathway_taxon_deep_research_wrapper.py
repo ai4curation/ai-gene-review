@@ -14,7 +14,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 from module_deep_research_wrapper import (
     command_for_log,
@@ -38,6 +37,7 @@ PROVIDERS = (
 )
 DEFAULT_TEMPLATE = Path("templates/module_pathway_taxon_research.md.j2")
 DEFAULT_MAX_GENES = 80
+DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
     "{pathway_query}",
@@ -322,6 +322,7 @@ def build_command(
     output_path: Path,
     template: Path,
     extra_args: list[str] | None,
+    provider_timeout: int | None = None,
 ) -> list[str]:
     cmd = [
         *deep_research_client_command(),
@@ -336,6 +337,8 @@ def build_command(
         cmd.extend(["--param", "agent_type=codex"])
     if provider == "perplexity-lite":
         cmd.extend(["--param", "reasoning_effort=low", "--param", "model=sonar-pro"])
+    if actual_provider(provider) == "openscientist" and provider_timeout is not None:
+        cmd.extend(["--param", f"timeout={provider_timeout}"])
     if extra_args:
         cmd.extend(extra_args)
     return cmd
@@ -379,7 +382,10 @@ def main() -> int:
     parser.add_argument(
         "--timeout",
         type=int,
-        help="Timeout for deep-research-client subprocess in seconds",
+        help=(
+            "Timeout for deep-research-client and the provider in seconds "
+            f"(OpenScientist default: {DEFAULT_OPENSCIENTIST_TIMEOUT})"
+        ),
     )
     parser.add_argument(
         "--extra-args",
@@ -424,12 +430,17 @@ def main() -> int:
         pathway_query=args.pathway,
         provider=args.provider,
     )
+    effective_timeout = args.timeout
+    if effective_timeout is None and args.provider == "openscientist":
+        effective_timeout = DEFAULT_OPENSCIENTIST_TIMEOUT
+
     cmd = build_command(
         variables=variables,
         provider=args.provider,
         output_path=output_path,
         template=args.template,
         extra_args=args.extra_args,
+        provider_timeout=effective_timeout,
     )
 
     print(f"Module: {module['module_title']} ({module['module_source']})")
@@ -439,16 +450,18 @@ def main() -> int:
     print(f"Provider: {args.provider}")
     print(f"Output: {output_path}")
     print(f"Command: {command_for_log(cmd)}")
+    if effective_timeout is not None:
+        print(f"Timeout: {effective_timeout}s")
     if args.dry_run:
         print("Dry run only; not running deep-research-client.")
         return 0
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        result = subprocess.run(cmd, timeout=args.timeout)
+        result = subprocess.run(cmd, timeout=effective_timeout)
     except subprocess.TimeoutExpired:
         print(
-            f"Error: deep-research-client timed out after {args.timeout}s",
+            f"Error: deep-research-client timed out after {effective_timeout}s",
             file=sys.stderr,
         )
         return 124

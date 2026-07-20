@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>argE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>argE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CJ5" target="_blank" class="term-link">
+                        Q88CJ5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "argE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CJ5" data-a="DESCRIPTION: ArgE (PP_5186) is a predicted M20A-family acetylor..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ArgE (PP_5186) is a predicted M20A-family acetylornithine deacetylase (EC 3.5.1.16) that hydrolyzes N-acetyl-L-ornithine to L-ornithine and acetate in the linear acetylated-ornithine route to L-arginine. Direct KT2440 enzymology is unavailable, and its condition-specific contribution relative to the cyclic ArgJ route is unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CJ5" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgE is predicted to be a soluble cytoplasmic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is plausible and electronically supported but is secondary to the reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CJ5" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgE provides a hydrolytic route from N-acetyl-L-ornithine to ornithine during L-arginine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The argE gene assignment, EC 3.5.1.16, and ArgE-specific HAMAP/NCBIfam families agree. A KT2440 argE mutant remains arginine prototrophic, consistent with compensation by the alternative ArgJ route rather than evidence against this pathway role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008777" target="_blank" class="term-link">
+                                    GO:0008777
+                                </a>
+                            </span>
+                            <span class="term-label">acetylornithine deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CJ5" data-a="GO:0008777" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the substrate-specific molecular function predicted for ArgE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 3.5.1.16, HAMAP MF_01108, NCBIfam TIGR01892, and the ArgE M20A subfamily agree.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argE/argE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Acetylornithine deacetylase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argE/argE-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-L-ornithine + H₂O → L-ornithine + acetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CJ5" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This root-level hydrolase term is redundant with acetylornithine deacetylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008777 captures the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019213" target="_blank" class="term-link">
+                                    GO:0019213
+                                </a>
+                            </span>
+                            <span class="term-label">deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CJ5" data-a="GO:0019213" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic deacetylase term is redundant with acetylornithine deacetylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008777 captures the biological substrate and reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes N-acetyl-L-ornithine to release L-ornithine in the linear route to L-arginine.</h3>
+                <span class="vote-buttons" data-g="Q88CJ5" data-a="FUNCTION: Hydrolyzes N-acetyl-L-ornithine to release L-ornit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008777" target="_blank" class="term-link">
+                            acetylornithine deacetylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argE/argE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Acetylornithine deacetylase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argE/argE-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">N-acetyl-L-ornithine + H₂O → L-ornithine + acetate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" target="_blank" class="term-link">
+                            PMID:31451546
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas putida as Part of the Mechanism of Adaptation to Oxidative Stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 study reports that an individual argE mutant remains arginine prototrophic, leaving its contribution relative to ArgJ unresolved.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argE/argE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK ArgE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88CJ5 to EC 3.5.1.16 and the ArgE-specific M20A family.</div>
+
+                        <div class="finding-text">"Full=Acetylornithine deacetylase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argE/argE-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK ArgE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the five existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argE/argE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK ArgE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the exact accession, ArgE-specific family signals, and substrate-specific hydrolysis reaction. Its claims that ArgJ is the dominant route, that ArgE is only a backup, and that PP_3571 is a second ArgE paralog are not used; it also missed the direct KT2440 argE-mutant study, which leaves route contribution unresolved.</div>
+
+                        <div class="finding-text">"N-acetyl-L-ornithine + H₂O → L-ornithine + acetate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which growth conditions does ArgE-mediated hydrolysis contribute measurably relative to ArgJ-mediated acetyl recycling in KT2440?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: microbial arginine metabolism</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CJ5" data-a="Q: Under which growth conditions does ArgE-mediated h..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(argE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CJ5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *argE* / PP_5186 (UniProt Q88CJ5) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T18:25:50.717105</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="argE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="argE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-arge-pp_5186-uniprot-q88cj5-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>argE</em> / PP_5186 (UniProt Q88CJ5) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>argE</strong> (ordered locus <strong>PP_5186</strong>; UniProt <strong>Q88CJ5</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes a <strong>cytoplasmic, zinc/cobalt-dependent dinuclear metallohydrolase</strong> belonging to the <strong>peptidase M20A family, ArgE subfamily</strong>. Its primary predicted function is that of an <strong>acetylornithine deacetylase (N-acetyl-L-ornithine deacetylase, EC 3.5.1.16)</strong>, which catalyzes the hydrolysis of <strong>N-acetyl-L-ornithine + H₂O → L-ornithine + acetate</strong>. This is the fifth step of the classical <strong>linear ("acetylase") branch of de novo L-arginine biosynthesis</strong>, the step that liberates free L-ornithine so that it can be carbamoylated to citrulline and, ultimately, converted to arginine. All bioinformatic, evolutionary, and network evidence converge on this assignment; there is, at present, no direct wet-lab biochemical characterization of the PP_5186 protein itself, so the functional call rests on strong homology-based inference anchored to biochemically validated orthologs.</p>
+<p>The identity of the target was rigorously verified. PP_5186 shares <strong>50.3 % amino-acid identity</strong> with the experimentally characterized <em>Escherichia coli</em> ArgE, and <strong>all seven functionally annotated catalytic and metal-binding residues</strong> of <em>E. coli</em> ArgE are strictly conserved. Multiple curated, ArgE-specific signatures (HAMAP MF_01108, NCBIfam TIGR01892, InterPro IPR010169) match the protein, and it maps to the KEGG ortholog <strong>K01438 (argE)</strong>. Genomically, PP_5186 is immediately downstream of <strong>PP_5185</strong>, the N-acetylglutamate synthase (ArgA) that catalyzes the first committed step of the same pathway, and its STRING functional-interaction network is dominated by arginine-biosynthesis and arginine-metabolism enzymes. The subcellular location is <strong>cytoplasmic</strong>, consistent with a soluble biosynthetic metalloenzyme and with immunolocalization of a plant ArgE homolog to the cytosol.</p>
+<p>An important nuance is that <em>P. putida</em> KT2440 does <strong>not</strong> rely primarily on the ArgE route. Like most bacteria, it encodes the <strong>cyclic ArgJ ornithine acetyltransferase (PP_1346)</strong>, which recycles the acetyl group and is the dominant ornithine-generating enzyme. <em>P. putida</em> also carries a <strong>second, more divergent argE paralog (PP_3571)</strong>. In a closely analogous organism, <em>Sinorhizobium meliloti</em>, which likewise encodes both ArgJ and ArgE, single and even double <em>argE/argJ</em> mutants remain arginine prototrophs. PP_5186 is therefore best described as a <strong>catalytically competent but genetically redundant / accessory</strong> deacetylase route to ornithine, rather than the essential committed enzyme it is in <em>Enterobacteriaceae</em>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-primary-function-n-acetyl-l-ornithine-deacetylase-ec-35116">Finding 1 — Primary function: N-acetyl-L-ornithine deacetylase (EC 3.5.1.16)</h3>
+<p>PP_5186 (Q88CJ5, <em>argE</em>) is a <strong>predicted N-acetyl-L-ornithine deacetylase (EC 3.5.1.16)</strong> that catalyzes the reaction:</p>
+<blockquote>
+<p><strong>N-acetyl-L-ornithine + H₂O → L-ornithine + acetate</strong></p>
+</blockquote>
+<p>This is the fifth (final deacylation) step of the <strong>linear/acetylase branch of L-arginine biosynthesis</strong>, in which the acetyl group that had been added to glutamate at the start of the pathway is finally removed to release free ornithine. The assignment rests on a coherent stack of curated evidence: UniProt Q88CJ5 describes a <strong>380-residue, 41.4-kDa</strong> protein assigned to the <strong>peptidase M20A family / ArgE subfamily</strong>, carrying EC 3.5.1.16. Critically, the protein matches ArgE-<em>specific</em> bioinformatic signatures rather than generic M20 signatures — <strong>HAMAP MF_01108 (ArgE)</strong>, <strong>NCBIfam TIGR01892 (AcOrn-deacetyl)</strong>, and <strong>InterPro IPR010169 (AcOrn-deacetyl)</strong> — and is annotated with <strong>GO:0008777 (acetylornithine deacetylase activity)</strong> and <strong>GO:0006526 (L-arginine biosynthetic process)</strong>. It maps to the KEGG ortholog <strong>K01438 (argE)</strong>.</p>
+<p>The reaction itself is not in doubt for the ArgE family: homologous enzymes have been biochemically confirmed to catalyze exactly this hydrolysis. Work on <em>Sinorhizobium meliloti</em> describes that "<em>N-acetylornithine (NAO) deacetylase (ArgE) hydrolyses NAO to acetate and ornithine</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26271664/">PMID: 26271664</a>), and the arginine-pathway evolution literature states that ornithine "<em>is produced from N-alpha-acetylornithine by a deacylase, acetylornithinase (AOase) (argE encoded)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10692366/">PMID: 10692366</a>). Both statements define precisely the EC 3.5.1.16 function assigned to Q88CJ5.</p>
+<h3 id="finding-2-a-cytoplasmic-dinuclear-zniicoii-m20a-metallohydrolase-with-broad-n-acyl-specificity">Finding 2 — A cytoplasmic dinuclear Zn(II)/Co(II) M20A metallohydrolase with broad α-N-acyl specificity</h3>
+<p>ArgE is a <strong>dinuclear (two-metal) zinc/cobalt-dependent metallohydrolase</strong>. UniProt Q88CJ5 lists a Zn²⁺ cofactor, both Cobalt and Zinc keywords, explicit metal-binding sites, and a <strong>cytoplasmic</strong> subcellular location. Its domain architecture is the canonical M20 pairing of a catalytic <strong>Peptidase M20 domain (PF01546)</strong> with an <strong>M20 dimerization domain (PF07687, residues 174–278)</strong> — the latter being responsible for the physiological homodimer typical of this family.</p>
+<p>The metal chemistry and substrate scope are established by biochemical work on the <em>E. coli</em> ArgE ortholog. Javid-Majd and Blanchard reported that "<em>the purified enzyme contains a single atom of zinc per monomer. The activity of this enzyme can be increased greater than 2-fold by the addition of zinc, or 8-fold by the addition of cobalt. This suggests that the enzyme can accommodate two metal ions at the active site</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10684608/">PMID: 10684608</a>). The same study established that the specificity is <strong>broad</strong> rather than narrowly restricted to acetylornithine: "<em>The substrate specificity of the enzyme is relatively broad, with a number of alpha-N-acyl-L-amino acids exhibiting activity, including both alpha-N-acetyl- and alpha-N-formylmethionine that exhibit higher activity than alpha-N-acetyl-L-ornithine</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10684608/">PMID: 10684608</a>). The mechanism proceeds through a metal-activated water molecule that attacks the acetyl carbonyl, aided by a general-acid/general-base pair, with a single partially rate-limiting proton transfer.</p>
+<p>Direct structural confirmation of the two-metal architecture comes from EXAFS spectroscopy of <em>E. coli</em> ArgE loaded with Zn(II), Co(II), and Mn(II), which reveals a metal–metal vector of ~3.3–3.4 Å "<em>suggesting the formation of a dinuclear site</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/22459917/">PMID: 22459917</a>). The cytoplasmic localization is further corroborated by immunogold electron microscopy of the plant ArgE homolog DRIP-1, which is "<em>confined exclusively to the cytosol</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12102508/">PMID: 12102508</a>).</p>
+<h3 id="finding-3-pathway-context-a-redundant-deacetylase-alongside-the-dominant-cyclic-argj-route">Finding 3 — Pathway context: a redundant deacetylase alongside the dominant cyclic ArgJ route</h3>
+<p><em>P. putida</em> KT2440 possesses <strong>both</strong> routes to ornithine. The <strong>cyclic</strong> route uses <strong>ArgJ ornithine acetyltransferase (KEGG K00620, gene PP_1346)</strong>, which transfers the acetyl group from N-acetylornithine directly onto glutamate, thereby regenerating N-acetylglutamate and recycling the acetyl moiety. The <strong>linear</strong> route instead uses ArgE to hydrolyze off the acetyl group and discard it as acetate. Strikingly, KEGG maps <strong>two</strong> acetylornithine deacetylase genes to K01438 in KT2440: the target <strong>PP_5186</strong> and a paralog <strong>PP_3571</strong>. Other pathway components are present as expected — argB/NAG kinase (PP_5289), argC (PP_0432/PP_3633).</p>
+<p>Because ArgJ is present and dominant in most bacteria — "<em>the formation of ornithine is catalyzed by an enzyme transferring the acetyl group of N-alpha-acetylornithine to glutamate (ornithine acetyltransferase [OATase]) (argJ encoded)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10692366/">PMID: 10692366</a>) — the ArgE deacetylase is dispensable in organisms that carry both. This is demonstrated directly in <em>S. meliloti</em>, where "<em>argE and argJ single mutants, and an argEJ double mutant, are arginine prototrophs</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26271664/">PMID: 26271664</a>). By analogy, PP_5186 is expected to be a <strong>redundant / accessory</strong> contributor to ornithine formation in <em>P. putida</em>, backing up the cyclic ArgJ route.</p>
+<h3 id="finding-4-sequence-identity-and-strict-conservation-of-the-catalytic-machinery">Finding 4 — Sequence identity and strict conservation of the catalytic machinery</h3>
+<p>Global pairwise alignment identifies PP_5186 as the <strong>true ArgE ortholog</strong>. It shares <strong>50.3 % amino-acid identity</strong> with the experimentally characterized <em>E. coli</em> ArgE (P23908, 383 aa) but only <strong>36.8 %</strong> with its own <em>P. putida</em> paralog PP_3571 (Q88GZ4), meaning PP_5186 is substantially closer to bona fide ArgE than to its divergent in-genome paralog.</p>
+<p>All <strong>seven</strong> functionally annotated <em>E. coli</em> ArgE residues are strictly conserved in PP_5186:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th><em>E. coli</em> ArgE</th>
+<th>PP_5186 (Q88CJ5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Metal ligand (His)</td>
+<td>His80</td>
+<td>His76</td>
+</tr>
+<tr>
+<td>Metal ligand (Asp)</td>
+<td>Asp112</td>
+<td>Asp108</td>
+</tr>
+<tr>
+<td>Metal ligand (Glu)</td>
+<td>Glu145</td>
+<td>Glu141</td>
+</tr>
+<tr>
+<td>Metal ligand (Glu)</td>
+<td>Glu169</td>
+<td>Glu165</td>
+</tr>
+<tr>
+<td>Metal ligand (His)</td>
+<td>His355</td>
+<td>His352</td>
+</tr>
+<tr>
+<td>Catalytic general base (Asp)</td>
+<td>Asp82</td>
+<td>Asp78</td>
+</tr>
+<tr>
+<td>Catalytic general acid (Glu)</td>
+<td>Glu144</td>
+<td>Glu140</td>
+</tr>
+</tbody>
+</table>
+<p>This reproduces the canonical peptidase-M20 dinuclear metallohydrolase active-site constellation — two histidines, bridging Glu/Asp carboxylates, and a general acid/base pair. The functional relevance of the general acid/base dyad is established biochemically: the pH-dependence of <em>E. coli</em> ArgE "<em>revealed the presence of two enzymic groups, one functioning as a general base and one functioning as a general acid</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10684608/">PMID: 10684608</a>). The complete conservation of these catalytic residues in PP_5186 is strong structural evidence that the enzyme is catalytically competent.</p>
+<h3 id="finding-5-genomic-synteny-with-arga-n-acetylglutamate-synthase-and-a-lrp-family-regulator">Finding 5 — Genomic synteny with argA (N-acetylglutamate synthase) and a Lrp-family regulator</h3>
+<p>The genomic neighborhood of PP_5186 reinforces its arginine-biosynthesis role. Immediately upstream lies <strong>PP_5185</strong>, an amino-acid acetyltransferase (P0A0Z9) annotated as <strong>N-acetylglutamate synthase / ArgA (EC 2.3.1.1)</strong> — the <strong>first, committed step</strong> of arginine biosynthesis (glutamate + acetyl-CoA → N-acetyl-L-glutamate). Thus the <strong>first (ArgA)</strong> and <strong>fifth (ArgE)</strong> steps of the acetylated-ornithine branch are physically clustered. Nearby genes include <strong>PP_5188</strong>, an <strong>AsnC/Lrp-family transcriptional regulator</strong> — a family that commonly senses amino acids and controls amino-acid biosynthetic operons — plus glutamate/glutamylpolyamine-synthetase-family genes (PP_5183/PP_5184).</p>
+<p>This arrangement mirrors the operonic organization of <em>argE</em> genes in other bacteria. In <em>Lactococcus lactis</em>, "<em>The gltS-argE operon ... encodes a putative glutamate or arginine transport protein and acetylornithine deacetylase, which catalyzes an important step in the arginine biosynthesis pathway</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/14762010/">PMID: 14762010</a>), demonstrating that <em>argE</em> genes are routinely embedded in arginine-biosynthesis gene clusters under dedicated regulation — exactly the context observed around PP_5186.</p>
+<h3 id="finding-6-string-network-embeds-pp_5186-in-the-arginine-biosynthesismetabolism-module">Finding 6 — STRING network embeds PP_5186 in the arginine biosynthesis/metabolism module</h3>
+<p>The STRING v12 functional-interaction network for PP_5186 (<em>P. putida</em> KT2440, taxid 160488) is dominated by arginine-pathway enzymes, with high confidence scores:</p>
+<table>
+<thead>
+<tr>
+<th>Partner</th>
+<th>Function</th>
+<th>STRING score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>argG</td>
+<td>argininosuccinate synthase</td>
+<td>0.964</td>
+</tr>
+<tr>
+<td>argF</td>
+<td>ornithine carbamoyltransferase</td>
+<td>0.929</td>
+</tr>
+<tr>
+<td>arcB</td>
+<td>(arginine catabolism)</td>
+<td>0.926</td>
+</tr>
+<tr>
+<td>PP_3571</td>
+<td>argE paralog</td>
+<td>0.922</td>
+</tr>
+<tr>
+<td>argJ</td>
+<td>ornithine acetyltransferase</td>
+<td>0.919</td>
+</tr>
+<tr>
+<td>aruC</td>
+<td>acetylornithine/succinylornithine aminotransferase</td>
+<td>0.916</td>
+</tr>
+<tr>
+<td>arcA</td>
+<td>arginine deiminase</td>
+<td>0.908</td>
+</tr>
+<tr>
+<td>argA</td>
+<td>N-acetylglutamate synthase</td>
+<td>0.893</td>
+</tr>
+<tr>
+<td>argB</td>
+<td>NAG kinase</td>
+<td>0.624</td>
+</tr>
+<tr>
+<td>astC</td>
+<td>succinylornithine aminotransferase</td>
+<td>0.586</td>
+</tr>
+</tbody>
+</table>
+<p>Critically, the network directly links PP_5186 to the enzyme that <strong>generates its substrate</strong> (aruC/ArgD → N-acetylornithine) and to the enzyme that <strong>consumes its product</strong> (argF → uses L-ornithine + carbamoyl-phosphate to make citrulline), as well as to the downstream argininosuccinate-forming steps (argG/argH). This "substrate-upstream, product-downstream" flanking is the signature of a metabolic-pathway member and places PP_5186 squarely at the ornithine node.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The evidence assembles into a coherent mechanistic picture of PP_5186 as the ornithine-releasing deacetylase of the <strong>linear (acetylase) branch</strong> of arginine biosynthesis, operating in parallel with the dominant <strong>cyclic (ArgJ) branch</strong>.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">          </span><span class="n">De</span><span class="w"> </span><span class="n">novo</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">arginine</span><span class="w"> </span><span class="n">biosynthesis</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="w"> </span><span class="n">putida</span><span class="w"> </span><span class="n">KT2440</span>
+<span class="w">          </span><span class="o">===================================================</span>
+
+<span class="w">     </span><span class="n">L</span><span class="o">-</span><span class="n">glutamate</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgA</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">acetylglutamate</span><span class="w"> </span><span class="n">synthase</span><span class="w">   </span><span class="p">(</span><span class="n">PP_5185</span><span class="p">)</span><span class="w">  </span><span class="o">&lt;--</span><span class="w"> </span><span class="n">syntenic</span><span class="w"> </span><span class="n">neighbor</span>
+<span class="n">v</span><span class="w">            </span><span class="p">[</span><span class="n">EC</span><span class="w"> </span><span class="mf">2.3.1.1</span><span class="p">]</span>
+<span class="w">   </span><span class="n">N</span><span class="o">-</span><span class="n">acetyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">glutamate</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgB</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">NAG</span><span class="w"> </span><span class="n">kinase</span><span class="w"> </span><span class="p">(</span><span class="n">PP_5289</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">N</span><span class="o">-</span><span class="n">acetylglutamyl</span><span class="o">-</span><span class="n">phosphate</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgC</span><span class="w"> </span><span class="p">(</span><span class="n">PP_0432</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PP_3633</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">N</span><span class="o">-</span><span class="n">acetylglutamate</span><span class="o">-</span><span class="mi">5</span><span class="o">-</span><span class="n">semialdehyde</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgD</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">AruC</span><span class="w">  </span><span class="n">aminotransferase</span><span class="w">  </span><span class="p">(</span><span class="kt">STRING</span><span class="w"> </span><span class="mf">0.916</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">N</span><span class="o">-</span><span class="n">acetyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">ornithine</span><span class="w">  </span><span class="o">&lt;====</span><span class="w"> </span><span class="n">SUBSTRATE</span>
+<span class="o">|</span><span class="w">                                </span><span class="err">\</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgE</span><span class="w">  </span><span class="p">(</span><span class="n">PP_5186</span><span class="p">,</span><span class="w"> </span><span class="n">TARGET</span><span class="p">)</span><span class="w">        </span><span class="err">\</span><span class="w">  </span><span class="n">ArgJ</span><span class="w"> </span><span class="n">ornithine</span><span class="w"> </span><span class="n">acetyltransferase</span>
+<span class="o">|</span><span class="w">  </span><span class="n">EC</span><span class="w"> </span><span class="mf">3.5.1.16</span><span class="w">                     </span><span class="err">\</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1346</span><span class="p">)</span><span class="w">  </span><span class="o">--</span><span class="w"> </span><span class="n">DOMINANT</span><span class="w"> </span><span class="n">cyclic</span><span class="w"> </span><span class="n">route</span>
+<span class="o">|</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span><span class="w">  </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">acetate</span><span class="w"> </span><span class="p">(</span><span class="n">discarded</span><span class="p">)</span><span class="w">    </span><span class="err">\</span><span class="w">  </span><span class="n">transfers</span><span class="w"> </span><span class="n">acetyl</span><span class="w"> </span><span class="n">back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">glutamate</span>
+<span class="n">v</span><span class="w">                                     </span><span class="n">v</span>
+<span class="w">   </span><span class="n">L</span><span class="o">-</span><span class="n">ORNITHINE</span><span class="w">  </span><span class="o">&lt;====</span><span class="w"> </span><span class="n">PRODUCT</span><span class="w">  </span><span class="o">&lt;----------------</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgF</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">ornithine</span><span class="w"> </span><span class="n">carbamoyltransferase</span><span class="w"> </span><span class="p">(</span><span class="kt">STRING</span><span class="w"> </span><span class="mf">0.929</span><span class="p">)</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">L</span><span class="o">-</span><span class="n">citrulline</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">  </span><span class="n">ArgG</span><span class="w"> </span><span class="n">argininosuccinate</span><span class="w"> </span><span class="n">synthase</span><span class="w"> </span><span class="p">(</span><span class="kt">STRING</span><span class="w"> </span><span class="mf">0.964</span><span class="p">)</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">ArgH</span>
+<span class="n">v</span>
+<span class="w">   </span><span class="n">L</span><span class="o">-</span><span class="n">ARGININE</span>
+</code></pre></div>
+
+<p><strong>Active-site chemistry.</strong> PP_5186 is a homodimeric M20A metalloenzyme. Each monomer harbors a <strong>dinuclear metal center</strong> (typically 1–2 Zn²⁺, with Co²⁺ strongly activating) bridged by carboxylate ligands (Asp108, Glu141, Glu165) and coordinated by two histidines (His76, His352). A metal-bound water/hydroxide is the nucleophile that attacks the acetyl carbonyl of N-acetyl-L-ornithine; <strong>Asp78</strong> acts as the general base to deprotonate/orient the water and <strong>Glu140</strong> as the general acid to protonate the leaving amine, resolving the tetrahedral intermediate to release L-ornithine and acetate. The strict conservation of every one of these residues (Finding 4) means the catalytic apparatus is intact and the enzyme is very likely active.</p>
+<p><strong>Physiological role and redundancy.</strong> Because <em>P. putida</em> carries the cyclic <strong>ArgJ</strong> route (PP_1346) as its principal ornithine source, PP_5186 functions as a <strong>parallel / backup deacetylase</strong> rather than an indispensable committed enzyme. The precedent from <em>S. meliloti</em> — where deleting <em>argE</em>, <em>argJ</em>, or both still yields arginine prototrophs — indicates that in dual-route organisms neither enzyme is strictly essential, and additional aminoacylase-type deacetylases can further buffer the pathway. The broad α-N-acyl-amino-acid specificity of ArgE orthologs (Finding 2) further suggests PP_5186 may contribute to <strong>secondary deacylation activities</strong> (e.g., turnover of other N-acetyl/N-formyl amino acids), though this is unconfirmed for the <em>P. putida</em> protein.</p>
+<p><strong>Localization.</strong> All evidence points to a <strong>cytoplasmic</strong> site of action: a soluble metalloenzyme with no signal peptide, UniProt cytoplasm annotation, and cytosolic immunolocalization of a plant homolog. This is where free ornithine is generated and immediately handed off to ArgF for carbamoylation — consistent with the tight metabolic channeling implied by the STRING network.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10684608/">10684608</a></td>
+<td><em>Mechanistic analysis of the argE-encoded N-acetylornithine deacetylase</em></td>
+<td>Primary biochemistry of <em>E. coli</em> ArgE: Zn/Co dinuclear site, broad α-N-acyl specificity, general acid/base dyad. Defines the residues conserved in PP_5186.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22459917/">22459917</a></td>
+<td><em>Structural characterization of Zn/Co/Mn-loaded ArgE from E. coli</em></td>
+<td>EXAFS evidence for a dinuclear metal center (M–M ~3.3–3.4 Å), confirming the two-metal architecture.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26271664/">26271664</a></td>
+<td><em>Arginine biosynthesis in Sinorhizobium meliloti 1021</em></td>
+<td>Defines the ArgE reaction (NAO → acetate + ornithine); shows <em>argE</em>, <em>argJ</em>, and <em>argEJ</em> mutants are prototrophs — the basis for the redundancy interpretation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10692366/">10692366</a></td>
+<td><em>Evolution of arginine biosynthesis; N-α-acetyl ornithinase</em></td>
+<td>Establishes that <em>argE</em> encodes the ornithine-producing deacylase and that ArgJ is the dominant route in most prokaryotes.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14762010/">14762010</a></td>
+<td><em>ArgR and AhrC regulation in Lactococcus lactis</em></td>
+<td>Shows <em>argE</em> genes are embedded in arginine-biosynthesis operons under dedicated regulation, paralleling PP_5186's syntenic/regulated context.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12102508/">12102508</a></td>
+<td><em>Citrulline and DRIP-1 (ArgE homologue) in wild watermelon</em></td>
+<td>Immunogold EM localizes an ArgE homolog exclusively to the cytosol, supporting cytoplasmic localization.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9829957/">9829957</a></td>
+<td><em>argE gene of Myxococcus xanthus</em></td>
+<td>Genetic demonstration that <em>argE</em> disruption causes arginine auxotrophy in an organism relying on the linear route — validates the ArgE→arginine functional link.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11852094/">11852094</a></td>
+<td><em>lysK as an argE homolog in Thermus thermophilus</em></td>
+<td>Illustrates the broad specificity/promiscuity of the ArgE family (deacetylates both N-acetylornithine and N-acetyllysine).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting vs. challenging.</strong> All the ArgE-family papers (10684608, 22459917, 26271664, 10692366, 14762010, 12102508, 9829957) <em>support</em> the annotation of PP_5186. The <em>challenge</em> is one of directness rather than contradiction: none of these characterize the <em>P. putida</em> PP_5186 protein itself, and the <em>S. meliloti</em> and dual-route data actively temper the physiological importance of ArgE where ArgJ is present. Several other <em>Pseudomonas</em>-related papers surfaced during literature search (e.g., PADI/citrullination in sepsis, c-di-GMP signaling, glyoxal responses, polyamine synthases) are <strong>not relevant</strong> to this gene and were correctly excluded — they concern unrelated arginine-derivative biology or share only superficial keyword overlap.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of PP_5186.</strong> The functional assignment is entirely homology- and network-based. There is no purified-enzyme assay, no measured kcat/Km for N-acetyl-L-ornithine or alternative substrates, and no crystal structure for the <em>P. putida</em> protein. Confidence in the reaction is high (strong ortholog + full active-site conservation), but the quantitative kinetics and true substrate preference are unmeasured.</p>
+</li>
+<li>
+<p><strong>Redundancy and physiological role are inferred, not tested.</strong> No <em>P. putida argE</em> (PP_5186) knockout phenotype has been reported. The prediction that PP_5186 is dispensable (because ArgJ/PP_1346 dominates) rests on analogy to <em>S. meliloti</em>. A <em>P. putida</em>-specific mutant analysis is needed to confirm redundancy and to distinguish the roles of PP_5186 versus the paralog PP_3571.</p>
+</li>
+<li>
+<p><strong>Two paralogs mapping to K01438.</strong> The functional division of labor between PP_5186 and PP_3571 is unknown. They may be differentially expressed, differentially regulated, or specialized for distinct N-acyl substrates. Only sequence-distance data (50.3 % vs 36.8 % identity to <em>E. coli</em> ArgE) currently distinguish them.</p>
+</li>
+<li>
+<p><strong>Substrate specificity is extrapolated.</strong> The "broad α-N-acyl-amino-acid" behavior is documented for <em>E. coli</em> ArgE and <em>T. thermophilus</em> LysK, not for PP_5186. Whether PP_5186 has meaningful moonlighting deacylase activity (e.g., on N-acetylmethionine or N-acetyllysine) is untested.</p>
+</li>
+<li>
+<p><strong>Regulation is unconfirmed.</strong> The adjacent AsnC/Lrp-family regulator (PP_5188) and the general ArgR paradigm suggest arginine-responsive control, but promoter mapping, operon structure, and ArgR-binding for the PP_5185–PP_5186 region in <em>P. putida</em> have not been experimentally established.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Clone, express, and purify PP_5186; measure steady-state kinetics (kcat, Km) for N-acetyl-L-ornithine and a panel of α-N-acyl amino acids (N-acetylmethionine, N-formylmethionine, N-acetyllysine). Determine metal dependence (apo vs Zn²⁺ vs Co²⁺ reconstitution) to confirm the dinuclear Zn/Co behavior predicted from the <em>E. coli</em> ortholog.</p>
+</li>
+<li>
+<p><strong>Genetic dissection of redundancy.</strong> Construct single (ΔPP_5186, ΔPP_3571, ΔargJ/PP_1346) and combinatorial deletion strains in <em>P. putida</em> KT2440 and test arginine prototrophy on minimal medium ± arginine. This directly tests the redundancy hypothesis and clarifies the relative contributions of the linear vs cyclic routes.</p>
+</li>
+<li>
+<p><strong>Paralog specialization.</strong> Compare expression (RT-qPCR / RNA-seq) of PP_5186 vs PP_3571 across growth conditions (arginine excess/limitation, different carbon/nitrogen sources) to determine whether the paralogs are condition-specific.</p>
+</li>
+<li>
+<p><strong>Structural validation.</strong> Solve the crystal or cryo-EM structure of PP_5186 (or generate a high-confidence AlphaFold model with metal placement) to confirm the dinuclear active-site geometry and the positioning of His76/Asp78/Asp108/Glu140/Glu141/Glu165/His352.</p>
+</li>
+<li>
+<p><strong>Regulatory mapping.</strong> Test whether the PP_5188 Lrp/AsnC regulator and/or ArgR controls the PP_5185–PP_5186 locus via promoter–reporter fusions and electrophoretic mobility-shift assays with arginine as effector.</p>
+</li>
+<li>
+<p><strong>Metabolic flux tracing.</strong> Use ¹³C/¹⁵N-labeled precursors to quantify how much ornithine flux proceeds through the ArgE (acetate-releasing) branch versus the ArgJ (acetyl-recycling) branch under standard and arginine-limited growth.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <strong>argE / PP_5186 (Q88CJ5)</strong> in <em>Pseudomonas putida</em> KT2440 encodes a <strong>cytoplasmic, zinc/cobalt-dependent dinuclear M20A metallohydrolase</strong> that functions as an <strong>acetylornithine deacetylase (EC 3.5.1.16)</strong>, hydrolyzing <strong>N-acetyl-L-ornithine to L-ornithine + acetate</strong> in the linear branch of de novo L-arginine biosynthesis. The assignment is exceptionally well supported at the sequence, structural-homology, syntenic, and network levels — 50.3 % identity to biochemically validated <em>E. coli</em> ArgE with complete conservation of all catalytic and metal-binding residues — even though the <em>P. putida</em> protein has not itself been characterized in vitro. Because <em>P. putida</em> also carries the dominant cyclic ArgJ ornithine acetyltransferase (PP_1346) plus a second <em>argE</em> paralog (PP_3571), PP_5186 is most parsimoniously interpreted as a <strong>catalytically competent but genetically redundant / accessory</strong> route to ornithine.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="argE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="argE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:26271664</li>
+<li>PMID:10692366</li>
+<li>PMID:10684608</li>
+<li>PMID:22459917</li>
+<li>PMID:12102508</li>
+<li>PMID:14762010</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CJ5
+gene_symbol: argE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ArgE (PP_5186) is a predicted M20A-family acetylornithine deacetylase (EC
+  3.5.1.16) that hydrolyzes N-acetyl-L-ornithine to L-ornithine and acetate in
+  the linear acetylated-ornithine route to L-arginine. Direct KT2440 enzymology
+  is unavailable, and its condition-specific contribution relative to the
+  cyclic ArgJ route is unresolved.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: ArgE is predicted to be a soluble cytoplasmic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is plausible and electronically supported but is secondary to the reaction.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: ArgE provides a hydrolytic route from N-acetyl-L-ornithine to ornithine during L-arginine synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      The argE gene assignment, EC 3.5.1.16, and ArgE-specific HAMAP/NCBIfam
+      families agree. A KT2440 argE mutant remains arginine prototrophic,
+      consistent with compensation by the alternative ArgJ route rather than
+      evidence against this pathway role.
+    additional_reference_ids:
+    - PMID:31451546
+- term:
+    id: GO:0008777
+    label: acetylornithine deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the substrate-specific molecular function predicted for ArgE.
+    action: ACCEPT
+    reason: EC 3.5.1.16, HAMAP MF_01108, NCBIfam TIGR01892, and the ArgE M20A subfamily agree.
+    supported_by:
+    - reference_id: file:PSEPK/argE/argE-uniprot.txt
+      supporting_text: Full=Acetylornithine deacetylase
+    - reference_id: file:PSEPK/argE/argE-deep-research-openscientist.md
+      supporting_text: N-acetyl-L-ornithine + H₂O → L-ornithine + acetate
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This root-level hydrolase term is redundant with acetylornithine deacetylase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008777 captures the substrate-specific reaction.
+- term:
+    id: GO:0019213
+    label: deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This generic deacetylase term is redundant with acetylornithine deacetylase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008777 captures the biological substrate and reaction.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31451546
+  title: Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas
+    putida as Part of the Mechanism of Adaptation to Oxidative Stress.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The KT2440 study reports that an individual argE mutant remains arginine
+      prototrophic, leaving its contribution relative to ArgJ unresolved.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and accessible publisher/PMC full text were checked. The
+      local publication cache remains abstract-only, so the full-text statement
+      is recorded without a supporting-text excerpt.
+- id: file:PSEPK/argE/argE-uniprot.txt
+  title: UniProtKB entry for PSEPK ArgE
+  findings:
+  - statement: Assigns Q88CJ5 to EC 3.5.1.16 and the ArgE-specific M20A family.
+    supporting_text: Full=Acetylornithine deacetylase
+- id: file:PSEPK/argE/argE-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK ArgE
+  findings:
+  - statement: Contains the five existing annotations reviewed above.
+- id: file:PSEPK/argE/argE-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK ArgE
+  findings:
+  - statement: &gt;-
+      The report identifies the exact accession, ArgE-specific family signals,
+      and substrate-specific hydrolysis reaction. Its claims that ArgJ is the
+      dominant route, that ArgE is only a backup, and that PP_3571 is a second
+      ArgE paralog are not used; it also missed the direct KT2440 argE-mutant
+      study, which leaves route contribution unresolved.
+    supporting_text: N-acetyl-L-ornithine + H₂O → L-ornithine + acetate
+core_functions:
+- description: &gt;-
+    Hydrolyzes N-acetyl-L-ornithine to release L-ornithine in the linear route
+    to L-arginine.
+  molecular_function:
+    id: GO:0008777
+    label: acetylornithine deacetylase activity
+  directly_involved_in:
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/argE/argE-uniprot.txt
+    supporting_text: Full=Acetylornithine deacetylase
+  - reference_id: file:PSEPK/argE/argE-deep-research-openscientist.md
+    supporting_text: N-acetyl-L-ornithine + H₂O → L-ornithine + acetate
+suggested_questions:
+- question: &gt;-
+    Under which growth conditions does ArgE-mediated hydrolysis contribute
+    measurably relative to ArgJ-mediated acetyl recycling in KT2440?
+  experts:
+  - microbial arginine metabolism
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
