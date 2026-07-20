@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>moeA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>moeA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88L14" target="_blank" class="term-link">
+                        Q88L14
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "moeA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88L14" data-a="DESCRIPTION: moeA encodes a soluble molybdopterin molybdenumtra..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>moeA encodes a soluble molybdopterin molybdenumtransferase that inserts molybdate into adenylylated molybdopterin, releases AMP, and forms Mo-molybdopterin. This reaction completes the conserved metal-insertion stage of molybdenum-cofactor biosynthesis before optional nucleotide maturation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L14" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with a soluble bacterial Mo-cofactor enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88L14 has no membrane or export features and acts on soluble adenylyl-molybdopterin.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L14" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is an appropriate specific localization for MoeA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molybdate-insertion reaction occurs in the soluble cofactor biosynthetic pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L14" data-a="GO:0006777" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MoeA directly forms Mo-molybdopterin during cofactor biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns the adenylyl-MPT plus molybdate reaction producing Mo-MPT.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032324" target="_blank" class="term-link">
+                                    GO:0032324
+                                </a>
+                            </span>
+                            <span class="term-label">molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L14" data-a="GO:0032324" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broader molybdopterin-cofactor biosynthetic process annotation is valid.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MoeA performs the conserved metal-insertion step that produces Mo-MPT.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L14" data-a="GO:0046872" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal-ion binding is compatible with molybdate insertion and Mg2+-dependent catalysis but is non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records Mg2+ and molybdate in the MoeA reaction; the exact catalytic term is more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061599" target="_blank" class="term-link">
+                                    GO:0061599
+                                </a>
+                            </span>
+                            <span class="term-label">molybdopterin molybdotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L14" data-a="GO:0061599" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the exact core molecular function of MoeA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt supplies EC 2.10.1.1 and the reaction converting adenylyl-MPT plus molybdate to Mo-MPT plus AMP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moeA/moeA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- CATALYTIC ACTIVITY:
+CC       Reaction=adenylyl-molybdopterin + molybdate = Mo-molybdopterin + AMP +
+CC         H(+); Xref=Rhea:RHEA:35047, ChEBI:CHEBI:15378, ChEBI:CHEBI:36264,
+CC         ChEBI:CHEBI:62727, ChEBI:CHEBI:71302, ChEBI:CHEBI:456215;
+CC         EC=2.10.1.1; Evidence={ECO:0000256|ARBA:ARBA00047317};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moeA/moeA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">&gt; **adenylyl-molybdopterin (MPT-AMP) + molybdate (MoO₄²⁻) → Mo-molybdopterin (Moco) + AMP + H⁺**  (Mg²⁺-dependent)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Molybdate insertion into adenylyl-molybdopterin to form Mo-molybdopterin and release AMP.</h3>
+                <span class="vote-buttons" data-g="Q88L14" data-a="FUNCTION: Molybdate insertion into adenylyl-molybdopterin to..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061599" target="_blank" class="term-link">
+                            molybdopterin molybdotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                Mo-molybdopterin cofactor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/moeA/moeA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FUNCTION: Catalyzes the insertion of molybdate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moeA/moeA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for moeA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns Q88L14 molybdopterin molybdenumtransferase activity, EC 2.10.1.1, producing Mo-molybdopterin from adenylyl-MPT and molybdate.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: Catalyzes the insertion of molybdate into adenylated
+CC       molybdopterin with the concomitant release of AMP.
+CC       {ECO:0000256|ARBA:ARBA00002901, ECO:0000256|RuleBase:RU365090}.
+CC   -!- CATALYTIC ACTIVITY:
+CC       Reaction=adenylyl-molybdopterin + molybdate = Mo-molybdopterin + AMP +
+CC         H(+); Xref=Rhea:RHEA:35047, ChEBI:CHEBI:15378, ChEBI:CHEBI:36264,
+CC         ChEBI:CHEBI:62727, ChEBI:CHEBI:71302, ChEBI:CHEBI:456215;
+CC         EC=2.10.1.1; Evidence={ECO:0000256|ARBA:ARBA00047317};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moeA/moeA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for moeA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains the exact MoeA activity annotation reviewed here.</div>
+
+                        <div class="finding-text">"UniProtKB	Q88L14	moeA	enables	GO:0061599	molybdopterin molybdotransferase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	RHEA:35047|EC:2.10.1.1|PANTHER:PTN002229918|UniRule:UR001079767	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Molybdopterin molybdenumtransferase	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moeA/moeA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for moeA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report gives the conserved MoeA reaction used here.</div>
+
+                        <div class="finding-text">"&gt; **adenylyl-molybdopterin (MPT-AMP) + molybdate (MoO₄²⁻) → Mo-molybdopterin (Moco) + AMP + H⁺**  (Mg²⁺-dependent)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report explicitly identifies the lack of target-specific experimental evidence.</div>
+
+                        <div class="finding-text">"- No *P. putida* KT2440-specific biochemical or structural study of PP_2123 was found; functional assignment relies on high-confidence orthology to *E. coli* MoeA and conserved domain architecture. Direct enzymatic characterization or a KT2440 knockout phenotype would confirm substrate specificity (Mo vs W) and downstream molybdoenzyme dependencies in this organism."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR10192/PTHR10192-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER representative entries for the MoeA/gephyrin family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PTHR10192 contains bacterial MoeA proteins, including E. coli P12281.</div>
+
+                        <div class="finding-text">"P12281,Molybdopterin molybdenumtransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),moeA,411,PTHR10192:SF5,GEPHYRIN,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 protein supplies the preceding MPT adenylyltransferase activity required by MoeA?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88L14" data-a="Q: Which KT2440 protein supplies the preceding MPT ad..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute Mo-MPT formation with Q88L14 and candidate MPT-adenylylating proteins, measuring adenylyl-MPT, AMP release, and Mo-MPT formation.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical pathway reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88L14" data-a="EXPERIMENT: Reconstitute Mo-MPT formation with Q88L14 and cand..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(moeA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88L14" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *moeA* (Q88L14 / PP_2123) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T14:53:01.258629</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="moeA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="moeA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-moea-q88l14-pp_2123-in-pseudomonas-putida-kt2440">Functional Annotation of <em>moeA</em> (Q88L14 / PP_2123) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary — Answer to the Research Question</h2>
+<p><strong>MoeA (Q88L14, locus PP_2123) is molybdopterin molybdenumtransferase (EC 2.10.1.1), the enzyme that catalyzes the final, metal-insertion step of molybdenum cofactor (Moco) biosynthesis.</strong> It ligates molybdenum into the dithiolene of molybdopterin (MPT) to produce the mature, active molybdenum cofactor. This reaction takes place in the <strong>cytoplasm</strong>, acting on an adenylylated molybdopterin (MPT-AMP) substrate provided by a MogA/MoaB-type adenylyltransferase partner, and delivering finished Moco for insertion into the cell's molybdoenzymes. In obligately aerobic KT2440 these clients are principally <strong>xanthine dehydrogenase, aldehyde oxidoreductases, and formate dehydrogenase</strong> (nitrate/DMSO/sulfite reductases are absent from this strain). MoeA is an ancient, deeply conserved enzyme, the bacterial ancestor of eukaryotic gephyrin/Cnx1.</p>
+<p>The gene identity is unambiguous: the symbol <em>moeA</em>, the EC number, the MoeA protein family, and the domain architecture (MoaB/Mog-like domain IPR001453; MoeA-like IPR038987; MoeA_C_domain_IV IPR005111) all coincide with the canonical, well-characterized bacterial MoeA. Because MoeA is highly conserved and the <em>E. coli</em> ortholog is biochemically and structurally characterized, its function transfers to <em>P. putida</em> Q88L14 with high confidence.</p>
+<h2 id="2-primary-function-the-catalyzed-reaction">2. Primary Function — the Catalyzed Reaction</h2>
+<p><strong>Organism-specific annotation (UniProt Q88L14 / KEGG ppu:PP_2123):</strong> a 408-residue, single-chain enzyme; EC 2.10.1.1; KEGG ortholog <strong>K03750</strong> (molybdopterin molybdotransferase); orthology group <strong>COG0303 (MoeA)</strong>; FUNCTION "Catalyzes the insertion of molybdate into adenylated molybdopterin with the concomitant release of AMP"; <strong>required cofactor Mg²⁺</strong>; pathway "Cofactor biosynthesis; molybdopterin biosynthesis." The recorded catalytic activity is:</p>
+<blockquote>
+<p><strong>adenylyl-molybdopterin (MPT-AMP) + molybdate (MoO₄²⁻) → Mo-molybdopterin (Moco) + AMP + H⁺</strong>  (Mg²⁺-dependent)</p>
+</blockquote>
+<p>MoeA performs this terminal metal-insertion step of Moco biosynthesis:</p>
+<ul>
+<li>In <em>E. coli</em>, <strong>MoeA mediates the ligation of Mo to molybdopterin, while MogA enhances this process in an ATP-dependent manner</strong> (Nichols &amp; Rajagopalan 2007, PMID 17198377). MogA adenylylates MPT (forming MPT-AMP); MoeA then inserts molybdenum with concomitant release of AMP.</li>
+<li>This is the <strong>final step of Moco biosynthesis: the incorporation of molybdenum into molybdopterin (MPT), the organic pyranopterin moiety of Moco</strong> (Xiang et al. 2001, PMID 11525167).</li>
+<li>The same reaction — <strong>transfer and insertion of Mo into MPT</strong> — is carried out in eukaryotes by the two-domain proteins Cnx1 (plants) and gephyrin (mammals), whose E-domain is the MoeA homolog (Schwarz et al. 2001, PMID 11554796).</li>
+</ul>
+<p><strong>Substrate specificity:</strong> the organic substrate is molybdopterin / adenylylated molybdopterin (MPT-AMP); the metal substrate is molybdate; Mg²⁺ is required as a catalytic cofactor. Notably, MoeA-family proteins can also handle tungstate: in tungsten-utilizing organisms, specialized MoeA paralogs dedicate biosynthesis toward tungsten cofactors (Debnar-Daumler et al. 2014, PMID 24214948), underscoring that the enzyme's role is metal insertion into the pterin dithiolene.</p>
+<h2 id="3-structurefunction-basis">3. Structure–Function Basis</h2>
+<ul>
+<li>The <em>E. coli</em> MoeA monomer is <strong>highly elongated with four clearly separated domains, one of which is structurally related to MogA</strong> (Xiang et al. 2001, PMID 11525167; Schrag et al. 2001, PMID 11428898). Q88L14's InterPro domains (MoaB/Mog domain; MoeA-like; MoeA C-domain IV) match this architecture.</li>
+<li><strong>The active form of MoeA is a dimer</strong>, with the putative active site in <strong>a cleft formed between domain II of one monomer and domains III and IV of the second monomer</strong> (Xiang et al. 2001, PMID 11525167) — i.e., a composite, inter-subunit active site requiring homodimerization.</li>
+<li>Mutational analysis maps two functional activities to the active-site cleft, and a variant's Moco-binding ability correlates with activity (Nichols &amp; Rajagopalan 2007, PMID 17198377). Conserved acidic residues are essential: <strong>replacements such as Asp259Ala abolished MoeA function in Mo-molybdopterin formation and stabilization, and the inability to restore nitrate reductase activity</strong> (Sandu &amp; Brandsch 2002, PMID 11934270).</li>
+</ul>
+<h2 id="4-localization">4. Localization</h2>
+<p>Moco biosynthesis is a <strong>cytosolic</strong> process; MoeA is a soluble cytoplasmic enzyme (no signal peptide or transmembrane segments; consistent with UniProt annotation). It carries out metal insertion in the cytoplasm and the resulting Moco is subsequently inserted into apo-molybdoenzymes, some of which are then exported (e.g., periplasmic nitrate reductase NapA) or remain cytoplasmic.</p>
+<h2 id="5-pathway-context-and-physiological-role">5. Pathway Context and Physiological Role</h2>
+<p>MoeA operates at the <strong>convergence of two branches</strong> of Moco biosynthesis: the pterin branch (MoaA/MoaC → cyclic pyranopterin monophosphate; MoaD/MoaE + MoeB → MPT) and the metal-incorporation branch (MogA/MoaB adenylylation of MPT + MoeA Mo insertion; downstream MobA/MobB further modify Mo-MPT to the molybdopterin-guanine dinucleotide (MGD/bis-MGD) form). Its product Moco is <strong>required for all molybdoenzymes except nitrogenase</strong> (Schwarz et al. 2001, PMID 11554796).</p>
+<p><strong>KT2440 encodes a complete Moco pathway (KEGG mapping):</strong> MoaA (PP_1969, PP_2482, PP_4597), MoaC (PP_1292), MoaB/MogA-like scaffolds (PP_1293; and MoaB paralogs PP_2122, PP_4600), MoeB sulfurtransferase (PP_1294), <strong>MoeA (PP_2123, the target, K03750)</strong>, and downstream MobA (PP_4003) and MobB (PP_3309) for MGD synthesis. Notably a dedicated <em>mogA</em> gene (K03831) is absent — the adenylyltransferase partner activity is supplied by MoaB/MogA paralogs, one of which (PP_2122) is operon-coupled to <em>moeA</em>. The presence of MobA/MobB confirms that MoeA-derived Mo-MPT is matured to the MGD form used by the Gram-negative DMSO-reductase-family molybdoenzymes.</p>
+<p>Physiological evidence from bacteria (illustrating MoeA's essentiality for molybdoenzyme function; note these particular clients differ by organism — see the KT2440-specific survey below):<br />
+- In <em>Burkholderia thailandensis</em>, a <strong>moeA transposon mutant could not grow anaerobically with nitrate as sole terminal electron acceptor</strong>, with defects in nitrate reductase activity, biofilm formation, and motility, all restored (except motility) by complementation (Andreae et al. 2014, PMID 24239959).<br />
+- The rice MoeA homolog OsCNX1, when restored, recovered <strong>MoCo-dependent enzyme activities such as xanthine dehydrogenase, aldehyde oxidase, nitrate reductase and sulfite oxidase</strong> (Liu et al. 2019, PMID 30471121), illustrating the breadth of downstream molybdoenzymes.</p>
+<p><strong>Genomic context in KT2440:</strong> <em>moeA</em> (PP_2123, 2,421,713–2,422,939, forward strand) lies immediately downstream of and <strong>overlaps by ~16 bp</strong> with PP_2122 ("molybdenum cofactor biosynthesis protein B," a MogA/MoaB-family gene), indicating translational coupling / co-transcription. This physical pairing mirrors the functional partnership between MoeA and its MogA/MoaB-type adenylyltransferase partner (which generates the MPT-AMP substrate), supporting coordinated expression of the final metal-insertion module.</p>
+<p><strong>Molybdoenzyme clients specific to KT2440 (KEGG survey):</strong> Importantly, obligately aerobic <em>P. putida</em> KT2440 <strong>lacks</strong> the nitrate reductases (respiratory NarG, assimilatory, periplasmic NapA), DMSO/TMAO reductase, biotin sulfoxide reductase, and sulfite oxidase that are the prominent Moco clients in facultative anaerobes such as <em>E. coli</em> and <em>Burkholderia</em>. Instead, its Moco-dependent enzymes are: <strong>xanthine dehydrogenase</strong> (XdhA, PP_3308, with small subunit PP_3310 — flanking MobB PP_3309, i.e., a purine-catabolism/molybdo gene cluster), <strong>aldehyde oxidoreductases</strong> (PaoC-type, PP_2477, PP_3621), and <strong>formate dehydrogenase</strong> (PP_0489, PP_2185). Thus in KT2440, MoeA-derived Moco gates <strong>aerobic purine catabolism, aldehyde oxidation, and formate oxidation</strong> rather than anaerobic nitrate/S-oxide respiration. Consistent with the research brief's emphasis on the precise role rather than pleiotropy, MoeA's effects are pleiotropic only because it is the single gate for cofactor maturation; its own biochemical act is the specific, defined metal-insertion reaction.</p>
+<h2 id="6-evolutionary-evidence">6. Evolutionary Evidence</h2>
+<p>MoeA <strong>exists in all domains of life</strong> and is the ancestor of eukaryotic gephyrin (mammals) and Cnx1 (plants), where MogA and MoeA are fused (Xiang et al. 2001, PMID 11525167). Phylogenetic and structural analysis confirms MoeA is an <strong>essential enzyme for Moco biosynthesis</strong>; early eukaryotes acquired MoeA from Bacteria, MogA–MoeA fusion arose in the opisthokont ancestor, and gephyrin later gained receptor-clustering roles at inhibitory synapses (Megrian et al. 2025, PMID 39809875). The <em>P. putida</em> protein represents the ancestral, catalytically dedicated bacterial form without the eukaryotic scaffolding functions.</p>
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- H1: Q88L14/MoeA catalyzes molybdenum insertion into molybdopterin (final Moco step). — Strongly supported by structural, biochemical, and mutational data on orthologs.<br />
+- H2: MoeA functions as a homodimer with an inter-subunit active-site cleft and conserved catalytic Asp residues. — Supported by crystallography and mutagenesis.<br />
+- H3: MoeA acts cytoplasmically and its product Moco is essential for the strain's molybdoenzymes. — Supported by mutant phenotypes across taxa; in KT2440 specifically the clients are xanthine dehydrogenase, aldehyde oxidoreductases, and formate dehydrogenase (KEGG survey), not nitrate/DMSO reductases.<br />
+- H4 (organism-specific): KT2440's Moco demand reflects an aerobic lifestyle. — Supported: the strain lacks anaerobic-respiration molybdoenzymes, so MoeA gates aerobic purine/aldehyde/formate oxidation.</p>
+<p><strong>Not applicable / Refuted</strong><br />
+- The <em>moeA</em> symbol is NOT ambiguous here; it is not a transporter, structural protein, or signaling molecule. It is a biosynthetic transferase enzyme.<br />
+- MoeA is not itself a molybdoenzyme (it does not use Moco); it makes Moco.</p>
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li>No <em>P. putida</em> KT2440-specific biochemical or structural study of PP_2123 was found; functional assignment relies on high-confidence orthology to <em>E. coli</em> MoeA and conserved domain architecture. Direct enzymatic characterization or a KT2440 knockout phenotype would confirm substrate specificity (Mo vs W) and downstream molybdoenzyme dependencies in this organism.</li>
+<li>The exact kinetic mechanism (order of Mo insertion vs AMP release; Mg²⁺ requirement) is inferred from ortholog studies.</li>
+<li>Whether <em>P. putida</em> MoeA shows any tungstate handling or paralog specialization is untested.</li>
+<li>The molybdoenzyme inventory was derived from KEGG KO markers, which could miss divergent or unannotated enzymes; nonetheless the clear absence of nitrate/DMSO/sulfite-reductase KOs is consistent with KT2440's known obligately aerobic, non-denitrifying physiology.</li>
+</ul>
+<hr />
+<p><em>Citations: PMIDs 17198377, 11525167, 11428898, 11934270, 11554796, 39809875, 24239959, 30471121, 24214948.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="moeA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="moeA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88L14
+gene_symbol: moeA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  moeA encodes a soluble molybdopterin molybdenumtransferase that inserts
+  molybdate into adenylylated molybdopterin, releases AMP, and forms
+  Mo-molybdopterin. This reaction completes the conserved metal-insertion stage
+  of molybdenum-cofactor biosynthesis before optional nucleotide maturation.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is consistent with a soluble bacterial Mo-cofactor enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: Q88L14 has no membrane or export features and acts on soluble adenylyl-molybdopterin.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol is an appropriate specific localization for MoeA.
+    action: KEEP_AS_NON_CORE
+    reason: The molybdate-insertion reaction occurs in the soluble cofactor biosynthetic pathway.
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: MoeA directly forms Mo-molybdopterin during cofactor biosynthesis.
+    action: ACCEPT
+    reason: UniProt assigns the adenylyl-MPT plus molybdate reaction producing Mo-MPT.
+- term:
+    id: GO:0032324
+    label: molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: The broader molybdopterin-cofactor biosynthetic process annotation is valid.
+    action: ACCEPT
+    reason: MoeA performs the conserved metal-insertion step that produces Mo-MPT.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Metal-ion binding is compatible with molybdate insertion and Mg2+-dependent catalysis but is non-core.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt records Mg2+ and molybdate in the MoeA reaction; the exact catalytic term is more informative.
+- term:
+    id: GO:0061599
+    label: molybdopterin molybdotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the exact core molecular function of MoeA.
+    action: ACCEPT
+    reason: UniProt supplies EC 2.10.1.1 and the reaction converting adenylyl-MPT plus molybdate to Mo-MPT plus AMP.
+    supported_by:
+    - reference_id: file:PSEPK/moeA/moeA-uniprot.txt
+      supporting_text: |-
+        CC   -!- CATALYTIC ACTIVITY:
+        CC       Reaction=adenylyl-molybdopterin + molybdate = Mo-molybdopterin + AMP +
+        CC         H(+); Xref=Rhea:RHEA:35047, ChEBI:CHEBI:15378, ChEBI:CHEBI:36264,
+        CC         ChEBI:CHEBI:62727, ChEBI:CHEBI:71302, ChEBI:CHEBI:456215;
+        CC         EC=2.10.1.1; Evidence={ECO:0000256|ARBA:ARBA00047317};
+    - reference_id: file:PSEPK/moeA/moeA-deep-research-openscientist.md
+      supporting_text: &gt;-
+        &gt; **adenylyl-molybdopterin (MPT-AMP) + molybdate (MoO₄²⁻) →
+        Mo-molybdopterin (Moco) + AMP + H⁺**  (Mg²⁺-dependent)
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/moeA/moeA-uniprot.txt
+  title: UniProtKB entry for moeA
+  findings:
+  - statement: UniProt assigns Q88L14 molybdopterin molybdenumtransferase activity, EC 2.10.1.1, producing Mo-molybdopterin from adenylyl-MPT and molybdate.
+    supporting_text: |-
+      CC   -!- FUNCTION: Catalyzes the insertion of molybdate into adenylated
+      CC       molybdopterin with the concomitant release of AMP.
+      CC       {ECO:0000256|ARBA:ARBA00002901, ECO:0000256|RuleBase:RU365090}.
+      CC   -!- CATALYTIC ACTIVITY:
+      CC       Reaction=adenylyl-molybdopterin + molybdate = Mo-molybdopterin + AMP +
+      CC         H(+); Xref=Rhea:RHEA:35047, ChEBI:CHEBI:15378, ChEBI:CHEBI:36264,
+      CC         ChEBI:CHEBI:62727, ChEBI:CHEBI:71302, ChEBI:CHEBI:456215;
+      CC         EC=2.10.1.1; Evidence={ECO:0000256|ARBA:ARBA00047317};
+- id: file:PSEPK/moeA/moeA-goa.tsv
+  title: QuickGO GOA annotations for moeA
+  findings:
+  - statement: The fetched table contains the exact MoeA activity annotation reviewed here.
+    supporting_text: &#34;UniProtKB\tQ88L14\tmoeA\tenables\tGO:0061599\tmolybdopterin molybdotransferase activity\tmolecular_function\tECO:0000501\tIEA\tGO_REF:0000120\tRHEA:35047|EC:2.10.1.1|PANTHER:PTN002229918|UniRule:UR001079767\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tMolybdopterin molybdenumtransferase\t20260706&#34;
+- id: file:PSEPK/moeA/moeA-deep-research-openscientist.md
+  title: OpenScientist gene research for moeA
+  reference_review:
+    relevance: HIGH
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      The target MoeA reaction agrees with UniProt, but the report misassigns
+      several KT2440 MoaD/MoaE/MoeB/MobA locus tags and overstates moaB-I as the
+      missing active MPT adenylyltransferase. Those organism-specific claims were
+      not used; no direct KT2440 assay was found.
+  findings:
+  - statement: The report gives the conserved MoeA reaction used here.
+    supporting_text: &gt;-
+      &gt; **adenylyl-molybdopterin (MPT-AMP) + molybdate (MoO₄²⁻) →
+      Mo-molybdopterin (Moco) + AMP + H⁺**  (Mg²⁺-dependent)
+  - statement: The report explicitly identifies the lack of target-specific experimental evidence.
+    supporting_text: &gt;-
+      - No *P. putida* KT2440-specific biochemical or structural study of PP_2123
+      was found; functional assignment relies on high-confidence orthology to *E.
+      coli* MoeA and conserved domain architecture. Direct enzymatic characterization
+      or a KT2440 knockout phenotype would confirm substrate specificity (Mo vs W)
+      and downstream molybdoenzyme dependencies in this organism.
+- id: file:interpro/panther/PTHR10192/PTHR10192-entries.csv
+  title: PANTHER representative entries for the MoeA/gephyrin family
+  findings:
+  - statement: PTHR10192 contains bacterial MoeA proteins, including E. coli P12281.
+    supporting_text: P12281,Molybdopterin molybdenumtransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),moeA,411,PTHR10192:SF5,GEPHYRIN,True
+core_functions:
+- description: Molybdate insertion into adenylyl-molybdopterin to form Mo-molybdopterin and release AMP.
+  molecular_function:
+    id: GO:0061599
+    label: molybdopterin molybdotransferase activity
+  directly_involved_in:
+  - id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/moeA/moeA-uniprot.txt
+    supporting_text: &#34;FUNCTION: Catalyzes the insertion of molybdate&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Which KT2440 protein supplies the preceding MPT adenylyltransferase activity required by MoeA?
+suggested_experiments:
+- description: Reconstitute Mo-MPT formation with Q88L14 and candidate MPT-adenylylating proteins, measuring adenylyl-MPT, AMP release, and Mo-MPT formation.
+  experiment_type: biochemical pathway reconstitution
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
