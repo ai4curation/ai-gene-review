@@ -113,17 +113,19 @@ Use the cheapest useful source first:
 just fetch-gene PSEPK <gene>
 ```
 
-3. Gene-level first-pass research with Asta. For this organism, simple retrieval
-   is usually enough to identify the relevant primary literature:
+3. Gene-level first-pass research with OpenScientist. For this organism, simple
+   retrieval is usually enough to identify the relevant primary literature, but
+   OpenScientist runs are slow and should be given long timeouts:
 
 ```bash
-just deep-research-asta PSEPK <gene>
+just deep-research-openscientist PSEPK <gene> --timeout 2400
 ```
 
-4. Module-level research with Falcon when a broader pathway synthesis is needed:
+4. Module-level research with OpenScientist when a broader pathway synthesis is
+   needed:
 
 ```bash
-just module-deep-research-falcon <module>
+just module-deep-research-openscientist <module> --timeout 2400
 ```
 
 5. For species-aware module/pathway research, use the module + pathway + taxon
@@ -132,11 +134,11 @@ just module-deep-research-falcon <module>
    partition table when available:
 
 ```bash
-just module-pathway-deep-research-falcon "central carbon metabolism" ppu00020 PSEPK
+just module-pathway-deep-research openscientist "central carbon metabolism" ppu00020 PSEPK --timeout 2400
 ```
 
 The report is written under the project support folder by default, e.g.
-`projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-falcon.md`.
+`projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-openscientist.md`.
 
 6. PaperBLAST remains an optional protein-specific lookup:
 
@@ -144,15 +146,18 @@ The report is written under the project support folder by default, e.g.
 uv run python scripts/fetch_paperblast.py <uniprot_accession>
 ```
 
-7. Use `perplexity-lite` only as a secondary fallback when Asta is unavailable
-   or comparison across providers is useful.
-8. Escalate to OpenAI/perplexity/full manual literature only when the first-pass
+7. Use `perplexity-lite` only as a secondary fallback when OpenScientist is
+   unavailable or comparison across providers is useful.
+8. Falcon/Edison outputs in older batches are historical. Do not start new
+   Falcon runs while Edison is unavailable; use OpenScientist instead.
+9. Escalate to OpenAI/perplexity/full manual literature only when the first-pass
    provider output leaves a curation-changing question unresolved.
 
 Operational caveat: the repository has a PaperBLAST wrapper, but it depends on
 Playwright and the PaperBLAST website can present a Cloudflare challenge. If the
 script returns a timeout or challenge page, record that in the module checklist
-and use Asta or another fallback rather than pretending PaperBLAST was queried.
+and use OpenScientist or another fallback rather than pretending PaperBLAST was
+queried.
 
 Never create a fake `-deep-research-{provider}.md` by hand. If manual notes are
 needed, write them as notes or a clearly named manual research file.
