@@ -13,7 +13,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 7
 - Existing review files: 8
 - Curated review files: 8
-- Existing OpenScientist research files: 5
+- Existing OpenScientist research files: 6
 
 ## Scope
 
@@ -53,7 +53,7 @@ PqqF reaction or the conserved module core.
 | [x] | `pqqC` | PP_0378 | Q88QV6 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | Pyrroloquinoline-quinone synthase (EC 1.3.3.11) |
 | [x] | `pqqB` | PP_0379 | Q88QV5 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein B |
 | [x] | `pqqA` | PP_0380 | Q88QV4 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein A |
-| [x] | `pqqF` | PP_0381 | Q88QV3 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | Coenzyme PQQ synthesis protein F (EC 3.4.24.-) |
+| [x] | `pqqF` | PP_0381 | Q88QV3 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein F (EC 3.4.24.-) |
 | [x] | `pqqD2` | PP_2681 | Q88JG8 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | PqqA binding protein 2 |
 
 ## Notes
@@ -82,3 +82,8 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
   extracellular PQQ, so PP_0375 remains a follow-up candidate rather than a new
   PQQ-biosynthetic-process annotation. Its direct substrate and relationship to
   the unrelated M16B PqqG proteins remain open questions.
+- The PqqF OpenScientist report imported the two-component M16B PqqF/PqqG
+  architecture from *Methylorubrum extorquens* into KT2440. Q88QV3 is instead
+  a single-chain M16A-like protein, while PP_0375 is an unrelated S9-family
+  candidate. The review records the report as miscited for that claim and does
+  not propagate the conflation into the curated model.
