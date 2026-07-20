@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D17" target="_blank" class="term-link">
+                        Q88D17
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D17" data-a="DESCRIPTION: ubiE encodes a SAM-dependent C-methyltransferase t..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiE encodes a SAM-dependent C-methyltransferase that methylates a polyprenylated benzoquinol intermediate during ubiquinone biosynthesis. In Pseudomonas putida KT2440 this enzyme supports ubiquinone formation; the strain lacks the canonical upstream menaquinone pathway needed to supply the alternative demethylmenaquinol substrate.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the core process for PSEPK UbiE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiE installs the ring C-methyl group in a ubiquinone intermediate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiE/ubiE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ubiquinone biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                        PMID:9045837
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008168" target="_blank" class="term-link">
+                                    GO:0008168
+                                </a>
+                            </span>
+                            <span class="term-label">methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0008168" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic methyltransferase term is correct but less informative than the exact UbiE activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008425 captures the substrate-specific core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    GO:0008425
+                                </a>
+                            </span>
+                            <span class="term-label">2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0008425" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the substrate-specific core C-methyltransferase activity of UbiE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.1.1.201 and Rhea 28286 to this reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiE/ubiE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">2-methoxy-6-polyprenyl-1,4-benzoquinol methylase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                        PMID:9045837
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0009060" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation overstates the indirect respiratory consequence of ubiquinone synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiE synthesizes a respiratory quinone but does not itself catalyze an electron-transfer reaction in aerobic respiration.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009234" target="_blank" class="term-link">
+                                    GO:0009234
+                                </a>
+                            </span>
+                            <span class="term-label">menaquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0009234" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KT2440 lacks the canonical menaquinone pathway that would make this a physiological role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The species-level pathway audit found no canonical MenA/MenD pathway in the target proteome. This unconditioned HAMAP transfer is therefore not a supported biological process for PSEPK UbiE.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042181" target="_blank" class="term-link">
+                                    GO:0042181
+                                </a>
+                            </span>
+                            <span class="term-label">ketone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0042181" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad parent process is redundant with the specific ubiquinone pathway annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006744 identifies the relevant ketone product and pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043770" target="_blank" class="term-link">
+                                    GO:0043770
+                                </a>
+                            </span>
+                            <span class="term-label">demethylmenaquinone methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D17" data-a="GO:0043770" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Demethylmenaquinone methylation is a demonstrated UbiE-family activity, but it is not a physiological pathway role in KT2440 because the canonical upstream menaquinone pathway is absent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> E. coli UbiE directly serves both quinone pathways, so outright removal would overstate the negative evidence for the highly conserved PP_5011 ortholog. However, no PP_5011 assay demonstrates this activity and KT2440 lacks the Men pathway that would supply demethylmenaquinone; retain it as an over-annotation, not a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                        PMID:9045837
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The data presented identify the E. coli UbiE polypeptide and provide evidence that it is required for the C methylation reactions in both ubiquinone and menaquinone biosynthesis.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiE/ubiE-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">whether it makes functionally significant menaquinone (and hence how much EC 2.1.1.163 activity matters physiologically) is not established from the retrieved literature</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SAM-dependent C-methylation of a polyprenylated benzoquinol intermediate during ubiquinone biosynthesis, inferred for PP_5011 from conserved UbiE/COQ5-family and close-ortholog evidence.</h3>
+                <span class="vote-buttons" data-g="Q88D17" data-a="FUNCTION: SAM-dependent C-methylation of a polyprenylated be..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                            2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiE/ubiE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">2-methoxy-6-polyprenyl-1,4-benzoquinol methylase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                PMID:9045837
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiE/ubiE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88D17 for ubiE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record assigns the ubiquinone C-methylation reaction through EC 2.1.1.201 and Rhea 28286.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiE/ubiE-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the seven annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__ubiquinone_biosynthesis__ppu00130-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK ubiquinone pathway assessment</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The species-level proteome audit found the canonical ubiquinone pathway but not the upstream canonical menaquinone pathway.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                            PMID:9045837
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A C-methyltransferase involved in both ubiquinone and menaquinone biosynthesis: isolation and identification of the Escherichia coli ubiE gene.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli genetics establishes UbiE C-methylation in both ubiquinone and menaquinone biosynthesis; this supports conserved catalytic capacity but does not establish a menaquinone pathway in KT2440.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiE/ubiE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ortholog genetics and conserved family architecture support UbiE C-methyltransferase chemistry, but PP_5011 itself has not been assayed. The report&#39;s claims of a physiological KT2440 menaquinone role, target metabolon membership, essentiality, and downstream HskA regulation are not adopted as gene-level facts.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_5011 retain measurable demethylmenaquinone methyltransferase activity despite the absence of a physiological menaquinone pathway in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D17" data-a="Q: Does PP_5011 retain measurable demethylmenaquinone..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_5011 and compare SAM-dependent turnover of ubiquinone and demethylmenaquinone substrates, then confirm the physiological role by quinone/intermediate profiling of a complemented P. putida ubiE deletion.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D17" data-a="EXPERIMENT: Purify PP_5011 and compare SAM-dependent turnover ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D17" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: UbiE (Q88D17, PP_5011) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T19:37:20.671753</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ubie-q88d17-pp_5011-in-pseudomonas-putida-kt2440">Functional Annotation Report: UbiE (Q88D17, PP_5011) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>ubiE</em> (Ordered locus PP_5011) · <strong>UniProt:</strong> Q88D17 · <strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440) · <strong>EC:</strong> 2.1.1.201 and 2.1.1.163</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>UbiE (UniProt Q88D17, ordered locus PP_5011) of <em>Pseudomonas putida</em> KT2440 is a cytoplasmic, S-adenosyl-L-methionine (SAM)–dependent class I C-methyltransferase that catalyzes a single, chemically distinctive ring carbon-methylation step shared by two respiratory-quinone biosynthetic pathways.</strong> In the ubiquinone (coenzyme Q, CoQ) pathway it acts as 2-methoxy-6-polyprenyl-1,4-benzoquinol methylase (EC 2.1.1.201), transferring a methyl group from SAM to the C5 position of the quinone ring. In the menaquinone (vitamin K2) pathway the same enzyme acts as demethylmenaquinone methyltransferase (EC 2.1.1.163), converting demethylmenaquinone (DMK) to menaquinone (MK). This dual EC assignment and the "bifunctional" description are directly encoded in the UniProt record and are firmly supported by classical genetics in the model organism <em>Escherichia coli</em>, where loss of <em>ubiE</em> abolishes the C-methylation step in <strong>both</strong> quinone pathways.</p>
+<p>The gene symbol and protein identity are unambiguous and internally consistent. The organism (<em>P. putida</em> KT2440), the gene name (<em>ubiE</em>), the family assignment (class I-like SAM-binding methyltransferase; UbiE/COQ5 family; Pfam PF01209; InterPro IPR004033/IPR023576/IPR029063), and the two EC activities all point to one well-defined enzyme. There is no evidence of a symbol clash: "ubiE" reliably denotes the ubiquinone/menaquinone biosynthesis C-methyltransferase across γ-proteobacteria. While no <em>P. putida</em>-specific enzymology study of UbiE was located, the functional assignment is transferred with high confidence from the experimentally characterized <em>E. coli</em> UbiE (72.6% sequence identity) and the crystallographically characterized yeast ortholog Coq5 (~44–47% identity), whose catalytic residues and SAM-binding motifs are conserved in Q88D17.</p>
+<p>Mechanistically and physiologically, UbiE operates in a <strong>soluble cytoplasmic "Ubi" metabolon</strong> — a ~1-MDa multienzyme complex that carries out the last several ring-modification reactions of CoQ biosynthesis — rather than as a membrane-embedded enzyme. In <em>P. putida</em>, an obligate aerobe, the dominant end-product of the pathway is <strong>ubiquinone-9 (UQ9)</strong>, the redox-active carrier that feeds electrons into a <strong>branched aerobic respiratory chain</strong> terminating at multiple ubiquinol oxidases (cytochrome <em>bo₃</em>/Cyo, the cyanide-insensitive oxidase CIO, and <em>cbb₃</em>/<em>aa₃</em>-type oxidases). Beyond bioenergetics, the ubiquinone pool serves as a redox signal sensed by the hybrid sensor kinase HskA, linking UbiE's metabolic output to regulatory remodeling of the respiratory chain in response to oxygen availability.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="1-ubie-is-a-bifunctional-sam-dependent-c-methyltransferase-serving-both-ubiquinone-and-menaquinone-biosynthesis">1. UbiE is a bifunctional SAM-dependent C-methyltransferase serving both ubiquinone and menaquinone biosynthesis</h3>
+<p>The core identity of UbiE is that of a single enzyme catalyzing the same class of chemistry — SAM-dependent carbon methylation of an aromatic quinone ring — in two distinct pathways. The UniProt record for Q88D17 annotates two enzyme activities: <strong>EC 2.1.1.201</strong> (2-methoxy-6-polyprenyl-1,4-benzoquinol methylase, the ubiquinone pathway) and <strong>EC 2.1.1.163</strong> (demethylmenaquinone methyltransferase, the menaquinone pathway). The protein is 256 amino acids and adopts the class I SAM-methyltransferase fold.</p>
+<p>This dual role was established genetically in <em>E. coli</em>. Strains carrying <em>ubiE</em> mutations "are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid quinone components of the respiratory electron transport chain" (<a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">PMID: 9045837</a>). A second study independently confirms that "the <em>ubiE</em> gene encodes a C-methyltransferase required for the synthesis of both CoQ and menaquinone" (<a href="https://pubmed.ncbi.nlm.nih.gov/10960098/">PMID: 10960098</a>). The convergence of the UniProt EC assignments with two independent genetic reports makes this the highest-confidence claim in the report.</p>
+<h3 id="2-loss-of-ubie-causes-accumulation-of-defined-pathway-intermediates-and-a-respiratory-growth-defect">2. Loss of UbiE causes accumulation of defined pathway intermediates and a respiratory-growth defect</h3>
+<p>The metabolic consequence of UbiE loss provides a precise readout of which reaction it catalyzes. In <em>E. coli</em>, both a <em>ubiE</em> disruption and the point mutant <strong>ubiE401 (Gly142→Asp)</strong> accumulate <strong>2-octaprenyl-6-methoxy-1,4-benzoquinone</strong> — the immediate substrate of the ubiquinone C-methylation — and <strong>demethylmenaquinone (DMK)</strong> — the substrate of the menaquinone C-methylation. These mutants fail to grow on succinate, a non-fermentable carbon source that requires a functional aerobic respiratory chain (<a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">PMID: 9045837</a>).</p>
+<p>The <em>ubiE401</em> allele is mechanistically informative: "DNA sequence analysis of the <em>ubiE401</em> allele identified a missense mutation resulting in the amino acid substitution of Asp for Gly142" (<a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">PMID: 9045837</a>). This glycine lies in the conserved glycine-rich loop characteristic of SAM-binding class I methyltransferases; substituting a bulky, charged aspartate for it is expected to disrupt cofactor binding, explaining the loss of function. The substrate-accumulation phenotype directly demonstrates that UbiE acts <strong>at</strong> the C-methylation node — upstream substrates pile up because the methyl-transfer step is blocked.</p>
+<h3 id="3-ubie-acts-within-a-soluble-cytoplasmic-ubi-metabolon-not-a-membrane-bound-complex">3. UbiE acts within a soluble cytoplasmic Ubi metabolon, not a membrane-bound complex</h3>
+<p>A key advance in understanding where UbiE does its work came from the demonstration that CoQ biosynthesis in <em>E. coli</em> is carried out by a soluble multienzyme assembly. "Seven Ubi proteins form the Ubi complex, a stable metabolon that catalyzes the last six reactions of the UQ biosynthetic pathway in <em>Escherichia coli</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>). Crucially, "we purify the Ubi complex from cytoplasmic extracts and demonstrate that UQ biosynthesis occurs in this fraction, challenging the current thinking of a membrane-associated biosynthetic process" (<a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>).</p>
+<p>This finding localizes UbiE's catalytic activity to the <strong>cytoplasm</strong>, where the hydrophobic polyprenyl-quinone intermediates are handled by the SCP2 lipid-binding domain of the accessory protein UbiJ, keeping otherwise membrane-partitioning substrates soluble and channeled between active sites. UbiE, as the C-methyltransferase of this pathway, is a member of this metabolon, and its reaction is one of the sequential ring modifications performed within the complex. This reframes the classical textbook picture of quinone biosynthesis as a purely membrane-bound process.</p>
+<h3 id="4-ubie-belongs-to-the-class-i-sam-binding-methyltransferase-family-ubiecoq5-homologous-to-yeast-coq5">4. UbiE belongs to the class I SAM-binding methyltransferase family (UbiE/COQ5), homologous to yeast Coq5</h3>
+<p>Q88D17 carries the diagnostic sequence hallmarks of a class I (Rossmann-fold) SAM-dependent methyltransferase. The 256-residue protein contains the SAM-binding <strong>motif I</strong> (visible as the sequence "DIAGGTGD" around residues 72–79), with UniProt-annotated SAM-contact residues at positions 79, 100, and 128–129. Its domain complement — InterPro <strong>IPR004033</strong> (UbiE/COQ5_MeTrFase), <strong>IPR023576</strong> (UbiE/COQ5 conserved site), <strong>IPR029063</strong> (SAM-dependent MTase superfamily) and Pfam <strong>PF01209</strong> (Ubie_methyltran) — places it firmly in the UbiE/COQ5 subfamily.</p>
+<p>The eukaryotic ortholog, yeast Coq5, anchors the functional interpretation: it shares "44% sequence identity over 262 amino acids to UbiE, which is required for a C-methyltransferase step in the Q and menaquinone biosynthetic pathways in <em>Escherichia coli</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9083049/">PMID: 9083049</a>), and "both the <em>ubiE</em> and <em>COQ5</em> coding sequences contain sequence motifs common to a wide variety of S-adenosyl-L-methionine-dependent methyltransferases" (<a href="https://pubmed.ncbi.nlm.nih.gov/9083049/">PMID: 9083049</a>). Coq5 is a mitochondrial C-methyltransferase in eukaryotic Q biosynthesis — the compartment-specific counterpart of bacterial UbiE.</p>
+<h3 id="5-p-putida-ubie-is-a-close-ortholog-726-identity-of-the-experimentally-characterized-e-coli-ubie">5. <em>P. putida</em> UbiE is a close ortholog (72.6% identity) of the experimentally characterized <em>E. coli</em> UbiE</h3>
+<p>Because no direct enzymology on <em>P. putida</em> UbiE was found, the strength of the functional transfer rests on orthology. A Needleman–Wunsch global alignment of Q88D17 (256 aa) against <em>E. coli</em> UbiE (P0A887, 251 aa) gives <strong>180/248 = 72.6% identity</strong> over aligned columns — well above the ~40% threshold generally considered sufficient to transfer detailed enzymatic function. Critically, the functionally essential regions are conserved: the class I SAM-MTase motif I ("DIAGGTGD") and the catalytic glycine-rich loop (<em>E. coli</em> "…SFGLRNV…" ≈ <em>P. putida</em> "…AFGLRNV…") that contains the very glycine whose mutation (Gly142→Asp) inactivates <em>E. coli</em> UbiE. Conservation of both the cofactor-binding and catalytic elements makes it near-certain that <em>P. putida</em> UbiE performs the identical chemistry.</p>
+<h3 id="6-ubie-catalyzes-the-ring-c-methylation-step-within-a-super-structured-multi-enzyme-ubi-pathway">6. UbiE catalyzes the ring C-methylation step within a super-structured, multi-enzyme Ubi pathway</h3>
+<p>Authoritative reviews place UbiE's reaction in the context of an ordered series of ring modifications carried out by physically associated enzymes. "Studies in model microorganisms elucidated the details of CoQ biosynthesis and revealed the existence of multiprotein complexes composed of several enzymes that catalyze consecutive reactions in the CoQ pathways of <em>Saccharomyces cerevisiae</em> and <em>Escherichia coli</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/35178585/">PMID: 35178585</a>). UbiE performs the <strong>sole C-methylation</strong> of the pathway: in ubiquinone synthesis it methylates 2-methoxy-6-polyprenyl-1,4-benzoquinol (EC 2.1.1.201); in menaquinone synthesis it methylates demethylmenaquinone to menaquinone (EC 2.1.1.163). The end-product, ubiquinone, "functions in the respiratory electron transport chain and plays a pivotal role in energy generating processes" (<a href="https://pubmed.ncbi.nlm.nih.gov/24480387/">PMID: 24480387</a>).</p>
+<h3 id="7-structural-and-mechanistic-basis-a-class-i-sam-mtase-adding-the-ring-methyl-at-c5">7. Structural and mechanistic basis: a class I SAM-MTase adding the ring methyl at C5</h3>
+<p>The crystallographic characterization of the yeast ortholog Coq5 provides an atomic-resolution model for UbiE's mechanism. Coq5 "is an S-adenosyl methionine (SAM)-dependent methyltransferase (SAM-MTase) that catalyzes the only C-methylation step in the coenzyme Q (CoQ) biosynthesis pathway, in which 2-methoxy-6-polyprenyl-1,4-benzoquinone (DDMQH2) is converted to 2-methoxy-5-methyl-6-polyprenyl-1,4-benzoquinone (DMQH2)" (<a href="https://pubmed.ncbi.nlm.nih.gov/25084328/">PMID: 25084328</a>). Structurally, "Coq5 displays a typical class I SAM-MTase structure with two minor variations beyond the core domain, both of which are considered to participate in dimerization and/or substrate recognition" (<a href="https://pubmed.ncbi.nlm.nih.gov/25084328/">PMID: 25084328</a>). This defines the exact regiochemistry: the methyl group is installed at <strong>C5</strong> of the quinone ring.</p>
+<p>Direct functional equivalence between UbiE and Coq5 was proven by cross-species complementation: among yeast <em>coq5</em> point mutants, "only the <em>coq5-2</em> and <em>coq5-5</em> mutants are rescued by expression of <em>Escherichia coli ubiE</em>, a homolog of <em>COQ5</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/14701817/">PMID: 14701817</a>). The ability of bacterial UbiE to substitute for eukaryotic Coq5 in vivo confirms that the two enzymes catalyze the same reaction on chemically analogous substrates.</p>
+<h3 id="8-the-proposed-catalytic-general-base-is-conserved-in-p-putida-ubie-arg149-coq5-arg201">8. The proposed catalytic general base is conserved in <em>P. putida</em> UbiE (Arg149 ≡ Coq5 Arg201)</h3>
+<p>A putative catalytic mechanism for the family was proposed from the Coq5 structure: "Arg201 acts as a general base to initiate catalysis with the help of a water molecule" (<a href="https://pubmed.ncbi.nlm.nih.gov/25084328/">PMID: 25084328</a>). Pairwise alignment of yeast Coq5 (P49017) against <em>P. putida</em> UbiE (Q88D17) — 47.1% identity over 255 columns, consistent with the ~44% Coq5–<em>E. coli</em> UbiE figure — maps this catalytic Arg201 onto a conserved <strong>Arg149</strong> in <em>P. putida</em> UbiE. Together with the conserved SAM-binding residues (positions 79, 100, 128–129) and motif I ("DIAGGTGD"), the full catalytic apparatus predicted from structural studies is present in Q88D17, completing the case that it is a fully functional C-methyltransferase.</p>
+<h3 id="9-physiological-output-ubie-derived-ubiquinone-9-powers-a-branched-aerobic-respiratory-chain">9. Physiological output: UbiE-derived ubiquinone-9 powers a branched aerobic respiratory chain</h3>
+<p>In <em>P. putida</em>, the metabolic product of UbiE's activity feeds directly into respiration. The species uses <strong>ubiquinone-9 (UQ9)</strong> as its dominant respiratory quinone (<a href="https://pubmed.ncbi.nlm.nih.gov/11359512/">PMID: 11359512</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/18323682/">PMID: 18323682</a>). <em>P. putida</em> KT2440 "contains a branched aerobic respiratory chain with several terminal oxidases" (<a href="https://pubmed.ncbi.nlm.nih.gov/16958757/">PMID: 16958757</a>) — including the cytochrome <em>bo₃</em> (Cyo) <strong>ubiquinol oxidase</strong>, the cyanide-insensitive oxidase (CIO), and <em>cbb₃</em>-1/<em>cbb₃</em>-2/<em>aa₃</em>-type oxidases (<a href="https://pubmed.ncbi.nlm.nih.gov/18341582/">PMID: 18341582</a>). These terminal oxidases oxidize ubiquinol, the reduced form of the very quinone pool UbiE helps build, closing the loop between quinone biosynthesis and energy conservation.</p>
+<h3 id="10-ubie-output-as-a-redox-signal-and-operon-context">10. UbiE output as a redox signal and operon context</h3>
+<p>Beyond serving as an electron carrier, the ubiquinone pool acts as a signaling molecule in <em>P. putida</em>. The hybrid sensor kinase HskA senses the ubiquinone oxidation state: "HskA autophosphorylation is inhibited by ubiquinone but not by ubiquinol, its reduced derivative" (<a href="https://pubmed.ncbi.nlm.nih.gov/24249291/">PMID: 24249291</a>), linking the UbiE-produced quinone pool to regulatory remodeling of the electron transport chain in response to oxygen availability. In terms of genomic context, <em>ubiE</em> lies in a conserved operon: it is described as being co-located in an operon containing <em>ubiE</em>, <em>yigP</em> (<em>ubiJ</em>), and <em>ubiB</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10960098/">PMID: 10960098</a>) — a gene neighborhood that co-encodes members of the same Ubi metabolon.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-catalyzed">The reaction catalyzed</h3>
+<p>UbiE installs a methyl group directly onto a ring <strong>carbon</strong> of a polyprenylated quinone/quinol, using SAM as the methyl donor and producing S-adenosyl-L-homocysteine (SAH) as the by-product. It performs this same C-methylation chemistry in two pathways:</p>
+<div class="codehilite"><pre><span></span><code>UBIQUINONE (CoQ) PATHWAY  — EC 2.1.1.201
+  2-methoxy-6-polyprenyl-1,4-benzoquinol   ──UbiE (SAM)──►  2-methoxy-5-methyl-6-polyprenyl-1,4-benzoquinol
+  (DDMQH2)                                  + SAM → + SAH     (DMQH2)
+                                             methyl added at ring C5
+
+MENAQUINONE (MK) PATHWAY  — EC 2.1.1.163
+  demethylmenaquinone (DMK)                ──UbiE (SAM)──►  menaquinone (MK / vitamin K2)
+                            + SAM → + SAH
+</code></pre></div>
+
+<p>UbiE is the <strong>only</strong> C-methyltransferase of the CoQ pathway; all other ring modifications are hydroxylations, decarboxylation, or O-methylations carried out by other Ubi enzymes. This makes UbiE a non-redundant, essential node for building a mature respiratory quinone.</p>
+<h3 id="where-it-acts-the-soluble-ubi-metabolon">Where it acts: the soluble Ubi metabolon</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">CYTOPLASM</span>
+<span class="w">   </span><span class="err">┌─────────────────────────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="n">Ubi</span><span class="w"> </span><span class="n">metabolon</span><span class="w"> </span><span class="p">(</span><span class="o">~</span><span class="mh">1</span><span class="w"> </span><span class="n">MDa</span><span class="p">,</span><span class="w"> </span><span class="n">soluble</span><span class="p">)</span><span class="w">                </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="n">UbiE</span><span class="w"> </span><span class="p">(</span><span class="n">C</span><span class="o">-</span><span class="n">methyl</span><span class="p">)</span><span class="w"> </span><span class="err">─</span><span class="w"> </span><span class="n">UbiG</span><span class="w"> </span><span class="p">(</span><span class="n">O</span><span class="o">-</span><span class="n">methyl</span><span class="p">)</span><span class="w"> </span><span class="err">─</span><span class="w"> </span><span class="n">UbiH</span><span class="o">/</span><span class="n">UbiI</span><span class="w">  </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="n">hydroxylases</span><span class="p">)</span><span class="w"> </span><span class="err">─</span><span class="w"> </span><span class="n">UbiJ</span><span class="w"> </span><span class="p">(</span><span class="n">SCP2</span><span class="w"> </span><span class="n">lipid</span><span class="w"> </span><span class="n">carrier</span><span class="p">)</span><span class="w">     </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">                                         </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">└──</span><span class="w"> </span><span class="n">hydrophobic</span><span class="w"> </span><span class="n">polyprenyl</span><span class="o">-</span><span class="n">quinone</span><span class="w">        </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">            </span><span class="n">intermediates</span><span class="w"> </span><span class="n">shuttled</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">UbiJ</span><span class="w">        </span><span class="err">│</span>
+<span class="w">   </span><span class="err">└──────────────────────┬──────────────────────────┘</span>
+<span class="w">          </span><span class="err">│</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">ubiquinone</span><span class="o">-</span><span class="mh">9</span><span class="w"> </span><span class="p">(</span><span class="n">UQ9</span><span class="p">)</span>
+<span class="w">          </span><span class="err">▼</span>
+<span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">aerobic</span><span class="w"> </span><span class="n">respiratory</span><span class="w"> </span><span class="n">chain</span>
+<span class="w">   </span><span class="n">dehydrogenases</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">UQ9</span><span class="o">/</span><span class="n">UQ9H2</span><span class="w"> </span><span class="n">pool</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ubiquinol</span><span class="w"> </span><span class="n">oxidases</span>
+<span class="w">       </span><span class="p">(</span><span class="n">cyt</span><span class="w"> </span><span class="n">bo3</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">CIO</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">cbb3</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">aa3</span><span class="p">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">O2</span>
+<span class="w">          </span><span class="err">│</span>
+<span class="w">          </span><span class="err">▼</span>
+<span class="w">     </span><span class="n">HskA</span><span class="w"> </span><span class="n">senses</span><span class="w"> </span><span class="n">UQ</span><span class="w"> </span><span class="n">oxidation</span><span class="w"> </span><span class="n">state</span>
+<span class="w">     </span><span class="p">(</span><span class="n">regulatory</span><span class="w"> </span><span class="n">feedback</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">ETC</span><span class="w"> </span><span class="n">composition</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The metabolon model resolves a long-standing puzzle: how extremely hydrophobic isoprenoid-quinone intermediates are processed by soluble enzymes. UbiJ's SCP2 lipid-binding domain sequesters these intermediates and presents them sequentially to the active sites of the complex, including UbiE. The reaction therefore occurs in the aqueous cytoplasm, with the finished UQ9 subsequently partitioning into the inner membrane where it functions in respiration.</p>
+<h3 id="confidence-chain-for-the-annotation">Confidence chain for the annotation</h3>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Source organism</th>
+<th>Strength</th>
+<th>What it establishes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Genetic loss-of-function (both pathways)</td>
+<td><em>E. coli</em></td>
+<td>Direct/high</td>
+<td>UbiE = C-methyltransferase for CoQ + MK (<a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">9045837</a>)</td>
+</tr>
+<tr>
+<td>Intermediate accumulation + point mutant</td>
+<td><em>E. coli</em></td>
+<td>Direct/high</td>
+<td>Reaction node &amp; essential Gly142 (<a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">9045837</a>)</td>
+</tr>
+<tr>
+<td>Crystal structure + mechanism</td>
+<td>Yeast Coq5</td>
+<td>Structural/high</td>
+<td>Class I fold, C5 regiochemistry, Arg catalytic base (<a href="https://pubmed.ncbi.nlm.nih.gov/25084328/">25084328</a>)</td>
+</tr>
+<tr>
+<td>Cross-species complementation</td>
+<td><em>E. coli</em> UbiE → yeast</td>
+<td>Functional/high</td>
+<td>Same reaction as Coq5 (<a href="https://pubmed.ncbi.nlm.nih.gov/14701817/">14701817</a>)</td>
+</tr>
+<tr>
+<td>Sequence orthology 72.6%</td>
+<td><em>P. putida</em> vs <em>E. coli</em></td>
+<td>Inferential/high</td>
+<td>Function transfer to Q88D17</td>
+</tr>
+<tr>
+<td>Conserved catalytic residues</td>
+<td><em>P. putida</em> vs Coq5</td>
+<td>Inferential/high</td>
+<td>Arg149, SAM motifs present in Q88D17</td>
+</tr>
+<tr>
+<td>Respiratory context (UQ9, oxidases)</td>
+<td><em>P. putida</em></td>
+<td>Direct/high</td>
+<td>Physiological role of the product (<a href="https://pubmed.ncbi.nlm.nih.gov/16958757/">16958757</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/18341582/">18341582</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>The functional annotation of <em>P. putida</em> UbiE is thus supported by a robust chain: direct experimental evidence in two model organisms (<em>E. coli</em>, yeast), structural/mechanistic detail from a crystallized ortholog, and high sequence conservation of both cofactor-binding and catalytic residues in Q88D17 itself.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">9045837</a></td>
+<td><em>A C-methyltransferase involved in both ubiquinone and menaquinone biosynthesis: isolation of E. coli ubiE</em></td>
+<td><strong>Foundational.</strong> Genetic proof UbiE catalyzes C-methylation in both pathways; identifies ubiE401 (Gly142→Asp); documents intermediate accumulation and succinate-growth defect.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10960098/">10960098</a></td>
+<td><em>Identification of E. coli ubiB…</em></td>
+<td>Confirms UbiE required for CoQ + MK; defines the ubiE–yigP(ubiJ)–ubiB operon context.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">30686758</a></td>
+<td><em>A Soluble Metabolon Synthesizes the Isoprenoid Lipid Ubiquinone</em></td>
+<td>Localizes CoQ biosynthesis (including methylation) to a soluble ~1-MDa cytoplasmic complex; UbiJ SCP2 domain binds hydrophobic intermediates.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9083049/">9083049</a></td>
+<td><em>Characterization of COQ5 from S. cerevisiae</em></td>
+<td>Establishes UbiE↔Coq5 homology (44% identity) and shared SAM-MTase motifs.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25084328/">25084328</a></td>
+<td><em>Crystal structures and catalytic mechanism of Coq5</em></td>
+<td>Class I SAM-MTase fold; C5 regiochemistry (DDMQH2→DMQH2); Arg201 general-base mechanism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14701817/">14701817</a></td>
+<td><em>Yeast Coq5 required for stability of other CoQ polypeptides</em></td>
+<td>Cross-species complementation: E. coli ubiE rescues yeast coq5 mutants.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35178585/">35178585</a></td>
+<td><em>Recent advances in metabolic pathways and microbial production of CoQ</em></td>
+<td>Review: multiprotein complexes catalyze consecutive CoQ reactions.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24480387/">24480387</a></td>
+<td><em>Biosynthesis and physiology of coenzyme Q in bacteria</em></td>
+<td>Review: ubiquinone function in respiration and signaling.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24249291/">24249291</a></td>
+<td><em>P. putida HskA hybrid sensor kinase responds to redox signals</em></td>
+<td>UQ (not UQH2) inhibits HskA autophosphorylation — ubiquinone as redox signal in <em>P. putida</em>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16958757/">16958757</a></td>
+<td><em>Inactivation of P. putida cyt o ubiquinol oxidase…</em></td>
+<td><em>P. putida</em> branched aerobic chain; Cyo is a ubiquinol oxidase.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18341582/">18341582</a></td>
+<td><em>Coordinate regulation of multiple terminal oxidases by ANR</em></td>
+<td>Confirms branched chain with multiple ubiquinol oxidases.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11359512/">11359512</a> / <a href="https://pubmed.ncbi.nlm.nih.gov/18323682/">18323682</a></td>
+<td>Ubiquinone profiling / <em>Pseudomonas</em> taxonomy</td>
+<td><em>P. putida</em> uses UQ9 as dominant respiratory quinone.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence coheres:</strong> The <em>E. coli</em> genetics (<a href="https://pubmed.ncbi.nlm.nih.gov/9045837/">PMID: 9045837</a>) and the yeast structural work (<a href="https://pubmed.ncbi.nlm.nih.gov/25084328/">PMID: 25084328</a>) are mutually reinforcing — one defines the reaction genetically, the other defines it structurally and mechanistically — and the complementation study (<a href="https://pubmed.ncbi.nlm.nih.gov/14701817/">PMID: 14701817</a>) bridges them by showing the bacterial and eukaryotic enzymes are functionally interchangeable. The metabolon paper (<a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>) updates the subcellular localization. The <em>P. putida</em>-specific papers supply the physiological endpoint (UQ9, branched respiration, redox signaling). No retrieved paper contradicts the annotation.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of <em>P. putida</em> UbiE.</strong> All enzymatic evidence derives from orthologs (<em>E. coli</em> UbiE, yeast Coq5). The assignment for Q88D17 is inferential, albeit at high confidence given 72.6% identity and conservation of catalytic/cofactor residues. Purified-enzyme kinetics (kcat, Km for SAM and quinol substrate) for the <em>P. putida</em> protein have not been reported.</p>
+</li>
+<li>
+<p><strong>No experimental structure of UbiE from any organism.</strong> The mechanistic model (Arg general base, C5 regiochemistry) is transferred from the crystallized yeast ortholog Coq5, not from a UbiE crystal structure. An AlphaFold model could be assessed but was not analyzed here.</p>
+</li>
+<li>
+<p><strong>Relative flux between the two pathways in <em>P. putida</em> is unquantified.</strong> <em>P. putida</em> is an obligate aerobe that relies overwhelmingly on ubiquinone; whether it makes functionally significant menaquinone (and hence how much EC 2.1.1.163 activity matters physiologically) is not established from the retrieved literature. In many strict aerobes the menaquinone branch is minor or absent.</p>
+</li>
+<li>
+<p><strong>Metabolon composition in <em>P. putida</em> not verified.</strong> The soluble Ubi metabolon was demonstrated in <em>E. coli</em>. Whether <em>P. putida</em> forms an identical complex (and the identity/stoichiometry of its UbiJ-like accessory) is assumed by orthology, not shown.</p>
+</li>
+<li>
+<p><strong>Essentiality and phenotype in <em>P. putida</em> untested here.</strong> No <em>P. putida ubiE</em> knockout phenotype was retrieved; predicted consequences (loss of UQ9, respiratory-growth defect) are extrapolated from <em>E. coli</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous complementation:</strong> Express <em>P. putida ubiE</em> (PP_5011) in an <em>E. coli</em> Δ<em>ubiE</em> strain and score restoration of ubiquinone synthesis and succinate growth — a fast, definitive functional confirmation.</p>
+</li>
+<li>
+<p><strong>In vitro enzymology:</strong> Purify recombinant Q88D17 and assay SAM-dependent methyltransferase activity against a demethyl-Q intermediate (or a soluble analog), measuring kcat/Km and confirming SAH production. Include a Gly-loop mutant (equivalent to <em>E. coli</em> Gly142→Asp) and the Arg149→Ala mutant as negative controls to validate the predicted catalytic apparatus.</p>
+</li>
+<li>
+<p><strong>Structural determination / modeling:</strong> Solve a crystal or cryo-EM structure of <em>P. putida</em> UbiE (or rigorously evaluate its AlphaFold model with SAM docked) to verify the class I fold and the positioning of Arg149 and the SAM-binding motif I.</p>
+</li>
+<li>
+<p><strong>Targeted knockout in <em>P. putida</em> KT2440:</strong> Delete PP_5011 and characterize the quinone pool by LC-MS (expecting loss of UQ9 and accumulation of 2-methoxy-6-nonaprenyl-1,4-benzoquinol), plus aerobic respiratory-growth and HskA-signaling phenotypes.</p>
+</li>
+<li>
+<p><strong>Metabolon co-purification:</strong> Test whether UbiE co-purifies with a UbiJ/UbiG-containing soluble complex from <em>P. putida</em> cytoplasm, confirming the metabolon architecture in this organism.</p>
+</li>
+<li>
+<p><strong>Menaquinone-branch relevance:</strong> Quantify menaquinone/demethylmenaquinone in <em>P. putida</em> under microaerobic/anaerobic-mimicking conditions to determine the physiological weight of the EC 2.1.1.163 activity.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>P. putida</em> KT2440 UbiE (Q88D17, PP_5011) is confidently annotated as the <strong>cytoplasmic, SAM-dependent class I C-methyltransferase</strong> that performs the single ring carbon-methylation step shared by the ubiquinone (EC 2.1.1.201) and menaquinone (EC 2.1.1.163) biosynthetic pathways, adding the C5 ring methyl using SAM and generating SAH. It operates within a soluble multienzyme Ubi metabolon and its principal product, ubiquinone-9, is the redox carrier and redox signal of <em>P. putida</em>'s branched aerobic respiratory chain. The assignment rests on direct genetic and structural evidence in <em>E. coli</em> and yeast, cross-species functional complementation, and high sequence conservation (72.6% to <em>E. coli</em> UbiE; catalytic Arg149 and SAM-binding motifs intact in Q88D17), with the main gap being the absence of direct enzymology on the <em>P. putida</em> protein itself.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:9045837</li>
+<li>PMID:10960098</li>
+<li>PMID:30686758</li>
+<li>PMID:9083049</li>
+<li>PMID:35178585</li>
+<li>PMID:24480387</li>
+<li>PMID:25084328</li>
+<li>PMID:14701817</li>
+<li>PMID:11359512</li>
+<li>PMID:18323682</li>
+<li>PMID:16958757</li>
+<li>PMID:18341582</li>
+<li>PMID:24249291</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D17
+gene_symbol: ubiE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiE encodes a SAM-dependent C-methyltransferase that methylates a
+  polyprenylated benzoquinol intermediate during ubiquinone biosynthesis. In
+  Pseudomonas putida KT2440 this enzyme supports ubiquinone formation; the
+  strain lacks the canonical upstream menaquinone pathway needed to supply the
+  alternative demethylmenaquinol substrate.
+existing_annotations:
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Ubiquinone biosynthesis is the core process for PSEPK UbiE.
+    action: ACCEPT
+    reason: UbiE installs the ring C-methyl group in a ubiquinone intermediate.
+    supported_by:
+    - reference_id: file:PSEPK/ubiE/ubiE-uniprot.txt
+      supporting_text: ubiquinone biosynthesis
+    - reference_id: PMID:9045837
+      supporting_text: &gt;-
+        Strains of Escherichia coli with mutations in the ubiE gene are not able
+        to catalyze the carbon methylation reaction in the biosynthesis of
+        ubiquinone
+- term:
+    id: GO:0008168
+    label: methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The generic methyltransferase term is correct but less informative than the exact UbiE activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008425 captures the substrate-specific core molecular function.
+- term:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the substrate-specific core C-methyltransferase activity of UbiE.
+    action: ACCEPT
+    reason: UniProt assigns EC 2.1.1.201 and Rhea 28286 to this reaction.
+    supported_by:
+    - reference_id: file:PSEPK/ubiE/ubiE-uniprot.txt
+      supporting_text: 2-methoxy-6-polyprenyl-1,4-benzoquinol methylase
+    - reference_id: PMID:9045837
+      supporting_text: &gt;-
+        Strains of Escherichia coli with mutations in the ubiE gene are not able
+        to catalyze the carbon methylation reaction in the biosynthesis of
+        ubiquinone
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: This annotation overstates the indirect respiratory consequence of ubiquinone synthesis.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      UbiE synthesizes a respiratory quinone but does not itself catalyze an
+      electron-transfer reaction in aerobic respiration.
+- term:
+    id: GO:0009234
+    label: menaquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: KT2440 lacks the canonical menaquinone pathway that would make this a physiological role.
+    action: REMOVE
+    reason: &gt;-
+      The species-level pathway audit found no canonical MenA/MenD pathway in
+      the target proteome. This unconditioned HAMAP transfer is therefore not a
+      supported biological process for PSEPK UbiE.
+- term:
+    id: GO:0042181
+    label: ketone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: This broad parent process is redundant with the specific ubiquinone pathway annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0006744 identifies the relevant ketone product and pathway.
+- term:
+    id: GO:0043770
+    label: demethylmenaquinone methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Demethylmenaquinone methylation is a demonstrated UbiE-family activity,
+      but it is not a physiological pathway role in KT2440 because the canonical
+      upstream menaquinone pathway is absent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      E. coli UbiE directly serves both quinone pathways, so outright removal
+      would overstate the negative evidence for the highly conserved PP_5011
+      ortholog. However, no PP_5011 assay demonstrates this activity and KT2440
+      lacks the Men pathway that would supply demethylmenaquinone; retain it as
+      an over-annotation, not a core function.
+    supported_by:
+    - reference_id: PMID:9045837
+      supporting_text: &gt;-
+        The data presented identify the E. coli UbiE polypeptide and provide
+        evidence that it is required for the C methylation reactions in both
+        ubiquinone and menaquinone biosynthesis.
+    - reference_id: file:PSEPK/ubiE/ubiE-deep-research-openscientist.md
+      supporting_text: &gt;-
+        whether it makes functionally significant menaquinone (and hence how
+        much EC 2.1.1.163 activity matters physiologically) is not established
+        from the retrieved literature
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ubiE/ubiE-uniprot.txt
+  title: UniProt entry Q88D17 for ubiE
+  findings:
+  - statement: &gt;-
+      The reviewed record assigns the ubiquinone C-methylation reaction through
+      EC 2.1.1.201 and Rhea 28286.
+- id: file:PSEPK/ubiE/ubiE-goa.tsv
+  title: QuickGO GOA annotations for ubiE
+  findings:
+  - statement: The fetched GOA table contains the seven annotations reviewed here.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__ubiquinone_biosynthesis__ppu00130-deep-research-openscientist.md
+  title: OpenScientist PSEPK ubiquinone pathway assessment
+  findings:
+  - statement: &gt;-
+      The species-level proteome audit found the canonical ubiquinone pathway
+      but not the upstream canonical menaquinone pathway.
+- id: PMID:9045837
+  title: &#39;A C-methyltransferase involved in both ubiquinone and menaquinone biosynthesis:
+    isolation and identification of the Escherichia coli ubiE gene.&#39;
+  findings:
+  - statement: &gt;-
+      E. coli genetics establishes UbiE C-methylation in both ubiquinone and
+      menaquinone biosynthesis; this supports conserved catalytic capacity but
+      does not establish a menaquinone pathway in KT2440.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-cached abstract verified; direct evidence is for E. coli UbiE and
+      is transferred to PP_5011 by close orthology.
+- id: file:PSEPK/ubiE/ubiE-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiE
+  findings:
+  - statement: &gt;-
+      Ortholog genetics and conserved family architecture support UbiE
+      C-methyltransferase chemistry, but PP_5011 itself has not been assayed.
+      The report&#39;s claims of a physiological KT2440 menaquinone role, target
+      metabolon membership, essentiality, and downstream HskA regulation are
+      not adopted as gene-level facts.
+core_functions:
+- description: &gt;-
+    SAM-dependent C-methylation of a polyprenylated benzoquinol intermediate
+    during ubiquinone biosynthesis, inferred for PP_5011 from conserved
+    UbiE/COQ5-family and close-ortholog evidence.
+  molecular_function:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/ubiE/ubiE-uniprot.txt
+    supporting_text: 2-methoxy-6-polyprenyl-1,4-benzoquinol methylase
+  - reference_id: PMID:9045837
+    supporting_text: &gt;-
+      Strains of Escherichia coli with mutations in the ubiE gene are not able
+      to catalyze the carbon methylation reaction in the biosynthesis of
+      ubiquinone
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does PP_5011 retain measurable demethylmenaquinone methyltransferase
+    activity despite the absence of a physiological menaquinone pathway in
+    KT2440?
+suggested_experiments:
+- description: &gt;-
+    Purify PP_5011 and compare SAM-dependent turnover of ubiquinone and
+    demethylmenaquinone substrates, then confirm the physiological role by
+    quinone/intermediate profiling of a complemented P. putida ubiE deletion.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

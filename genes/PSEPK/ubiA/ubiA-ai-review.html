@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C65" target="_blank" class="term-link">
+                        Q88C65
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C65" data-a="DESCRIPTION: ubiA encodes an integral inner-membrane 4-hydroxyb..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiA encodes an integral inner-membrane 4-hydroxybenzoate polyprenyltransferase. It attaches a supplied all-trans polyprenyl side chain to 4-hydroxybenzoate, generating the first membrane-bound aromatic intermediate in ubiquinone biosynthesis. Long-chain donor availability helps determine the mature ubiquinone side-chain length.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004659" target="_blank" class="term-link">
+                                    GO:0004659
+                                </a>
+                            </span>
+                            <span class="term-label">prenyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0004659" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Prenyltransferase activity is correct but too broad.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008412 captures the 4-hydroxybenzoate substrate and evolved function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UbiA is an integral bacterial inner-membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record explicitly assigns a multi-pass cell inner-membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiA/ubiA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the core process for UbiA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiA catalyzes the pathway&#39;s aromatic-head-group prenylation step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiA/ubiA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ubiquinone biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008412" target="_blank" class="term-link">
+                                    GO:0008412
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxybenzoate polyprenyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0008412" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the substrate-specific core molecular function of UbiA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.5.1.39 and Rhea 27782 for octaprenylation of 4-hydroxybenzoate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiA/ubiA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">4-hydroxybenzoate octaprenyltransferase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiA/ubiA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">UbiA (PP_5318, Q88C65) catalyzes the membrane-associated condensation of 4-hydroxybenzoate with a polyprenyl-diphosphate donor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane is correct but redundant with the more specific plasma-membrane term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005886 is the informative bacterial membrane location.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0016740" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transferase activity is uninformative beside the substrate-specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008412 captures the exact reaction class.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016765" target="_blank" class="term-link">
+                                    GO:0016765
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring alkyl or aryl (other than methyl) groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C65" data-a="GO:0016765" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Alkyl-group transfer is correct but less specific than the exact UbiA activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008412 identifies both the aromatic substrate and polyprenyl transfer.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Inner-membrane polyprenylation of 4-hydroxybenzoate to form the first membrane-bound aromatic intermediate of ubiquinone biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88C65" data-a="FUNCTION: Inner-membrane polyprenylation of 4-hydroxybenzoat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008412" target="_blank" class="term-link">
+                            4-hydroxybenzoate polyprenyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiA/ubiA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">4-hydroxybenzoate octaprenyltransferase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiA/ubiA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">UbiA (PP_5318, Q88C65) catalyzes the membrane-associated condensation of 4-hydroxybenzoate with a polyprenyl-diphosphate donor</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiA/ubiA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88C65 for ubiA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed entry assigns an integral inner-membrane 4-hydroxybenzoate octaprenyltransferase in ubiquinone-8 biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiA/ubiA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the seven annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiA/ubiA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ortholog biochemistry, the UbiA fold, intact Q88C65 catalytic motifs, and target database annotations converge on a membrane polyprenyltransferase with flexible all-trans donor-chain acceptance.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C65" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: UbiA (PP_5318 / Q88C65) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T18:11:31.543354</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ubia-pp_5318-q88c65-in-pseudomonas-putida-kt2440">Functional Annotation Report: UbiA (PP_5318 / Q88C65) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene symbol:</strong> <em>ubiA</em> | <strong>UniProt:</strong> Q88C65 (UBIA_PSEPK) | <strong>Ordered locus:</strong> PP_5318 | <strong>KEGG:</strong> ppu:PP_5318<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)<br />
+<strong>EC number:</strong> 2.5.1.39 | <strong>Protein family:</strong> UbiA prenyltransferase superfamily (Pfam PF01040)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>UbiA (PP_5318, Q88C65) in <em>Pseudomonas putida</em> KT2440 is 4-hydroxybenzoate polyprenyltransferase (EC 2.5.1.39), an integral, magnesium-dependent inner-membrane enzyme that catalyzes the second and committed step of ubiquinone (coenzyme Q) biosynthesis.</strong> The enzyme transfers an all-<em>trans</em> polyprenyl group from a polyprenyl-diphosphate donor onto the C-3 position of the aromatic head group 4-hydroxybenzoate (4-HB, also called <em>para</em>-hydroxybenzoate/PHB), producing 3-polyprenyl-4-hydroxybenzoate plus inorganic diphosphate. This product is the first membrane-anchored intermediate of the coenzyme Q pathway; all subsequent modifications (hydroxylations, methylations, decarboxylation) act on the aromatic ring while the isoprenoid tail keeps the molecule embedded in the lipid bilayer. The reference reaction is catalogued as Rhea:27782, and the biological process is ubiquinone biosynthesis (GO:0006744), which supplies the lipophilic electron carrier essential for the aerobic respiratory chain.</p>
+<p>Gene identity has been verified at three independent levels, so this is not a case of symbol ambiguity. First, the target UniProt entry is governed by HAMAP rule MF_01635, which assigns Q88C65 to the UbiA prenyltransferase family and specifies the octaprenyltransferase reaction. Second, the physically retrieved 296-residue Q88C65 sequence contains both diagnostic aspartate-rich Mg²⁺-binding motifs of the UbiA superfamily (an N-D-x-x-D motif "NDFAD" at residue 73, and a second Asp-rich cluster "DDD" at residues 199–201) and is strongly hydrophobic, consistent with the polytopic transmembrane fold. Third, the biochemical and genetic literature on the orthologous <em>E. coli</em> UbiA — the founding member of the family and the enzyme whose reaction defines EC 2.5.1.39 — is internally consistent and directly transferable through high sequence identity and cross-species functional complementation.</p>
+<p>The enzyme carries out its function <em>within</em> the cytoplasmic (inner) membrane rather than in the aqueous cytoplasm. Crystal structures of an archaeal UbiA homolog reveal a nine-transmembrane-helix fold with a central active-site cavity that opens laterally to the lipid bilayer, so the hydrophobic polyprenyl substrate and product can partition into the membrane while the reaction proceeds. Substrate specificity is well defined on the aromatic side (4-hydroxybenzoate) but permissive on the prenyl-donor side: purified <em>E. coli</em> UbiA accepts geranyl-, farnesyl- and solanesyl-diphosphate, so the isoprenoid chain length of the product is dictated by the cellular polyprenyl-diphosphate pool rather than by strict enzyme selection. In <em>P. putida</em> this pool is expected to yield the physiological coenzyme Q species of pseudomonads.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-ubia-catalyzes-the-committed-prenylation-step-of-ubiquinone-biosynthesis">Finding 1 — UbiA catalyzes the committed prenylation step of ubiquinone biosynthesis</h3>
+<p>UbiA (PP_5318, Q88C65) catalyzes the membrane-associated condensation of 4-hydroxybenzoate with a polyprenyl-diphosphate donor:</p>
+<blockquote>
+<p><strong>4-hydroxybenzoate + polyprenyl-diphosphate → 3-polyprenyl-4-hydroxybenzoate + diphosphate</strong></p>
+</blockquote>
+<p>This is EC 2.5.1.39. The foundational genetic evidence comes from <em>E. coli</em> K-12, where <em>ubiA</em> mutants specifically lack the activity that converts 4-hydroxybenzoate to 3-octaprenyl-4-hydroxybenzoate, mapping <em>ubiA</em> as the structural gene for 4-hydroxybenzoate octaprenyltransferase (<a href="https://pubmed.ncbi.nlm.nih.gov/4552989/">PMID: 4552989</a>). That study describes the reaction as "the conversion of 4-hydroxybenzoate into 3-octaprenyl-4-hydroxybenzoate, catalyzed by 4-hydroxybenzoate octaprenyltransferase," defining both the chemistry and the gene–enzyme relationship.</p>
+<p>The genomic and pathway context reinforces the functional call. In <em>E. coli</em>, <em>ubiA</em> lies directly downstream of <em>ubiC</em> (chorismate pyruvate-lyase, the enzyme that produces the 4-HB substrate) in a typical operon; UbiA thus performs the second step of the pathway, immediately consuming the aromatic precursor generated by UbiC. As the primary cloning paper states, "the ubiA gene, coding for the 4-hydroxybenzoate octaprenyl transferase, was identified by sequence homology and complementation of a ubiA⁻ strain. It is located directly downstream of ubiC in a typical operon structure" (<a href="https://pubmed.ncbi.nlm.nih.gov/1644192/">PMID: 1644192</a>). The gene was independently cloned and sequenced as "encoding the membrane-bound p-hydroxybenzoate:octaprenyltransferase" (<a href="https://pubmed.ncbi.nlm.nih.gov/8409922/">PMID: 8409922</a>). Because Q88C65 is assigned by HAMAP rule MF_01635 to the same family and reaction, the <em>P. putida</em> ortholog performs the identical committed prenyl-transfer step. This step is "committed" because prenylation converts a soluble, freely diffusing aromatic acid into a membrane-anchored intermediate irreversibly channeled toward coenzyme Q. (Note: the exact <em>ubiC-ubiA</em> operon synteny is documented in <em>E. coli</em>; the <em>P. putida</em> genomic arrangement was not independently confirmed here.)</p>
+<h3 id="finding-2-ubia-is-an-integral-membrane-mg2-dependent-enzyme-with-a-permissive-prenyl-donor-site">Finding 2 — UbiA is an integral-membrane, Mg²⁺-dependent enzyme with a permissive prenyl-donor site</h3>
+<p>Direct biochemical characterization of the <em>E. coli</em> enzyme established its physical and catalytic properties. Purified/enriched 4-HB polyprenyltransferase is membrane-bound: "the enzyme is membrane-bound and could not be solubilized by hypotonic buffer or detergent treatment. The enzymatic activity is optimal at pH 7.8 and depends on the presence of magnesium ions. Geranyldiphosphate (GPP), all-trans-farnesyldiphosphate (FPP) and all-trans-solanesyldiphosphate (SPP) are accepted as side chain precursors" (<a href="https://pubmed.ncbi.nlm.nih.gov/8155731/">PMID: 8155731</a>). The reported affinities were GPP (C10, Kₘ ≈ 254 µM), FPP (C15, Kₘ ≈ 22 µM) and SPP (C45, Kₘ ≈ 31 µM); crucially, a <em>cis</em>-configured octaprenyl-diphosphate was <strong>not</strong> accepted. This demonstrates two things: (1) the enzyme requires the all-<em>trans</em> stereochemistry of the isoprenoid donor, and (2) it tolerates a wide range of chain lengths, so the <em>in vivo</em> product length is set by whichever polyprenyl-diphosphate dominates the cellular pool rather than by tight active-site selection.</p>
+<p>The membrane localization and Mg²⁺ requirement were confirmed independently <em>in vivo</em>: "both the side-chain precursor and 4-hydroxybenozate octaprenyltransferase were shown to be membrane-bound. The enzyme required Mg(2+) for optimal activity" (<a href="https://pubmed.ncbi.nlm.nih.gov/4552989/">PMID: 4552989</a>). Hydropathy analysis of the cloned sequence predicts a polytopic membrane protein with multiple hydrophobic regions, homologous to the yeast COQ2 prenyltransferase (<a href="https://pubmed.ncbi.nlm.nih.gov/8409922/">PMID: 8409922</a>). The magnesium dependence is mechanistically central: the divalent cation bridges the enzyme's Asp-rich motifs to the diphosphate leaving group, stabilizing the developing charge as the prenyl carbocation attacks the aromatic ring.</p>
+<p>The donor permissiveness has practical significance beyond respiration. When <em>E. coli ubiA</em> is expressed heterologously using geranyl-diphosphate, it catalyzes formation of 3-geranyl-4-hydroxybenzoate, a step that can be redirected toward shikonin/naphthoquinone biosynthesis (<a href="https://pubmed.ncbi.nlm.nih.gov/11038051/">PMID: 11038051</a>), and the same gene has been actively expressed as a membrane-bound prenyltransferase in tobacco (<a href="https://pubmed.ncbi.nlm.nih.gov/11206977/">PMID: 11206977</a>). These heterologous studies confirm that UbiA's intrinsic catalytic behavior — aromatic 4-HB acceptor plus flexible prenyl donor — is portable across kingdoms.</p>
+<h3 id="finding-3-ubia-belongs-to-the-ubia-superfamily-of-intramembrane-aromatic-prenyltransferases">Finding 3 — UbiA belongs to the UbiA superfamily of intramembrane aromatic prenyltransferases</h3>
+<p>Q88C65 carries the UbiA prenyltransferase domain (Pfam PF01040; InterPro IPR000537, IPR044878 "UbiA_sf") and the HB_polyprenyltransferase-like signature (IPR006370). The authoritative superfamily review establishes that "the UbiA superfamily of intramembrane prenyltransferases catalyzes a key biosynthetic step in the production of ubiquinones, menaquinones, plastoquinones, hemes, chlorophylls, vitamin E, and structural lipids" (<a href="https://pubmed.ncbi.nlm.nih.gov/26922674/">PMID: 26922674</a>). Members share a conserved Mg²⁺/Asp-rich active site and install lipophilic isoprenoid tails onto aromatic head groups within the lipid bilayer; the review notes that "prenyltransferases in this superfamily have distinctive substrate preferences," exactly the pattern observed for UbiA (fixed aromatic acceptor, flexible prenyl donor).</p>
+<p>Evolutionary evidence confirms deep conservation of the specific octaprenyltransferase function. The <em>aarE</em> gene product of <em>Providencia stuartii</em> "displayed 61% amino acid identity to the Escherichia coli UbiA protein, an octaprenyltransferase required for the second step of ubiquinone biosynthesis. Complementation experiments in both Providencia stuartii and E. coli demonstrated that aarE and ubiA are functionally equivalent" (<a href="https://pubmed.ncbi.nlm.nih.gov/9559821/">PMID: 9559821</a>). This interchangeability — high sequence identity combined with cross-species genetic complementation — is strong evidence that orthologs like <em>P. putida</em> UbiA retain the same reaction. It also illustrates that mutations in this gene produce measurable downstream physiological readouts.</p>
+<p>The broader superfamily context is useful for interpreting substrate range. Many plant and fungal UbiA-type enzymes prenylate diverse aromatic acceptors (flavonoids, coumarins, orsellinic acid), and some UbiA-type enzymes even catalyze terpene cyclization (<a href="https://pubmed.ncbi.nlm.nih.gov/41836159/">PMID: 41836159</a>). These specialized-metabolism relatives share the same catalytic machinery but have diverged in acceptor specificity. <em>P. putida</em> UbiA, however, sits firmly in the primary-metabolism (ubiquinone) branch defined by the <em>E. coli</em> prototype and the MF_01635 HAMAP rule.</p>
+<h3 id="finding-4-crystal-structures-reveal-a-9-tm-fold-with-a-laterally-opening-intramembrane-active-site">Finding 4 — Crystal structures reveal a 9-TM fold with a laterally opening, intramembrane active site</h3>
+<p>The structural basis for intramembrane catalysis was solved by Cheng &amp; Li in <em>Science</em> (2014): apo and substrate-bound structures of an archaeal UbiA at 3.3 and 3.6 Å resolution. "The structures reveal nine transmembrane helices and an extramembrane cap domain that surround a large central cavity containing the active site. To facilitate the catalysis inside membranes, UbiA has an unusual active site that opens laterally to the lipid bilayer. Our studies illuminate general mechanisms for substrate recognition and catalysis in the UbiA superfamily and rationalize disease-related mutations in humans" (<a href="https://pubmed.ncbi.nlm.nih.gov/24558159/">PMID: 24558159</a>). This lateral opening is the key architectural insight: it allows the long, hydrophobic polyprenyl substrate and the equally hydrophobic prenylated product to slide in and out of the membrane while the aromatic head group and the diphosphate leaving group are processed at the Mg²⁺-containing catalytic center. Because the study explicitly generalizes its mechanism across the superfamily, the framework is transferable to <em>P. putida</em> UbiA via the shared UbiA_sf fold (IPR044878).</p>
+<p>The relevance of this fold to the eukaryotic homologs further underscores its conservation. An AlphaFold-based analysis of COQ2 — the direct eukaryotic counterpart of bacterial UbiA in the coenzyme Q pathway — describes COQ2 as "a member of the UbiA family of transmembrane prenyltransferases that catalyzes the condensation of the head and tail precursors of CoQ, which is a key step in the process, because its product is the first intermediate that will be modified in the head by the next components of the synthesis process" (<a href="https://pubmed.ncbi.nlm.nih.gov/38671943/">PMID: 38671943</a>). This is a precise description of what <em>P. putida</em> UbiA does at the bacterial inner membrane.</p>
+<h3 id="finding-5-the-actual-q88c65-sequence-carries-the-diagnostic-catalytic-motifs-direct-identity-confirmation">Finding 5 — The actual Q88C65 sequence carries the diagnostic catalytic motifs (direct identity confirmation)</h3>
+<p>Rather than relying solely on orthology, the investigation retrieved and analyzed the physical UniProt Q88C65 sequence (296 aa; header <code>sp|Q88C65|UBIA_PSEPK</code>). Motif analysis identified both conserved catalytic aspartate-rich motifs that define the UbiA superfamily and coordinate Mg²⁺ and the prenyl-diphosphate:</p>
+<ul>
+<li><strong>First motif (N-D-x-x-D):</strong> "NDFAD" at residue 73, embedded in the C-x-N-D signature "AGCCINDFADRK".</li>
+<li><strong>Second Asp-rich cluster (D-D-D):</strong> residues 199–201, within "VDRDDDLKI".</li>
+</ul>
+<p>These are precisely the aspartates whose side chains chelate the catalytic Mg²⁺ and stabilize the diphosphate leaving group in the UbiA mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/26922674/">PMID: 26922674</a>). The protein is strongly hydrophobic (≈57% A/I/L/M/F/V/W/Y/C residues) with multiple predicted transmembrane segments by Kyte–Doolittle hydropathy, consistent with the polytopic 9-TM UbiA fold (<a href="https://pubmed.ncbi.nlm.nih.gov/24558159/">PMID: 24558159</a>). This direct sequence-level evidence closes the gene-identity verification loop: the target protein is not merely annotated as UbiA — it structurally <em>is</em> a UbiA-family enzyme with intact catalytic machinery.</p>
+<h3 id="finding-6-curated-uniprotgorhea-annotation-converges-with-the-primary-literature">Finding 6 — Curated UniProt/GO/Rhea annotation converges with the primary literature</h3>
+<p>The curated annotation for Q88C65 (HAMAP MF_01635) is fully consistent with the experimental and structural evidence above and pins down the physiological details:</p>
+<table>
+<thead>
+<tr>
+<th>Annotation field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FUNCTION</strong></td>
+<td>Catalyzes prenylation of <em>para</em>-hydroxybenzoate (PHB) with an all-<em>trans</em> polyprenyl group; second step in the final reaction sequence of ubiquinone-8 (UQ-8) biosynthesis; generates the first membrane-bound Q intermediate, 3-octaprenyl-4-hydroxybenzoate</td>
+</tr>
+<tr>
+<td><strong>Catalytic activity (Rhea:27782)</strong></td>
+<td>all-<em>trans</em>-octaprenyl diphosphate + 4-hydroxybenzoate = 4-hydroxy-3-(all-<em>trans</em>-octaprenyl)benzoate + diphosphate</td>
+</tr>
+<tr>
+<td><strong>Cofactor</strong></td>
+<td>Mg²⁺</td>
+</tr>
+<tr>
+<td><strong>Pathway</strong></td>
+<td>Cofactor biosynthesis; ubiquinone biosynthesis</td>
+</tr>
+<tr>
+<td><strong>Subcellular location</strong></td>
+<td>Cell inner membrane</td>
+</tr>
+<tr>
+<td><strong>GO — Function</strong></td>
+<td>GO:0008412 (4-hydroxybenzoate polyprenyltransferase activity)</td>
+</tr>
+<tr>
+<td><strong>GO — Process</strong></td>
+<td>GO:0006744 (ubiquinone biosynthetic process)</td>
+</tr>
+<tr>
+<td><strong>GO — Component</strong></td>
+<td>GO:0005886 (plasma membrane)</td>
+</tr>
+<tr>
+<td><strong>Transmembrane helices</strong></td>
+<td>8 annotated</td>
+</tr>
+<tr>
+<td><strong>Keywords</strong></td>
+<td>Magnesium, Transferase, Ubiquinone biosynthesis, Cell inner membrane</td>
+</tr>
+<tr>
+<td><strong>Cross-reference</strong></td>
+<td>KEGG ppu:PP_5318</td>
+</tr>
+</tbody>
+</table>
+<p>The convergence of independent lines of evidence — <em>E. coli</em> genetics/biochemistry, cross-species complementation, crystallography, direct sequence-motif analysis, and curated database annotation — makes this one of the most robustly supported functional annotations possible for a non-model-organism gene.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-the-coenzyme-q-ubiquinone-pathway">Position in the coenzyme Q (ubiquinone) pathway</h3>
+<p>UbiA occupies the second step of the classical ubiquinone biosynthetic route, immediately downstream of the chorismate-derived aromatic precursor:</p>
+<div class="codehilite"><pre><span></span><code>Chorismate
+   │  UbiC (chorismate pyruvate-lyase)              [step 1]
+   ▼
+4-Hydroxybenzoate (4-HB / PHB)  ── soluble aromatic head group
+   │
+   │  + all-trans-polyprenyl-diphosphate (donor; chain length from cellular pool)
+   │  + Mg2+
+   ▼  UbiA (PP_5318 / Q88C65)   ★ COMMITTED STEP ★  [step 2]
+   │
+3-Polyprenyl-4-hydroxybenzoate  ── FIRST membrane-anchored Q intermediate
+   │
+   │  UbiD/UbiX (decarboxylation), UbiH/UbiI/UbiF (hydroxylations),
+   │  UbiE/UbiG (methylations) — all act on the ring; tail stays in membrane
+   ▼
+Ubiquinone (Coenzyme Q)  ── lipophilic electron carrier of the respiratory chain
+</code></pre></div>
+
+<p>The reaction UbiA catalyzes is the moment a water-soluble metabolite becomes a lipid. Before UbiA, 4-hydroxybenzoate diffuses freely in the cytoplasm; after UbiA, the attached isoprenoid tail anchors the molecule permanently in the inner membrane, where every subsequent tailoring enzyme can process the ring face-on from the membrane surface. This is why the step is "committed": it is effectively irreversible in the cellular context and channels carbon exclusively toward coenzyme Q. Physiologically, ubiquinone is the central lipid-soluble electron/proton carrier of the aerobic respiratory chain; in <em>E. coli</em>, loss of <em>ubiA</em> abolishes aerobic growth on non-fermentable substrates, a defect rescued by exogenous ubiquinone (<a href="https://pubmed.ncbi.nlm.nih.gov/8409922/">PMID: 8409922</a>). For <em>P. putida</em>, an obligately respiratory soil bacterium, this step is expected to be important for efficient aerobic energy metabolism.</p>
+<h3 id="how-catalysis-happens-inside-a-membrane">How catalysis happens inside a membrane</h3>
+<p>The structural model explains an otherwise puzzling problem: how does a single active site handle one polar substrate (4-HB, plus a highly charged diphosphate) and one extremely hydrophobic substrate (a C₄₀–C₄₅ polyprenyl chain)? The answer from the archaeal UbiA structures (<a href="https://pubmed.ncbi.nlm.nih.gov/24558159/">PMID: 24558159</a>) is a nine-transmembrane-helix bundle capped by an extramembrane domain, enclosing a large central cavity. The catalytic center — built around the two Asp-rich motifs and the Mg²⁺ ion — sits in this cavity, but the cavity has a <strong>lateral portal opening into the lipid bilayer</strong>. The isoprenoid tail threads through this portal into the membrane interior, while the aromatic head and diphosphate are held at the Mg²⁺ center.</p>
+<p>Mechanistically, Mg²⁺ bridges the Asp-rich motifs (in Q88C65: NDFAD at residue 73 and DDD at residues 199–201) to the diphosphate of the prenyl donor. Ionization of the allylic diphosphate generates (or approaches) a prenyl carbocation; the electron-rich C-3 position of 4-hydroxybenzoate attacks this electrophile in a Friedel–Crafts-type C-alkylation, forming the new C–C bond and releasing inorganic diphosphate. The requirement for the all-<em>trans</em> donor configuration (<a href="https://pubmed.ncbi.nlm.nih.gov/8155731/">PMID: 8155731</a>) reflects the geometric fit of the extended isoprenoid in the lateral membrane channel.</p>
+<div class="codehilite"><pre><span></span><code>   Cytoplasmic face
+        │
+   ┌────┴─────────────────────┐   Extramembrane cap
+   │  4-HB  •  Mg2+ • Asp-rich │   (holds polar head + diphosphate)
+   │        active site        │
+   ├───────────────╲───────────┤  ← lateral portal
+   │  TM helices    ╲ polyprenyl│
+   │  (~9 TM)        ╲ tail ~~~~│~~→ into lipid bilayer
+   └─────────────────╲─────────┘
+   Inner membrane (lipid)
+</code></pre></div>
+
+<h3 id="substrate-specificity-summary">Substrate specificity summary</h3>
+<table>
+<thead>
+<tr>
+<th>Substrate role</th>
+<th>Identity / range</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Aromatic acceptor</strong></td>
+<td>4-hydroxybenzoate (fixed)</td>
+<td>EC 2.5.1.39; Rhea:27782; <em>E. coli</em> genetics [PMID: 4552989]</td>
+</tr>
+<tr>
+<td><strong>Prenyl donor</strong></td>
+<td>all-<em>trans</em>-polyprenyl-diphosphate; accepts GPP/FPP/SPP; <strong>not</strong> <em>cis</em>-octaprenyl-PP</td>
+<td>Kₘ values, <em>E. coli</em> enzyme [PMID: 8155731]</td>
+</tr>
+<tr>
+<td><strong>Product chain length</strong></td>
+<td>Set by cellular polyprenyl-PP pool (octaprenyl per HAMAP; pseudomonads commonly UQ-9)</td>
+<td>[PMID: 8155731]; HAMAP MF_01635</td>
+</tr>
+<tr>
+<td><strong>Cofactor</strong></td>
+<td>Mg²⁺ (essential)</td>
+<td>[PMID: 8155731]; [PMID: 4552989]</td>
+</tr>
+<tr>
+<td><strong>Location of catalysis</strong></td>
+<td>Inner (cytoplasmic) membrane, active site open to bilayer</td>
+<td>[PMID: 24558159]; UniProt Q88C65</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/4552989/">4552989</a></td>
+<td>Biochemical/genetic studies on ubiquinone biosynthesis in <em>E. coli</em> K-12: 4-HB octaprenyltransferase</td>
+<td>Defines the reaction; maps <em>ubiA</em> as the structural gene; establishes membrane localization and Mg²⁺ requirement <em>in vivo</em></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1644192/">1644192</a></td>
+<td>Cloning of <em>ubiC</em> and <em>ubiA</em> from <em>E. coli</em></td>
+<td>Establishes <em>ubiA</em> identity by homology + complementation; operon context downstream of <em>ubiC</em>; the prenylation step</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8409922/">8409922</a></td>
+<td>Cloning/sequence of <em>ubiA</em>, membrane-bound p-hydroxybenzoate:octaprenyltransferase</td>
+<td>Gene product identity; hydropathy predicts polytopic membrane protein; aerobic-respiration phenotype; homology to yeast COQ2</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8155731/">8155731</a></td>
+<td>Characterization of 4-HB polyprenyltransferase from <em>E. coli</em></td>
+<td>Direct biochemistry: membrane-bound, detergent-resistant, Mg²⁺-dependent, pH 7.8 optimum; donor Kₘ values; requires all-<em>trans</em> donor</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9559821/">9559821</a></td>
+<td><em>aarE</em>, the <em>ubiA</em> homolog of <em>P. stuartii</em></td>
+<td>Evolutionary/functional: 61% identity to <em>E. coli</em> UbiA; <em>aarE</em> and <em>ubiA</em> interchangeable by complementation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26922674/">26922674</a></td>
+<td>The UbiA superfamily of intramembrane aromatic prenyltransferases (review)</td>
+<td>Places UbiA in the superfamily; conserved Mg²⁺/Asp active site; roles across quinones, hemes, chlorophylls, vitamin E</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24558159/">24558159</a></td>
+<td>Structural insights into ubiquinone biosynthesis in membranes (<em>Science</em>)</td>
+<td>Crystal structure: 9-TM fold, extramembrane cap, laterally opening active site; general mechanism for the superfamily</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38671943/">38671943</a></td>
+<td>AlphaFold analysis of COQ2</td>
+<td>Eukaryotic UbiA-family counterpart; confirms "condensation of head and tail precursors of CoQ" as the committed step</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11038051/">11038051</a></td>
+<td>Expression of bacterial <em>ubiA</em> in <em>Lithospermum</em></td>
+<td>Demonstrates donor flexibility (GPP → 3-geranyl-4-HB); portability of the enzyme's core chemistry</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11206977/">11206977</a></td>
+<td>Active expression of <em>E. coli ubiA</em> in tobacco</td>
+<td>Confirms <em>ubiA</em> encodes an integral membrane prenyltransferase; membrane-targeting requirements for activity</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> All primary sources agree on the enzyme's identity, reaction, cofactor, and membrane localization. There are no contradicting reports. The only annotations to treat with mild caution are those that infer the specific product species purely from the <em>E. coli</em> octaprenyl (UQ-8) chain length; the biochemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/8155731/">PMID: 8155731</a>) shows the enzyme itself is chain-length-permissive, so the actual product species in <em>P. putida</em> is set by that organism's polyprenyl-diphosphate synthase.</p>
+<p><strong>A note on gene-symbol ambiguity.</strong> The symbol <em>ubiA</em> is also used for a large family of specialized-metabolism prenyltransferases in plants and fungi (e.g., flavonoid, coumarin, orsellinic-acid, and even terpene-cyclizing enzymes: <a href="https://pubmed.ncbi.nlm.nih.gov/40080387/">PMID: 40080387</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38641144/">PMID: 38641144</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/40759078/">PMID: 40759078</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/41836159/">PMID: 41836159</a>). These share the UbiA fold but differ in aromatic-acceptor specificity, and the mammalian paralog <em>UBIAD1</em> is a distinct member. The target here is unambiguously the <strong>primary-metabolism, ubiquinone-pathway</strong> UbiA: this is confirmed by the HAMAP MF_01635 rule, the operon context, the direct catalytic-motif analysis of the Q88C65 sequence, and cross-species complementation with the <em>E. coli</em> prototype. No mis-assignment to a specialized-metabolism homolog has occurred.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical study of the <em>P. putida</em> protein.</strong> The functional assignment rests on orthology to <em>E. coli</em> UbiA (backed by HAMAP MF_01635, sequence-motif analysis, and structural homology), not on purification or kinetics of Q88C65 itself. The inference is very strong but remains inference for this specific ortholog.</p>
+</li>
+<li>
+<p><strong>Physiological prenyl-donor chain length is not experimentally pinned down for this strain.</strong> UniProt/HAMAP annotates octaprenyl (UQ-8) by rule, but pseudomonads are commonly reported to produce UQ-9. Because the enzyme is chain-length-permissive, the actual product species depends on the <em>P. putida</em> polyprenyl-diphosphate synthase (e.g., an octaprenyl/solanesyl-PP synthase homolog), which was not characterized here.</p>
+</li>
+<li>
+<p><strong>Structural data are from an archaeal homolog, not from a Gammaproteobacterium.</strong> The 9-TM fold and laterally opening active site are almost certainly conserved (human/eukaryotic COQ2 and UBIAD1 fit the same framework), but no experimental structure of a <em>Pseudomonas</em> UbiA exists. UniProt annotates 8 TM helices versus the 9 seen in the archaeal crystal structure — a minor topology discrepancy likely reflecting prediction vs. crystallography.</p>
+</li>
+<li>
+<p><strong>Operon arrangement and regulation are uncharacterized in <em>P. putida</em>.</strong> The <em>ubiC-ubiA</em> synteny is documented in <em>E. coli</em>; whether the same arrangement holds in <em>P. putida</em> KT2440, and whether UbiA associates with a membrane-bound coenzyme Q biosynthetic complex ("CoQ synthome") in this organism, is unknown.</p>
+</li>
+<li>
+<p><strong>No phenotypic knockout data for PP_5318 specifically.</strong> By analogy, loss of function would impair aerobic respiration; the <em>aarE</em>/<em>ubiA</em> work (<a href="https://pubmed.ncbi.nlm.nih.gov/9559821/">PMID: 9559821</a>) and <em>E. coli ubiA</em> mutants (<a href="https://pubmed.ncbi.nlm.nih.gov/8409922/">PMID: 8409922</a>) show such mutations have measurable physiological consequences, but a targeted PP_5318 deletion phenotype was not part of this evidence base.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymatic assay of recombinant Q88C65.</strong> Express PP_5318 in an <em>E. coli ubiA⁻</em> background and assay membrane fractions with 4-hydroxybenzoate plus a panel of all-<em>trans</em> prenyl-diphosphate donors (GPP, FPP, SPP, octaprenyl-PP, solanesyl-PP). This would (a) confirm activity of the specific ortholog, (b) measure its donor Kₘ profile, and (c) test complementation of the <em>E. coli</em> mutant — mirroring the <em>aarE</em> experiment.</p>
+</li>
+<li>
+<p><strong>Determine the physiological Q species in <em>P. putida</em> KT2440.</strong> Extract and quantify ubiquinones by LC-MS to establish whether the strain makes UQ-8, UQ-9, or a mixture, resolving the octaprenyl-vs-nonaprenyl annotation question and clarifying the <em>in vivo</em> donor.</p>
+</li>
+<li>
+<p><strong>Targeted PP_5318 deletion / conditional knockdown.</strong> Test the predicted phenotype: impaired aerobic respiratory growth, accumulation of 4-hydroxybenzoate, and loss of downstream Q intermediates; complement with <em>E. coli ubiA</em> to confirm specificity.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis of the diagnostic motifs.</strong> Mutate the NDFAD (residue 73) and DDD (residues 199–201) aspartates to alanine and confirm loss of Mg²⁺-dependent activity, experimentally validating the sequence-motif assignment from Finding 5.</p>
+</li>
+<li>
+<p><strong>Homology-model / AlphaFold structure of Q88C65</strong> superposed on the archaeal UbiA and COQ2 models to map the predicted 8–9 TM topology, the lateral membrane portal, and the Mg²⁺-coordinating residues — providing a structural rationale specific to the <em>Pseudomonas</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Confirm operon structure and test for a CoQ biosynthetic complex in <em>P. putida</em>.</strong> Map the genomic neighborhood of PP_5318 and use co-immunoprecipitation or BN-PAGE of tagged UbiA to determine whether it associates with other Ubi enzymes at the inner membrane.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>ubiA</em> (PP_5318 / Q88C65) in <em>Pseudomonas putida</em> KT2440 encodes <strong>4-hydroxybenzoate polyprenyltransferase (EC 2.5.1.39)</strong>, an integral, Mg²⁺-dependent inner-membrane enzyme of the UbiA prenyltransferase superfamily. It catalyzes the <strong>second, committed step of ubiquinone (coenzyme Q) biosynthesis</strong>, transferring an all-<em>trans</em> polyprenyl group from polyprenyl-diphosphate onto C-3 of 4-hydroxybenzoate (Rhea:27782) to form 3-polyprenyl-4-hydroxybenzoate plus diphosphate — the first membrane-anchored Q intermediate. Catalysis occurs <em>within</em> the inner membrane through an active site that opens laterally to the lipid bilayer; the aromatic acceptor is strictly 4-hydroxybenzoate, while the prenyl-donor chain length is set by the cellular polyprenyl-diphosphate pool. The product feeds the coenzyme Q pathway that supplies the lipophilic electron carrier for aerobic respiration. This annotation is supported by convergent genetic, biochemical, structural, evolutionary, and sequence-level evidence, and the gene identity has been verified directly against the Q88C65 sequence — no symbol ambiguity remains.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:4552989</li>
+<li>PMID:1644192</li>
+<li>PMID:8409922</li>
+<li>PMID:8155731</li>
+<li>PMID:11038051</li>
+<li>PMID:11206977</li>
+<li>PMID:26922674</li>
+<li>PMID:9559821</li>
+<li>PMID:41836159</li>
+<li>PMID:24558159</li>
+<li>PMID:38671943</li>
+<li>PMID:40080387</li>
+<li>PMID:38641144</li>
+<li>PMID:40759078</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C65
+gene_symbol: ubiA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiA encodes an integral inner-membrane 4-hydroxybenzoate
+  polyprenyltransferase. It attaches a supplied all-trans polyprenyl side chain
+  to 4-hydroxybenzoate, generating the first membrane-bound aromatic
+  intermediate in ubiquinone biosynthesis. Long-chain donor availability helps
+  determine the mature ubiquinone side-chain length.
+existing_annotations:
+- term:
+    id: GO:0004659
+    label: prenyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Prenyltransferase activity is correct but too broad.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008412 captures the 4-hydroxybenzoate substrate and evolved function.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: UbiA is an integral bacterial inner-membrane protein.
+    action: ACCEPT
+    reason: The reviewed UniProt record explicitly assigns a multi-pass cell inner-membrane location.
+    supported_by:
+    - reference_id: file:PSEPK/ubiA/ubiA-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Ubiquinone biosynthesis is the core process for UbiA.
+    action: ACCEPT
+    reason: UbiA catalyzes the pathway&#39;s aromatic-head-group prenylation step.
+    supported_by:
+    - reference_id: file:PSEPK/ubiA/ubiA-uniprot.txt
+      supporting_text: ubiquinone biosynthesis
+- term:
+    id: GO:0008412
+    label: 4-hydroxybenzoate polyprenyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the substrate-specific core molecular function of UbiA.
+    action: ACCEPT
+    reason: UniProt assigns EC 2.5.1.39 and Rhea 27782 for octaprenylation of 4-hydroxybenzoate.
+    supported_by:
+    - reference_id: file:PSEPK/ubiA/ubiA-uniprot.txt
+      supporting_text: 4-hydroxybenzoate octaprenyltransferase
+    - reference_id: file:PSEPK/ubiA/ubiA-deep-research-openscientist.md
+      supporting_text: UbiA (PP_5318, Q88C65) catalyzes the membrane-associated condensation of 4-hydroxybenzoate with a polyprenyl-diphosphate donor
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Membrane is correct but redundant with the more specific plasma-membrane term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005886 is the informative bacterial membrane location.
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Transferase activity is uninformative beside the substrate-specific term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008412 captures the exact reaction class.
+- term:
+    id: GO:0016765
+    label: transferase activity, transferring alkyl or aryl (other than methyl) groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Alkyl-group transfer is correct but less specific than the exact UbiA activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008412 identifies both the aromatic substrate and polyprenyl transfer.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ubiA/ubiA-uniprot.txt
+  title: UniProt entry Q88C65 for ubiA
+  findings:
+  - statement: &gt;-
+      The reviewed entry assigns an integral inner-membrane
+      4-hydroxybenzoate octaprenyltransferase in ubiquinone-8 biosynthesis.
+- id: file:PSEPK/ubiA/ubiA-goa.tsv
+  title: QuickGO GOA annotations for ubiA
+  findings:
+  - statement: The fetched GOA table contains the seven annotations reviewed here.
+- id: file:PSEPK/ubiA/ubiA-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiA
+  findings:
+  - statement: &gt;-
+      Ortholog biochemistry, the UbiA fold, intact Q88C65 catalytic motifs, and
+      target database annotations converge on a membrane polyprenyltransferase
+      with flexible all-trans donor-chain acceptance.
+core_functions:
+- description: &gt;-
+    Inner-membrane polyprenylation of 4-hydroxybenzoate to form the first
+    membrane-bound aromatic intermediate of ubiquinone biosynthesis.
+  molecular_function:
+    id: GO:0008412
+    label: 4-hydroxybenzoate polyprenyltransferase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/ubiA/ubiA-uniprot.txt
+    supporting_text: 4-hydroxybenzoate octaprenyltransferase
+  - reference_id: file:PSEPK/ubiA/ubiA-deep-research-openscientist.md
+    supporting_text: UbiA (PP_5318, Q88C65) catalyzes the membrane-associated condensation of 4-hydroxybenzoate with a polyprenyl-diphosphate donor
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
