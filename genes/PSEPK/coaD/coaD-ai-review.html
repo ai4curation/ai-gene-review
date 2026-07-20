@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>coaD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>coaD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CQ7" target="_blank" class="term-link">
+                        Q88CQ7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "coaD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CQ7" data-a="DESCRIPTION: coaD (PP_5123) encodes the soluble bacterial phosp..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>coaD (PP_5123) encodes the soluble bacterial phosphopantetheine adenylyltransferase (PPAT) that reversibly transfers an adenylyl group from ATP to 4&#39;-phosphopantetheine, producing 3&#39;-dephospho-CoA and diphosphate. This is the fourth of five reactions that convert pantothenate to coenzyme A. Q88CQ7 is a compact CoaD-family homohexamer with the conserved PPAT domains and catalytic-site features; direct kinetics have not been reported for the KT2440 protein.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CQ7" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic catalytic activity should be replaced by the known PPAT function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro-derived parent term is true but uninformative. HAMAP, Rhea, and the bacterial CoaD family support the specific pantetheine-phosphate adenylyltransferase activity already present in GOA.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    pantetheine-phosphate adenylyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003824	catalytic activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004595	pantetheine-phosphate adenylyltransferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Phosphopantetheine adenylyltransferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CQ7" data-a="GO:0004595" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PPAT is the core molecular function of CoaD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88CQ7 is assigned to the bacterial CoaD family by HAMAP, InterPro, PANTHER, and NCBIfam, and UniProt records the exact Rhea reaction and conserved catalytic features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004595	pantetheine-phosphate adenylyltransferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reversibly transfers an adenylyl group from ATP to 4&#39;-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR21342:SF1; PHOSPHOPANTETHEINE ADENYLYLTRANSFERASE; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">encodes **phosphopantetheine adenylyltransferase (PPAT; EC 2.7.7.3)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CQ7" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with a soluble bacterial PPAT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88CQ7 to the cytoplasm and records a soluble homohexamer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CQ7" data-a="GO:0015937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CoaD catalyzes step 4 of the five-step coenzyme A pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The PPAT reaction produces dephospho-CoA for the terminal CoaE reaction, and UniProt explicitly places Q88CQ7 at step 4 of 5.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015937	coenzyme A biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coaD/coaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CoA from (R)-pantothenate: step 4/5.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">| 4. PPAT | 2.7.7.3 | **coaD** | PP_5123 / Q88CQ7</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphopantetheine adenylyltransferase that converts 4&#39;-phosphopantetheine and ATP to dephospho-CoA and diphosphate in coenzyme A biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88CQ7" data-a="FUNCTION: Phosphopantetheine adenylyltransferase that conver..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                            pantetheine-phosphate adenylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coaD/coaD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Phosphopantetheine adenylyltransferase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coaD/coaD-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004595	pantetheine-phosphate adenylyltransferase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coaD/coaD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PPAT catalyzes the **penultimate (4th of 5) step</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27041211" target="_blank" class="term-link">
+                            PMID:27041211
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transition of phosphopantetheine adenylyltransferase from catalytic to allosteric state is characterized by ternary complex formation in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pseudomonas aeruginosa PPAT structures and enzyme assays establish the conserved catalytic and feedback-regulated behavior of this enzyme family.</div>
+
+                        <div class="finding-text">"We have solved the structures of PPAT from Pseudomonas aeruginosa"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coaD/coaD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for coaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records the PPAT reaction, CoA-pathway position, bacterial CoaD family, homohexameric assembly, and cytoplasmic localization of Q88CQ7.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coaD/coaD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for coaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed for coaD.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coaD/coaD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for coaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the PPAT assignment using bacterial ortholog biochemistry and Q88CQ7 sequence features, while identifying the absence of direct KT2440 enzymology.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* KT2440 protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway report identifies coaD as the standalone enzyme satisfying CoA-pathway step 4.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 CoaD show the CoA and acetyl-CoA feedback regulation measured for the Pseudomonas aeruginosa ortholog?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CQ7" data-a="Q: Does KT2440 CoaD show the CoA and acetyl-CoA feedb..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88CQ7 and measure PPAT kinetics, oligomeric state, and inhibition by CoA and major acyl-CoA species.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CQ7" data-a="EXPERIMENT: Purify Q88CQ7 and measure PPAT kinetics, oligomeri..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(coaD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CQ7" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">coaD (PP_5123, UniProt Q88CQ7): Phosphopantetheine Adenylyltransferase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T13:29:56.397285</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="coaD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="coaD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="coad-pp_5123-uniprot-q88cq7-phosphopantetheine-adenylyltransferase-of-pseudomonas-putida-kt2440">coaD (PP_5123, UniProt Q88CQ7): Phosphopantetheine Adenylyltransferase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>coaD</em> (OrderedLocusName PP_5123)<br />
+<strong>Protein:</strong> Phosphopantetheine adenylyltransferase (PPAT); also called dephospho-CoA pyrophosphorylase / pantetheine-phosphate adenylyltransferase<br />
+<strong>UniProt:</strong> Q88CQ7 · <strong>EC:</strong> 2.7.7.3 · <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK)</p>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>coaD</strong> (ordered locus <strong>PP_5123</strong>, UniProt <strong>Q88CQ7</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>phosphopantetheine adenylyltransferase (PPAT; EC 2.7.7.3)</strong>, also historically called dephospho-CoA pyrophosphorylase and pantetheine-phosphate adenylyltransferase. PPAT catalyzes the <strong>penultimate (4th of 5) step of the universal coenzyme A (CoA) biosynthetic pathway</strong>: the reversible, Mg-ATP–dependent transfer of an adenylyl group to (R)-4′-phosphopantetheine (PhP/PNS), producing <strong>3′-dephospho-CoA (dPCoA) and pyrophosphate</strong>. This assignment is unambiguous and is supported convergently by three independent lines of evidence: (i) primary biochemical and structural literature on close bacterial orthologs, including the enzyme from the sister species <em>Pseudomonas aeruginosa</em>; (ii) direct sequence analysis of Q88CQ7 itself, which is 64% identical to the biochemically characterized <em>E. coli</em> CoaD and retains every catalytic residue; and (iii) curated UniProt/KEGG annotation of the <em>P. putida</em> protein.</p>
+<p>The enzyme is a <strong>soluble, cytoplasmic homohexamer</strong> in which each ~161-residue protomer folds into a dinucleotide-binding (Rossmann-like α/β/α) fold. It carries out catalysis via an <strong>in-line (SN2-like) displacement mechanism</strong> in which the 4′-phosphopantetheine phosphate attacks the α-phosphate of ATP; the reaction is oriented by a small set of invariant active-site residues (Thr9, His17, Arg87, Arg90 in <em>P. putida</em> numbering). PPAT is a <strong>rate-limiting control point</strong> of CoA synthesis and is <strong>allosterically feedback-inhibited by the pathway end-product CoA</strong> (and by acetyl-CoA), competitively with its substrates. It hands its product, dephospho-CoA, to a separate enzyme, dephospho-CoA kinase (CoaE), which phosphorylates the 3′-OH to complete CoA.</p>
+<p>Because CoA and its thioester derivatives are central to fatty-acid metabolism, the TCA cycle, and — in <em>P. putida</em> specifically — to the many CoA-dependent catabolic and polyhydroxyalkanoate (PHA)-biosynthetic pathways that make this organism a versatile metabolic chassis, PPAT sits at a metabolic bottleneck upstream of all acyl-CoA chemistry. The bacterial CoaD family is structurally and mechanistically distinct from the bifunctional human enzyme (COASY), which is one reason the CoA-biosynthetic pathway is an actively pursued antibacterial drug target.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-coad-encodes-phosphopantetheine-adenylyltransferase-ppat-ec-2773-catalyzing-the-penultimate-step-of-coa-biosynthesis">F001 — coaD encodes phosphopantetheine adenylyltransferase (PPAT, EC 2.7.7.3), catalyzing the penultimate step of CoA biosynthesis</h3>
+<p>The core functional assignment rests on the classical biochemical characterization of the <em>E. coli</em> ortholog. Geerlof and colleagues purified recombinant PPAT and showed that it <strong>"catalyzes the penultimate step in coenzyme A (CoA) biosynthesis: the reversible adenylation of 4′-phosphopantetheine yielding 3′-dephospho-CoA and pyrophosphate"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/10480925/">PMID: 10480925</a>). That same study <strong>renamed the gene coaD</strong> and noted that it "is found in a wide range of microorganisms, indicating that it plays a key role in the synthesis of 3′-dephospho-CoA." Overexpression yielded highly purified recombinant PPAT that assembled as a <strong>homohexamer of 108 kDa</strong>. Importantly, the purified enzyme <strong>lacked dephospho-CoA kinase activity</strong>, establishing PPAT as a dedicated enzyme for the fourth of five CoA-biosynthesis steps rather than a bifunctional enzyme.</p>
+<p>The kinetic behavior of the enzyme was subsequently defined by Miller et al., who showed the reaction follows a <strong>random bi-bi ternary-complex mechanism</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17873050/">PMID: 17873050</a>). The reaction catalyzed is:</p>
+<blockquote>
+<p>(R)-4′-phosphopantetheine + ATP + H⁺ ⇌ 3′-dephospho-CoA + diphosphate (pyrophosphate)</p>
+</blockquote>
+<p>This is a nucleotidyltransferase reaction (transfer of an AMP/adenylyl moiety), not a simple kinase step, and it is fully reversible.</p>
+<h3 id="f002-ppat-is-a-rate-limiting-allosteric-enzyme-feedback-inhibited-by-coa-the-pseudomonas-enzyme-is-structurally-characterized">F002 — PPAT is a rate-limiting, allosteric enzyme feedback-inhibited by CoA; the <em>Pseudomonas</em> enzyme is structurally characterized</h3>
+<p>PPAT is not merely a catalytic step; it is a <strong>regulatory hub</strong>. Miller et al. demonstrated that <strong>"CoA inhibits PPAT and is competitive with ATP, PhP, and dPCoA"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17873050/">PMID: 17873050</a>), i.e., the end-product of the pathway feeds back onto this enzyme by competing with all three of its substrates/products at the active site. This makes PPAT a rate-limiting control point of CoA homeostasis.</p>
+<p>Directly relevant to <em>P. putida</em>, the closely related enzyme from <em>Pseudomonas aeruginosa</em> has been crystallized in multiple states. Chatterjee et al. captured X-ray structures with AMP-PNP, CoA, and acetyl-CoA and showed that <strong>"the enzyme is allosteric in nature and regulated by Coenzyme A (CoA) through feedback inhibition,"</strong> with the transition from a catalytic to an allosteric state proceeding via ternary-complex formation (<a href="https://pubmed.ncbi.nlm.nih.gov/27041211/">PMID: 27041211</a>). Structural work on the <em>Helicobacter pylori</em> ortholog established the general architecture: <strong>"HpPPAT is hexameric in solution and as a crystal. Each protomer has a well-packed dinucleotide-binding fold in which CoA binds"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21527250/">PMID: 21527250</a>), confirming the hexameric assembly and the Rossmann-like dinucleotide-binding fold that is diagnostic of this family.</p>
+<h3 id="f003-ppatcoad-operates-in-the-cytoplasm-within-the-universal-five-step-coa-biosynthetic-pathway">F003 — PPAT/CoaD operates in the cytoplasm within the universal five-step CoA biosynthetic pathway</h3>
+<p>CoA is a universal, essential cofactor. As reviewed by Leonardi et al., <strong>"CoA is assembled in five steps from pantothenic acid and pathway intermediates are common to both prokaryotes and eukaryotes"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/15893380/">PMID: 15893380</a>). PPAT (CoaD) performs step 4 of this pathway, converting 4′-phosphopantetheine + ATP to dephospho-CoA. Because purified PPAT lacks dephospho-CoA kinase activity, <strong>"the two final steps of CoA biosynthesis in E. coli must be catalyzed by separate enzymes"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/10480925/">PMID: 10480925</a>) — the fifth and final step is carried out by dephospho-CoA kinase (CoaE). All of these reactions occur in the <strong>cytoplasm</strong>, consistent with the soluble nature of the enzyme. The pathway as a whole is a validated antibacterial drug target (<a href="https://pubmed.ncbi.nlm.nih.gov/17873050/">PMID: 17873050</a>).</p>
+<h3 id="f004-sequence-analysis-confirms-q88cq7-is-a-bona-fide-single-domain-ppat-with-an-intact-catalytic-signature-direct-evidence-for-the-p-putida-protein">F004 — Sequence analysis confirms Q88CQ7 is a bona fide single-domain PPAT with an intact catalytic signature (direct evidence for the <em>P. putida</em> protein)</h3>
+<p>Rather than relying solely on ortholog inference, the <em>P. putida</em> protein was analyzed directly. Q88CQ7 is a <strong>compact 161-residue protein</strong>, matching the length of standalone bacterial CoaD enzymes (<em>E. coli</em> is 159 aa). A Needleman–Wunsch global alignment of Q88CQ7 against the biochemically and kinetically characterized <em>E. coli</em> CoaD (P0A6I6) gives <strong>64.3% identity and 80.5% similarity</strong> (99 of 154 aligned positions identical). Both proteins carry the diagnostic N-terminal PPAT/nucleotidyltransferase signature <strong>"(G)TFDPIT(K/N)GH"</strong> (<em>P. putida</em> residues 8–17), which includes the invariant catalytic histidine (His17 in <em>P. putida</em>, equivalent to His18 in <em>E. coli</em>) that contacts the ATP α-phosphate. Conserved downstream motifs — the basic "RGLRAV" loop around residue 87 and the "ISS" catalytic region near residues 118–120 — are also retained. This level of identity across a compact, single-domain enzyme leaves no ambiguity: Q88CQ7 is a genuine, catalytically intact PPAT.</p>
+<h3 id="f005-all-experimentally-validated-ppat-catalytic-residues-are-conserved-in-p-putida-coad-the-mechanism-is-an-sn2-like-in-line-adenylyl-transfer">F005 — All experimentally validated PPAT catalytic residues are conserved in <em>P. putida</em> CoaD; the mechanism is an SN2-like in-line adenylyl transfer</h3>
+<p>Recent structure/mutagenesis work on <em>H. pylori</em> PPAT pinned down the catalytic machinery to the residue level. Ko et al. identified <strong>"critical active site residues Thr10, His18, Arg88, and Arg91, conserved in Escherichia coli PPAT (EcPPAT)"</strong> and showed by alanine-scanning that <strong>"mutations of these residues, except for Thr10 and Lys42, resulted in a complete loss of enzymatic activity"</strong> — i.e., His18, Arg88, and Arg91 are catalytically essential (<a href="https://pubmed.ncbi.nlm.nih.gov/40843967/">PMID: 40843967</a>). Mechanistically, <strong>"these residues are expected to orient the nucleophile for an in-line displacement mechanism"</strong> — an SN2-like transfer in which the 4′-phosphopantetheine phosphate attacks the α-phosphate of ATP, displacing pyrophosphate.</p>
+<p>Alignment mapping shows all four residues are <strong>exactly conserved in <em>P. putida</em> Q88CQ7</strong>: <em>E. coli</em> Thr10→Thr9, His18→His17, Arg88→Arg87, and Arg91→Arg90 (<em>P. putida</em> numbering; motifs "FLRGLRAV" at residues 85–92 and "PGTFDPITKGHG" at residues 7–18). Furthermore, the binding modes of ligands are conserved across the whole family: <strong>"the binding modes of ATP, ADP, Ppant, and dPCoA are highly similar in all known structures"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21912874/">PMID: 21912874</a>), and structures of the <em>Mycobacterium tuberculosis</em> enzyme in apo, ATP-bound, dPCoA-bound, and CoA-bound states document the conformational cycle of the catalyzed reaction (<a href="https://pubmed.ncbi.nlm.nih.gov/23151631/">PMID: 23151631</a>). This transfer of well-established structural knowledge to the <em>P. putida</em> enzyme is fully justified by the near-complete conservation of active-site residues.</p>
+<h3 id="f006-uniprot-curation-of-q88cq7-independently-corroborates-the-reaction-hexamer-cytoplasmic-localization-and-pathway-position">F006 — UniProt curation of Q88CQ7 independently corroborates the reaction, hexamer, cytoplasmic localization, and pathway position</h3>
+<p>The curated UniProt entry for Q88CQ7 independently agrees with every conclusion drawn from literature and sequence analysis:</p>
+<table>
+<thead>
+<tr>
+<th>UniProt field</th>
+<th>Annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Function</strong></td>
+<td>"Reversibly transfers an adenylyl group from ATP to 4′-phosphopantetheine, yielding dephospho-CoA (dPCoA) and pyrophosphate"</td>
+</tr>
+<tr>
+<td><strong>Catalytic activity</strong></td>
+<td>"(R)-4′-phosphopantetheine + ATP + H⁺ = 3′-dephospho-CoA + diphosphate"</td>
+</tr>
+<tr>
+<td><strong>Pathway</strong></td>
+<td>"coenzyme A biosynthesis; CoA from (R)-pantothenate: step 4/5"</td>
+</tr>
+<tr>
+<td><strong>Subunit</strong></td>
+<td>"Homohexamer"</td>
+</tr>
+<tr>
+<td><strong>Subcellular location</strong></td>
+<td>"Cytoplasm"</td>
+</tr>
+<tr>
+<td><strong>Family</strong></td>
+<td>Bacterial CoaD family; orthology cluster COG0669</td>
+</tr>
+</tbody>
+</table>
+<p>Critically, the <strong>annotated binding-site residues (positions 9–10, 17, 41, 73, 87, 88–90, 98, 123–129) coincide exactly with the catalytic residues independently mapped by alignment</strong> (Thr9, His17, Arg87, and the 88–90 basic loop). An AlphaFold model (AlphaFoldDB Q88CQ7) and STRING/KEGG (ppu:PP_5123) cross-references are available. The convergence of curated annotation with de novo sequence analysis provides strong, mutually reinforcing support for the functional assignment.</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<h3 id="position-in-the-coa-biosynthetic-pathway">Position in the CoA biosynthetic pathway</h3>
+<p>Coenzyme A is synthesized from (R)-pantothenate (vitamin B5) in five universally conserved enzymatic steps. PPAT/CoaD catalyzes <strong>step 4</strong>:</p>
+<div class="codehilite"><pre><span></span><code> (R)-Pantothenate
+     │  1. Pantothenate kinase (CoaA / PanK)              [+ATP]
+     ▼
+ 4′-Phosphopantothenate
+     │  2. Phosphopantothenoylcysteine synthetase (CoaB)  [+Cys, +CTP]
+     ▼
+ 4′-Phosphopantothenoyl-cysteine
+     │  3. Phosphopantothenoylcysteine decarboxylase (CoaC)
+     ▼
+ 4′-Phosphopantetheine (PhP / PNS)
+     │  ►►► 4. PHOSPHOPANTETHEINE ADENYLYLTRANSFERASE (PPAT / CoaD) ◄◄◄
+     │        4′-phosphopantetheine + ATP → 3′-dephospho-CoA + PPi
+     │        [ EC 2.7.7.3 — the coaD/PP_5123 gene product ]
+     ▼
+ 3′-Dephospho-CoA (dPCoA)
+     │  5. Dephospho-CoA kinase (CoaE)                    [+ATP]
+     ▼
+ Coenzyme A (CoA)
+</code></pre></div>
+
+<p>The reaction is an <strong>adenylyl (AMP) transfer</strong>, not a phosphoryl transfer: the α-phosphate of ATP is attacked by the terminal phosphate of 4′-phosphopantetheine, forming a new phosphoanhydride bond and releasing pyrophosphate. This is why the enzyme is a nucleotidyltransferase (EC 2.7.7.-) rather than a kinase, and why the product dephospho-CoA still requires a final phosphorylation by CoaE to become mature CoA.</p>
+<h3 id="catalytic-mechanism-at-the-residue-level">Catalytic mechanism at the residue level</h3>
+<p>Each protomer presents a dinucleotide-binding (Rossmann-like) fold that binds ATP and 4′-phosphopantetheine adjacently. The conserved active-site residues perform the following roles (numbering for <em>P. putida</em> Q88CQ7):</p>
+<table>
+<thead>
+<tr>
+<th>Residue (P. putida)</th>
+<th>E. coli / H. pylori equiv.</th>
+<th>Role</th>
+<th>Effect of Ala mutation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>His17</strong></td>
+<td>His18</td>
+<td>Contacts/stabilizes ATP α-phosphate; positions nucleophile</td>
+<td>Complete loss of activity</td>
+</tr>
+<tr>
+<td><strong>Arg87</strong></td>
+<td>Arg88</td>
+<td>Stabilizes transition state / phosphates</td>
+<td>Complete loss of activity</td>
+</tr>
+<tr>
+<td><strong>Arg90</strong></td>
+<td>Arg91</td>
+<td>Stabilizes transition state / phosphates</td>
+<td>Complete loss of activity</td>
+</tr>
+<tr>
+<td><strong>Thr9</strong></td>
+<td>Thr10</td>
+<td>Substrate positioning</td>
+<td>Substantial activity retained</td>
+</tr>
+</tbody>
+</table>
+<p>The reaction proceeds through an <strong>in-line (SN2-like) displacement</strong>: the invariant His and two Arg residues orient the incoming 4′-phosphopantetheine phosphate for backside attack on the ATP α-phosphate, with pyrophosphate as the leaving group. The near-symmetric kinetics (random bi-bi ternary complex) reflect a single active site that must simultaneously accommodate both substrates.</p>
+<h3 id="quaternary-structure-and-allosteric-regulation">Quaternary structure and allosteric regulation</h3>
+<div class="codehilite"><pre><span></span><code>Hexamer (dimer of trimers) — cytoplasmic
+┌──────────────────────────────────┐
+│   6 identical ~161-aa protomers   │
+│   central water-filled channel    │
+│   along the 3-fold axis           │
+└──────────────────────────────────┘
+ │
+     Each active site:  ATP + 4&#39;-PhP  ⇌  dPCoA + PPi
+ │
+     Feedback:  CoA / acetyl-CoA bind competitively
+→ transition to allosteric (low-activity) state
+</code></pre></div>
+
+<p>The enzyme functions as a homohexamer (a dimer of trimers) with a central water-filled channel running along the three-fold axis. Feedback inhibition by CoA — competitive with ATP, PhP, and dPCoA — allows the cell to throttle CoA production when supply is adequate. Structural snapshots in <em>P. aeruginosa</em> and <em>M. tuberculosis</em> show that binding of CoA/acetyl-CoA drives a conformational transition from a catalytically competent to an allosterically inhibited state, mediated by ternary complex formation.</p>
+<h3 id="physiological-significance-in-p-putida">Physiological significance in <em>P. putida</em></h3>
+<p><em>P. putida</em> KT2440 is a metabolically versatile soil bacterium whose lifestyle depends heavily on acyl-CoA chemistry: β-oxidation of fatty acids and alcohols, catabolism of aromatic and terpenoid compounds, and the biosynthesis of medium-chain-length polyhydroxyalkanoates (PHAs) all consume or generate CoA thioesters (<a href="https://pubmed.ncbi.nlm.nih.gov/32826213/">PMID: 32826213</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/16085828/">PMID: 16085828</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/16820476/">PMID: 16820476</a>). As the rate-limiting supplier of the CoA backbone, PPAT/CoaD sits upstream of this entire acyl-CoA economy. While the CoaD enzyme itself has broadly conserved housekeeping function, its output is what fuels the specialized catabolic and biosynthetic capabilities that make <em>P. putida</em> a favored metabolic-engineering chassis. Because CoA biosynthesis is essential, coaD is expected to be an essential gene.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (organism)</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10480925/">10480925</a></td>
+<td>Geerlof et al., <em>E. coli</em> PPAT purification</td>
+<td>Defines the reaction, names the gene coaD, establishes homohexamer, shows PPAT lacks kinase activity (steps 4 &amp; 5 are separate)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17873050/">17873050</a></td>
+<td>Miller et al., <em>E. coli</em> kinetics</td>
+<td>Random bi-bi mechanism; CoA feedback inhibition competitive with all substrates; rate-limiting/drug-target status</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27041211/">27041211</a></td>
+<td>Chatterjee et al., <em>P. aeruginosa</em> structures</td>
+<td>Directly relevant <em>Pseudomonas</em> ortholog; catalytic→allosteric transition via ternary complex; CoA feedback</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21527250/">21527250</a></td>
+<td>Cheng et al., <em>H. pylori</em> structure</td>
+<td>Hexameric assembly; dinucleotide-binding (Rossmann-like) fold; CoA binding site</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40843967/">40843967</a></td>
+<td>Ko et al., <em>H. pylori</em> structure/mutagenesis</td>
+<td>Identifies and validates catalytic residues (His18, Arg88, Arg91 essential); in-line displacement mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21912874/">21912874</a></td>
+<td>Yoon et al., <em>E. faecalis</em> structures</td>
+<td>Conserved binding modes of ATP, ADP, Ppant, dPCoA across all known PPAT structures</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23151631/">23151631</a></td>
+<td>Timofeev et al., <em>M. tuberculosis</em> structures</td>
+<td>Apo/ATP/dPCoA/CoA structures document conformational cycle and hexameric central channel</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15893380/">15893380</a></td>
+<td>Leonardi et al., review</td>
+<td>Establishes the universal five-step cytoplasmic CoA pathway</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25109998/">25109998</a></td>
+<td>Leonardi &amp; Jackowski, review</td>
+<td>Broader CoA pathway regulation (PanK-centric) context</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29107839/">29107839</a></td>
+<td>Enzymatic depCoA synthesis</td>
+<td>Demonstrates PPAT (CoaD) used with PanK to make dephospho-CoA from phosphopantetheine + ATP — confirms substrate/product</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38456905/">38456905</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/40689715/">40689715</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/41069273/">41069273</a></td>
+<td><em>K. pneumoniae</em> / <em>Enterobacter</em> structures</td>
+<td>Additional structural confirmations of the reaction and PNS/ATP binding sites</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is notable for its <strong>convergence across three independent modalities</strong> — direct biochemistry/enzymology, X-ray crystallography of multiple orthologs (including a <em>Pseudomonas</em> species), and de novo sequence/curation analysis of the exact target protein Q88CQ7. No paper in the reviewed literature challenges the functional assignment.</p>
+<h3 id="on-gene-symbol-ambiguity">On gene-symbol ambiguity</h3>
+<p>The gene symbol "coaD" is unambiguous and matches the protein description. The only historical caveat is that the <em>E. coli</em> ortholog was originally mis-named <strong>kdtB</strong> (falsely implicated in Kdo/lipopolysaccharide biology) before Geerlof et al. formally corrected it to <strong>coaD</strong> upon biochemical characterization (<a href="https://pubmed.ncbi.nlm.nih.gov/10480925/">PMID: 10480925</a>). This does not affect the <em>P. putida</em> assignment, which is corroborated by direct sequence and curation evidence.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> KT2440 protein.</strong> All enzymological and structural data derive from orthologs (<em>E. coli</em>, <em>P. aeruginosa</em>, <em>H. pylori</em>, <em>M. tuberculosis</em>, <em>E. faecalis</em>, <em>K. pneumoniae</em>, <em>Enterobacter</em>). The assignment for Q88CQ7 rests on inference from high sequence identity (64% to <em>E. coli</em>) and complete active-site conservation. While this inference is extremely robust for such a conserved single-domain housekeeping enzyme, kinetic constants (Km, kcat), the precise CoA-inhibition constant, and a crystal structure specific to the <em>P. putida</em> enzyme have not been reported.</p>
+</li>
+<li>
+<p><strong>Essentiality not directly demonstrated in <em>P. putida</em>.</strong> CoA biosynthesis is essential in bacteria generally, and coaD would be expected to be essential in KT2440, but a specific gene-deletion/conditional-knockout study for PP_5123 has not been documented here.</p>
+</li>
+<li>
+<p><strong>Regulation in vivo is uncharacterized for this organism.</strong> Transcriptional/translational regulation of PP_5123 and its integration with the heavy acyl-CoA flux of <em>P. putida</em> (PHA production, aromatic catabolism) are not established.</p>
+</li>
+<li>
+<p><strong>Structural data is a model, not experimental.</strong> Only an AlphaFold model (AlphaFoldDB Q88CQ7) exists for the <em>P. putida</em> protein; no experimental structure has been solved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-and-actions">Proposed Follow-up Experiments and Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzymology.</strong> Clone PP_5123, purify the His-tagged protein, and measure steady-state kinetics (Km for ATP and 4′-phosphopantetheine, kcat) and the Ki for CoA/acetyl-CoA feedback inhibition, to confirm the inferred rate-limiting/allosteric behavior in the <em>P. putida</em> enzyme directly. (Note: expression tags can occupy the PNS-binding site — see <a href="https://pubmed.ncbi.nlm.nih.gov/40689715/">PMID: 40689715</a> — so tag placement/removal should be considered.)</p>
+</li>
+<li>
+<p><strong>Confirm quaternary structure.</strong> Use size-exclusion chromatography–MALS or native MS to verify the homohexameric assembly predicted by the family.</p>
+</li>
+<li>
+<p><strong>Solve an experimental structure.</strong> Crystallize the <em>P. putida</em> enzyme with ATP/AMP-PNP, 4′-phosphopantetheine, dephospho-CoA, and CoA to validate the AlphaFold model and directly visualize the mapped catalytic residues (Thr9, His17, Arg87, Arg90).</p>
+</li>
+<li>
+<p><strong>Genetic essentiality test.</strong> Attempt a chromosomal deletion or construct a conditional (e.g., inducible) knockdown of PP_5123 to formally establish essentiality in KT2440, ideally with rescue by an ectopic copy.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis in situ.</strong> Introduce His17Ala, Arg87Ala, and Arg90Ala substitutions and confirm loss of function, directly transferring the <em>H. pylori</em> mutagenesis result (<a href="https://pubmed.ncbi.nlm.nih.gov/40843967/">PMID: 40843967</a>) to the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Metabolic-engineering relevance.</strong> Given <em>P. putida</em>'s reliance on acyl-CoA chemistry, quantify how CoaD activity/expression limits CoA pools during PHA accumulation and aromatic/fatty-acid catabolism — potentially identifying PPAT as an engineering target to relieve CoA bottlenecks.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>coaD (PP_5123, Q88CQ7) encodes phosphopantetheine adenylyltransferase (PPAT, EC 2.7.7.3)</strong>, a soluble cytoplasmic homohexamer that catalyzes step 4 of the five-step coenzyme A biosynthetic pathway — the reversible, Mg-ATP–dependent adenylyl transfer to (R)-4′-phosphopantetheine, yielding 3′-dephospho-CoA and pyrophosphate via an in-line (SN2-like) mechanism using conserved residues Thr9, His17, Arg87, and Arg90. It is the rate-limiting, CoA/acetyl-CoA–feedback-inhibited control point of CoA synthesis and passes its product to dephospho-CoA kinase (CoaE) for the final step. This conclusion is supported convergently by primary biochemical/structural literature on close orthologs (including <em>P. aeruginosa</em>), direct sequence analysis of Q88CQ7 (64% identity to the characterized <em>E. coli</em> enzyme with a fully conserved catalytic signature), and curated UniProt/KEGG annotation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="coaD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="coaD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10480925</li>
+<li>PMID:17873050</li>
+<li>PMID:27041211</li>
+<li>PMID:21527250</li>
+<li>PMID:15893380</li>
+<li>PMID:40843967</li>
+<li>PMID:21912874</li>
+<li>PMID:23151631</li>
+<li>PMID:32826213</li>
+<li>PMID:16085828</li>
+<li>PMID:16820476</li>
+<li>PMID:40689715</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CQ7
+gene_symbol: coaD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  coaD (PP_5123) encodes the soluble bacterial phosphopantetheine
+  adenylyltransferase (PPAT) that reversibly transfers an adenylyl group from
+  ATP to 4&#39;-phosphopantetheine, producing 3&#39;-dephospho-CoA and diphosphate.
+  This is the fourth of five reactions that convert pantothenate to coenzyme A.
+  Q88CQ7 is a compact CoaD-family homohexamer with the conserved PPAT domains
+  and catalytic-site features; direct kinetics have not been reported for the
+  KT2440 protein.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic catalytic activity should be replaced by the known PPAT function.
+    action: MODIFY
+    reason: &gt;-
+      The InterPro-derived parent term is true but uninformative. HAMAP, Rhea,
+      and the bacterial CoaD family support the specific
+      pantetheine-phosphate adenylyltransferase activity already present in GOA.
+    proposed_replacement_terms:
+    - id: GO:0004595
+      label: pantetheine-phosphate adenylyltransferase activity
+    supported_by:
+    - reference_id: file:PSEPK/coaD/coaD-goa.tsv
+      supporting_text: &#34;GO:0003824\tcatalytic activity&#34;
+    - reference_id: file:PSEPK/coaD/coaD-goa.tsv
+      supporting_text: &#34;GO:0004595\tpantetheine-phosphate adenylyltransferase activity&#34;
+    - reference_id: file:PSEPK/coaD/coaD-uniprot.txt
+      supporting_text: &#34;RecName: Full=Phosphopantetheine adenylyltransferase&#34;
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: PPAT is the core molecular function of CoaD.
+    action: ACCEPT
+    reason: &gt;-
+      Q88CQ7 is assigned to the bacterial CoaD family by HAMAP, InterPro,
+      PANTHER, and NCBIfam, and UniProt records the exact Rhea reaction and
+      conserved catalytic features.
+    supported_by:
+    - reference_id: file:PSEPK/coaD/coaD-goa.tsv
+      supporting_text: &#34;GO:0004595\tpantetheine-phosphate adenylyltransferase activity&#34;
+    - reference_id: file:PSEPK/coaD/coaD-uniprot.txt
+      supporting_text: &#34;Reversibly transfers an adenylyl group from ATP to 4&#39;-&#34;
+    - reference_id: file:PSEPK/coaD/coaD-uniprot.txt
+      supporting_text: &#34;DR   PANTHER; PTHR21342:SF1; PHOSPHOPANTETHEINE ADENYLYLTRANSFERASE; 1.&#34;
+    - reference_id: file:PSEPK/coaD/coaD-deep-research-openscientist.md
+      supporting_text: &#34;encodes **phosphopantetheine adenylyltransferase (PPAT; EC 2.7.7.3)**&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is consistent with a soluble bacterial PPAT.
+    action: ACCEPT
+    reason: UniProt explicitly assigns Q88CQ7 to the cytoplasm and records a soluble homohexamer.
+    supported_by:
+    - reference_id: file:PSEPK/coaD/coaD-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/coaD/coaD-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: CoaD catalyzes step 4 of the five-step coenzyme A pathway.
+    action: ACCEPT
+    reason: &gt;-
+      The PPAT reaction produces dephospho-CoA for the terminal CoaE reaction,
+      and UniProt explicitly places Q88CQ7 at step 4 of 5.
+    supported_by:
+    - reference_id: file:PSEPK/coaD/coaD-goa.tsv
+      supporting_text: &#34;GO:0015937\tcoenzyme A biosynthetic process&#34;
+    - reference_id: file:PSEPK/coaD/coaD-uniprot.txt
+      supporting_text: &#34;CoA from (R)-pantothenate: step 4/5.&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+      supporting_text: &#34;| 4. PPAT | 2.7.7.3 | **coaD** | PP_5123 / Q88CQ7&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:27041211
+  title: Transition of phosphopantetheine adenylyltransferase from catalytic to allosteric
+    state is characterized by ternary complex formation in Pseudomonas aeruginosa.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified structural and biochemical evidence for a close
+      Pseudomonas PPAT ortholog; it does not directly assay Q88CQ7.
+  findings:
+  - statement: &gt;-
+      Pseudomonas aeruginosa PPAT structures and enzyme assays establish the
+      conserved catalytic and feedback-regulated behavior of this enzyme family.
+    supporting_text: &#34;We have solved the structures of PPAT from Pseudomonas aeruginosa&#34;
+- id: file:PSEPK/coaD/coaD-uniprot.txt
+  title: UniProtKB entry for coaD
+  findings:
+  - statement: &gt;-
+      UniProt records the PPAT reaction, CoA-pathway position, bacterial CoaD
+      family, homohexameric assembly, and cytoplasmic localization of Q88CQ7.
+- id: file:PSEPK/coaD/coaD-goa.tsv
+  title: QuickGO GOA annotations for coaD
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed for coaD.
+- id: file:PSEPK/coaD/coaD-deep-research-openscientist.md
+  title: OpenScientist gene research for coaD
+  findings:
+  - statement: &gt;-
+      The report supports the PPAT assignment using bacterial ortholog
+      biochemistry and Q88CQ7 sequence features, while identifying the absence
+      of direct KT2440 enzymology.
+    supporting_text: &#34;No direct experimental characterization of the *P. putida* KT2440 protein.&#34;
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: The pathway report identifies coaD as the standalone enzyme satisfying CoA-pathway step 4.
+core_functions:
+- description: &gt;-
+    Phosphopantetheine adenylyltransferase that converts
+    4&#39;-phosphopantetheine and ATP to dephospho-CoA and diphosphate in coenzyme A
+    biosynthesis.
+  molecular_function:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/coaD/coaD-uniprot.txt
+    supporting_text: &#34;RecName: Full=Phosphopantetheine adenylyltransferase&#34;
+  - reference_id: file:PSEPK/coaD/coaD-goa.tsv
+    supporting_text: &#34;GO:0004595\tpantetheine-phosphate adenylyltransferase activity&#34;
+  - reference_id: file:PSEPK/coaD/coaD-deep-research-openscientist.md
+    supporting_text: &#34;PPAT catalyzes the **penultimate (4th of 5) step&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does KT2440 CoaD show the CoA and acetyl-CoA feedback regulation measured
+    for the Pseudomonas aeruginosa ortholog?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88CQ7 and measure PPAT kinetics, oligomeric state, and inhibition by
+    CoA and major acyl-CoA species.
+  experiment_type: biochemical enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

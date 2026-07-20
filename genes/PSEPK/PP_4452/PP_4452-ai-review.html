@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_4452 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_4452</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EL0" target="_blank" class="term-link">
+                        Q88EL0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_4452";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EL0" data-a="DESCRIPTION: PP_4452 encodes a predicted soluble NAD(P)-depende..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_4452 encodes a predicted soluble NAD(P)-dependent oxidoreductase in the opine/lysopine dehydrogenase family. Q88EL0 has an opine-dehydrogenase C-terminal domain and is encoded next to an opine ABC importer and the opine-oxidase genes ooxA and ooxB. This architecture and neighborhood support an opine-related metabolic role, but the native substrate, cofactor preference, and physiological reaction direction have not been determined experimentally.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008677" target="_blank" class="term-link">
+                                    GO:0008677
+                                </a>
+                            </span>
+                            <span class="term-label">2-dehydropantoate 2-reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EL0" data-a="GO:0008677" data-r="GO_REF:0000003" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The EC-derived ketopantoate-reductase assignment conflicts with the full-length family classification.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88EL0 is assigned to the opine/lysopine-dehydrogenase PANTHER and InterPro families and contains the diagnostic Octopine_DH domain. KEGG independently assigns it K04940/EC 1.5.1.28, while canonical panE Q88N64 supplies the ketopantoate reaction. The EC 1.1.1.169 mapping is therefore a cross-family electronic over-propagation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008677	2-dehydropantoate 2-reductase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR051729; Opine/Lysopine_DH.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF02317; Octopine_DH; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The evidence overwhelmingly favors an **opine/lysopine dehydrogenase**.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EL0" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad oxidoreductase term is supported while the native opine substrate remains unknown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Rossmann-like NAD(P)-binding architecture, opine-dehydrogenase family assignment, and neighboring opine-catabolism genes support an oxidoreductase function. A substrate-specific GO term would be premature without direct biochemistry.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016491	oxidoreductase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   SUPFAM; SSF51735; NAD(P)-binding Rossmann-fold domains; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The **exact opine substrate of PP_4452 has not been experimentally determined.**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015940" target="_blank" class="term-link">
+                                    GO:0015940
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EL0" data-a="GO:0015940" data-r="GO_REF:0000041" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pantothenate-pathway placement derives from the erroneous EC 1.1.1.169 assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The opine-dehydrogenase family and local opine uptake/oxidation locus place Q88EL0 outside pantothenate biosynthesis. Canonical PanE Q88N64 satisfies the pantoate-forming reaction in KT2440.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015940	pantothenate biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4452/PP_4452-notes.md
+
+                                </span>
+
+                                <div class="support-text">This is a family mismatch, not merely a redundant paralog.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_4452 (not in the supplied candidate list) is a mis-annotated opine dehydrogenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Opine/lysopine-dehydrogenase-family NAD(P)-dependent oxidoreductase in an opine uptake and oxidation locus; native substrate and reaction direction are unresolved.</h3>
+                <span class="vote-buttons" data-g="Q88EL0" data-a="FUNCTION: Opine/lysopine-dehydrogenase-family NAD(P)-depende..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                            oxidoreductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4452/PP_4452-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR051729; Opine/Lysopine_DH.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4452/PP_4452-notes.md
+
+                        </span>
+
+                        <div class="finding-text">opine ABC-transporter neighborhood and the named opine-oxidase genes</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The **exact opine substrate of PP_4452 has not been experimentally determined.**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18599075" target="_blank" class="term-link">
+                            PMID:18599075
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A structural basis for substrate selectivity and stereoselectivity in octopine dehydrogenase from Pecten maximus.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Octopine dehydrogenase catalyzes NADH-dependent reductive condensation of an amino acid and pyruvate, with family substrate specificity determined by active-site recognition.</div>
+
+                        <div class="finding-text">"catalyzes the reductive condensation of l-arginine and pyruvate to"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4452/PP_4452-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4452</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The unreviewed record carries the conflicting electronic KPR assignment but identifies an opine/lysopine-dehydrogenase family and Octopine_DH domain.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4452/PP_4452-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_4452</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the three annotations reviewed for PP_4452.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4452/PP_4452-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual curation notes for PP_4452</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The notes record the verified KEGG K04940 assignment, the opine-transporter/ooxAB neighborhood, and the decision to retain only a broad oxidoreductase term pending substrate identification.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_4452</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report resolves the KPR/opine-family conflict using domain, orthology, and genomic-neighborhood evidence and explicitly notes the lack of direct PP_4452 biochemistry.</div>
+
+                        <div class="finding-text">"**No experimental study of PP_4452 itself exists**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The species-aware report identified PP_4452 as an extra false-positive KPR outside the original ppu00770 candidate table.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which opine substrate and nicotinamide cofactor are used by PP_4452 in vivo?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88EL0" data-a="Q: Which opine substrate and nicotinamide cofactor ar..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Screen purified Q88EL0 against candidate opines and amino-acid/keto-acid pairs with NADH and NADPH, then test growth and transcriptional induction of a PP_4452 deletion on the active substrates.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical and genetic analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88EL0" data-a="EXPERIMENT: Screen purified Q88EL0 against candidate opines an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4452-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EL0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_4452 (Q88EL0) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T13:54:59.545357</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4452-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4452-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_4452-q88el0-in-pseudomonas-putida-kt2440">Functional Annotation of PP_4452 (Q88EL0) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Target:</strong> Gene PP_4452 / UniProt <strong>Q88EL0</strong> / <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / <strong>KT2440</strong>), organism code PSEPK.<br />
+<strong>Protein:</strong> 359 aa, soluble cytoplasmic NAD(P)-dependent oxidoreductase.<br />
+<strong>Report date:</strong> 2026-07-18</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>PP_4452 encodes a <strong>cytoplasmic NAD(P)-dependent oxidoreductase of the opine/lysopine dehydrogenase family</strong> (an "opine dehydrogenase," EC 1.5.1.28-type; KEGG ortholog <strong>K04940</strong>). Its most likely primary reaction is the reversible NAD(P)(H)-dependent interconversion between an <strong>"opine" (an N-(carboxyalkyl)-amino acid / secondary-amine conjugate) and its constituent amino acid + 2‑oxo (keto) acid</strong> — i.e., reductive condensation in the anabolic direction, or oxidative cleavage in the catabolic direction. The gene lies at the head of a <strong>complete opine-utilization operon</strong> (opine ABC importer + a two-subunit octopine oxidase OoxAB + a LysR regulator), which strongly indicates a <strong>catabolic role in the uptake and breakdown of opine growth substrates</strong> in this soil/rhizosphere bacterium. The enzyme works in the <strong>cytoplasm</strong>.</p>
+<blockquote>
+<p><strong>Important annotation caveat.</strong> The UniProt name "2‑dehydropantoate 2‑reductase / ketopantoate reductase (EC 1.1.1.169)" attached to Q88EL0 is an <strong>automated (ARBA) electronic prediction, not an experimental or manually curated assignment, and is almost certainly a mis-annotation.</strong> It arises because ketopantoate reductase (KPR/PanE) and opine dehydrogenases share the same two-domain protein fold. Family-level classifiers, KEGG orthology, genomic context, and the presence of three <em>bona fide</em> ketopantoate reductases elsewhere in the genome all indicate PP_4452 is <strong>not</strong> the pantothenate-pathway KPR. This report treats PP_4452 as an opine dehydrogenase and explains the evidence in full.</p>
+</blockquote>
+<p><strong>No experimental study of PP_4452 itself exists</strong>; the functional assignment is based on rigorous bioinformatic and evolutionary inference plus the biochemistry of characterized homologs.</p>
+<hr />
+<h2 id="2-geneprotein-identity-verification">2. Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88EL0</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>Locus tag</td>
+<td>PP_4452 (GenBank AAN70027)</td>
+<td>EMBL AAN70027.1</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440 (PSEPK)</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Length / location</td>
+<td>359 aa; genome complement 5,051,434–5,052,513</td>
+<td>KEGG ppu:PP_4452</td>
+</tr>
+<tr>
+<td>UniProt RecName (automated)</td>
+<td>2-dehydropantoate 2-reductase, EC 1.1.1.169</td>
+<td>ARBA (ECO:0000256)</td>
+</tr>
+<tr>
+<td>KEGG ortholog</td>
+<td><strong>K04940 opine dehydrogenase (EC 1.5.1.28)</strong></td>
+<td>KEGG</td>
+</tr>
+<tr>
+<td>GenBank product</td>
+<td>"NAD/NADP octopine/nopaline dehydrogenase family protein"</td>
+<td>KEGG/GenBank</td>
+</tr>
+<tr>
+<td>eggNOG / OrthoDB</td>
+<td>COG0240 / 6135265at2</td>
+<td>UniProt xrefs</td>
+</tr>
+</tbody>
+</table>
+<p>The locus tag, organism, and accession all match the target. <strong>The disagreement is purely at the level of assigned function</strong> (KPR vs. opine dehydrogenase), which Section 3 resolves. The gene is genuine and correctly identified; the literature below concerns the protein <em>family</em>, since no paper addresses PP_4452 directly.</p>
+<hr />
+<h2 id="3-resolving-the-function-opine-dehydrogenase-not-ketopantoate-reductase">3. Resolving the Function: Opine Dehydrogenase, Not Ketopantoate Reductase</h2>
+<p>Ketopantoate reductase (KPR) and opine dehydrogenases are <strong>structural homologs</strong>: both are built from an N‑terminal Rossmann NAD(P)(H)-binding domain plus a C‑terminal α‑helical domain, and KPR is a member of the 6‑phosphogluconate‑dehydrogenase C‑terminal‑domain‑like superfamily [PMID 11724562]. This shared fold is exactly what causes automated pipelines to cross-label members of one family as the other. Five independent lines of evidence show PP_4452 belongs to the <strong>opine dehydrogenase</strong> side of this fold:</p>
+<ol>
+<li><strong>Family-level classification (strongest signal).</strong> InterPro assigns Q88EL0 to <strong>family IPR051729 "Opine/Lysopine Dehydrogenase,"</strong> and PANTHER independently assigns <strong>family PTHR38015 "Opine/Lysopine Dehydrogenase."</strong> In InterPro, family membership is the functional classification; the ketopantoate-reductase match (IPR013332 "KPR N-terminal domain," Pfam PF02558 PanE/ApbA) is only a <strong>domain-level</strong> hit reflecting the shared Rossmann fold.</li>
+<li><strong>Diagnostic domain and structural signatures.</strong> Pfam also matches <strong>PF02317 "NAD/NADP octopine/nopaline dehydrogenase, α-helical domain,"</strong> and the CATH homologous superfamily for the C-terminal domain is <strong>G3DSA:1.10.1040.10 "N-(1-D-carboxylethyl)-L-norvaline dehydrogenase"</strong> (CENDH, a characterized bacterial opine dehydrogenase).</li>
+<li><strong>KEGG orthology.</strong> PP_4452 is assigned <strong>K04940 opine dehydrogenase (EC 1.5.1.28)</strong> — not the KPR ortholog K00077.</li>
+<li><strong>The real KPRs are elsewhere.</strong> <em>P. putida</em> KT2440's genuine pantothenate-pathway ketopantoate reductases are <strong>PP_1351, PP_2325, and PP_2998</strong>, all annotated K00077 / EC 1.1.1.169. PP_4452 is therefore redundant to and distinct from the housekeeping KPR — it is not needed for vitamin B5/CoA synthesis.</li>
+<li><strong>Protein length.</strong> PP_4452 is <strong>359 aa</strong>, matching the opine dehydrogenase family (e.g., <em>Arthrobacter</em> sp. 1C opine DH, UniProt Q44297 = 359 aa; <em>Pecten maximus</em> octopine DH ≈ 399 aa) and clearly longer than single-domain KPR (<em>E. coli</em> PanE = 303 aa).</li>
+<li><strong>Quantitative pairwise identity</strong> (global BLOSUM62 alignment, this work). PP_4452 is <strong>most similar to a characterized bacterial opine dehydrogenase</strong> — <em>Arthrobacter</em> sp. 1C opine DH (Q44297): <strong>29.6% identity / 49.3% similarity over a near-full-length 351-residue alignment</strong> — and to <em>P. aeruginosa</em> pseudopaline synthase CntM (Q9HUX5): 24.6% / 42.4% over 354 aa. By contrast it aligns to <em>E. coli</em> ketopantoate reductase (P0A9J4) at only <strong>22.7% identity over 295 aa</strong>, meaning ~64 residues of PP_4452 have <strong>no KPR counterpart</strong> — only the shared N-terminal Rossmann region aligns. Thus PP_4452 matches opine dehydrogenases along essentially its entire length but matches KPR only in the common cofactor-binding subdomain.</li>
+</ol>
+<p><strong>Conclusion:</strong> The evidence overwhelmingly favors an <strong>opine/lysopine dehydrogenase</strong>. The KPR RecName should be regarded as a low-confidence electronic artifact.</p>
+<hr />
+<h2 id="4-primary-function-and-reaction-chemistry">4. Primary Function and Reaction Chemistry</h2>
+<h3 id="41-reaction-class">4.1 Reaction class</h3>
+<p>Opine dehydrogenases (OpDHs) catalyze the <strong>NAD(P)(H)-dependent reductive condensation of an amino acid and a 2‑oxo acid into a secondary-amine "opine,"</strong> and the reverse oxidative cleavage. The archetype is octopine dehydrogenase (OcDH) from the scallop <em>Pecten maximus</em>, which "catalyzes the reductive condensation of L‑arginine and pyruvate to octopine … [and] oxidizes glycolytically born NADH to NAD⁺" [PMID 18599075]. Generic scheme:</p>
+<blockquote>
+<p>amino acid + 2‑oxo acid + NAD(P)H + H⁺ ⇌ opine (N‑(carboxyalkyl)amino acid) + NAD(P)⁺ + H₂O</p>
+</blockquote>
+<p>The hydride is delivered from/accepted by the nicotinamide cofactor bound in the N‑terminal Rossmann domain; the reaction creates (or breaks) a C–N bond and generates a new chiral center.</p>
+<h3 id="42-substrate-specificity">4.2 Substrate specificity</h3>
+<p>The <strong>exact opine substrate of PP_4452 has not been experimentally determined.</strong> In characterized OpDHs, substrate identity is set by <strong>size selection in the active site</strong> — a "molecular ruler" that combines electrostatic recognition of the amino-acid α-carboxylate/side chain with steric gating of the 2‑oxo-acid moiety [PMID 18599075]. Family members differ widely in their amino-acid partner (arginine → octopine/nopaline; ornithine/lysine → various; norvaline → CENDH product; glutamate → staphylopine/pseudopaline-type). Based on family and genomic context, PP_4452 is predicted to act on an <strong>opine-type N-(carboxyalkyl)amino acid</strong>; defining the precise pair requires enzymology.</p>
+<h3 id="43-cofactor">4.3 Cofactor</h3>
+<p>NAD(P)(H)-dependent (the family uses NADH or NADPH depending on the member). The intact N-terminal glycine-rich dinucleotide-binding motif is present near the N-terminus of PP_4452 (…<strong>GIIGAGGIG</strong>…, residues ~10–18), confirming a functional Rossmann cofactor site.</p>
+<hr />
+<h2 id="5-structural-basis">5. Structural Basis</h2>
+<ul>
+<li><strong>Fold:</strong> two-domain architecture — N‑terminal <strong>Rossmann NAD(P)(H)-binding domain</strong> (CATH 3.40.50.720 / SSF51735) + C‑terminal <strong>α-helical substrate/dimerization domain</strong> (6‑phosphogluconate-dehydrogenase-like; SSF48179, CATH 1.10.1040.10). This is the canonical opine-dehydrogenase/KPR superfamily fold [PMID 11724562].</li>
+<li><strong>Catalytic logic (from homologs):</strong> catalysis occurs in the interdomain cleft; cofactor binds in the Rossmann lobe and the amino-acid/2-oxo-acid substrates bind in the cleft, with domain closure bringing catalytic residues into register. In the homologous KPR this closure repositions a catalytic Lys/Glu pair over the substrate [PMID 17229734, PMID 11123955]; opine dehydrogenases use an analogous interdomain active site with substrate-recognition residues that impose the "molecular ruler" specificity [PMID 18599075].</li>
+<li>An <strong>AlphaFold model (AlphaFoldDB Q88EL0)</strong> is available and is expected to reproduce this bilobed fold, offering a route to computational substrate docking.</li>
+</ul>
+<hr />
+<h2 id="6-subcellular-localization">6. Subcellular Localization</h2>
+<p>PP_4452 is a <strong>soluble cytoplasmic protein</strong>. A Kyte–Doolittle hydropathy scan (19-residue window, this work) gives a maximum local hydropathy of only <strong>1.36</strong>, below the ~1.6–1.9 threshold for a membrane-spanning helix, so there is <strong>no predicted transmembrane segment</strong>; the N-terminus begins directly with the glycine-rich Rossmann motif (MEMQSYKVGIIGAGGIG…) rather than a cleavable signal peptide. NAD(P)-dependent dehydrogenases of this family act in the cytosol. This is consistent with its pathway role: the substrate (an opine) is first <strong>imported across the inner membrane by the co-encoded ABC transporter</strong> (membrane-bound permeases + periplasmic/lipoprotein substrate-binding protein), after which PP_4452 processes it <strong>intracellularly</strong>.</p>
+<hr />
+<h2 id="7-pathway-context-a-complete-opine-utilization-operon">7. Pathway Context: A Complete Opine-Utilization Operon</h2>
+<p>PP_4452 is the first gene of a contiguous, co-oriented (minus-strand) gene cluster spanning ~5.051–5.061 Mb that encodes a full opine uptake-and-catabolism system:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>KEGG KO</th>
+<th>Annotated product</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_4452</strong></td>
+<td>K04940</td>
+<td>opine dehydrogenase (EC 1.5.1.28)</td>
+<td><strong>NAD(P)-dependent opine dehydrogenase (this gene)</strong></td>
+</tr>
+<tr>
+<td>PP_4453</td>
+<td>K02031</td>
+<td>ABC transporter ATP-binding</td>
+<td>Importer — ATPase</td>
+</tr>
+<tr>
+<td>PP_4454</td>
+<td>K02034</td>
+<td>"Opine ABC transporter" permease</td>
+<td>Importer — permease</td>
+</tr>
+<tr>
+<td>PP_4455</td>
+<td>K02033</td>
+<td>ABC permease</td>
+<td>Importer — permease</td>
+</tr>
+<tr>
+<td>PP_4458</td>
+<td>K02035</td>
+<td>ABC substrate-binding protein</td>
+<td>Importer — solute-binding subunit</td>
+</tr>
+<tr>
+<td>PP_4456</td>
+<td>K24954</td>
+<td><strong>octopine oxidase subunit A (OoxA)</strong></td>
+<td>Flavin/Fe-S opine-catabolic oxidase</td>
+</tr>
+<tr>
+<td>PP_4457</td>
+<td>K24955</td>
+<td><strong>octopine oxidase subunit B (OoxB)</strong></td>
+<td>Flavin/Fe-S opine-catabolic oxidase</td>
+</tr>
+<tr>
+<td>PP_4460</td>
+<td>—</td>
+<td>LysR-family transcriptional regulator</td>
+<td>Substrate-responsive induction</td>
+</tr>
+<tr>
+<td>PP_4461</td>
+<td>—</td>
+<td>Major facilitator superfamily transporter</td>
+<td>Auxiliary transport</td>
+</tr>
+<tr>
+<td>PP_4462</td>
+<td>—</td>
+<td>putative keto-acid (HMG/oxaloacetate) aldolase</td>
+<td>Downstream product catabolism</td>
+</tr>
+</tbody>
+</table>
+<p>Bacterial opine dehydrogenases function in <strong>opine catabolism</strong> — for example, "Opines, such as nopaline and octopine … are specifically catabolized by opine dehydrogenase (OpnDH)" [PMID 40581604]. The classical multi-subunit OpnDH/opine oxidase "contain[s] FAD, FMN, and 2 iron-sulfur clusters as cofactors" [PMID 40581604], matching the two-subunit <strong>OoxAB (PP_4456/PP_4457)</strong> in this operon. Thus the cluster contains <strong>two complementary opine-degrading activities</strong> — the NAD(P)-linked opine dehydrogenase (PP_4452) and the flavin/Fe-S opine oxidase (OoxAB) — alongside a dedicated importer and a LysR regulator that likely induces the operon when an opine is available. The most parsimonious interpretation is that this locus lets <em>P. putida</em> <strong>import and consume opine (N-carboxyalkyl-amino-acid) compounds as carbon and nitrogen sources</strong>, with PP_4452 cleaving the opine into an amino acid + 2‑oxo acid that feed central metabolism.</p>
+<h3 id="distinction-from-the-metallophore-branch">Distinction from the metallophore branch</h3>
+<p>The same superfamily includes <strong>biosynthetic</strong> "opine" dehydrogenases that build nicotianamine-like metallophores (staphylopine, pseudopaline, yersinopine) used by pathogens to counter host nutritional immunity [PMID 31300464]. Those enzymes (CntM-type) sit in <em>cnt</em> operons together with a <strong>nicotianamine synthase (CntL)</strong> and a dedicated metallophore exporter — none of which are present at the PP_4452 locus. This further supports a <strong>catabolic</strong>, nutrient-utilization role rather than metallophore biosynthesis.</p>
+<hr />
+<h2 id="8-evidence-summary">8. Evidence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Belongs to opine/lysopine dehydrogenase family (not KPR)</td>
+<td>Bioinformatic: InterPro &amp; PANTHER family assignment, CATH/Pfam signatures, KEGG orthology</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Housekeeping KPRs are separate genes (PP_1351/2325/2998)</td>
+<td>Comparative genomics (KEGG K00077)</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Catalyzes NAD(P)-dependent opine ⇌ amino acid + 2-oxo acid</td>
+<td>Homology to characterized OpDHs [PMID 18599075]</td>
+<td>Moderate–strong (by inference)</td>
+</tr>
+<tr>
+<td>Functions in opine catabolism/uptake</td>
+<td>Genomic context: complete importer + OoxAB oxidase + LysR [PMID 40581604]</td>
+<td>Strong (contextual)</td>
+</tr>
+<tr>
+<td>Cytoplasmic localization</td>
+<td>Sequence features (no signal/TM) + family biochemistry</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Exact opine substrate</td>
+<td>—</td>
+<td><strong>Unknown (experimental gap)</strong></td>
+</tr>
+<tr>
+<td>Direct enzymology of PP_4452</td>
+<td>—</td>
+<td><strong>None available</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-supported-and-refuted-hypotheses">9. Supported and Refuted Hypotheses</h2>
+<ul>
+<li><strong>REFUTED (as the primary function): Ketopantoate reductase / 2-dehydropantoate 2-reductase (EC 1.1.1.169).</strong> The UniProt ARBA name is a fold-based electronic artifact; family classifiers, KEGG orthology, and the existence of three dedicated KPRs elsewhere argue against it. (A residual, unproven possibility that the enzyme retains weak promiscuous 2-oxo-acid reductase activity cannot be formally excluded without assays, but it is not the physiological role.)</li>
+<li><strong>SUPPORTED: NAD(P)-dependent opine/lysopine dehydrogenase (EC 1.5.1.28-type, K04940)</strong> acting in the cytoplasm.</li>
+<li><strong>SUPPORTED: Catabolic role in an opine-utilization operon</strong> (uptake + degradation of an opine growth substrate), based on the co-encoded ABC importer, OoxAB opine oxidase, and LysR regulator.</li>
+<li><strong>NOT SUPPORTED: Metallophore (staphylopine/pseudopaline-type) biosynthesis</strong> — the diagnostic nicotianamine synthase (CntL) and metallophore exporter are absent.</li>
+</ul>
+<hr />
+<h2 id="10-limitations-and-future-directions">10. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No direct biochemistry</strong> exists for PP_4452; conclusions rest on bioinformatics, homology, and genomic context. High-throughput/automated database annotations conflict, and the UniProt RecName is misleading.</li>
+<li><strong>The precise opine substrate and cofactor preference (NADH vs NADPH) are undetermined.</strong> Priority experiments: (i) recombinant expression and an activity screen against candidate opines and amino-acid/2‑oxo-acid pairs (arginine+pyruvate, ornithine/lysine/glutamate + pyruvate/α-ketoglutarate); (ii) steady-state kinetics and cofactor specificity; (iii) AlphaFold-guided substrate docking and active-site "molecular-ruler" analysis; (iv) growth phenotyping of a PP_4452 (and operon) deletion on candidate opines as sole C/N source; (v) transcriptional induction tests to confirm LysR (PP_4460) control.</li>
+<li>Confirming which of PP_1351/PP_2325/PP_2998 is the functional pantothenate-pathway KPR would complete the vitamin B5 picture but is outside this gene's scope.</li>
+</ul>
+<hr />
+<h2 id="key-references">Key References</h2>
+<ul>
+<li>Matak-Vinković et al. (2001) <em>Biochemistry</em> — E. coli ketopantoate reductase structure; shared 6PGD-like superfamily fold. <strong>PMID 11724562</strong></li>
+<li>Zheng &amp; Blanchard (2000) — KPR catalytic residues (Lys/Glu). <strong>PMID 11123955</strong></li>
+<li>Ciulli et al. (2007) — KPR ternary complex, domain closure. <strong>PMID 17229734</strong></li>
+<li>Smits et al. (2008) <em>J. Biol. Chem.</em> — octopine dehydrogenase structure; reaction and "molecular ruler" specificity. <strong>PMID 18599075</strong></li>
+<li>Laffont et al. (2019) — opine-type metallophores (staphylopine/pseudopaline/yersinopine). <strong>PMID 31300464</strong></li>
+<li>Watanabe et al. (2025) — bacterial opine catabolism; monomeric flavin opine dehydrogenase and multi-subunit OpnDH cofactors. <strong>PMID 40581604</strong></li>
+<li>Database sources: UniProt Q88EL0; KEGG ppu:PP_4452 and neighbors; InterPro/PANTHER/CATH/Pfam classifications.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_4452-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_4452-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4452-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EL0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_4452-curation-notes">PP_4452 curation notes</h1>
+<h2 id="opine-dehydrogenase-architecture">Opine-dehydrogenase architecture</h2>
+<p>Q88EL0 carries the opine/lysopine dehydrogenase family assignments<br />
+<code>IPR051729</code>, <code>IPR003421</code>, and <code>PTHR38015:SF1</code>, including an Octopine_DH Pfam<br />
+domain. It lacks the PanE/ApbA family assignment that supports the canonical<br />
+ketopantoate reductase in this organism.<br />
+[file:PSEPK/PP_4452/PP_4452-uniprot.txt "DR   PANTHER; PTHR38015:SF1; OPINE<br />
+DEHYDROGENASE DOMAIN-CONTAINING PROTEIN; 1."]</p>
+<p>The PANTHER family is grounded by reviewed opine, octopine, vitopine, and<br />
+tauropine dehydrogenases, whereas the current EC 1.1.1.169 and pantothenate<br />
+pathway assignments were propagated electronically. This is a family mismatch,<br />
+not merely a redundant paralog. The ketopantoate-reductase activity and<br />
+pantothenate-biosynthesis annotations should be removed. A broad oxidoreductase<br />
+term can be retained until the native opine-like substrate is identified.</p>
+<p>KEGG independently assigns <code>ppu:PP_4452</code> to <code>K04940</code>, opine dehydrogenase<br />
+(EC 1.5.1.28), and gives the GenBank product as an NAD/NADP<br />
+octopine/nopaline-dehydrogenase-family protein.<br />
+<a href="https://www.kegg.jp/entry/ppu:PP_4452">KEGG ppu:PP_4452</a><br />
+The local whole-proteome metadata also places PP_4452 immediately before an<br />
+opine ABC-transporter neighborhood and the named opine-oxidase genes <code>ooxA</code><br />
+(PP_4456) and <code>ooxB</code> (PP_4457).<br />
+[file:projects/P_PUTIDA/data/psepk_gene_list.tsv "ooxA PP_4456\tOpine oxidase subunit A"]</p>
+<p>The family and neighborhood support an opine-related physiological role, but<br />
+they do not establish which opine PP_4452 uses or whether the relevant in vivo<br />
+direction is reductive condensation or oxidative cleavage. The first-pass gene<br />
+review therefore accepts only the existing broad oxidoreductase activity and<br />
+does not add the substrate-specific GO opine-dehydrogenase term.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EL0
+gene_symbol: PP_4452
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_4452 encodes a predicted soluble NAD(P)-dependent oxidoreductase in the
+  opine/lysopine dehydrogenase family. Q88EL0 has an opine-dehydrogenase
+  C-terminal domain and is encoded next to an opine ABC importer and the
+  opine-oxidase genes ooxA and ooxB. This architecture and neighborhood support
+  an opine-related metabolic role, but the native substrate, cofactor
+  preference, and physiological reaction direction have not been determined
+  experimentally.
+existing_annotations:
+- term:
+    id: GO:0008677
+    label: 2-dehydropantoate 2-reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: The EC-derived ketopantoate-reductase assignment conflicts with the full-length family classification.
+    action: REMOVE
+    reason: &gt;-
+      Q88EL0 is assigned to the opine/lysopine-dehydrogenase PANTHER and
+      InterPro families and contains the diagnostic Octopine_DH domain. KEGG
+      independently assigns it K04940/EC 1.5.1.28, while canonical panE
+      Q88N64 supplies the ketopantoate reaction. The EC 1.1.1.169 mapping is
+      therefore a cross-family electronic over-propagation.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4452/PP_4452-goa.tsv
+      supporting_text: &#34;GO:0008677\t2-dehydropantoate 2-reductase activity&#34;
+    - reference_id: file:PSEPK/PP_4452/PP_4452-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR051729; Opine/Lysopine_DH.&#34;
+    - reference_id: file:PSEPK/PP_4452/PP_4452-uniprot.txt
+      supporting_text: &#34;DR   Pfam; PF02317; Octopine_DH; 1.&#34;
+    - reference_id: file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+      supporting_text: &#34;The evidence overwhelmingly favors an **opine/lysopine dehydrogenase**.&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: A broad oxidoreductase term is supported while the native opine substrate remains unknown.
+    action: ACCEPT
+    reason: &gt;-
+      The Rossmann-like NAD(P)-binding architecture, opine-dehydrogenase family
+      assignment, and neighboring opine-catabolism genes support an
+      oxidoreductase function. A substrate-specific GO term would be premature
+      without direct biochemistry.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4452/PP_4452-goa.tsv
+      supporting_text: &#34;GO:0016491\toxidoreductase activity&#34;
+    - reference_id: file:PSEPK/PP_4452/PP_4452-uniprot.txt
+      supporting_text: &#34;DR   SUPFAM; SSF51735; NAD(P)-binding Rossmann-fold domains; 1.&#34;
+    - reference_id: file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+      supporting_text: &#34;The **exact opine substrate of PP_4452 has not been experimentally determined.**&#34;
+- term:
+    id: GO:0015940
+    label: pantothenate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: Pantothenate-pathway placement derives from the erroneous EC 1.1.1.169 assignment.
+    action: REMOVE
+    reason: &gt;-
+      The opine-dehydrogenase family and local opine uptake/oxidation locus
+      place Q88EL0 outside pantothenate biosynthesis. Canonical PanE Q88N64
+      satisfies the pantoate-forming reaction in KT2440.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4452/PP_4452-goa.tsv
+      supporting_text: &#34;GO:0015940\tpantothenate biosynthetic process&#34;
+    - reference_id: file:PSEPK/PP_4452/PP_4452-notes.md
+      supporting_text: &#34;This is a family mismatch, not merely a redundant paralog.&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+      supporting_text: &#34;PP_4452 (not in the supplied candidate list) is a mis-annotated opine dehydrogenase&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: PMID:18599075
+  title: A structural basis for substrate selectivity and stereoselectivity in octopine dehydrogenase from Pecten maximus.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified structural and biochemical evidence for a eukaryotic
+      opine-dehydrogenase family member; it establishes family reaction logic
+      but does not identify the substrate of Q88EL0.
+  findings:
+  - statement: &gt;-
+      Octopine dehydrogenase catalyzes NADH-dependent reductive condensation of
+      an amino acid and pyruvate, with family substrate specificity determined
+      by active-site recognition.
+    supporting_text: &#34;catalyzes the reductive condensation of l-arginine and pyruvate to&#34;
+- id: file:PSEPK/PP_4452/PP_4452-uniprot.txt
+  title: UniProtKB entry for PP_4452
+  findings:
+  - statement: &gt;-
+      The unreviewed record carries the conflicting electronic KPR assignment
+      but identifies an opine/lysopine-dehydrogenase family and Octopine_DH
+      domain.
+- id: file:PSEPK/PP_4452/PP_4452-goa.tsv
+  title: QuickGO GOA annotations for PP_4452
+  findings:
+  - statement: The fetched GOA table contains the three annotations reviewed for PP_4452.
+- id: file:PSEPK/PP_4452/PP_4452-notes.md
+  title: Manual curation notes for PP_4452
+  findings:
+  - statement: &gt;-
+      The notes record the verified KEGG K04940 assignment, the
+      opine-transporter/ooxAB neighborhood, and the decision to retain only a
+      broad oxidoreductase term pending substrate identification.
+- id: file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_4452
+  findings:
+  - statement: &gt;-
+      The report resolves the KPR/opine-family conflict using domain,
+      orthology, and genomic-neighborhood evidence and explicitly notes the
+      lack of direct PP_4452 biochemistry.
+    supporting_text: &#34;**No experimental study of PP_4452 itself exists**&#34;
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: &gt;-
+      The species-aware report identified PP_4452 as an extra false-positive
+      KPR outside the original ppu00770 candidate table.
+core_functions:
+- description: &gt;-
+    Opine/lysopine-dehydrogenase-family NAD(P)-dependent oxidoreductase in an
+    opine uptake and oxidation locus; native substrate and reaction direction
+    are unresolved.
+  molecular_function:
+    id: GO:0016491
+    label: oxidoreductase activity
+  supported_by:
+  - reference_id: file:PSEPK/PP_4452/PP_4452-uniprot.txt
+    supporting_text: &#34;DR   InterPro; IPR051729; Opine/Lysopine_DH.&#34;
+  - reference_id: file:PSEPK/PP_4452/PP_4452-notes.md
+    supporting_text: &#34;opine ABC-transporter neighborhood and the named opine-oxidase genes&#34;
+  - reference_id: file:PSEPK/PP_4452/PP_4452-deep-research-openscientist.md
+    supporting_text: &#34;The **exact opine substrate of PP_4452 has not been experimentally determined.**&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Which opine substrate and nicotinamide cofactor are used by PP_4452 in vivo?
+suggested_experiments:
+- description: &gt;-
+    Screen purified Q88EL0 against candidate opines and amino-acid/keto-acid
+    pairs with NADH and NADPH, then test growth and transcriptional induction
+    of a PP_4452 deletion on the active substrates.
+  experiment_type: biochemical and genetic analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

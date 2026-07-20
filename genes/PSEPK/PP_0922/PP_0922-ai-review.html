@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0922 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0922</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PC8" target="_blank" class="term-link">
+                        Q88PC8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0922";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PC8" data-a="DESCRIPTION: PP_0922 encodes a predicted acyl-carrier-protein p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0922 encodes a predicted acyl-carrier-protein phosphodiesterase (AcpH). Q88PC8 belongs to the conserved ACP_PD family, whose characterized members hydrolyze the phosphodiester bond linking 4&#39;-phosphopantetheine to acyl carrier protein and thereby generate apo-ACP. This is an ACP de-modification or turnover reaction, not a step in de novo pantothenate or coenzyme A synthesis. The physiological role of the KT2440 protein has not been tested directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                    GO:0006633
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PC8" data-a="GO:0006633" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family activity connects Q88PC8 to ACP state, but direct participation in fatty acid synthesis is not established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IEA is propagated from the ACP_PD family. AcpH removes the phosphopantetheine prosthetic group required for ACP function rather than catalyzing a fatty-acid biosynthetic reaction. Experimental work on the E. coli enzyme found the proposed regulatory role in fatty acid synthesis unlikely and left its physiological function unresolved. Without organism-specific evidence, the broad process annotation overstates what the molecular-function prediction establishes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0922/PP_0922-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006633	fatty acid biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2168383" target="_blank" class="term-link">
+                                        PMID:2168383
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">presently available evidence makes this unlikely, and its physiological function requires further investigation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16107329" target="_blank" class="term-link">
+                                        PMID:16107329
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">required for turnover of the ACP prosthetic group in vivo</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17198382" target="_blank" class="term-link">
+                                        PMID:17198382
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0922/PP_0922-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">This is an ACP de-modification or turnover reaction, not a step in de novo pantothenate or coenzyme A synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008770" target="_blank" class="term-link">
+                                    GO:0008770
+                                </a>
+                            </span>
+                            <span class="term-label">[acyl-carrier-protein] phosphodiesterase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PC8" data-a="GO:0008770" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACP phosphodiesterase activity is the supported family-level function of Q88PC8.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88PC8 is a full-length member of the ACP_PD InterPro, Pfam, and PANTHER families. Characterized E. coli AcpH hydrolyzes the same phosphopantetheine-to-ACP linkage and its catalytic residues define this phosphodiesterase family. No direct assay of Q88PC8 was identified, so the assignment remains homology-based.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0922/PP_0922-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008770	[acyl-carrier-protein] phosphodiesterase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0922/PP_0922-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR007431; ACP_PD.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0922/PP_0922-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF04336; ACP_PD; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17198382" target="_blank" class="term-link">
+                                        PMID:17198382
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20064615" target="_blank" class="term-link">
+                                        PMID:20064615
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AcpH (paAcpH) from Pseudomonas aeruginosa can be overexpressed in Escherichia coli as a soluble and stable protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted AcpH-family phosphodiesterase that removes the 4&#39;-phosphopantetheine prosthetic group from acyl carrier protein to produce apo-ACP; its physiological role in KT2440 is unresolved.</h3>
+                <span class="vote-buttons" data-g="Q88PC8" data-a="FUNCTION: Predicted AcpH-family phosphodiesterase that remov..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008770" target="_blank" class="term-link">
+                            [acyl-carrier-protein] phosphodiesterase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0922/PP_0922-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR007431; ACP_PD.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17198382" target="_blank" class="term-link">
+                                PMID:17198382
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20064615" target="_blank" class="term-link">
+                                PMID:20064615
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">AcpH (paAcpH) from Pseudomonas aeruginosa can be overexpressed in Escherichia coli as a soluble and stable protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16107329" target="_blank" class="term-link">
+                                PMID:16107329
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">required for turnover of the ACP prosthetic group in vivo</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2168383" target="_blank" class="term-link">
+                            PMID:2168383
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation and properties of acyl carrier protein phosphodiesterase of Escherichia coli.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACP phosphodiesterase cleaves the phosphopantetheine residue from ACP, while its physiological role remained unresolved.</div>
+
+                        <div class="finding-text">"catalyzes the hydrolytic cleavage of the 4&#39;-phosphopantetheine residue from ACP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17198382" target="_blank" class="term-link">
+                            PMID:17198382
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Acyl carrier protein phosphodiesterase (AcpH) of Escherichia coli is a non-canonical member of the HD phosphatase/phosphodiesterase family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli AcpH is a metal-dependent phosphodiesterase that hydrolyzes the phosphopantetheine linkage on ACP.</div>
+
+                        <div class="finding-text">"AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16107329" target="_blank" class="term-link">
+                            PMID:16107329
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The enigmatic acyl carrier protein phosphodiesterase of Escherichia coli: genetic and enzymological characterization.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AcpH is dispensable for E. coli growth but is required for ACP prosthetic-group turnover and cleaves multiple acyl-ACP substrates.</div>
+
+                        <div class="finding-text">"required for turnover of the ACP prosthetic group in vivo"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20064615" target="_blank" class="term-link">
+                            PMID:20064615
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression, purification and characterization of the acyl carrier protein phosphodiesterase from Pseudomonas Aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. aeruginosa AcpH removes phosphopantetheine from FAS and polyketide- synthase carrier proteins, including acylated substrates.</div>
+
+                        <div class="finding-text">"PaAcpH exhibits preferred substrate specificity towards the ACPs from the fatty acid synthesis pathway"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0922/PP_0922-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_0922</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The unreviewed Q88PC8 record assigns the protein to the ACP_PD InterPro, Pfam, and PANTHER families.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0922/PP_0922-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_0922</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the two electronic annotations reviewed for PP_0922.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway report places PP_0922 in ACP de-modification or recycling rather than in pantothenate or CoA biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0922/PP_0922-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_0922</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the AcpH assignment from domain, orthology, active- site, and close-Pseudomonas evidence while identifying the lack of a direct KT2440 assay.</div>
+
+                        <div class="finding-text">"Direct biochemical data are lacking for the *P. putida* protein itself"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 carrier proteins are physiological substrates of PP_0922, and under what conditions is the enzyme active?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PC8" data-a="Q: Which KT2440 carrier proteins are physiological su..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88PC8 and test holo- and acylated AcpP and selected secondary- metabolism carrier proteins with Mn2+, then quantify apo/holo carrier- protein pools in a PP_0922 deletion across nutrient and stress conditions.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical and physiological analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PC8" data-a="EXPERIMENT: Purify Q88PC8 and test holo- and acylated AcpP and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0922-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PC8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_0922 (AcpH) — Acyl Carrier Protein Phosphodiesterase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T14:11:55.356596</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0922-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0922-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_0922-acph-acyl-carrier-protein-phosphodiesterase-of-pseudomonas-putida-kt2440">Functional Annotation Report: PP_0922 (AcpH) — Acyl Carrier Protein Phosphodiesterase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88PC8 | <strong>Gene / Ordered Locus:</strong> PP_0922 | <strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440), taxid 160488<br />
+<strong>EC:</strong> 3.1.4.14 | <strong>KEGG Orthology:</strong> K08682 | <strong>Pfam:</strong> PF04336 (ACP_PD) | <strong>InterPro:</strong> IPR007431 | <strong>eggNOG:</strong> COG3124</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>PP_0922 encodes <strong>AcpH, an acyl carrier protein (ACP) phosphodiesterase</strong> (also historically called "ACP hydrolyase"; EC 3.1.4.14). Its primary catalytic function is to <strong>hydrolyze the phosphodiester bond that links the 4′-phosphopantetheine (4′-PP) prosthetic group to the active-site serine of acyl carrier protein</strong>, thereby converting functional <strong>holo-ACP (or acyl-ACP) back into inactive apo-ACP</strong> and releasing 4′-phosphopantetheine. This is the reverse of the reaction carried out by holo-ACP synthase (AcpS). AcpH is a <strong>soluble, cytoplasmic, Mn²⁺-dependent metalloenzyme</strong> and a non-canonical member of the HD phosphohydrolase superfamily. Biologically, it operates in the <strong>prosthetic-group turnover / coenzyme A (CoA)–pantetheine recycling cycle</strong> rather than in a biosynthetic step; it is dispensable for growth but required for in vivo turnover of the ACP prosthetic group. The characterized <em>Pseudomonas</em> enzyme prefers ACPs of the fatty-acid-synthesis (FAS) pathway but can also process acylated and polyketide-synthase (PKS) carrier proteins.</p>
+<p>The gene symbol is <strong>not ambiguous</strong>: domain (PF04336/ACP_PD), orthology (COG3124, KO K08682), GO term (GO:0008770), KEGG EC assignment, and a full-length 39% sequence identity to the biochemically characterized <em>E. coli</em> AcpH all converge on the same function.</p>
+<hr />
+<h2 id="2-identity-verification">2. Identity Verification</h2>
+<p>Multiple independent lines of evidence confirm PP_0922 is a genuine AcpH:</p>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Finding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein family</td>
+<td>Single <strong>ACP_PD</strong> domain (Pfam <strong>PF04336</strong>; InterPro <strong>IPR007431</strong>) spanning the 194-aa protein</td>
+</tr>
+<tr>
+<td>Orthology</td>
+<td><strong>COG3124</strong>; OrthoDB 8442777at2; KEGG KO <strong>K08682</strong></td>
+</tr>
+<tr>
+<td>Enzyme classification</td>
+<td><strong>EC 3.1.4.14</strong>, "[acyl-carrier-protein] phosphodiesterase" (KEGG, GO:0008770)</td>
+</tr>
+<tr>
+<td>Sequence homology</td>
+<td><strong>39.3% identity</strong> (75/191 aligned positions) to experimentally characterized <em>E. coli</em> AcpH (P21515), colinear over the full length with no large indels</td>
+</tr>
+<tr>
+<td>Active-site motifs</td>
+<td>Conserved N-terminal <strong>LAHLHL</strong> block and internal <strong>LDV..DH</strong> metallo-motif that carry the essential metal-binding residues</td>
+</tr>
+</tbody>
+</table>
+<p>The organism is correctly <em>P. putida</em> KT2440 (KEGG ppu:PP_0922; gene coordinates 1,064,359–1,064,943, + strand). A proteome-wide scan shows <strong>Q88PC8/PP_0922 is the single ACP_PD (PF04336) protein in the KT2440 genome</strong> — AcpH is <strong>single-copy</strong>, so this gene is solely responsible for ACP-phosphodiesterase activity. The conserved His/Asp metal-binding constellation (His6, His8 in the LAHLHL motif; Asp78/Asp82/His83 in the LDV..FFDH motif, plus Asp49/Asp53/His55/His88/Asp94) reproduces the HD-superfamily active-site pattern whose ligands are essential in <em>E. coli</em> AcpH.</p>
+<blockquote>
+<p>Caveat on nomenclature: UniProt's "RecName: ACP phosphodiesterase" carries a low-confidence automatic annotation source (ProtNLM/Google) and KEGG's GenBank name is "conserved protein of unknown function." However, the curated KO/EC assignments, domain architecture, orthology, and sequence conservation with a biochemically defined enzyme make the AcpH assignment robust.</p>
+</blockquote>
+<hr />
+<h2 id="3-primary-function-the-catalyzed-reaction">3. Primary Function — The Catalyzed Reaction</h2>
+<p><strong>Reaction (EC 3.1.4.14):</strong></p>
+<blockquote>
+<p>holo-[acyl-carrier-protein] + H₂O → apo-[acyl-carrier-protein] + 4′-phosphopantetheine</p>
+</blockquote>
+<p>AcpH is described as "the only enzyme known to remove the 4′-phosphopantetheinyl moiety from holo acyl carrier proteins (ACP)" [PMID 20064615]. It cleaves the <strong>phosphodiester link between 4′-phosphopantetheine and the serine-36 side chain of ACP</strong> and is "the only enzyme known to cleave a phosphodiester-linked post-translational protein modification" [PMID 17198382]. The 4′-PP prosthetic group is the moiety onto which acyl/malonyl intermediates are loaded during fatty-acid synthesis; by removing it, AcpH inactivates ACP (apo-ACP is functionally inactive) and liberates phosphopantetheine.</p>
+<p><strong>Substrate specificity:</strong><br />
+- The purified <em>E. coli</em> enzyme cleaves <strong>acyl-ACP species with acyl chains of 6–16 carbons</strong> and is active on some, but not all, non-native ACPs [PMID 16107329] — i.e., it accepts both unacylated holo-ACP and medium/long-chain acyl-ACP.<br />
+- The closely related, well-behaved ortholog <strong><em>P. aeruginosa</em> AcpH (PaAcpH)</strong> — the best functional proxy for PP_0922 — shows <strong>preferred specificity toward FAS-pathway ACPs</strong> among eight carrier proteins tested, and it also <strong>hydrolyzes/releases 4′-phosphopantetheinyl-linked products from a multidomain polyketide synthase</strong>, demonstrating activity on acylated and PKS carrier-protein substrates [PMID 20064615].<br />
+- AcpH readily removes even a <strong>modified (pantothenamide, N5-Pan) prosthetic group</strong>, indicating tolerance for altered pantetheine moieties [PMID 20047918].</p>
+<p><strong>By inference for PP_0922:</strong> the physiological substrate in <em>P. putida</em> is most likely the primary FAS acyl carrier protein (AcpP, holo/acyl form), with capacity to edit/regenerate other carrier proteins.</p>
+<hr />
+<h2 id="4-catalytic-mechanism-structure-fold">4. Catalytic Mechanism, Structure &amp; Fold</h2>
+<ul>
+<li><strong>Metal dependence:</strong> AcpH <strong>requires Mn²⁺ for activity</strong> [PMID 17198382].</li>
+<li><strong>Fold / superfamily:</strong> Bioinformatic modeling placed AcpH on the structure of the <strong>SpoT hydrolase (HD) domain</strong>, identifying it as a <strong>non-canonical member of the HD phosphatase/phosphodiesterase superfamily</strong> — non-canonical because it <strong>lacks the histidine characteristic of the canonical HD motif</strong> [PMID 17198382].</li>
+<li><strong>Active-site validation:</strong> Putative metal-binding ligands were tested by <strong>site-directed mutagenesis; removal of any of them caused severe or total loss of phosphodiesterase activity</strong> [PMID 17198382]. In this report's alignment, the corresponding His/Asp-bearing motifs (<strong>LAHLHL</strong>, <strong>LDV..DH</strong>) are conserved in PP_0922, supporting a shared Mn²⁺-dependent active site.</li>
+<li><strong>Solubility:</strong> AcpH is a soluble protein that "very readily aggregates upon overexpression in vivo or concentration in vitro" [PMID 16107329]; the <em>Pseudomonas</em> orthologs are notably <strong>more soluble and stable</strong> than <em>E. coli</em> AcpH, which is why PaAcpH became the tractable model [PMID 20064615].</li>
+</ul>
+<hr />
+<h2 id="5-localization">5. Localization</h2>
+<p>AcpH is a <strong>soluble, cytoplasmic enzyme</strong> — it was "purified to homogeneity … and is a soluble protein" [PMID 16107329]. It has no signal peptide or transmembrane segment (single cytoplasmic ACP_PD domain). It therefore acts in the <strong>cytosol</strong>, the same compartment where ACP, AcpS, the FAS-II enzymes, and CoA/pantetheine metabolism operate.</p>
+<hr />
+<h2 id="6-biological-process-pathway-context">6. Biological Process &amp; Pathway Context</h2>
+<p><strong>The 4′-phosphopantetheine prosthetic-group cycle.</strong> ACP is functional only when its conserved serine bears a 4′-PP arm, installed from CoA by <strong>holo-ACP synthase (AcpS / a phosphopantetheinyl transferase)</strong> [PMID 35337986; PMID 11032795]. AcpH catalyzes the <strong>opposing reaction</strong>, removing 4′-PP to regenerate apo-ACP. Together AcpS and AcpH constitute a <strong>prosthetic-group attachment/removal cycle</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">apo</span><span class="o">-</span><span class="n">ACP</span><span class="w">  </span><span class="o">--</span><span class="p">(</span><span class="n">AcpS</span><span class="p">,</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">CoA</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">holo</span><span class="o">-</span><span class="n">ACP</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">acyl</span><span class="o">-</span><span class="n">ACP</span><span class="w">  </span><span class="o">--</span><span class="p">(</span><span class="n">AcpH</span><span class="p">,</span><span class="w"> </span><span class="o">+</span><span class="n">H2O</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">apo</span><span class="o">-</span><span class="n">ACP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="s">&#39;-phosphopantetheine</span>
+</code></pre></div>
+
+<p><strong>Link to CoA metabolism.</strong> Classic pulse-chase work showed the ACP 4′-PP prosthetic group <strong>turns over metabolically</strong>, at a rate that <strong>depends on intracellular CoA concentration</strong>, leading to the conclusion that "the acyl carrier protein prosthetic group turnover cycle may be related to coenzyme A metabolism rather than to lipid biosynthesis" [PMID 6363417]. Consistently, KEGG maps PP_0922 to <strong>"Pantothenate and CoA biosynthesis" (ppu00770)</strong> within <em>metabolism of cofactors and vitamins</em>. Thus AcpH's role is best understood as <strong>cofactor recycling / homeostasis</strong> — returning phosphopantetheine to the CoA/pantetheine pool — and quality-control "editing" of carrier proteins, rather than a step in fatty-acid biosynthesis per se.</p>
+<p><strong>Non-essentiality.</strong> A total <em>acpH</em> deletion in <em>E. coli</em> grows normally, showing the activity is <strong>not essential for growth</strong>, "although it is required for turnover of the ACP prosthetic group in vivo" [PMID 16107329]. Apo-ACP does not normally accumulate in cells (rapidly reconverted to holo-ACP), and no apo-ACP intermediate is detected under normal or CoA-depleted conditions [PMID 6317688], underscoring that AcpH sets the balance of a dynamic cycle rather than performing an obligatory metabolic transformation.</p>
+<p><strong>Genomic context in KT2440.</strong> PP_0922 is transcribed <strong>divergently</strong> from its neighbors (PP_0920 xenobiotic reductase, PP_0921 ArsR-family regulator, PP_0923/PP_0924 ornithine-lipid acyltransferases), which all lie on the opposite strand. It is therefore <strong>not embedded in a FAS or CoA operon</strong>, consistent with independent regulation and a homeostatic role. (Interestingly, the adjacent ornithine-lipid acyltransferases are themselves acyl-ACP–consuming enzymes, but the opposite-strand arrangement indicates coincidental proximity rather than co-transcription.)</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+1. PP_0922 is a genuine AcpH / ACP phosphodiesterase (EC 3.1.4.14) — supported by domain, orthology, EC/KO, GO, and 39% identity to characterized <em>E. coli</em> AcpH.<br />
+2. It catalyzes hydrolytic removal of 4′-phosphopantetheine from holo-/acyl-ACP, producing apo-ACP — supported by transitive biochemical evidence from <em>E. coli</em> and <em>P. aeruginosa</em> orthologs.<br />
+3. It is a soluble, cytoplasmic, Mn²⁺-dependent HD-superfamily metallohydrolase — supported by biochemistry, modeling, and conserved catalytic motifs.<br />
+4. Its physiological role is prosthetic-group turnover linked to CoA/pantetheine metabolism, non-essential for growth.</p>
+<p><strong>Refuted / down-weighted:</strong><br />
+- Not an essential fatty-acid-biosynthesis enzyme (deletion is viable).<br />
+- Not membrane-associated or secreted (no signal/TM; purified as soluble).<br />
+- The gene is <strong>not</strong> part of a fatty-acid or CoA operon in KT2440.</p>
+<hr />
+<h2 id="8-limitations-future-directions">8. Limitations &amp; Future Directions</h2>
+<ul>
+<li><strong>Direct biochemical data are lacking for the <em>P. putida</em> protein itself</strong>; functional claims are transitive inferences from <em>E. coli</em> (P21515) and <em>P. aeruginosa</em> AcpH, justified by strong sequence/active-site conservation.</li>
+<li><strong>No experimental 3-D structure</strong> of AcpH is available (fold assignment rests on modeling onto SpoT/HD).</li>
+<li>The exact in vivo substrate spectrum and any regulatory/physiological trigger for AcpH in <em>P. putida</em> (e.g., during solvent stress, PHA/rhamnolipid or secondary-metabolite production, or CoA imbalance) remain to be tested.</li>
+<li><strong>Future work:</strong> recombinant expression and kinetic characterization of PP_0922; substrate profiling against <em>P. putida</em> AcpP and secondary-metabolite carrier proteins; a KT2440 Δ<em>PP_0922</em> phenotype under metabolic stress; and structural determination to confirm the Mn²⁺ HD-like active site.</li>
+</ul>
+<hr />
+<h2 id="9-key-references">9. Key References</h2>
+<ul>
+<li>Thomas J, Cronan JE. <em>The enigmatic acyl carrier protein phosphodiesterase of Escherichia coli: genetic and enzymological characterization.</em> <strong>PMID 16107329</strong> (2005) — identity of acpH (yajB), non-essentiality, solubility, 6–16C acyl-ACP substrate range.</li>
+<li>Thomas J, Rigden DJ, Cronan JE. <em>AcpH … is a non-canonical member of the HD phosphatase/phosphodiesterase family.</em> <strong>PMID 17198382</strong> (2007) — Ser-36 phosphodiester cleavage, Mn²⁺ dependence, HD superfamily, mutagenesis of metal ligands.</li>
+<li>Murugan et al. <em>Expression, purification and characterization of the acyl carrier protein phosphodiesterase from Pseudomonas aeruginosa.</em> <strong>PMID 20064615</strong> (2010) — soluble Pseudomonas ortholog; FAS-ACP preference; activity on acyl/PKS carriers.</li>
+<li>Thomas J, Cronan JE. <em>Antibacterial activity of N-pentylpantothenamide…</em> <strong>PMID 20047918</strong> (2010) — AcpH removes modified (N5-Pan) prosthetic groups.</li>
+<li>Jackowski S, Rock CO. <em>Turnover of the 4′-phosphopantetheine prosthetic group of acyl carrier protein.</em> <strong>PMID 6363417</strong> (1984) — prosthetic-group turnover tied to CoA levels.</li>
+<li>Jackowski S, Rock CO. <em>Ratio of active to inactive forms of acyl carrier protein in E. coli.</em> <strong>PMID 6317688</strong> (1983) — apo-ACP not normally detected; rapid reconversion to holo-ACP.</li>
+<li>Supporting AcpS/PPTase context: <strong>PMID 35337986</strong>, <strong>PMID 11032795</strong>.</li>
+</ul>
+<hr />
+<p><em>Report generated through iterative literature review (PubMed) and bioinformatic analysis (UniProt sequence retrieval, pairwise alignment to characterized orthologs, KEGG orthology/pathway and genomic-context inspection).</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0922-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0922-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PC8
+gene_symbol: PP_0922
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_0922 encodes a predicted acyl-carrier-protein phosphodiesterase (AcpH).
+  Q88PC8 belongs to the conserved ACP_PD family, whose characterized members
+  hydrolyze the phosphodiester bond linking 4&#39;-phosphopantetheine to acyl
+  carrier protein and thereby generate apo-ACP. This is an ACP
+  de-modification or turnover reaction, not a step in de novo pantothenate or
+  coenzyme A synthesis. The physiological role of the KT2440 protein has not
+  been tested directly.
+existing_annotations:
+- term:
+    id: GO:0006633
+    label: fatty acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Family activity connects Q88PC8 to ACP state, but direct participation in fatty acid synthesis is not established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The IEA is propagated from the ACP_PD family. AcpH removes the
+      phosphopantetheine prosthetic group required for ACP function rather
+      than catalyzing a fatty-acid biosynthetic reaction. Experimental work on
+      the E. coli enzyme found the proposed regulatory role in fatty acid
+      synthesis unlikely and left its physiological function unresolved.
+      Without organism-specific evidence, the broad process annotation
+      overstates what the molecular-function prediction establishes.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0922/PP_0922-goa.tsv
+      supporting_text: &#34;GO:0006633\tfatty acid biosynthetic process&#34;
+    - reference_id: PMID:2168383
+      supporting_text: &#34;presently available evidence makes this unlikely, and its physiological function requires further investigation&#34;
+    - reference_id: PMID:16107329
+      supporting_text: &#34;required for turnover of the ACP prosthetic group in vivo&#34;
+    - reference_id: PMID:17198382
+      supporting_text: &#34;AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein&#34;
+    - reference_id: file:PSEPK/PP_0922/PP_0922-deep-research-openscientist.md
+      supporting_text: &#34;This is an ACP de-modification or turnover reaction, not a step in de novo pantothenate or coenzyme A synthesis.&#34;
+- term:
+    id: GO:0008770
+    label: &#39;[acyl-carrier-protein] phosphodiesterase activity&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ACP phosphodiesterase activity is the supported family-level function of Q88PC8.
+    action: ACCEPT
+    reason: &gt;-
+      Q88PC8 is a full-length member of the ACP_PD InterPro, Pfam, and PANTHER
+      families. Characterized E. coli AcpH hydrolyzes the same
+      phosphopantetheine-to-ACP linkage and its catalytic residues define this
+      phosphodiesterase family. No direct assay of Q88PC8 was identified, so
+      the assignment remains homology-based.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0922/PP_0922-goa.tsv
+      supporting_text: &#34;GO:0008770\t[acyl-carrier-protein] phosphodiesterase activity&#34;
+    - reference_id: file:PSEPK/PP_0922/PP_0922-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR007431; ACP_PD.&#34;
+    - reference_id: file:PSEPK/PP_0922/PP_0922-uniprot.txt
+      supporting_text: &#34;DR   Pfam; PF04336; ACP_PD; 1.&#34;
+    - reference_id: PMID:17198382
+      supporting_text: &#34;AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein&#34;
+    - reference_id: PMID:20064615
+      supporting_text: &#34;AcpH (paAcpH) from Pseudomonas aeruginosa can be overexpressed in Escherichia coli as a soluble and stable protein&#34;
+references:
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:2168383
+  title: Isolation and properties of acyl carrier protein phosphodiesterase of Escherichia coli.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified biochemical characterization of E. coli ACP
+      phosphodiesterase. It establishes the reaction and cautions that the
+      proposed role in fatty acid synthesis was unsupported; it does not assay
+      Q88PC8.
+  findings:
+  - statement: &gt;-
+      ACP phosphodiesterase cleaves the phosphopantetheine residue from ACP,
+      while its physiological role remained unresolved.
+    supporting_text: &#34;catalyzes the hydrolytic cleavage of the 4&#39;-phosphopantetheine residue from ACP&#34;
+- id: PMID:17198382
+  title: Acyl carrier protein phosphodiesterase (AcpH) of Escherichia coli is a non-canonical member of the HD phosphatase/phosphodiesterase family.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified mechanistic characterization of recombinant E. coli
+      AcpH and its conserved family; transfer to Q88PC8 is homology-based.
+  findings:
+  - statement: &gt;-
+      E. coli AcpH is a metal-dependent phosphodiesterase that hydrolyzes the
+      phosphopantetheine linkage on ACP.
+    supporting_text: &#34;AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein&#34;
+- id: PMID:16107329
+  title: &#39;The enigmatic acyl carrier protein phosphodiesterase of Escherichia coli: genetic and enzymological characterization.&#39;
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified genetic and biochemical identification of E. coli acpH.
+      It supports ACP prosthetic-group turnover and carrier-protein substrate
+      range but does not assay Q88PC8.
+  findings:
+  - statement: &gt;-
+      AcpH is dispensable for E. coli growth but is required for ACP
+      prosthetic-group turnover and cleaves multiple acyl-ACP substrates.
+    supporting_text: &#34;required for turnover of the ACP prosthetic group in vivo&#34;
+- id: PMID:20064615
+  title: Expression, purification and characterization of the acyl carrier protein phosphodiesterase from Pseudomonas Aeruginosa.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified biochemical characterization of a close Pseudomonas
+      AcpH ortholog. It supports the family reaction and carrier-protein
+      substrate range but does not directly assay Q88PC8.
+  findings:
+  - statement: &gt;-
+      P. aeruginosa AcpH removes phosphopantetheine from FAS and polyketide-
+      synthase carrier proteins, including acylated substrates.
+    supporting_text: &#34;PaAcpH exhibits preferred substrate specificity towards the ACPs from the fatty acid synthesis pathway&#34;
+- id: file:PSEPK/PP_0922/PP_0922-uniprot.txt
+  title: UniProtKB entry for PP_0922
+  findings:
+  - statement: &gt;-
+      The unreviewed Q88PC8 record assigns the protein to the ACP_PD InterPro,
+      Pfam, and PANTHER families.
+- id: file:PSEPK/PP_0922/PP_0922-goa.tsv
+  title: QuickGO GOA annotations for PP_0922
+  findings:
+  - statement: The fetched GOA table contains the two electronic annotations reviewed for PP_0922.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: &gt;-
+      The pathway report places PP_0922 in ACP de-modification or recycling
+      rather than in pantothenate or CoA biosynthesis.
+- id: file:PSEPK/PP_0922/PP_0922-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_0922
+  findings:
+  - statement: &gt;-
+      The report supports the AcpH assignment from domain, orthology, active-
+      site, and close-Pseudomonas evidence while identifying the lack of a
+      direct KT2440 assay.
+    supporting_text: &#34;Direct biochemical data are lacking for the *P. putida* protein itself&#34;
+core_functions:
+- description: &gt;-
+    Predicted AcpH-family phosphodiesterase that removes the
+    4&#39;-phosphopantetheine prosthetic group from acyl carrier protein to produce
+    apo-ACP; its physiological role in KT2440 is unresolved.
+  molecular_function:
+    id: GO:0008770
+    label: &#39;[acyl-carrier-protein] phosphodiesterase activity&#39;
+  supported_by:
+  - reference_id: file:PSEPK/PP_0922/PP_0922-uniprot.txt
+    supporting_text: &#34;DR   InterPro; IPR007431; ACP_PD.&#34;
+  - reference_id: PMID:17198382
+    supporting_text: &#34;AcpH hydrolyzes the link between 4&#39;-phosphopanthetheine and the serine-36 side chain of acyl carrier protein&#34;
+  - reference_id: PMID:20064615
+    supporting_text: &#34;AcpH (paAcpH) from Pseudomonas aeruginosa can be overexpressed in Escherichia coli as a soluble and stable protein&#34;
+  - reference_id: PMID:16107329
+    supporting_text: &#34;required for turnover of the ACP prosthetic group in vivo&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Which KT2440 carrier proteins are physiological substrates of PP_0922, and under what conditions is the enzyme active?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88PC8 and test holo- and acylated AcpP and selected secondary-
+    metabolism carrier proteins with Mn2+, then quantify apo/holo carrier-
+    protein pools in a PP_0922 deletion across nutrient and stress conditions.
+  experiment_type: biochemical and physiological analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
