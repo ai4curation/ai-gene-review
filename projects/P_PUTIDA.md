@@ -62,23 +62,26 @@ Lightweight data products:
 - `projects/P_PUTIDA/build_pathway_worklist.py` builds the PR-oriented pathway
   queue from the bucket table.
 - `projects/P_PUTIDA/data/psepk_pathway_worklist.tsv` tracks module mapping,
-  Falcon research status, gene review coverage, Asta coverage, and PR status
-  per pathway/module bucket.
+  research status, gene review coverage, and PR status per pathway/module
+  bucket.
 - `projects/P_PUTIDA/extract_pathway_batch.py` extracts a per-pathway gene
   checklist from KEGG/UniPathway membership.
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md` is the first
   pilot pathway checklist.
 
-For gene-level first-pass research, use Asta as the default provider:
+While the Edison-backed Falcon route is unavailable, use OpenScientist for
+gene-level research with a full two-hour provider allowance:
 
 ```bash
-just deep-research-asta PSEPK <gene>
+just deep-research-openscientist PSEPK <gene> --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
-For module-level research, use Falcon by default:
+Use the same provider for reusable module-level research:
 
 ```bash
-just module-deep-research-falcon <module>
+just module-deep-research-openscientist <module> --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
 For PSEPK-specific pathway/module satisfiability research, use the taxon-aware
@@ -86,13 +89,20 @@ wrapper so the prompt includes the species constraint and local candidate genes
 from the pathway partition:
 
 ```bash
-just module-pathway-deep-research-falcon "<module or module title>" <pathway-or-bucket> PSEPK
+just module-pathway-deep-research openscientist "<module or module title>" \
+  <pathway-or-bucket> PSEPK --project P_PUTIDA --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
 PaperBLAST can still be used opportunistically for protein-specific literature
 lookup, but it is not the main workflow because the current wrapper is
-Cloudflare-sensitive in this environment. Use `perplexity-lite` only as a
-secondary fallback when Asta is unavailable or provider comparison is useful.
+Cloudflare-sensitive in this environment. Asta remains a lightweight gene-level
+fallback; Falcon remains preferred for module synthesis when Edison is
+available again. Use `perplexity-lite` only as a secondary fallback.
+
+OpenScientist jobs commonly take more than 20 minutes and difficult runs can
+approach the two-hour provider timeout. Do not use a 180-second smoke-test
+timeout or infer failure from a quiet wrapper.
 
 ## Completed Reviews
 
@@ -324,6 +334,7 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - [x] Re-scope P_PUTIDA from selected-gene project to genome-wide pathway/module curation umbrella.
 - [x] Confirm working species/proteome: PSEPK / *P. putida* KT2440 / UniProt proteome `UP000000556`.
 - [x] Confirm research provider policy: Asta for gene-level first-pass research; Falcon for module-level research; PaperBLAST optional; `perplexity-lite` secondary fallback.
+- [x] Apply the 2026-07-20 operational override: OpenScientist for gene and module research while Edison/Falcon is unavailable, with full long-run timeouts.
 - [x] Create module-first workplan in `projects/P_PUTIDA/P_PUTIDA_MODULE_PLAN.md`.
 - [x] Refresh lightweight UniProt metadata snapshot before module clustering.
 - [x] Build whole-proteome gene list from UniProt metadata.
