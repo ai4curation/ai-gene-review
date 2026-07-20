@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>catA-II - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>catA-II</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88I35" target="_blank" class="term-link">
+                        Q88I35
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_3166</span>
+
+                    <span class="badge">catA2</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "catA-II";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88I35" data-a="DESCRIPTION: CatA-II (PP_3166, Q88I35) is a second catechol 1,2..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CatA-II (PP_3166, Q88I35) is a second catechol 1,2-dioxygenase paralog in Pseudomonas putida KT2440. It catalyzes Fe(III)-dependent intradiol ortho-cleavage of catechol to cis,cis-muconate, the first step of the catechol branch of the beta-ketoadipate pathway. Unlike the primary CatA-I/PP_3713 enzyme in the cat regulon, CatA-II is located downstream of the benABCD benzoate upper-pathway operon. KT2440 proteomics identifies PP_3166 as its second catechol 1,2-dioxygenase, while work on the corresponding ben-linked paralog in P. putida mt-2 supports a safety-valve role that relieves catechol surplus during benzoate-induced aromatic catabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CatA-II is catalytic, but this top-level molecular-function term is too general for a gene product with a specific catechol 1,2-dioxygenase activity annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace the generic parent with GO:0018576, which captures the specific intradiol ring-cleavage reaction recorded in UniProt, GOA, EC, and Rhea.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018576" target="_blank" class="term-link">
+                                    catechol 1,2-dioxygenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=catechol 1,2-dioxygenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0005506" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Iron binding is true but less specific than the ferric iron binding term already present for CatA-II.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Intradiol catechol dioxygenases use non-heme Fe(III). GO:0008199 captures that cofactor specificity, while GO:0005506 is a broad parent term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=Fe(3+); Xref=ChEBI:CHEBI:29034;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008199" target="_blank" class="term-link">
+                                    GO:0008199
+                                </a>
+                            </span>
+                            <span class="term-label">ferric iron binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0008199" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ferric iron binding correctly captures the catalytic cofactor requirement of this intradiol catechol 1,2-dioxygenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt record explicitly lists Fe(3+) as the cofactor, consistent with the intradiol ring-cleavage dioxygenase family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=Fe(3+); Xref=ChEBI:CHEBI:29034;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009712" target="_blank" class="term-link">
+                                    GO:0009712
+                                </a>
+                            </span>
+                            <span class="term-label">catechol-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0009712" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad metabolic-process term is directionally correct but less precise than catechol catabolism by the ortho-cleavage branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CatA-II performs the first catechol ortho-cleavage reaction. A catabolic child term is more appropriate than the generic parent.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019615" target="_blank" class="term-link">
+                                    catechol catabolic process, ortho-cleavage
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">4,5-dihydro-2-furylacetate from catechol: step 1/3.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016702" target="_blank" class="term-link">
+                                    GO:0016702
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0016702" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This dioxygenase parent term is biologically consistent but redundant with the more specific catechol 1,2-dioxygenase activity annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0018576 fully specifies the substrate and reaction; retaining this broader parent as core would dilute the annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018576" target="_blank" class="term-link">
+                                    GO:0018576
+                                </a>
+                            </span>
+                            <span class="term-label">catechol 1,2-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0018576" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the precise core molecular function of CatA-II.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt record, EC 1.13.11.1, Rhea reaction, InterPro family, and the ben-locus catA2 literature all support CatA-II as a catechol 1,2-dioxygenase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=catechol 1,2-dioxygenase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24341396" target="_blank" class="term-link">
+                                        PMID:24341396
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">located downstream of the ben operon that encodes an additional catechol-1,2-dioxygenase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019614" target="_blank" class="term-link">
+                                    GO:0019614
+                                </a>
+                            </span>
+                            <span class="term-label">catechol-containing compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0019614" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CatA-II participates in catechol catabolism by cleaving catechol to cis,cis-muconate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is correct, but GO:0019615 captures the direct ortho-cleavage catabolic branch more precisely.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">4,5-dihydro-2-furylacetate from catechol: step 1/3.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042952" target="_blank" class="term-link">
+                                    GO:0042952
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ketoadipate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I35" data-a="GO:0042952" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This pathway annotation is correct for CatA-II, which performs step 1/3 of the catechol branch feeding the beta-ketoadipate pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniPathway/UniProt place the enzyme in the catechol-derived beta-ketoadipate route, and P. putida literature identifies PP_3166 catA2 as a second catechol 1,2-dioxygenase downstream of the ben operon.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Aromatic compound metabolism; beta-ketoadipate pathway; 5-oxo-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21906639" target="_blank" class="term-link">
+                                        PMID:21906639
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This operon contains PP_3166 (catA2), which was shown to be a second catechol 1,2-dioxygenase besides catA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Fe(III)-dependent catechol 1,2-dioxygenase that cleaves catechol to cis,cis-muconate as a ben-locus-associated paralog in the catechol branch of the beta-ketoadipate pathway.</h3>
+                <span class="vote-buttons" data-g="Q88I35" data-a="FUNCTION: Fe(III)-dependent catechol 1,2-dioxygenase that cl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018576" target="_blank" class="term-link">
+                            catechol 1,2-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019615" target="_blank" class="term-link">
+                                catechol catabolic process, ortho-cleavage
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042952" target="_blank" class="term-link">
+                                beta-ketoadipate pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24341396" target="_blank" class="term-link">
+                                PMID:24341396
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">P. putida mt-2 has a second chromosomal copy of the catA gene (named catA2) located downstream of the ben operon that encodes an additional catechol-1,2-dioxygenase.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/catA-II/catA-II-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">catA-II (PP_3166) is embedded in a dedicated **benzoate uptake/oxidation gene island**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/catA-II/catA-II-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for catA-II (Q88I35)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CatA-II is annotated as catechol 1,2-dioxygenase.</div>
+
+                        <div class="finding-text">"RecName: Full=catechol 1,2-dioxygenase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CatA-II catalyzes catechol ortho-cleavage to cis,cis-muconate.</div>
+
+                        <div class="finding-text">"Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CatA-II is placed at step 1/3 of the catechol branch of the beta-ketoadipate pathway.</div>
+
+                        <div class="finding-text">"4,5-dihydro-2-furylacetate from catechol: step 1/3."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24341396" target="_blank" class="term-link">
+                            PMID:24341396
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A second chromosomal copy of the catA gene endows Pseudomonas putida mt-2 with an enzymatic safety valve for excess of catechol.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida mt-2 carries a second catA copy downstream of the ben operon that encodes an additional catechol 1,2-dioxygenase.</div>
+
+                        <div class="finding-text">"P. putida mt-2 has a second chromosomal copy of the catA gene (named catA2) located downstream of the ben operon that encodes an additional catechol-1,2-dioxygenase."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The catA2 paralog acts as a metabolic safety valve for excess catechol during benzoate-induced ortho-pathway flux.</div>
+
+                        <div class="finding-text">"The data consistently indicated that induction of the ortho pathway by benzoate plasmid-less strain P. putida KT2440 led to catechol surplus, the toxicity of which at high concentrations being counteracted by CatA2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21906639" target="_blank" class="term-link">
+                            PMID:21906639
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Generation of a catR deficient mutant of P. putida KT2440 that produces cis, cis-muconate from benzoate at high rate and yield.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In a KT2440 catR mutant, the ben operon containing PP_3166/catA2 was highly expressed in benzoate and PP_3166 was identified as a second catechol 1,2-dioxygenase.</div>
+
+                        <div class="finding-text">"This operon contains PP_3166 (catA2), which was shown to be a second catechol 1,2-dioxygenase besides catA."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/catA-II/catA-II-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research retrieval for catA-II</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist confirmed CatA-II as the PP_3166 catechol 1,2-dioxygenase paralog and distinguished it from CatA-I/PP_3713 by genomic context.</div>
+
+                        <div class="finding-text">"The only ambiguity is intra-organismal: KT2440 has two catechol 1,2-dioxygenase paralogs, and this report distinguishes catA-II (PP_3166) from catA-I (PP_3713) explicitly (see Finding F007)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which KT2440 growth conditions does CatA-II materially contribute to catechol flux relative to CatA-I?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I35" data-a="Q: Under which KT2440 growth conditions does CatA-II ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CatA-II differ from CatA-I in catechol affinity, inhibitor sensitivity, or response to substituted catechols?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I35" data-a="Q: Does CatA-II differ from CatA-I in catechol affini..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild type, catA-I, catA-II, and double-mutant strains during growth on benzoate or catechol, measuring catechol accumulation, cis,cis-muconate production, and expression from the ben and cat loci.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CatA-II acts as a benzoate-induced safety-valve enzyme when catechol production exceeds CatA-I capacity.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic perturbation with targeted metabolite profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I35" data-a="EXPERIMENT: Compare wild type, catA-I, catA-II, and double-mut..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(catA-II-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I35" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *catA-II* (Q88I35, PP_3166) — Catechol 1,2-Dioxygenase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T06:56:18.737686</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="catA-II-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="catA-II-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-cata-ii-q88i35-pp_3166-catechol-12-dioxygenase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>catA-II</em> (Q88I35, PP_3166) — Catechol 1,2-Dioxygenase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>catA-II</strong> (UniProt <strong>Q88I35</strong>; ordered locus name <strong>PP_3166</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes a <strong>catechol 1,2-dioxygenase</strong> (EC 1.13.11.1; KEGG ortholog K03381). This is a <strong>soluble, cytoplasmic, non-heme Fe(III)-dependent intradiol (ortho-cleaving) ring-fission dioxygenase</strong>. Its primary and defining catalytic function is to use molecular oxygen to cleave the aromatic ring of <strong>catechol</strong> between its two adjacent hydroxyl-bearing carbons, producing <strong>cis,cis-muconate</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">catechol</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nt">O2</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="nt">cis</span><span class="o">,</span><span class="nt">cis-muconate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">H</span><span class="o">+</span><span class="w">     </span><span class="o">(</span><span class="nt">RHEA</span><span class="p">:</span><span class="nd">23852</span><span class="o">;</span><span class="w"> </span><span class="nt">EC</span><span class="w"> </span><span class="nt">1</span><span class="p">.</span><span class="nc">13</span><span class="p">.</span><span class="nc">11</span><span class="p">.</span><span class="nc">1</span><span class="o">)</span>
+</code></pre></div>
+
+<p>This reaction is the <strong>committed, ring-opening step of the catechol branch of the β-ketoadipate (ortho-cleavage) pathway</strong>, the central funnel through which <em>P. putida</em> channels a wide variety of aromatic growth substrates into the tricarboxylic acid cycle. The enzyme's ferric catalytic center is held by the family-conserved <strong>2-tyrosinate / 2-histidine ligand set</strong> (Tyr165, Tyr199, His223, His225 in the Q88I35 sequence), a signature shared with all structurally characterized intradiol dioxygenases.</p>
+<p>A key insight from this investigation is the <strong>paralog identity</strong> of catA-II. KT2440 carries <strong>two ~77%-identical catechol 1,2-dioxygenase isozymes</strong>. catA-II (PP_3166) is embedded in a dedicated <strong>benzoate uptake/oxidation gene island</strong> (benD–benK–catA-II–benE-II), which marks it as the <strong>benzoate-route</strong> copy: the catechol it cleaves is generated from benzoate by the upstream benzoate dioxygenase (BenABCD) and dihydrodiol dehydrogenase (BenD). The second isozyme, catA-I (PP_3713), sits in the canonical chromosomal catBCA ortho-cleavage operon. Both are bona fide catechol 1,2-dioxygenases, but their genomic contexts assign catA-II specifically to the benzoate→catechol catabolic branch.</p>
+<p>Beyond its catalytic role, the enzyme's <strong>product, cis,cis-muconate, is a regulatory signal</strong>: it is the physiological effector of the LysR-type transcriptional activator <strong>CatR</strong>, which induces the downstream <em>cat</em> (β-ketoadipate) regulon. catA-II therefore both <strong>drives</strong> aromatic carbon flux into central metabolism and <strong>generates the inducer</strong> that coordinates expression of the pathway that consumes its product.</p>
+<hr />
+<h2 id="geneprotein-identity-verified">Gene/Protein Identity (verified)</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td>catA-II</td>
+</tr>
+<tr>
+<td>UniProt accession</td>
+<td>Q88I35</td>
+</tr>
+<tr>
+<td>Ordered locus name</td>
+<td>PP_3166</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>1.13.11.1</td>
+</tr>
+<tr>
+<td>KEGG ortholog</td>
+<td>K03381</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>catechol 1,2-dioxygenase</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>304 aa</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>Fe(3+) (non-heme mononuclear iron)</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Intradiol ring-cleavage dioxygenase family</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification note:</strong> The gene symbol catA-II, the protein description (catechol 1,2-dioxygenase, EC 1.13.11.1), the organism (KT2440), and the domain/family assignments (intradiol ring-cleavage dioxygenase; Catechol_dOase_N, Intradiol_dOase_C, Intradiol_dOase_core) are all mutually consistent between UniProt, KEGG, and the primary literature retrieved. This is the correct target. The only ambiguity is intra-organismal: KT2440 has two catechol 1,2-dioxygenase paralogs, and this report distinguishes catA-II (PP_3166) from catA-I (PP_3713) explicitly (see Finding F007).</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-cata-ii-is-a-catechol-12-dioxygenase-catalyzing-intradiol-cleavage-of-catechol-to-ciscis-muconate">F001 — catA-II is a catechol 1,2-dioxygenase catalyzing intradiol cleavage of catechol to cis,cis-muconate</h3>
+<p>The core functional assignment is robust and multiply supported. UniProt Q88I35 and KEGG (ppu:PP_3166) both annotate the product as <strong>catechol 1,2-dioxygenase, EC 1.13.11.1, KO K03381</strong>. The catalytic activity is defined as catechol + O2 = cis,cis-muconate + 2 H+ (RHEA:23852), with an obligatory <strong>Fe(3+) cofactor</strong>. This is the first, ring-opening step of the catechol branch of the β-ketoadipate pathway.</p>
+<p>Classic enzymology directly establishes the chemistry. In studies of aromatic catabolism, <strong>catechol 1,2-dioxygenase catalyses ortho-fission of catechol which is then metabolized via the β-ketoadipate pathway; formation of cis,cis-muconate and β-ketoadipate was demonstrated by enzyme assays</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/4063065/">PMID: 4063065</a>). The enzyme's identity and its position at the head of a consecutive enzyme cascade are confirmed by the cloning and characterization of the cat gene cluster, in which <strong>catA encodes catechol 1,2-dioxygenase (EC 1.13.11.1), followed by catB (muconate lactonizing enzyme, EC 5.5.1.1) and catC (muconolactone isomerase, EC 5.3.3.4)</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/3139626/">PMID: 3139626</a>). This nails down both the EC number and the ordered position of catechol 1,2-dioxygenase as the first of the catechol-branch enzymes.</p>
+<p><strong>Reaction type:</strong> intradiol (ortho) ring cleavage — the C–C bond broken lies <em>between</em> the two hydroxylated carbons, distinguishing it mechanistically from extradiol (meta) dioxygenases (EC 1.13.11.2), which cleave adjacent to the diol and use Fe(II).</p>
+<h3 id="f002-in-kt2440-the-enzyme-functions-in-the-benzoatearomatic-catabolic-funnel-of-the-ketoadipate-pathway">F002 — In KT2440, the enzyme functions in the benzoate/aromatic catabolic funnel of the β-ketoadipate pathway</h3>
+<p>Direct proteomic evidence in the exact target organism places this enzyme in benzoate catabolism. In a combined 2-DE/MS and cleavable ICAT proteomic analysis of <em>P. putida</em> KT2440, <strong>benzoate dioxygenase (BenA, BenD) and catechol 1,2-dioxygenase (CatA) were induced by benzoate</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16470664/">PMID: 16470664</a>). Benzoate is converted by benzoate dioxygenase and BenD to catechol, which CatA then cleaves. The same study showed that <strong>benzoate, p-hydroxybenzoate and vanilline were degraded by different dioxygenases and then converged in the same beta-ketoadipate degradation pathway</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16470664/">PMID: 16470664</a>), placing catechol 1,2-dioxygenase squarely within the benzoate-to-β-ketoadipate catabolic funnel.</p>
+<p>Consistent with this, KEGG maps PP_3166 to <strong>benzoate degradation (ppu00362)</strong>, <strong>toluene degradation (ppu00623)</strong>, chloro-/fluoro-benzoate degradation pathways, and to module <strong>M00568 (catechol ortho-cleavage, catechol ⇒ 3-oxoadipate)</strong>. Downstream, the products of the catechol branch converge with the protocatechuate branch (PcaD, PcaF) on the shared lower β-ketoadipate pathway, ultimately yielding succinyl-CoA and acetyl-CoA for the TCA cycle.</p>
+<h3 id="f003-q88i35-is-a-non-heme-feiii-intradiol-dioxygenase-with-the-conserved-2-his2-tyr-iron-coordination-signature">F003 — Q88I35 is a non-heme Fe(III) intradiol dioxygenase with the conserved 2-His/2-Tyr iron-coordination signature</h3>
+<p>Sequence analysis of the 304-residue Q88I35 protein locates the canonical intradiol-dioxygenase catalytic residues: a <strong>His-x-His motif (His223, His225)</strong> within the conserved C-terminal <strong>"PAHVHFF"</strong> segment, and <strong>two tyrosinate ligands (Tyr165, Tyr199)</strong> spaced ~34 residues apart. This mirrors the active site of the structurally characterized hydroxyquinol/catechol 1,2-dioxygenase family, in which <strong>the catalytic Fe(III) is pentacoordinated by the conserved Tyr160, Tyr194, His218 and His220</strong> (in PnpC from <em>P. putida</em> DLL-E4) (<a href="https://pubmed.ncbi.nlm.nih.gov/30446218/">PMID: 30446218</a>). The equivalence between the KT2440 ligand set (Tyr165, Tyr199, His223, His225) and the structurally defined PnpC ligand set is direct evidence for the conserved 2-Tyr/2-His ferric coordination.</p>
+<p>The enzyme class is further confirmed by crystallographic and spectroscopic work showing that <strong>intradiol-cleaving catechol 1,2 dioxygenases are Fe(III) dependent enzymes that act on catechol and substituted catechols, including chlorocatechols pollutants, by inserting molecular oxygen in the aromatic ring</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/20869471/">PMID: 20869471</a>). Domain assignments corroborate this: Pfam PF00775 (Intradiol_dioxygenase C) and PF04444 (Dioxygenase_N); InterPro IPR000627 / IPR015889 / IPR050770 (intradiol ring-cleavage dioxygenase family), matching the domain architecture listed in the target's UniProt record (Catechol_dOase_N; Intradiol_dOase_C; Intradiol_dOase_core).</p>
+<h3 id="f004-cata-ii-acts-as-a-soluble-cytoplasmic-homodimeric-enzyme-with-a-broad-catecholsubstituted-catechol-substrate-range">F004 — catA-II acts as a soluble cytoplasmic homodimeric enzyme with a broad catechol/substituted-catechol substrate range</h3>
+<p>Members of this family are <strong>homodimeric non-heme iron enzymes</strong> that carry a bound amphipathic phospholipid at the dimer interface, which modulates their kinetics. For <em>P. putida</em> chlorocatechol 1,2-dioxygenase, <strong>the kinetics changes from Michaelis-Menten to a cooperative scheme, indicating that conformational changes propagate between monomers in the absence of amphipatic molecules</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/23754625/">PMID: 23754625</a>) — direct evidence for a communicating multi-subunit (dimeric) architecture with a bound amphipathic cofactor.</p>
+<p>Crystallographic characterization further shows that the family binds a phospholipid and that specific active-site residues govern substrate preference: the authors <strong>characterised the phospholipid bound to the enzyme and provided a structural framework to understand the inversion of substrate specificity showed by the mutants</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/20869471/">PMID: 20869471</a>). This indicates a <strong>broad but tunable substrate range</strong> spanning catechol and substituted catechols (methyl-, chloro-catechols).</p>
+<p><strong>Localization:</strong> The β-ketoadipate pathway is a cytoplasmic catabolic route, and the 304-aa protein has no signal peptide and no membrane-spanning region, indicating <strong>cytoplasmic localization</strong>. The enzyme therefore acts on catechol generated intracellularly (after benzoate is imported and oxidized) rather than in the periplasm or on the membrane.</p>
+<h3 id="f005-cata-ii-is-genomically-embedded-in-a-benzoate-uptakecatabolism-gene-cluster">F005 — catA-II is genomically embedded in a benzoate uptake/catabolism gene cluster</h3>
+<p>KEGG genome-context analysis of KT2440 shows PP_3166 (catA-II) is flanked by benzoate-catabolism genes, forming a tight, same-strand operonic arrangement:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product / function</th>
+<th>Coordinates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3164</td>
+<td>benD</td>
+<td>1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate dehydrogenase (EC 1.3.1.25) — converts benzoate-dioxygenase dihydrodiol to catechol</td>
+<td>3,584,988–3,585,749</td>
+</tr>
+<tr>
+<td>PP_3165</td>
+<td>benK</td>
+<td>benzoate MFS/AAHS-family transporter (K05548)</td>
+<td>3,585,807–3,587,135</td>
+</tr>
+<tr>
+<td><strong>PP_3166</strong></td>
+<td><strong>catA-II</strong></td>
+<td><strong>catechol 1,2-dioxygenase (EC 1.13.11.1)</strong></td>
+<td><strong>3,587,165–3,588,079</strong></td>
+</tr>
+<tr>
+<td>PP_3167</td>
+<td>benE-II</td>
+<td>benzoate membrane transport protein (K05782)</td>
+<td>3,588,154–3,589,425</td>
+</tr>
+<tr>
+<td>PP_3168</td>
+<td>nicP-I</td>
+<td>porin-like</td>
+<td>downstream</td>
+</tr>
+</tbody>
+</table>
+<p>The tight intergenic spacing and shared strand identify this as a coherent <strong>benzoate uptake + ring-cleavage module</strong>. The physical adjacency of benD (which makes catechol) and catA-II (which cleaves catechol) creates metabolic channeling from benzoate oxidation directly into ring fission, coupling catA-II mechanistically to the benzoate→catechol funnel.</p>
+<h3 id="f006-the-product-ciscis-muconate-is-the-physiological-inducer-coordinating-the-ketoadipate-cat-regulon">F006 — The product cis,cis-muconate is the physiological inducer coordinating the β-ketoadipate (cat) regulon</h3>
+<p>The enzyme's product is not merely a metabolic intermediate but a <strong>regulatory effector</strong>. In <em>P. putida</em>, cis,cis-muconate is the effector of the LysR-type regulator <strong>CatR</strong>, which activates the catBC operon and the recruited pheBA promoter. <strong>The catBC operon encodes two enzymes of the beta-ketoadipate pathway and also requires CatR and cis,cis-muconate for its expression</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/7596284/">PMID: 7596284</a>). DNase I footprinting shows CatR binds the catBC/pheBA promoters and switches from a repression-site to an activation-site occupancy only when cis,cis-muconate is present.</p>
+<p>This regulatory logic is corroborated in the target organism by proteomics on the aromatic substrate vanillin, which showed coordinate up-regulation of β-ketoadipate pathway enzymes: <strong>particularly enzymes belonging to the β-ketoadipate pathway including a transcriptional regulator and porins specific for vanillin uptake increased in abundance</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/25026441/">PMID: 25026441</a>). Thus, by generating cis,cis-muconate, catA-II both drives carbon flux and produces the inducer that switches on the downstream consuming enzymes — a feed-forward autoinduction motif.</p>
+<h3 id="f007-kt2440-encodes-two-catechol-12-dioxygenase-isozymes-cata-ii-pp_3166-and-cata-i-pp_3713-77-identical">F007 — KT2440 encodes two catechol 1,2-dioxygenase isozymes: catA-II (PP_3166) and catA-I (PP_3713), ~77% identical</h3>
+<p>Genome analysis identifies <strong>two paralogous catechol 1,2-dioxygenase genes</strong> in KT2440, both assigned KEGG ortholog K03381 (EC 1.13.11.1):</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>catA-II / PP_3166 (this target)</th>
+<th>catA-I / PP_3713</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>304 aa</td>
+<td>311 aa</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td>benzoate island: benD–benK–<strong>catA-II</strong>–benE-II</td>
+<td>canonical ortho-cleavage operon: <strong>catA-I</strong>–catC (PP_3714)–catB (PP_3715)</td>
+</tr>
+<tr>
+<td>Assigned role</td>
+<td>benzoate-route catechol cleavage</td>
+<td>classic cat-operon catechol cleavage</td>
+</tr>
+<tr>
+<td>Fe(III) ligands</td>
+<td>Tyr165, Tyr199, His223, His225 (conserved)</td>
+<td>conserved 2-Tyr/2-His set</td>
+</tr>
+</tbody>
+</table>
+<p>A Needleman–Wunsch global alignment of the two proteins gives <strong>240/313 = 76.7% amino-acid identity</strong>. Both retain the conserved intradiol Fe(III) 2-Tyr/2-His ligand set, so both are genuine catechol 1,2-dioxygenases. The distinguishing feature is genomic context: catA-II is co-located with benzoate transport and oxidation genes, whereas catA-I is co-located with the downstream muconate/muconolactone-converting genes catB and catC. This assigns catA-II specifically to the <strong>benzoate branch</strong>.</p>
+<h3 id="f008-the-benkcatabene-arrangement-is-a-conserved-benzoate-inducible-module-in-p-putida">F008 — The benK–catA–benE arrangement is a conserved, benzoate-inducible module in <em>P. putida</em></h3>
+<p>The gene neighborhood of catA-II is not an accident of KT2440 but a <strong>conserved functional module</strong> across <em>P. putida</em>. In <em>P. putida</em> CSV86, the ben locus is organized as <strong>benK–catA–benE–benF</strong>, in which benK is an aromatic-acid:H+ MFS symporter, benE a benzoate:H+ symporter, benF a benzoate-specific OprD porin, and catA the catechol 1,2-dioxygenase: <strong>benzoate transport and metabolism genes are clustered at the ben locus as benK-catA-benE-benF</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/28591829/">PMID: 28591829</a>). The paper explicitly identifies the enzyme: <strong>benF and catA encode benzoate specific porin, OprD and catechol 1,2-dioxygenase, respectively</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/28591829/">PMID: 28591829</a>).</p>
+<p>Functionally, benzoate transport in CSV86 is an <strong>inducible, proton-motive-force-driven active process</strong> (Km ≈ 4.5 μM; 90–100% inhibited by dinitrophenol), and benF, benK, and benE are transcriptionally induced by benzoate. This provides experimental support, in a closely related strain, that a catechol 1,2-dioxygenase co-located with benK/benE forms a <strong>dedicated benzoate uptake-and-ring-cleavage module</strong> — precisely the arrangement seen around KT2440 catA-II (benK/PP_3165–catA-II/PP_3166–benE-II/PP_3167).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>catA-II sits at a pivotal branch point in <em>P. putida</em>'s aromatic catabolism. The integrated model combining all eight findings is:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">Benzoate</span><span class="w"> </span><span class="p">(</span><span class="n">extracellular</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">BenK</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">BenE</span><span class="w"> </span><span class="p">(</span><span class="nl">benzoate:</span><span class="n">H</span><span class="o">+</span><span class="w"> </span><span class="n">symporters</span><span class="p">)</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">PMF</span><span class="o">-</span><span class="n">driven</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">uptake</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="n">Benzoate</span><span class="w"> </span><span class="p">(</span><span class="n">cytoplasm</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">Benzoate</span><span class="w"> </span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="o">-</span><span class="n">dioxygenase</span><span class="w"> </span><span class="p">(</span><span class="n">BenABC</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">reductase</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="n">benzoate</span><span class="o">-</span><span class="n">cis</span><span class="o">-</span><span class="n">dihydrodiol</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">BenD</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3164</span><span class="p">;</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">1.3.1.25</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="err">┌──────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">CATECHOL</span><span class="w">    </span><span class="err">│</span>
+<span class="w">   </span><span class="err">└──────┬───────┘</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">★</span><span class="w"> </span><span class="n">catA</span><span class="o">-</span><span class="n">II</span><span class="w">  </span><span class="p">(</span><span class="n">PP_3166</span><span class="p">;</span><span class="w"> </span><span class="n">catechol</span><span class="w"> </span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="o">-</span><span class="n">dioxygenase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">1.13.11.1</span><span class="p">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">     </span><span class="n">Fe</span><span class="p">(</span><span class="n">III</span><span class="p">),</span><span class="w"> </span><span class="n">O2</span><span class="p">,</span><span class="w"> </span><span class="n">INTRADIOL</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">ortho</span><span class="w"> </span><span class="n">cleavage</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">┌────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">cis</span><span class="p">,</span><span class="n">cis</span><span class="o">-</span><span class="n">MUCONATE</span><span class="w">  </span><span class="err">│──────────────┐</span>
+<span class="w">   </span><span class="err">└──────┬─────────────┘</span><span class="w">              </span><span class="err">│</span><span class="w"> </span><span class="p">(</span><span class="n">effector</span><span class="p">)</span>
+<span class="w">  </span><span class="err">│</span><span class="w">                            </span><span class="err">▼</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">CatB</span><span class="w"> </span><span class="p">(</span><span class="n">muconate</span><span class="w">       </span><span class="err">┌─────────────┐</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">cycloisomerase</span><span class="p">)</span><span class="w">      </span><span class="err">│</span><span class="w"> </span><span class="n">CatR</span><span class="w"> </span><span class="p">(</span><span class="n">LTTR</span><span class="p">)</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">activates</span><span class="w"> </span><span class="n">catBC</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="n">regulon</span>
+<span class="w">  </span><span class="err">▼</span><span class="w">                       </span><span class="err">└─────────────┘</span>
+<span class="w">   </span><span class="n">muconolactone</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">CatC</span><span class="w"> </span><span class="p">(</span><span class="n">muconolactone</span><span class="w"> </span><span class="n">isomerase</span><span class="p">)</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">β</span><span class="o">-</span><span class="n">ketoadipate</span><span class="w"> </span><span class="n">enol</span><span class="o">-</span><span class="n">lactone</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="err">β</span><span class="o">-</span><span class="n">ketoadipate</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">PcaD</span><span class="p">,</span><span class="w"> </span><span class="n">PcaIJ</span><span class="p">,</span><span class="w"> </span><span class="n">PcaF</span><span class="w"> </span><span class="p">(</span><span class="n">shared</span><span class="w"> </span><span class="n">lower</span><span class="w"> </span><span class="n">pathway</span><span class="p">)</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">succinyl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">acetyl</span><span class="o">-</span><span class="n">CoA</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="n">TCA</span><span class="w"> </span><span class="n">cycle</span>
+</code></pre></div>
+
+<p><strong>Enzyme mechanism.</strong> catA-II is a non-heme iron dioxygenase of the intradiol class. The catechol substrate chelates the mononuclear <strong>Fe(III)</strong> center (held by Tyr165, Tyr199, His223, His225); molecular oxygen then attacks the activated substrate, and both oxygen atoms are incorporated as the ring is cleaved between the two hydroxyl-bearing carbons (ortho fission), yielding the ring-opened diacid cis,cis-muconate. The ferric (rather than ferrous) oxidation state and the 2-Tyr/2-His coordination distinguish intradiol enzymes from their extradiol Fe(II) counterparts.</p>
+<p><strong>Quaternary structure and localization.</strong> The active enzyme is a soluble, cytoplasmic <strong>homodimer</strong> bearing a bound amphipathic phospholipid at the interface; the phospholipid and inter-subunit communication tune the kinetic profile (Michaelis–Menten vs. cooperative). It carries out its function in the cytoplasm, downstream of benzoate import and oxidation.</p>
+<p><strong>Paralog division of labor.</strong> KT2440's two catechol 1,2-dioxygenases (~77% identical) partition by genomic context. catA-II (PP_3166) is embedded with benzoate transport/oxidation genes (benD–benK–catA-II–benE-II) and is benzoate-induced; catA-I (PP_3713) is embedded with the muconate-processing genes (catA-I–catC–catB). catA-II is therefore best described as the <strong>benzoate-route</strong> catechol 1,2-dioxygenase.</p>
+<p><strong>Regulatory feed-forward.</strong> Because its product cis,cis-muconate is the CatR effector, catA-II activity generates the very signal that induces the downstream cat regulon — an elegant autoinduction that ensures the ring-cleavage product is efficiently consumed and prevents accumulation of the potentially toxic intermediate.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/4063065/">4063065</a></td>
+<td><em>Degradation of lawsone by P. putida L2</em></td>
+<td>Establishes the reaction: ortho-fission of catechol → cis,cis-muconate → β-ketoadipate (F001)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3139626/">3139626</a></td>
+<td><em>Cloning of catA and catBC clusters from P. aeruginosa PAO</em></td>
+<td>Confirms EC 1.13.11.1 and catA as first of the consecutive cat-branch enzymes (F001)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16470664/">16470664</a></td>
+<td><em>Aromatic catabolic pathways in P. putida KT2440 (proteomics)</em></td>
+<td>Direct evidence in KT2440: CatA induced by benzoate; branches converge on β-ketoadipate (F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30446218/">30446218</a></td>
+<td><em>Crystal structure of hydroxyquinol 1,2-dioxygenase PnpC (P. putida)</em></td>
+<td>Defines the conserved 2-Tyr/2-His Fe(III) coordination matching Q88I35 (F003)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20869471/">20869471</a></td>
+<td><em>Multidisciplinary characterization of catechol 1,2 dioxygenase</em></td>
+<td>Confirms Fe(III), intradiol mechanism, substituted-catechol range, phospholipid, substrate specificity (F003, F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23754625/">23754625</a></td>
+<td><em>Amphipatic molecules affect P. putida chlorocatechol 1,2-dioxygenase</em></td>
+<td>Demonstrates dimeric, inter-monomer-communicating architecture (F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7596284/">7596284</a></td>
+<td><em>CatR-induced DNA bending at pheBA/catBC promoters</em></td>
+<td>cis,cis-muconate + CatR required for downstream β-ketoadipate gene expression (F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25026441/">25026441</a></td>
+<td><em>Proteome response of KT2440 to vanillin</em></td>
+<td>Coordinate induction of β-ketoadipate enzymes, regulator, uptake porins (F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28591829/">28591829</a></td>
+<td><em>Benzoate transport in P. putida CSV86</em></td>
+<td>Establishes conserved benK-catA-benE benzoate module; identifies catA as catechol 1,2-dioxygenase (F008)</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting biomimetic/model chemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/15446874/">PMID: 15446874</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/21766098/">PMID: 21766098</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/20835480/">PMID: 20835480</a>) reinforces the intradiol-cleavage mechanism and the role of Fe–O(tyrosinate) coordination geometry in determining intradiol vs. extradiol regioselectivity. Applied studies (<a href="https://pubmed.ncbi.nlm.nih.gov/26306712/">PMID: 26306712</a>) using CatA to produce cis,cis-muconate in engineered <em>E. coli</em> further confirm the enzyme's product and its substrate-binding determinants.</p>
+<p><strong>Note on directness of evidence:</strong> No study cited here characterized the purified Q88I35 protein individually. The functional assignment rests on (i) database annotation (UniProt/KEGG), (ii) conserved sequence/active-site signatures shared with structurally solved family members, (iii) proteomic detection of "CatA" in benzoate-grown KT2440, and (iv) conserved genomic context across <em>P. putida</em> strains. This is strong convergent evidence but is inferential at the level of the specific isozyme.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No isozyme-specific biochemistry.</strong> The kinetic parameters (kcat, Km for catechol and substituted catechols), substrate specificity profile, and phospholipid identity have not been measured for the purified catA-II (PP_3166) protein specifically. Family properties are inferred from related enzymes (chlorocatechol 1,2-dioxygenase, Acinetobacter CatA, PnpC).</p>
+</li>
+<li>
+<p><strong>catA-II vs. catA-I functional redundancy.</strong> Although genomic context assigns catA-II to the benzoate branch and catA-I to the cat operon, no gene-knockout or expression study cited here directly demonstrates the <em>in vivo</em> division of labor between the two ~77%-identical isozymes in KT2440. Whether they are truly non-redundant, differentially regulated, or partially interchangeable is unresolved.</p>
+</li>
+<li>
+<p><strong>Substrate specificity resolution.</strong> It is unknown whether catA-II preferentially handles unsubstituted catechol vs. methyl-/chloro-catechols, which would distinguish it functionally from chlorocatechol-specialized isozymes.</p>
+</li>
+<li>
+<p><strong>Structural data.</strong> No experimental 3D structure of Q88I35 exists; the 2-Tyr/2-His ligand assignment is by homology, not crystallography of this protein.</p>
+</li>
+<li>
+<p><strong>Regulation specifics.</strong> The CatR/cis,cis-muconate induction circuit is best characterized for the classic cat operon; how the benzoate-island catA-II is transcriptionally controlled (BenR vs. CatR, promoter architecture) in KT2440 was not directly established here.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzymology of PP_3166.</strong> Clone, express, and purify Q88I35; determine steady-state kinetics (kcat, Km) for catechol and a panel of substituted catechols (3-/4-methylcatechol, 3-/4-chlorocatechol) to define substrate specificity and directly compare with catA-I/PP_3713.</p>
+</li>
+<li>
+<p><strong>Single and double knockouts (ΔcatA-II, ΔcatA-I, double).</strong> Measure growth on benzoate, 4-hydroxybenzoate, and other aromatics, plus catechol 1,2-dioxygenase activity in cell extracts, to test the proposed benzoate-branch specialization and quantify redundancy.</p>
+</li>
+<li>
+<p><strong>Transcriptional analysis of the ben island.</strong> RT-qPCR / RNA-seq of PP_3164–PP_3168 across benzoate vs. succinate growth; promoter mapping and identification of the cognate regulator (BenR vs. CatR) to establish how catA-II is induced.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure of Q88I35 to confirm the Fe(III) coordination (Tyr165/Tyr199/His223/His225), the homodimer interface, and any bound phospholipid.</p>
+</li>
+<li>
+<p><strong>Metabolic flux / channeling test.</strong> Assess whether physical adjacency of BenD and catA-II supports substrate channeling of catechol, e.g., via co-purification, proximity assays, or in vitro coupled-enzyme kinetics.</p>
+</li>
+<li>
+<p><strong>cis,cis-Muconate production application.</strong> Given the biotechnological interest in muconate as a nylon/adipic-acid precursor, benchmark catA-II against engineered CatA variants (<a href="https://pubmed.ncbi.nlm.nih.gov/26306712/">PMID: 26306712</a>) for muconate titer in a heterologous host.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated from an autonomous multi-iteration investigation (5 iterations; 8 confirmed findings; 25 papers reviewed). All functional claims are traceable to the cited literature and to UniProt/KEGG database annotations for Q88I35 / PP_3166.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="catA-II-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="catA-II-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:4063065</li>
+<li>PMID:3139626</li>
+<li>PMID:16470664</li>
+<li>PMID:30446218</li>
+<li>PMID:20869471</li>
+<li>PMID:23754625</li>
+<li>PMID:7596284</li>
+<li>PMID:25026441</li>
+<li>PMID:28591829</li>
+<li>PMID:15446874</li>
+<li>PMID:21766098</li>
+<li>PMID:20835480</li>
+<li>PMID:26306712</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88I35
+gene_symbol: catA-II
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  CatA-II (PP_3166, Q88I35) is a second catechol 1,2-dioxygenase paralog in
+  Pseudomonas putida KT2440. It catalyzes Fe(III)-dependent intradiol
+  ortho-cleavage of catechol to cis,cis-muconate, the first step of the
+  catechol branch of the beta-ketoadipate pathway. Unlike the primary
+  CatA-I/PP_3713 enzyme in the cat regulon, CatA-II is located downstream of
+  the benABCD benzoate upper-pathway operon. KT2440 proteomics identifies
+  PP_3166 as its second catechol 1,2-dioxygenase, while work on the corresponding
+  ben-linked paralog in P. putida mt-2 supports a safety-valve role that relieves
+  catechol surplus during benzoate-induced aromatic catabolism.
+aliases:
+  - PP_3166
+  - catA2
+existing_annotations:
+  - term:
+      id: GO:0003824
+      label: catalytic activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        CatA-II is catalytic, but this top-level molecular-function term is too
+        general for a gene product with a specific catechol 1,2-dioxygenase
+        activity annotation.
+      action: MODIFY
+      reason: &gt;-
+        Replace the generic parent with GO:0018576, which captures the specific
+        intradiol ring-cleavage reaction recorded in UniProt, GOA, EC, and Rhea.
+      proposed_replacement_terms:
+        - id: GO:0018576
+          label: catechol 1,2-dioxygenase activity
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;RecName: Full=catechol 1,2-dioxygenase&#34;
+  - term:
+      id: GO:0005506
+      label: iron ion binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Iron binding is true but less specific than the ferric iron binding term
+        already present for CatA-II.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Intradiol catechol dioxygenases use non-heme Fe(III). GO:0008199
+        captures that cofactor specificity, while GO:0005506 is a broad parent
+        term.
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;Name=Fe(3+); Xref=ChEBI:CHEBI:29034;&#34;
+  - term:
+      id: GO:0008199
+      label: ferric iron binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Ferric iron binding correctly captures the catalytic cofactor
+        requirement of this intradiol catechol 1,2-dioxygenase.
+      action: ACCEPT
+      reason: &gt;-
+        The UniProt record explicitly lists Fe(3+) as the cofactor, consistent
+        with the intradiol ring-cleavage dioxygenase family.
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;Name=Fe(3+); Xref=ChEBI:CHEBI:29034;&#34;
+  - term:
+      id: GO:0009712
+      label: catechol-containing compound metabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        The broad metabolic-process term is directionally correct but less
+        precise than catechol catabolism by the ortho-cleavage branch.
+      action: MODIFY
+      reason: &gt;-
+        CatA-II performs the first catechol ortho-cleavage reaction. A
+        catabolic child term is more appropriate than the generic parent.
+      proposed_replacement_terms:
+        - id: GO:0019615
+          label: catechol catabolic process, ortho-cleavage
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;4,5-dihydro-2-furylacetate from catechol: step 1/3.&#34;
+  - term:
+      id: GO:0016702
+      label: oxidoreductase activity, acting on single donors with incorporation of
+        molecular oxygen, incorporation of two atoms of oxygen
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        This dioxygenase parent term is biologically consistent but redundant
+        with the more specific catechol 1,2-dioxygenase activity annotation.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        GO:0018576 fully specifies the substrate and reaction; retaining this
+        broader parent as core would dilute the annotation.
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);&#34;
+  - term:
+      id: GO:0018576
+      label: catechol 1,2-dioxygenase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: &gt;-
+        This is the precise core molecular function of CatA-II.
+      action: ACCEPT
+      reason: &gt;-
+        The UniProt record, EC 1.13.11.1, Rhea reaction, InterPro family, and
+        the ben-locus catA2 literature all support CatA-II as a catechol
+        1,2-dioxygenase.
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;RecName: Full=catechol 1,2-dioxygenase&#34;
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);&#34;
+        - reference_id: PMID:24341396
+          supporting_text: &gt;-
+            located downstream of the ben operon that encodes an additional
+            catechol-1,2-dioxygenase.
+  - term:
+      id: GO:0019614
+      label: catechol-containing compound catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        CatA-II participates in catechol catabolism by cleaving catechol to
+        cis,cis-muconate.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        The term is correct, but GO:0019615 captures the direct ortho-cleavage
+        catabolic branch more precisely.
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;4,5-dihydro-2-furylacetate from catechol: step 1/3.&#34;
+  - term:
+      id: GO:0042952
+      label: beta-ketoadipate pathway
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000041
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        This pathway annotation is correct for CatA-II, which performs step 1/3
+        of the catechol branch feeding the beta-ketoadipate pathway.
+      action: ACCEPT
+      reason: &gt;-
+        UniPathway/UniProt place the enzyme in the catechol-derived
+        beta-ketoadipate route, and P. putida literature identifies PP_3166
+        catA2 as a second catechol 1,2-dioxygenase downstream of the ben operon.
+      supported_by:
+        - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+          supporting_text: &#34;PATHWAY: Aromatic compound metabolism; beta-ketoadipate pathway; 5-oxo-&#34;
+        - reference_id: PMID:21906639
+          supporting_text: &gt;-
+            This operon contains PP_3166 (catA2), which was shown to be a
+            second catechol 1,2-dioxygenase besides catA.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000041
+    title: Gene Ontology annotation based on UniPathway vocabulary mapping
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/catA-II/catA-II-uniprot.txt
+    title: UniProt record for catA-II (Q88I35)
+    findings:
+      - statement: CatA-II is annotated as catechol 1,2-dioxygenase.
+        supporting_text: &#34;RecName: Full=catechol 1,2-dioxygenase&#34;
+      - statement: CatA-II catalyzes catechol ortho-cleavage to cis,cis-muconate.
+        supporting_text: &#34;Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);&#34;
+      - statement: CatA-II is placed at step 1/3 of the catechol branch of the beta-ketoadipate pathway.
+        supporting_text: &#34;4,5-dihydro-2-furylacetate from catechol: step 1/3.&#34;
+  - id: PMID:24341396
+    title: A second chromosomal copy of the catA gene endows Pseudomonas putida mt-2 with an enzymatic safety valve for excess of catechol.
+    findings:
+      - statement: &gt;-
+          P. putida mt-2 carries a second catA copy downstream of the ben operon
+          that encodes an additional catechol 1,2-dioxygenase.
+        supporting_text: &gt;-
+          P. putida mt-2 has a second chromosomal copy of the catA gene (named
+          catA2) located downstream of the ben operon that encodes an
+          additional catechol-1,2-dioxygenase.
+      - statement: &gt;-
+          The catA2 paralog acts as a metabolic safety valve for excess catechol
+          during benzoate-induced ortho-pathway flux.
+        supporting_text: &gt;-
+          The data consistently indicated that induction of the ortho pathway by
+          benzoate plasmid-less strain P. putida KT2440 led to catechol surplus,
+          the toxicity of which at high concentrations being counteracted by
+          CatA2.
+  - id: PMID:21906639
+    title: Generation of a catR deficient mutant of P. putida KT2440 that produces cis, cis-muconate from benzoate at high rate and yield.
+    findings:
+      - statement: &gt;-
+          In a KT2440 catR mutant, the ben operon containing PP_3166/catA2 was
+          highly expressed in benzoate and PP_3166 was identified as a second
+          catechol 1,2-dioxygenase.
+        supporting_text: &gt;-
+          This operon contains PP_3166 (catA2), which was shown to be a second
+          catechol 1,2-dioxygenase besides catA.
+  - id: file:PSEPK/catA-II/catA-II-deep-research-openscientist.md
+    title: OpenScientist deep-research retrieval for catA-II
+    findings:
+      - statement: &gt;-
+          OpenScientist confirmed CatA-II as the PP_3166 catechol
+          1,2-dioxygenase paralog and distinguished it from CatA-I/PP_3713 by
+          genomic context.
+        supporting_text: &gt;-
+          The only ambiguity is intra-organismal: KT2440 has two catechol
+          1,2-dioxygenase paralogs, and this report distinguishes catA-II
+          (PP_3166) from catA-I (PP_3713) explicitly (see Finding F007).
+core_functions:
+  - description: &gt;-
+      Fe(III)-dependent catechol 1,2-dioxygenase that cleaves catechol to
+      cis,cis-muconate as a ben-locus-associated paralog in the catechol branch
+      of the beta-ketoadipate pathway.
+    molecular_function:
+      id: GO:0018576
+      label: catechol 1,2-dioxygenase activity
+    directly_involved_in:
+      - id: GO:0019615
+        label: catechol catabolic process, ortho-cleavage
+      - id: GO:0042952
+        label: beta-ketoadipate pathway
+    supported_by:
+      - reference_id: file:PSEPK/catA-II/catA-II-uniprot.txt
+        supporting_text: &#34;Reaction=catechol + O2 = cis,cis-muconate + 2 H(+);&#34;
+      - reference_id: PMID:24341396
+        supporting_text: &gt;-
+          P. putida mt-2 has a second chromosomal copy of the catA gene (named
+          catA2) located downstream of the ben operon that encodes an
+          additional catechol-1,2-dioxygenase.
+      - reference_id: file:PSEPK/catA-II/catA-II-deep-research-openscientist.md
+        supporting_text: &gt;-
+          catA-II (PP_3166) is embedded in a dedicated **benzoate
+          uptake/oxidation gene island**
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Under which KT2440 growth conditions does CatA-II materially contribute to
+      catechol flux relative to CatA-I?
+  - question: &gt;-
+      Does CatA-II differ from CatA-I in catechol affinity, inhibitor
+      sensitivity, or response to substituted catechols?
+suggested_experiments:
+  - hypothesis: &gt;-
+      CatA-II acts as a benzoate-induced safety-valve enzyme when catechol
+      production exceeds CatA-I capacity.
+    description: &gt;-
+      Compare wild type, catA-I, catA-II, and double-mutant strains during
+      growth on benzoate or catechol, measuring catechol accumulation,
+      cis,cis-muconate production, and expression from the ben and cat loci.
+    experiment_type: genetic perturbation with targeted metabolite profiling
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
