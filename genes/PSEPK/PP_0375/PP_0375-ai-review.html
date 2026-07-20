@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0375 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0375</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QV9" target="_blank" class="term-link">
+                        Q88QV9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0375";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QV9" data-a="DESCRIPTION: PP_0375 encodes an S9-family serine peptidase loca..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0375 encodes an S9-family serine peptidase located immediately downstream of pqqE in the Pseudomonas putida KT2440 pyrroloquinoline quinone (PQQ) locus. The KT2440 operon study refers to PP_0375 as pqqG, and related Pseudomonas proteins are called PqqG, PqqM, or PqqH. Sequence and locus conservation support a PQQ-pathway association, but the native substrate and whether the protein acts in precursor maturation, PQQ excretion, or both have not been established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV9" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteolysis is a reasonable broad process annotation for PP_0375. The protein contains an S9 peptidase catalytic domain and is annotated as a prolyl oligopeptidase-family protein, although its native substrate is unknown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The sequence-family evidence supports a proteolytic role, but the generic process is less informative than the serine-peptidase molecular function and the PQQ-pathway association. It does not specify that PqqA is the substrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006508	proteolysis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001375; Peptidase_S9_cat.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008236" target="_blank" class="term-link">
+                                    GO:0008236
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV9" data-a="GO:0008236" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Serine-type peptidase activity is supported by the S9 prolyl oligopeptidase catalytic domain and the conserved family assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most informative current molecular-function annotation for PP_0375, while substrate specificity remains unknown.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008236	serine-type peptidase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001375; Peptidase_S9_cat.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR43056:SF5; PEPTIDASE S9 PROLYL OLIGOPEPTIDASE CATALYTIC DOMAIN-CONTAINING PROTEIN; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018189" target="_blank" class="term-link">
+                                    GO:0018189
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroloquinoline quinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18055583" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18055583
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pyrroloquinoline quinone is a plant growth promotion factor ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QV9" data-a="GO:0018189" data-r="PMID:18055583" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_0375 is the S9 peptidase-family protein identified as the putative pqqG member of the KT2440 pqqFABCDEG locus. Disrupting the close B16 PqqM ortholog abolished PQQ production, while a close Pseudomonas aeruginosa ortholog has direct genetic evidence for PQQ excretion rather than a defined biosynthetic reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Conserved locus position, sequence-family identity, cotranscription with pqqCDE in KT2440, and the B16 pqqM loss-of-PQQ phenotype support this pathway-level ISS proposal. The PA1990/PqqH phenotype shows that an S9-family role can instead affect PQQ excretion without defining a biosynthetic reaction. The proposal is therefore not a substrate or reaction claim and remains outside the core-function summary.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27287323" target="_blank" class="term-link">
+                                        PMID:27287323
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The pqq gene cluster (pqqFABCDEG) encodes at least two independent transcripts</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19902179" target="_blank" class="term-link">
+                                        PMID:19902179
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gene PA1990 of Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues, covering 98.9% of Q88QV9 and 99.8% of AAX10035.1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The NCBI protein record names AAX10035.1 as the *Pseudomonas fluorescens* B16 `pqqG` gene product, a dipeptidyl aminopeptidase/acylaminoacyl-peptidase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">B16 full text names `pqqM` among 11 ORFs and states that &#34;the Tn3-gusA insertions in each ORF abolished PQQ production&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Q88QV9 aligned to the *Pseudomonas aeruginosa* PA1990/PqqH protein Q9I2B9 at 52.2% amino-acid identity across 597 residues, covering 97.1% of Q88QV9 and 98.2% of Q9I2B9.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0375/PP_0375-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_0375 is the *P. putida* ortholog occupying the same operonic position.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PP_0375 is a PQQ-locus-associated S9 serine peptidase in fluorescent pseudomonads. Its native substrate and whether it acts in precursor maturation, PQQ excretion, or both remain unknown.</h3>
+                <span class="vote-buttons" data-g="Q88QV9" data-a="FUNCTION: PP_0375 is a PQQ-locus-associated S9 serine peptid..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008236" target="_blank" class="term-link">
+                            serine-type peptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0375/PP_0375-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR001375; Peptidase_S9_cat.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27287323" target="_blank" class="term-link">
+                                PMID:27287323
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The pqq gene cluster (pqqFABCDEG) encodes at least two independent transcripts</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19902179" target="_blank" class="term-link">
+                                PMID:19902179
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Gene PA1990 of Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues, covering 98.9% of Q88QV9 and 99.8% of AAX10035.1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0375/PP_0375-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The **exact peptide substrate of PP_0375 has not been experimentally established** and remains the principal knowledge gap.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0375/PP_0375-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_0375 (prolyl oligopeptidase family protein)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"SubName: Full=Prolyl oligopeptidase family protein"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   InterPro; IPR001375; Peptidase_S9_cat."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   PANTHER; PTHR43056:SF5; PEPTIDASE S9 PROLYL OLIGOPEPTIDASE CATALYTIC DOMAIN-CONTAINING PROTEIN; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0375/PP_0375-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_0375</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0006508	proteolysis"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0008236	serine-type peptidase activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PP_0375 PqqG/PqqM ortholog comparison</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues, covering 98.9% of Q88QV9 and 99.8% of AAX10035.1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The NCBI protein record names AAX10035.1 as the *Pseudomonas fluorescens* B16 `pqqG` gene product, a dipeptidyl aminopeptidase/acylaminoacyl-peptidase."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"B16 full text names `pqqM` among 11 ORFs and states that &#34;the Tn3-gusA insertions in each ORF abolished PQQ production&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Q88QV9 aligned to the *Pseudomonas aeruginosa* PA1990/PqqH protein Q9I2B9 at 52.2% amino-acid identity across 597 residues, covering 97.1% of Q88QV9 and 98.2% of Q9I2B9."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0375/PP_0375-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_0375 (Q88QV9)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"PP_0375 is the *P. putida* ortholog occupying the same operonic position."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The **exact peptide substrate of PP_0375 has not been experimentally established** and remains the principal knowledge gap."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27287323" target="_blank" class="term-link">
+                            PMID:27287323
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of Pyrroloquinoline Quinone-Dependent Glucose Dehydrogenase Activity in the Model Rhizosphere-Dwelling Bacterium Pseudomonas putida KT2440.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The pqq gene cluster (pqqFABCDEG) encodes at least two independent transcripts"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18055583" target="_blank" class="term-link">
+                            PMID:18055583
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pyrroloquinoline quinone is a plant growth promotion factor produced by Pseudomonas fluorescens B16.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Analysis of the DNA sequence of the fragment identified 11 putative open reading frames, consisting of seven known and four previously unidentified pyrroloquinoline quinone (PQQ) biosynthetic genes."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"All of the pqq genes showed expression only in nutrient-limiting conditions in a PqqH-dependent manner."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"wild-type B16 produces PQQ, whereas mutants defective in plant growth promotion do not"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19902179" target="_blank" class="term-link">
+                            PMID:19902179
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The PQQ biosynthetic operons and their transcriptional regulation in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Gene PA1990 of Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The putative pqqF gene of P. aeruginosa was shown to be essential for PQQ biosynthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_0375 directly cleave a PqqA-derived intermediate, promote PQQ excretion, or perform both functions, and how does its role differ from the M16-family PqqF route?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QV9" data-a="Q: Does PP_0375 directly cleave a PqqA-derived interm..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify intracellular and extracellular PQQ and PqqA-derived peptide intermediates in wild-type, PP_0375 deletion, catalytic-serine mutant, and complemented strains, then test purified PP_0375 against unmodified and PqqE-cross-linked PqqA by LC-MS/MS.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_0375 contributes serine-peptidase activity to PQQ precursor maturation in KT2440.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted genetics and substrate-resolved peptidase assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QV9" data-a="EXPERIMENT: Quantify intracellular and extracellular PQQ and P..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0375-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QV9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">PP_0375 (Q88QV9): A Family-S9 Serine Peptidase of the *Pseudomonas putida* KT2440 Pyrroloquinoline-Quinone (PQQ) Biosynthesis Operon</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T13:39:51.454359</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0375-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0375-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="pp_0375-q88qv9-a-family-s9-serine-peptidase-of-the-pseudomonas-putida-kt2440-pyrroloquinoline-quinone-pqq-biosynthesis-operon">PP_0375 (Q88QV9): A Family-S9 Serine Peptidase of the <em>Pseudomonas putida</em> KT2440 Pyrroloquinoline-Quinone (PQQ) Biosynthesis Operon</h1>
+<p><strong>Target:</strong> PP_0375 · <strong>UniProt:</strong> Q88QV9 · <strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), taxid 160488<br />
+<strong>Protein length:</strong> 612 aa · <strong>Gene synonyms:</strong> <em>pqqG</em> (operon terminal gene); ortholog of <em>P. aeruginosa</em> <em>pqqH</em> (PA1990)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>PP_0375 encodes a <strong>family-S9 (prolyl oligopeptidase clan SC) serine peptidase</strong> — a catalytically competent α/β-hydrolase whose primary molecular function is <strong>peptide-bond hydrolysis</strong>. The gene sits as the <strong>terminal ("G") gene of the pyrroloquinoline-quinone (PQQ) biosynthesis operon</strong> of <em>P. putida</em> KT2440, whose gene order has been mapped by RT-PCR as <em>pqqFABCDEG</em> (loci PP_0375–PP_0381). PP_0375 is the ~53 %-identical ortholog of <em>P. aeruginosa</em> <em>pqqH</em>/PA1990, the peptidase gene cotranscribed with <em>pqqABCDE</em>. Its role therefore lies within <strong>PQQ cofactor maturation</strong>, a ribosomally-synthesized-and-post-translationally-modified-peptide (RiPP) pathway that builds the redox cofactor PQQ from a glutamate and a tyrosine embedded in the 23-residue precursor peptide PqqA.</p>
+<p>Structurally, PP_0375 has the <strong>canonical two-domain prolyl-oligopeptidase architecture</strong>: an N-terminal seven-bladed β-propeller domain that gates the active site, packed against a C-terminal α/β-hydrolase catalytic domain carrying the Peptidase_S9 module (Pfam PF00326). The catalytic <strong>Ser469–His582–Asp550 triad</strong> is geometrically intact in the high-confidence AlphaFold model (global pLDDT 93.8; triad distances 3.0 Å and 2.78 Å), with Ser469 sitting in a classic G-x-S-x-G "nucleophile elbow." Because the β-propeller covers the active site, this class of enzyme is intrinsically <strong>selective for short peptides (oligopeptidase behavior)</strong> rather than folded proteins — the enzyme sees a buried, gated pocket rather than an open surface groove.</p>
+<p>Functionally, the PQQ operon of <em>P. putida</em> carries <strong>two proteases of different mechanistic clans, doing two different jobs.</strong> The essential core excision of the PqqE-cross-linked Glu–Tyr di-amino-acid from PqqA is performed by <strong>PqqF</strong> (PP_0381), an M16 zinc "inverzincin" whose deletion abolishes PQQ synthesis. In contrast, deletion of the S9 peptidase (<em>pqqH</em>, the PP_0375 ortholog) in <em>P. aeruginosa</em> does <strong>not</strong> block PQQ synthesis but abolishes <strong>PQQ excretion</strong> into the culture supernatant. PP_0375 therefore functions in the <strong>cytoplasm</strong> during cofactor maturation/release, and the PQQ it helps produce is exported to the <strong>periplasm</strong>, where it serves as the redox cofactor of quinoprotein dehydrogenases (glucose dehydrogenase Gcd, and the alcohol dehydrogenases PedE/PedH), driving glucose→gluconate oxidation (mineral-phosphate solubilisation) and alcohol/aldehyde oxidation. The <strong>exact peptide substrate of PP_0375 has not been experimentally established</strong> and remains the principal knowledge gap.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity checks were satisfied:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol PP_0375 matches protein description</td>
+<td>✅ "Prolyl oligopeptidase family protein" is consistent with the S9 peptidase domains found (PF00326, IPR001375)</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>P. putida</em> KT2440 (taxid 160488), OrderedLocusName PP_0375</td>
+</tr>
+<tr>
+<td>Domains align with literature</td>
+<td>✅ AB_hydrolase_fold (IPR029058), Peptidase_S9_cat (IPR001375), Peptidase_S9 (PF00326) all confirmed; genomic context is the PQQ operon</td>
+</tr>
+<tr>
+<td>Literature consistency</td>
+<td>✅ No mistaken-identity conflict — PP_0375 maps cleanly onto the <em>pqqG/pqqH</em> operon position; literature on the PQQ pathway is directly relevant</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> The identity is secure. PP_0375 is the operonic S9 peptidase (<em>pqqG</em>) of the <em>P. putida</em> KT2440 PQQ cluster.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_0375-is-a-peptidase-s9-serine-hydrolase-with-an-intact-serhisasp-catalytic-triad">Finding 1 — PP_0375 is a Peptidase S9 serine hydrolase with an intact Ser–His–Asp catalytic triad</h3>
+<p>UniProt Q88QV9 (612 aa) carries a consistent, mutually corroborating stack of domain annotations that place it firmly in the <strong>prolyl oligopeptidase family (clan SC, family S9)</strong>: Pfam <strong>PF00326 (Peptidase_S9)</strong>, InterPro <strong>IPR001375 (Peptidase_S9_cat)</strong>, <strong>IPR029058 (α/β-hydrolase fold)</strong>, IPR050585, PANTHER <strong>PTHR43056:SF5</strong>, eggNOG <strong>COG1506</strong> (dipeptidyl-/acylamino-acid peptidase), and Gene3D <strong>3.40.50.1820</strong> (the α/β-hydrolase superfamily fold).</p>
+<p>The catalytic machinery is not merely annotated but <strong>structurally verified</strong>. The nucleophile <strong>Ser469</strong> lies in a canonical <strong>G-x-S-x-G elbow</strong> (sequence …RGG<strong>S</strong>AGG…), the signature "nucleophile elbow" of α/β-hydrolases. In the AlphaFold model <strong>AF-Q88QV9</strong> (global pLDDT 93.8, i.e. very high confidence), the triad is geometrically complete and correctly oriented for catalysis:</p>
+<ul>
+<li><strong>Ser469 Oγ – His582 Nε2 = 3.0 Å</strong> (hydrogen-bond distance for the charge-relay proton transfer)</li>
+<li><strong>His582 Nδ1 – Asp550 Oδ2 = 2.78 Å</strong> (the second charge-relay contact)</li>
+<li>All three triad residues have local pLDDT &gt; 86 (individually reliable)</li>
+</ul>
+<p>The InterPro-derived Gene Ontology terms are <strong>serine-type peptidase activity (GO:0008236)</strong> and <strong>proteolysis (GO:0006508)</strong>. Together these establish, with high confidence, that PP_0375 is a functional serine peptidase and not a degenerate/pseudo-enzyme.</p>
+<h3 id="finding-2-pp_0375-is-the-p-putida-ortholog-of-pqqh-a-peptidase-embedded-in-the-pqq-biosynthesis-operon">Finding 2 — PP_0375 is the <em>P. putida</em> ortholog of <em>pqqH</em>, a peptidase embedded in the PQQ biosynthesis operon</h3>
+<p>Genomic context is the decisive evidence. In the STRING network (organism 160488), PP_0375's highest-confidence functional partners are the <strong>PQQ-biosynthesis genes</strong>, and the supporting evidence channel is <strong>genomic neighborhood (nscore)</strong> — meaning these genes are co-located and co-inherited:</p>
+<table>
+<thead>
+<tr>
+<th>Partner</th>
+<th>Locus</th>
+<th>STRING score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pqqC</td>
+<td>PP_0378</td>
+<td>0.892</td>
+</tr>
+<tr>
+<td>pqqE</td>
+<td>PP_0376</td>
+<td>0.871</td>
+</tr>
+<tr>
+<td>pqqD</td>
+<td>PP_0377</td>
+<td>0.841</td>
+</tr>
+<tr>
+<td>pqqB</td>
+<td>PP_0379</td>
+<td>0.795</td>
+</tr>
+<tr>
+<td>pqqF</td>
+<td>PP_0381</td>
+<td>0.507</td>
+</tr>
+</tbody>
+</table>
+<p>PP_0375 sits <strong>immediately adjacent to <em>pqqE</em> (PP_0376)</strong> — precisely the operonic position occupied by <em>pqqH</em> in <em>P. aeruginosa</em>. A Needleman–Wunsch global alignment shows PP_0375 (612 aa) is <strong>52.9 % identical</strong> (344 identities over 650 aligned columns) to <em>P. aeruginosa</em> <strong>pqqH/PA1990</strong> (Q9I2B9, 608 aa). This level of identity across nearly the full length indicates clear orthology, not merely shared domain content.</p>
+<p>The functional identity of <em>pqqH</em> was established experimentally in <em>P. aeruginosa</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19902179/">PMID: 19902179</a>):</p>
+<blockquote>
+<p>"Gene PA1990 of <em>Pseudomonas aeruginosa</em>, located downstream of <em>pqqE</em> and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant. This gene is cotranscribed with the <em>pqqABCDE</em> cluster and was named <em>pqqH</em>."</p>
+</blockquote>
+<p>PP_0375 is the <em>P. putida</em> ortholog occupying the same operonic position.</p>
+<h3 id="finding-3-pp_0375-pqqgpqqh-functions-in-pqq-cofactor-biosynthesis-for-periplasmic-quinoprotein-glucose-dehydrogenase">Finding 3 — PP_0375 (<em>pqqG/pqqH</em>) functions in PQQ cofactor biosynthesis for periplasmic quinoprotein glucose dehydrogenase</h3>
+<p>RT-PCR mapping of the <em>P. putida</em> KT2440 cluster defines its gene order as <strong>pqqFABCDEG</strong> (An &amp; Moe 2016, <a href="https://pubmed.ncbi.nlm.nih.gov/27287323/">PMID: 27287323</a>). PP_0375 is the terminal <strong>"G"</strong> gene immediately after <em>pqqE</em> (PP_0376) — i.e. the peptidase-encoding gene, ortholog of <em>P. aeruginosa</em> <em>pqqH</em>/PA1990.</p>
+<p>The biological purpose of the operon is to synthesize <strong>PQQ</strong>, the redox coenzyme of the periplasmic <strong>glucose dehydrogenase (Gcd)</strong> that oxidizes glucose to gluconic acid, enabling <strong>mineral-phosphate solubilization</strong> in the rhizosphere:</p>
+<blockquote>
+<p>"Soil-dwelling microbes solubilize mineral phosphates by secreting gluconic acid, which is produced from glucose by a periplasmic glucose dehydrogenase (GDH) that requires pyrroloquinoline quinone (PQQ) as a redox coenzyme." — <a href="https://pubmed.ncbi.nlm.nih.gov/27287323/">PMID: 27287323</a></p>
+<p>"The <em>pqq</em> gene cluster (<em>pqqFABCDEG</em>) encodes at least two independent transcripts" — <a href="https://pubmed.ncbi.nlm.nih.gov/27287323/">PMID: 27287323</a></p>
+</blockquote>
+<p>Biochemically, PQQ is a <strong>RiPP</strong> built from a Glu and a Tyr embedded in the ribosomal precursor peptide <strong>PqqA</strong>. The precursor is cross-linked (C–C bond between the Glu Cγ and Tyr Cε) by the radical-SAM enzyme <strong>PqqE</strong> (assisted by the RRE chaperone <strong>PqqD</strong>), after which a <strong>protease/peptidase must excise the modified di-amino-acid</strong> before <strong>PqqB</strong> (dual hydroxylase) and <strong>PqqC</strong> (eight-electron oxidase/cyclase) complete the cofactor:</p>
+<blockquote>
+<p>"The PqqA peptide is recognised by PqqE, which links the C9 and C9a, afterwards it is accepted by PqqF which cuts out the linked amino acids." — <a href="https://pubmed.ncbi.nlm.nih.gov/18371220/">PMID: 18371220</a></p>
+</blockquote>
+<h3 id="finding-4-two-operon-proteases-two-roles-pqqf-m16-excises-pqqa-pp_0375-pqqgpqqh-s9-is-linked-to-pqq-excretion">Finding 4 — Two operon proteases, two roles: PqqF (M16) excises PqqA; PP_0375 (<em>pqqG/pqqH</em>, S9) is linked to PQQ excretion</h3>
+<p>Neighbor annotations (UniProt, organism 160488) confirm the complete operon and, critically, that it encodes <strong>two peptidases of entirely different catalytic clans</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Length</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0380</td>
+<td>pqqA</td>
+<td>23 aa</td>
+<td>Precursor peptide (Glu + Tyr donor)</td>
+</tr>
+<tr>
+<td>PP_0379</td>
+<td>pqqB</td>
+<td>—</td>
+<td>Dual hydroxylase / metallo-β-lactamase-fold</td>
+</tr>
+<tr>
+<td>PP_0378</td>
+<td>pqqC</td>
+<td>—</td>
+<td>Ring cyclization/oxidation (8 e⁻, 8 H⁺)</td>
+</tr>
+<tr>
+<td>PP_0377</td>
+<td>pqqD</td>
+<td>—</td>
+<td>PqqA-binding RRE chaperone</td>
+</tr>
+<tr>
+<td>PP_0376</td>
+<td>pqqE</td>
+<td>—</td>
+<td>Radical-SAM peptide cyclase (SPASM domain)</td>
+</tr>
+<tr>
+<td>PP_0381</td>
+<td>pqqF</td>
+<td>766 aa</td>
+<td><strong>M16 zinc "inverzincin" protease</strong> (IDE-like)</td>
+</tr>
+<tr>
+<td><strong>PP_0375</strong></td>
+<td><strong>pqqG</strong></td>
+<td><strong>612 aa</strong></td>
+<td><strong>S9 serine peptidase (this target)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Crystallography shows <strong>PqqF has a clamshell inverzincin fold</strong> with a large (~9,400 Å³) internal chamber proposed to bind PqqA and excise the PqqE-cross-linked Glu–Tyr; <em>pqqF</em> deletion abolishes PQQ biosynthesis (Wei et al. 2016):</p>
+<blockquote>
+<p>"After linkage of the Cγ of glutamate and Cϵ of tyrosine by PqqE, these two residues are hypothesized to be cleaved from PqqA by PqqF." — <a href="https://pubmed.ncbi.nlm.nih.gov/27231346/">PMID: 27231346</a></p>
+<p>"we demonstrated that the <em>pqqF</em> gene is essential for PQQ biosynthesis" — <a href="https://pubmed.ncbi.nlm.nih.gov/27231346/">PMID: 27231346</a></p>
+</blockquote>
+<p>By contrast, deletion of the <strong>S9 peptidase <em>pqqH</em></strong> in <em>P. aeruginosa</em> does <strong>not</strong> block PQQ synthesis but abolishes <strong>PQQ excretion</strong> into the supernatant (<a href="https://pubmed.ncbi.nlm.nih.gov/19902179/">PMID: 19902179</a>). This establishes a <strong>division of labor</strong>: PqqF performs the essential core excision step, while PP_0375/pqqG/pqqH plays a distinct, non-essential-for-synthesis role tied to release/excretion of mature PQQ. <strong>The precise molecular (peptide) substrate of PP_0375 has not been experimentally determined.</strong></p>
+<h3 id="finding-5-two-domain-prolyl-oligopeptidase-architecture-implies-short-peptide-oligopeptidase-selectivity">Finding 5 — Two-domain prolyl-oligopeptidase architecture implies short-peptide (oligopeptidase) selectivity</h3>
+<p>InterPro/SUPFAM/Gene3D domain mapping of Q88QV9 reveals the classic two-domain organization of the prolyl-oligopeptidase family:</p>
+<ul>
+<li><strong>N-terminal β-propeller</strong> ("DPP6 N-terminal domain-like," SCOP <strong>SSF82171</strong>, residues ~44–337)</li>
+<li><strong>C-terminal α/β-hydrolase catalytic domain</strong> (Gene3D <strong>G3DSA:3.40.50.1820</strong>, res ~356–612; SUPFAM <strong>SSF53474</strong>, res ~358–603), carrying the Peptidase_S9 module (PF00326 / IPR001375, res ~401–607) with the <strong>Ser469–Asp550–His582 triad</strong></li>
+<li><strong>PANTHER PTHR43056</strong> (Xaa-Pro dipeptidyl-peptidase / cocaine esterase) spans res 4–608</li>
+</ul>
+<p>In the AlphaFold model (pLDDT 93.8) the two domains <strong>pack tightly</strong> (75 Cα–Cα inter-domain contacts &lt; 8 Å; centroid separation 32.5 Å), and the catalytic Ser469 lies in an <strong>enclosed pocket</strong> (165 protein heavy atoms within 10 Å of Ser469 Oγ). This is a <strong>covered/gated active site</strong>, not an open surface groove.</p>
+<p>The functional implication is well established for this fold family: the β-propeller acts as a <strong>molecular sieve/gate</strong> that admits only small, unstructured peptides to the buried catalytic center, excluding large folded proteins. PP_0375 is therefore predicted to be an <strong>oligopeptidase — selective for short peptides</strong>, which is mechanistically consistent with acting on the small PqqA-derived/PQQ-maturation intermediates rather than degrading bulk protein.</p>
+<h3 id="finding-6-the-pqq-cofactor-served-by-pp_0375-feeds-multiple-periplasmic-quinoprotein-dehydrogenases">Finding 6 — The PQQ cofactor served by PP_0375 feeds multiple periplasmic quinoprotein dehydrogenases</h3>
+<p>UniProt (organism 160488) confirms <strong>three PQQ-dependent apo-dehydrogenases</strong> in KT2440 that consume the cofactor whose biosynthesis PP_0375 supports:</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>Locus</th>
+<th>Length</th>
+<th>Type / substrate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Glucose dehydrogenase Gcd</td>
+<td>PP_1444</td>
+<td>803 aa</td>
+<td>Glucose → gluconate (periplasm)</td>
+</tr>
+<tr>
+<td>Alcohol dehydrogenase PedE</td>
+<td>PP_2674</td>
+<td>631 aa</td>
+<td>Ca/Zn-type PQQ-ADH, alcohols/aldehydes</td>
+</tr>
+<tr>
+<td>Alcohol dehydrogenase PedH</td>
+<td>PP_2679</td>
+<td>595 aa</td>
+<td><strong>Lanthanide-dependent</strong> PQQ-ADH</td>
+</tr>
+</tbody>
+</table>
+<p>Wehrmann et al. 2017 (<a href="https://pubmed.ncbi.nlm.nih.gov/28655819/">PMID: 28655819</a>) purified and characterized PedE/PedH as functionally redundant periplasmic PQQ-ADHs for oxidation of alcohols and aldehydes (relevant to volatile-organic-compound detoxification and catabolism); PedH was the first lanthanide-dependent PQQ-ADH described in a non-methylotroph:</p>
+<blockquote>
+<p>"many Gram-negative bacteria have evolved periplasmic oxidation systems based on pyrroloquinoline quinone-dependent alcohol dehydrogenases (PQQ-ADHs) that are often functionally redundant" — <a href="https://pubmed.ncbi.nlm.nih.gov/28655819/">PMID: 28655819</a></p>
+</blockquote>
+<p>This closes the loop: the cofactor PP_0375 helps mature is exported and used by periplasmic quinoproteins that drive both <strong>glucose→gluconate oxidation</strong> (Gcd; phosphate solubilisation, environmental acidification) and <strong>alcohol/aldehyde oxidation</strong> (PedE/PedH).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-pqq-biosynthesis-operon-and-pp_0375s-place-in-it">The PQQ biosynthesis operon and PP_0375's place in it</h3>
+<div class="codehilite"><pre><span></span><code>   P. putida KT2440 pqq operon  (order: pqqFABCDEG)
+
+   PP_0381   PP_0380  PP_0379  PP_0378  PP_0377  PP_0376   PP_0375
+   ┌─────┐   ┌────┐   ┌────┐   ┌────┐   ┌────┐   ┌────┐    ┌───────┐
+   │ pqqF│   │pqqA│   │pqqB│   │pqqC│   │pqqD│   │pqqE│    │ pqqG  │  ← TARGET
+   │ M16 │   │23aa│   │hydr│   │cycl│   │RRE │   │rSAM│    │  S9   │
+   │prot.│   │prec│   │oxyl│   │oxid│   │chap│   │cycl│    │peptid.│
+   └─────┘   └────┘   └────┘   └────┘   └────┘   └────┘    └───────┘
+   ESSENTIAL                                                 EXCRETION-
+   for PQQ                                                   linked
+   synthesis
+</code></pre></div>
+
+<h3 id="biosynthetic-route-ripp-pathway-and-the-two-protease-division-of-labor">Biosynthetic route (RiPP pathway) and the two-protease division of labor</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">Ribosome</span>
+<span class="w">      </span><span class="err">│</span>
+<span class="w">      </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">PqqA</span><span class="w"> </span><span class="p">(</span><span class="mi">23</span><span class="o">-</span><span class="n">aa</span><span class="w"> </span><span class="n">precursor</span><span class="p">,</span><span class="w"> </span><span class="n">contains</span><span class="w"> </span><span class="n">Glu</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Tyr</span><span class="p">)</span>
+<span class="w">      </span><span class="err">│</span><span class="w">   </span><span class="n">bound</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">PqqD</span><span class="w"> </span><span class="p">(</span><span class="n">RRE</span><span class="w"> </span><span class="n">chaperone</span><span class="p">)</span><span class="w">  </span><span class="err">──</span><span class="w"> </span><span class="n">presents</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="err">──►</span><span class="w">  </span><span class="n">PqqE</span><span class="w"> </span><span class="p">(</span><span class="n">radical</span><span class="o">-</span><span class="n">SAM</span><span class="p">)</span>
+<span class="w">      </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">PqqA</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">Glu</span><span class="o">-</span><span class="n">Cγ</span><span class="w"> </span><span class="err">──</span><span class="w"> </span><span class="n">C</span><span class="err">–</span><span class="n">C</span><span class="w"> </span><span class="err">──</span><span class="w"> </span><span class="n">Tyr</span><span class="o">-</span><span class="n">Cε</span><span class="w">  </span><span class="n">cross</span><span class="o">-</span><span class="n">link</span>
+<span class="w">      </span><span class="err">│</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="err">┌──</span><span class="w"> </span><span class="n">CORE</span><span class="w"> </span><span class="n">EXCISION</span><span class="w"> </span><span class="err">──────────────────────────────┐</span>
+<span class="w">      </span><span class="err">▼</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">PqqF</span><span class="w"> </span><span class="p">(</span><span class="n">M16</span><span class="w"> </span><span class="n">inverzincin</span><span class="p">,</span><span class="w"> </span><span class="n">PP_0381</span><span class="p">)</span><span class="w"> </span><span class="n">cleaves</span><span class="w"> </span><span class="n">the</span><span class="w">   </span><span class="err">│</span>
+<span class="w">   </span><span class="n">excised</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="n">cross</span><span class="o">-</span><span class="n">linked</span><span class="w"> </span><span class="n">di</span><span class="o">-</span><span class="n">amino</span><span class="o">-</span><span class="n">acid</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">PqqA</span><span class="o">.</span><span class="w">       </span><span class="err">│</span><span class="w">  </span><span class="n">ESSENTIAL</span>
+<span class="w">   </span><span class="n">Glu</span><span class="err">–</span><span class="n">Tyr</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="err">Δ</span><span class="n">pqqf</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">NO</span><span class="w"> </span><span class="n">PQQ</span><span class="o">.</span><span class="w">                             </span><span class="err">│</span>
+<span class="w">           </span><span class="err">└──────────────────────────────────────────────┘</span>
+<span class="w">      </span><span class="err">│</span>
+<span class="w">      </span><span class="err">▼</span><span class="w">   </span><span class="n">PqqB</span><span class="w"> </span><span class="p">(</span><span class="n">hydroxylation</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">PqqC</span><span class="w"> </span><span class="p">(</span><span class="n">ring</span><span class="w"> </span><span class="n">closure</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="n">e</span><span class="err">⁻</span><span class="o">/</span><span class="mi">8</span><span class="n">H</span><span class="err">⁺</span><span class="w"> </span><span class="n">oxidation</span><span class="p">)</span>
+<span class="w">      </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">★</span><span class="w"> </span><span class="n">PQQ</span><span class="w"> </span><span class="p">(</span><span class="n">mature</span><span class="w"> </span><span class="n">cofactor</span><span class="p">)</span><span class="w"> </span><span class="err">★</span>
+<span class="w">      </span><span class="err">│</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="err">┌──</span><span class="w"> </span><span class="n">EXCRETION</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">RELEASE</span><span class="w"> </span><span class="err">─────────────────────────┐</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">pqqG</span><span class="o">/</span><span class="n">pqqH</span><span class="w"> </span><span class="p">(</span><span class="n">S9</span><span class="w"> </span><span class="n">serine</span><span class="w"> </span><span class="n">peptidase</span><span class="p">,</span><span class="w"> </span><span class="n">PP_0375</span><span class="p">)</span><span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="n">NON</span><span class="o">-</span><span class="n">ESSENTIAL</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">Δ</span><span class="n">pqqH</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">PQQ</span><span class="w"> </span><span class="n">still</span><span class="w"> </span><span class="n">made</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="n">NOT</span><span class="w"> </span><span class="n">excreted</span><span class="w">        </span><span class="err">│</span><span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="n">synthesis</span><span class="p">;</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="err">└────────────────────────────────────────────────┘</span><span class="w">  </span><span class="n">needed</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="k">export</span>
+<span class="w">      </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">PERIPLASM</span><span class="w">  </span><span class="err">─►</span><span class="w">  </span><span class="n">Gcd</span><span class="w"> </span><span class="p">(</span><span class="n">glucose</span><span class="err">→</span><span class="n">gluconate</span><span class="p">),</span><span class="w"> </span><span class="n">PedE</span><span class="o">/</span><span class="n">PedH</span><span class="w"> </span><span class="p">(</span><span class="n">alcohol</span><span class="o">/</span><span class="n">aldehyde</span><span class="w"> </span><span class="n">ox</span><span class="o">.</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="synthesis">Synthesis</h3>
+<p>PP_0375 is best understood as a <strong>cytoplasmic, short-peptide-selective serine oligopeptidase acting in PQQ cofactor maturation</strong>, distinct in both clan (S9 serine vs. M16 zinc) and phenotype (excretion vs. essential synthesis) from its operon partner PqqF. The structural evidence (intact triad, gated β-propeller active site, oligopeptidase architecture) is fully consistent with a role hydrolyzing a small peptide substrate during the late steps of PQQ maturation or release. The strongest experimental anchor for its physiological role is the <em>P. aeruginosa</em> <em>pqqH</em> knockout phenotype — <strong>loss of PQQ excretion</strong> — transferred by ~53 % orthology to PP_0375. Its exact substrate (whether a residual PqqA-derived peptide, a maturation intermediate, or a distinct target coupled to export) remains undetermined.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19902179/">19902179</a></td>
+<td><em>PQQ biosynthetic operons &amp; transcriptional regulation in P. aeruginosa</em></td>
+<td>Defines <em>pqqH</em> (PA1990) as the peptidase downstream of <em>pqqE</em>, cotranscribed with <em>pqqABCDE</em>, required for <strong>PQQ excretion</strong> — the direct functional model for PP_0375</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27287323/">27287323</a></td>
+<td><em>Regulation of PQQ-dependent glucose dehydrogenase in P. putida KT2440</em> (An &amp; Moe 2016)</td>
+<td>Maps the KT2440 operon as <em>pqqFABCDEG</em> (placing PP_0375 as "G"); links PQQ to periplasmic Gcd and gluconate/phosphate solubilisation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18371220/">18371220</a></td>
+<td><em>PQQ biosynthesis pathway revisited: a structural approach</em></td>
+<td>Describes the proteolytic excision step on the PqqE-cross-linked PqqA precursor</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27231346/">27231346</a></td>
+<td><em>Crystal structure and function of PqqF</em> (Wei et al. 2016)</td>
+<td>Shows PqqF (M16) performs the essential core PqqA excision and is essential for PQQ synthesis — establishes the two-protease division of labor</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28655819/">28655819</a></td>
+<td><em>Lanthanides in PQQ-ADHs</em> (Wehrmann et al. 2017)</td>
+<td>Characterizes periplasmic PQQ-ADHs PedE/PedH that consume the cofactor PP_0375 helps produce</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31427437/">31427437</a></td>
+<td><em>A two-component protease in PQQ biosynthesis</em></td>
+<td>Highlights that the identity of the PQQ maturation protease has been historically uncertain and varies between taxa</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8606199/">8606199</a></td>
+<td><em>pqqE and pqqF in M. extorquens AM1</em></td>
+<td>Historical context: PqqF as a zinc-endopeptidase family member (distinct clan from S9)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency / tension:</strong> The literature is internally consistent that PQQ biosynthesis requires a protease for di-amino-acid excision, and that different organisms deploy different peptidases. A key nuance (<a href="https://pubmed.ncbi.nlm.nih.gov/31427437/">PMID: 31427437</a>) is that the maturation protease is a "missing piece" that varies across taxa — in some α-proteobacteria it is a two-component heterodimer, in <em>Klebsiella/Methylobacterium</em> it is PqqF (M16), and <em>P. aeruginosa/P. putida</em> additionally carry the S9 <em>pqqH/pqqG</em>. The evidence assigns the <strong>essential</strong> excision to PqqF in <em>Pseudomonas</em> and an <strong>excretion-linked</strong> role to PP_0375/pqqG — but does not exclude an accessory maturation role for the S9 enzyme.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental characterization of PP_0375 itself.</strong> All functional inference derives from (a) orthology to <em>P. aeruginosa pqqH</em> (~53 % identity), (b) genomic operon context, and (c) structural prediction. No <em>P. putida</em> PP_0375 knockout, purified enzyme assay, or crystal structure exists in the reviewed literature.</li>
+<li><strong>The molecular substrate is undefined.</strong> Whether PP_0375 cleaves a residual PqqA fragment, a PQQ-maturation intermediate, or an unrelated peptide coupled to export is not established. The "excretion" phenotype of <em>pqqH</em> could reflect a direct role in export machinery processing rather than PQQ chemistry.</li>
+<li><strong>The AlphaFold-based active-site and oligopeptidase-selectivity claims are predictions</strong>, not experimental structures — high-confidence (pLDDT 93.8) but unvalidated by crystallography or mutagenesis.</li>
+<li><strong>Localization is inferred.</strong> A cytoplasmic role during maturation is the parsimonious interpretation, but the excretion phenotype raises the possibility of association with the inner membrane or export apparatus; no experimental subcellular-localization data were found.</li>
+<li><strong>Operon transcription nuance:</strong> the KT2440 cluster produces "at least two independent transcripts," so <em>pqqG</em> expression may be regulated separately from the core <em>pqqABCDE</em>, but this was not investigated in detail here.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Targeted gene deletion (ΔPP_0375) in <em>P. putida</em> KT2440</strong>, measuring (i) intracellular vs. extracellular PQQ (LC-MS or the classic <em>E. coli</em> GDH-reconstitution bioassay), (ii) glucose→gluconate flux, and (iii) periplasmic Gcd/PedE-PedH activity. This directly tests whether the <em>pqqH</em> "excretion" phenotype transfers to PP_0375.</li>
+<li><strong>Recombinant expression and enzymology.</strong> Purify PP_0375 and assay peptidase activity against candidate substrates: synthetic PqqA-derived peptides, cross-linked Glu–Tyr intermediates, and generic oligopeptide libraries (e.g., internally quenched fluorogenic peptides) to define the length and sequence specificity predicted by the gated β-propeller.</li>
+<li><strong>Active-site mutagenesis.</strong> Ser469Ala (and His582Ala) catalytic-dead variants to confirm the triad is required for the physiological phenotype, decoupling catalytic vs. possible scaffolding roles.</li>
+<li><strong>Structural validation.</strong> Solve a crystal or cryo-EM structure of PP_0375 to confirm the β-propeller / α-β-hydrolase two-domain arrangement and the buried active site, and to visualize the substrate-access channel.</li>
+<li><strong>Interaction / localization mapping.</strong> Co-purification or BioID with operon partners (PqqF, PqqE, PqqB/C) and with export components; cell-fractionation to test cytoplasmic vs. membrane-associated localization.</li>
+<li><strong>Comparative genomics of the two-protease pattern.</strong> Systematically map which PQQ-producing genomes carry PqqF, <em>pqqG/pqqH</em>, both, or the α-proteobacterial two-component protease, to clarify the evolutionary logic of redundancy and the specific selective role of the S9 enzyme.</li>
+</ol>
+<hr />
+<p><em>Report generated from a 5-iteration autonomous investigation: 6 confirmed findings, 15 papers reviewed. All functional claims are supported by the cited literature; claims resting on structure prediction or orthology are flagged as such.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0375-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0375-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:19902179</li>
+<li>PMID:27287323</li>
+<li>PMID:18371220</li>
+<li>PMID:27231346</li>
+<li>PMID:28655819</li>
+<li>PMID:31427437</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0375-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QV9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_0375-curation-notes">PP_0375 curation notes</h1>
+<h2 id="2026-07-20-pathway-hole-filling">2026-07-20 pathway hole filling</h2>
+<ul>
+<li>UniProt Q88QV9 has no accepted gene symbol and describes PP_0375 as a<br />
+  prolyl-oligopeptidase-family protein. InterPro IPR001375 and PANTHER<br />
+  PTHR43056:SF5 support an S9 serine-peptidase catalytic domain.</li>
+<li>PP_0375 was absent from UniPathway UPA00539 and therefore landed in the<br />
+  domain-only orphan bucket. The KT2440 operon paper nevertheless identifies<br />
+  PP_0375 as putative <code>pqqG</code> by conserved locus and sequence and places it<br />
+  downstream of <code>pqqE</code> on the <code>pqqCDEG</code> transcript [PMID:27287323, "The pqq<br />
+  gene cluster (pqqFABCDEG) encodes at least two independent transcripts"].</li>
+<li>The Pseudomonas fluorescens B16 homolog is named PqqG/PqqM. The primary full<br />
+  text says that Tn3-gusA insertions in every named ORF, including <code>pqqM</code>,<br />
+  abolished PQQ production [PMID:18055583, "the Tn3-gusA insertions in each ORF<br />
+  abolished PQQ production"]. This supports a PQQ-biosynthesis annotation by<br />
+  orthology but does not identify the PqqM substrate or reaction.</li>
+<li>A reproducible MMseqs2 comparison in <code>PP_0375-bioinformatics/</code> found 66.0%<br />
+  identity over a 606-residue alignment to B16 PqqG/PqqM AAX10035.1, with<br />
+  nearly complete coverage of both proteins.</li>
+<li>OpenScientist surfaced the Pseudomonas aeruginosa PA1990/PqqH comparison. A<br />
+  reproduced MMseqs2 alignment found 52.2% identity over 597 residues with<br />
+  nearly complete coverage. The PA1990 mutant lost extracellular PQQ, while a<br />
+  separate <code>pqqF</code> mutant could not produce PQQ [PMID:19902179, "Gene PA1990 of<br />
+  Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative<br />
+  peptidase, was shown to be involved in excretion of PQQ into the culture<br />
+  supernatant."].</li>
+<li>The OpenScientist report further described PA1990 disruption as not blocking<br />
+  synthesis. The cached primary abstract only establishes loss of PQQ excretion<br />
+  and does not report intracellular PQQ, so that stronger inference was not<br />
+  adopted in the review.</li>
+</ul>
+<h2 id="curation-boundary">Curation boundary</h2>
+<p>The sequence and locus evidence support PP_0375 as a PQQ-pathway-associated<br />
+PqqG/PqqM ortholog and support the existing broad serine-peptidase annotations.<br />
+They do not establish the native substrate. In particular, PP_0375 must not be<br />
+treated as equivalent to the unrelated M16B PqqG partner characterized in the<br />
+Methylorubrum PqqF/PqqG complex. Direct PqqA-derived peptide cleavage and a role<br />
+in PQQ excretion are distinct, unresolved hypotheses.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QV9" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_0375-pqqgpqqm-ortholog-check">PP_0375 PqqG/PqqM ortholog check</h1>
+<h2 id="question">Question</h2>
+<p>Is KT2440 PP_0375 (UniProt Q88QV9) a close sequence homolog of the<br />
+experimentally implicated Pseudomonas fluorescens B16 PqqG/PqqM protein<br />
+(GenPept AAX10035.1)?</p>
+<h2 id="method">Method</h2>
+<p>The script downloads PP_0375 and two comparison proteins from UniProt and NCBI<br />
+and compares them with MMseqs2 <code>easy-search</code>:</p>
+<div class="codehilite"><pre><span></span><code>./compare_pqqg_ortholog.sh<span class="w"> </span>results
+</code></pre></div>
+
+<h2 id="result">Result</h2>
+<p>Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues,<br />
+covering 98.9% of Q88QV9 and 99.8% of AAX10035.1. The alignment had an E-value<br />
+of 5.125e-294 and a bit score of 817.</p>
+<p>Q88QV9 aligned to the <em>Pseudomonas aeruginosa</em> PA1990/PqqH protein Q9I2B9 at<br />
+52.2% amino-acid identity across 597 residues, covering 97.1% of Q88QV9 and<br />
+98.2% of Q9I2B9. The alignment had an E-value of 2.409e-197 and a bit score of<br />
+569.</p>
+<h2 id="interpretation">Interpretation</h2>
+<p>The nearly full-length, high-identity match supports transfer of broad<br />
+PqqG/PqqM pathway association by sequence similarity. It does not establish<br />
+the native PP_0375 substrate or prove that this S9 peptidase directly processes<br />
+PqqA. Those mechanistic questions remain open.</p>
+<p>The NCBI protein record names AAX10035.1 as the <em>Pseudomonas fluorescens</em> B16<br />
+<code>pqqG</code> gene product, a dipeptidyl aminopeptidase/acylaminoacyl-peptidase. The<br />
+B16 full text names <code>pqqM</code> among 11 ORFs and states that "the Tn3-gusA<br />
+insertions in each ORF abolished PQQ production" [PMID:18055583;<br />
+PMCID:PMC2245851]. This supplies gene-specific pathway genetics but does not<br />
+identify the PqqM substrate or biochemical reaction. The KT2440 operon study<br />
+independently names PP_0375 as putative <code>pqqG</code> based on conserved locus and<br />
+sequence <a href="https://pubmed.ncbi.nlm.nih.gov/27287323">PMID:27287323</a>.</p>
+<p>The PA1990 study reports that disruption of this S9-family ortholog eliminated<br />
+PQQ excretion into the culture supernatant, whereas a separate <code>pqqF</code> mutant<br />
+could not produce PQQ <a href="https://pubmed.ncbi.nlm.nih.gov/19902179">PMID:19902179</a>. Thus, close homologs support a conserved<br />
+PQQ-pathway association but do not establish whether PP_0375 acts in precursor<br />
+maturation, PQQ export, or both.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QV9
+gene_symbol: PP_0375
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_0375 encodes an S9-family serine peptidase located immediately downstream
+  of pqqE in the Pseudomonas putida KT2440 pyrroloquinoline quinone (PQQ)
+  locus. The KT2440 operon study refers to PP_0375 as pqqG, and related
+  Pseudomonas proteins are called PqqG, PqqM, or PqqH. Sequence and locus
+  conservation support a PQQ-pathway association, but the native substrate and
+  whether the protein acts in precursor maturation, PQQ excretion, or both have
+  not been established.
+existing_annotations:
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proteolysis is a reasonable broad process annotation for PP_0375. The
+      protein contains an S9 peptidase catalytic domain and is annotated as a
+      prolyl oligopeptidase-family protein, although its native substrate is
+      unknown.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The sequence-family evidence supports a proteolytic role, but the generic
+      process is less informative than the serine-peptidase molecular function
+      and the PQQ-pathway association. It does not specify that PqqA is the
+      substrate.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0375/PP_0375-goa.tsv
+      supporting_text: &#34;GO:0006508\tproteolysis&#34;
+    - reference_id: file:PSEPK/PP_0375/PP_0375-uniprot.txt
+      supporting_text: &#39;DR   InterPro; IPR001375; Peptidase_S9_cat.&#39;
+- term:
+    id: GO:0008236
+    label: serine-type peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Serine-type peptidase activity is supported by the S9 prolyl
+      oligopeptidase catalytic domain and the conserved family assignment.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most informative current molecular-function annotation for
+      PP_0375, while substrate specificity remains unknown.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0375/PP_0375-goa.tsv
+      supporting_text: &#34;GO:0008236\tserine-type peptidase activity&#34;
+    - reference_id: file:PSEPK/PP_0375/PP_0375-uniprot.txt
+      supporting_text: &#39;DR   InterPro; IPR001375; Peptidase_S9_cat.&#39;
+    - reference_id: file:PSEPK/PP_0375/PP_0375-uniprot.txt
+      supporting_text: &#39;DR   PANTHER; PTHR43056:SF5; PEPTIDASE S9 PROLYL OLIGOPEPTIDASE CATALYTIC DOMAIN-CONTAINING PROTEIN; 1.&#39;
+- term:
+    id: GO:0018189
+    label: pyrroloquinoline quinone biosynthetic process
+  evidence_type: ISS
+  original_reference_id: PMID:18055583
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      PP_0375 is the S9 peptidase-family protein identified as the putative
+      pqqG member of the KT2440 pqqFABCDEG locus. Disrupting the close B16
+      PqqM ortholog abolished PQQ production, while a close Pseudomonas
+      aeruginosa ortholog has direct genetic evidence for PQQ excretion rather
+      than a defined biosynthetic reaction.
+    action: NEW
+    reason: &gt;-
+      Conserved locus position, sequence-family identity, cotranscription with
+      pqqCDE in KT2440, and the B16 pqqM loss-of-PQQ phenotype support this
+      pathway-level ISS proposal. The PA1990/PqqH phenotype shows that an
+      S9-family role can instead affect PQQ excretion without defining a
+      biosynthetic reaction. The proposal is therefore not a substrate or
+      reaction claim and remains outside the core-function summary.
+    additional_reference_ids:
+    - PMID:27287323
+    - PMID:19902179
+    supported_by:
+    - reference_id: PMID:27287323
+      supporting_text: The pqq gene cluster (pqqFABCDEG) encodes at least two independent transcripts
+    - reference_id: PMID:19902179
+      supporting_text: Gene PA1990 of Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant.
+    - reference_id: file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+      supporting_text: Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues, covering 98.9% of Q88QV9 and 99.8% of AAX10035.1.
+    - reference_id: file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+      supporting_text: The NCBI protein record names AAX10035.1 as the *Pseudomonas fluorescens* B16 `pqqG` gene product, a dipeptidyl aminopeptidase/acylaminoacyl-peptidase.
+    - reference_id: file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+      supporting_text: B16 full text names `pqqM` among 11 ORFs and states that &#34;the Tn3-gusA insertions in each ORF abolished PQQ production&#34;
+    - reference_id: file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+      supporting_text: Q88QV9 aligned to the *Pseudomonas aeruginosa* PA1990/PqqH protein Q9I2B9 at 52.2% amino-acid identity across 597 residues, covering 97.1% of Q88QV9 and 98.2% of Q9I2B9.
+    - reference_id: file:PSEPK/PP_0375/PP_0375-deep-research-openscientist.md
+      supporting_text: PP_0375 is the *P. putida* ortholog occupying the same operonic position.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: file:PSEPK/PP_0375/PP_0375-uniprot.txt
+  title: UniProtKB entry for PP_0375 (prolyl oligopeptidase family protein)
+  findings:
+  - supporting_text: &#39;SubName: Full=Prolyl oligopeptidase family protein&#39;
+  - supporting_text: &#39;DR   InterPro; IPR001375; Peptidase_S9_cat.&#39;
+  - supporting_text: &#39;DR   PANTHER; PTHR43056:SF5; PEPTIDASE S9 PROLYL OLIGOPEPTIDASE CATALYTIC DOMAIN-CONTAINING PROTEIN; 1.&#39;
+- id: file:PSEPK/PP_0375/PP_0375-goa.tsv
+  title: QuickGO GOA annotations for PP_0375
+  findings:
+  - supporting_text: &#34;GO:0006508\tproteolysis&#34;
+  - supporting_text: &#34;GO:0008236\tserine-type peptidase activity&#34;
+- id: file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+  title: PP_0375 PqqG/PqqM ortholog comparison
+  findings:
+  - supporting_text: Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues, covering 98.9% of Q88QV9 and 99.8% of AAX10035.1.
+  - supporting_text: The NCBI protein record names AAX10035.1 as the *Pseudomonas fluorescens* B16 `pqqG` gene product, a dipeptidyl aminopeptidase/acylaminoacyl-peptidase.
+  - supporting_text: B16 full text names `pqqM` among 11 ORFs and states that &#34;the Tn3-gusA insertions in each ORF abolished PQQ production&#34;
+  - supporting_text: Q88QV9 aligned to the *Pseudomonas aeruginosa* PA1990/PqqH protein Q9I2B9 at 52.2% amino-acid identity across 597 residues, covering 97.1% of Q88QV9 and 98.2% of Q9I2B9.
+- id: file:PSEPK/PP_0375/PP_0375-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_0375 (Q88QV9)
+  findings:
+  - supporting_text: PP_0375 is the *P. putida* ortholog occupying the same operonic position.
+  - supporting_text: The **exact peptide substrate of PP_0375 has not been experimentally established** and remains the principal knowledge gap.
+- id: PMID:27287323
+  title: Regulation of Pyrroloquinoline Quinone-Dependent Glucose Dehydrogenase Activity in the Model Rhizosphere-Dwelling Bacterium Pseudomonas putida KT2440.
+  full_text_unavailable: true
+  findings:
+  - supporting_text: The pqq gene cluster (pqqFABCDEG) encodes at least two independent transcripts
+    reference_section_type: ABSTRACT
+- id: PMID:18055583
+  title: Pyrroloquinoline quinone is a plant growth promotion factor produced by Pseudomonas fluorescens B16.
+  findings:
+  - supporting_text: Analysis of the DNA sequence of the fragment identified 11 putative open reading frames, consisting of seven known and four previously unidentified pyrroloquinoline quinone (PQQ) biosynthetic genes.
+    reference_section_type: ABSTRACT
+  - supporting_text: All of the pqq genes showed expression only in nutrient-limiting conditions in a PqqH-dependent manner.
+    reference_section_type: ABSTRACT
+  - supporting_text: wild-type B16 produces PQQ, whereas mutants defective in plant growth promotion do not
+    reference_section_type: ABSTRACT
+- id: PMID:19902179
+  title: The PQQ biosynthetic operons and their transcriptional regulation in Pseudomonas aeruginosa.
+  full_text_unavailable: true
+  findings:
+  - supporting_text: Gene PA1990 of Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant.
+    reference_section_type: ABSTRACT
+  - supporting_text: The putative pqqF gene of P. aeruginosa was shown to be essential for PQQ biosynthesis.
+    reference_section_type: ABSTRACT
+core_functions:
+- description: &gt;-
+    PP_0375 is a PQQ-locus-associated S9 serine peptidase in fluorescent
+    pseudomonads. Its native substrate and whether it acts in precursor
+    maturation, PQQ excretion, or both remain unknown.
+  molecular_function:
+    id: GO:0008236
+    label: serine-type peptidase activity
+  supported_by:
+  - reference_id: file:PSEPK/PP_0375/PP_0375-uniprot.txt
+    supporting_text: &#39;DR   InterPro; IPR001375; Peptidase_S9_cat.&#39;
+  - reference_id: PMID:27287323
+    supporting_text: The pqq gene cluster (pqqFABCDEG) encodes at least two independent transcripts
+  - reference_id: PMID:19902179
+    supporting_text: Gene PA1990 of Pseudomonas aeruginosa, located downstream of pqqE and encoding a putative peptidase, was shown to be involved in excretion of PQQ into the culture supernatant.
+  - reference_id: file:PSEPK/PP_0375/PP_0375-bioinformatics/RESULTS.md
+    supporting_text: Q88QV9 aligned to AAX10035.1 at 66.0% amino-acid identity across 606 residues, covering 98.9% of Q88QV9 and 99.8% of AAX10035.1.
+  - reference_id: file:PSEPK/PP_0375/PP_0375-deep-research-openscientist.md
+    supporting_text: The **exact peptide substrate of PP_0375 has not been experimentally established** and remains the principal knowledge gap.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does PP_0375 directly cleave a PqqA-derived intermediate, promote PQQ
+    excretion, or perform both functions, and how does its role differ from the
+    M16-family PqqF route?
+suggested_experiments:
+- hypothesis: &gt;-
+    PP_0375 contributes serine-peptidase activity to PQQ precursor maturation
+    in KT2440.
+  description: &gt;-
+    Quantify intracellular and extracellular PQQ and PqqA-derived peptide
+    intermediates in wild-type, PP_0375 deletion, catalytic-serine mutant, and
+    complemented strains, then test purified PP_0375 against unmodified and
+    PqqE-cross-linked PqqA by LC-MS/MS.
+  experiment_type: targeted genetics and substrate-resolved peptidase assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
