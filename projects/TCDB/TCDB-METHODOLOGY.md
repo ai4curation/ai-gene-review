@@ -24,11 +24,37 @@ Two separate things are easy to conflate:
 
    Every emitted row is `skos:relatedMatch` + `semapv:UnspecifiedMatching` — an
    unreviewed lead. Whether it is safe to **propagate** (a protein with the TC id
-   inheriting the GO term) is curated by hand, per entry, in `tc2go.sssom.yaml`,
-   whose header documents the propagation rule: `exactMatch` when the member set
-   is mono-specific at the cited TC level (usually a 5-level system, e.g.
-   `TC:2.A.22.1.1` SERT → `GO:0005335`), `narrowMatch` when the GO term is only a
-   subfamily property (usually a 3-level family) and must not propagate wholesale.
+   inheriting the GO term) is scored next.
+
+### Propagation scoring (evidence, not assertion)
+
+[`curate_propagation.py`](curate_propagation.py) scores every one of the 194 leads
+against UniProt member evidence — no hand-assertion:
+
+```bash
+uv run python curate_propagation.py        # ~185 UniProt calls, one per TC id
+# -> data/propagation_evidence.tsv and tc2go.propagation.sssom.yaml
+```
+
+For each `(TC, GO)` lead it fetches the reviewed Swiss-Prot proteins carrying the
+TC id and counts how many also carry the GO term (closure-expanded, computed
+locally from the cached `go-basic.obo` is_a graph). TC matching is level-aware: a
+5-level system is matched exactly; a coarser id by `<id>` OR `<id>.*` (the dot
+stops `2.A.1` matching `2.A.10`); placeholder segments (`1.B.1.-.-`) are stripped.
+The fraction `k/n` drives the verdict, encoded as the SSSOM predicate:
+
+- `exactMatch` **JUSTIFIED** — `n≥2, k/n≥0.7` (or `1/1`): the activity is shared
+  across the TC group, so a member can inherit it. **80 leads**, 70 of them
+  5-level systems.
+- `narrowMatch` **NOT JUSTIFIED at this level** — `n≥3, k/n<0.5`: the GO term is a
+  minority/subfamily property; wholesale propagation would over-annotate. **23**.
+- `relatedMatch` **UNCERTAIN** — no members, class/subclass-level (≤2), or the
+  ambiguous middle; kept as an unreviewed source. **91**.
+
+A JUSTIFIED lead with `k<n` (e.g. `3.A.3.1.1 → GO:0005391`, 4/5) doubles as a
+reverse-gap find: the activity is shared, so the missing member is a genuine
+annotation gap. The hand-curated `tc2go.sssom.yaml` is a deeper, individually
+read-through pass over a handful of exemplars.
 
 2. **An `external2go` *annotation pipeline* — this does not exist.** Every other
    source-audit project here hangs off a public mapping file (`ec2go`, `rhea2go`,
