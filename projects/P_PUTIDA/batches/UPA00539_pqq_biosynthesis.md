@@ -110,3 +110,8 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
 - The PqqA report correctly identifies the target peptide and Glu15/Tyr19 pair.
   Its conservation artifact omits source accessions, so exact conservation
   percentages and the inferred leader boundary are not treated as verified.
+- The final generic module report correctly separates single-chain M16A,
+  two-component M16B, and substitute-protease implementations and recognizes
+  proteolysis-versus-PqqB ordering as the main mechanistic gap. One section
+  nevertheless states that excision must precede all small-molecule steps; that
+  internal overstatement was not propagated into the graph.
