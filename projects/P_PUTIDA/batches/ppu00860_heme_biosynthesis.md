@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist research for every selected gene.
 - [x] Curate every selected GOA row with no pending actions.
 - [x] Validate and render the module, genes, and batch page.
-- [ ] Open one non-draft PR for this module/pathway.
+- [x] Open one non-draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Selected Genes
