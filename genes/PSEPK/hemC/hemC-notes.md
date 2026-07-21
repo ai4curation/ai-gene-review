@@ -18,7 +18,9 @@ found. The report nevertheless supplies an unsaved 66.6% pairwise alignment,
 exact target-residue mapping, and target essentiality inferred from Francisella
 and Salmonella. It also treats hemC-hemD adjacency as evidence for channeling and
 uses a membrane-associated HemH generalization that does not match the curated
-KT2440 HemH record. These claims were not used as target evidence.
+KT2440 HemH record. Its statement that the dipyrromethane cofactor is generated
+from pre-uroporphyrinogen is unsupported and was not adopted. These claims were
+not used as target evidence.
 
 ## Curation decisions
 
