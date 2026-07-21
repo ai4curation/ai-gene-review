@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nadE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nadE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DF6" target="_blank" class="term-link">
+                        Q88DF6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nadE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DF6" data-a="DESCRIPTION: Ammonia-dependent NAD+ synthetase of Pseudomonas p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Ammonia-dependent NAD+ synthetase of Pseudomonas putida KT2440. NadE uses deamido-NAD, ATP, and free ammonium to form NAD+, AMP, and diphosphate in the terminal reaction of the deamido-NAD completion branch. This compact bacterial enzyme lacks the glutaminase module required for glutamine-dependent NAD+ synthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003952" target="_blank" class="term-link">
+                                    GO:0003952
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ synthase (glutamine-hydrolyzing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0003952" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect nitrogen-donor specificity propagated from a broad family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed target is explicitly an NH3-dependent NadE, carries the NH(3)-dependent NAD synthetase subfamily assignment, and lacks a glutaminase domain. Its defined reaction uses NH4+, not glutamine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadE/nadE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=NH(3)-dependent NAD(+) synthetase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadE/nadE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0004359" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect InterPro over-propagation to an ammonia-dependent enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88DF6 is a 275-residue ammonia-dependent NadE with only the NAD synthetase module; no glutaminase catalytic module is present or needed for RHEA:21188.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadE/nadE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR022926; NH(3)-dep_NAD(+)_synth.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0005524" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct catalytic co-substrate binding, retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP is a substrate of the NadE ligase reaction, but GO:0008795 is the informative catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadE/nadE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for soluble bacterial NadE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The compact NadE enzyme is assigned to the bacterial cytoplasm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008795" target="_blank" class="term-link">
+                                    GO:0008795
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0008795" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for the ammonia-dependent enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed target and HAMAP rule specify the ammonium-dependent deamido-NAD amidation reaction RHEA:21188.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadE/nadE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NadE performs the final conversion of deamido-NAD to NAD+.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadE/nadE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; NAD(+) from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016879" target="_blank" class="term-link">
+                                    GO:0016879
+                                </a>
+                            </span>
+                            <span class="term-label">ligase activity, forming carbon-nitrogen bonds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF6" data-a="GO:0016879" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent chemistry but too broad for this specific enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008795 captures the NAD+ synthase reaction and correct nitrogen-donor class.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008795" target="_blank" class="term-link">
+                                    NAD+ synthase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ammonia-dependent NAD+ synthetase that amidates deamido-NAD using free ammonium and ATP, completing NAD+ biosynthesis through the deamido-NAD branch.</h3>
+                <span class="vote-buttons" data-g="Q88DF6" data-a="FUNCTION: Ammonia-dependent NAD+ synthetase that amidates de..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008795" target="_blank" class="term-link">
+                            NAD+ synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                NAD+ biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/nadE/nadE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/nadE/nadE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88DF6 for Pseudomonas putida KT2440 nadE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed target is an ammonia-dependent NAD+ synthetase.</div>
+
+                        <div class="finding-text">"RecName: Full=NH(3)-dependent NAD(+) synthetase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Its reaction uses ammonium rather than glutamine.</div>
+
+                        <div class="finding-text">"Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Its domain assignment is specific for ammonia-dependent NadE.</div>
+
+                        <div class="finding-text">"InterPro; IPR022926; NH(3)-dep_NAD(+)_synth."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/nadE/nadE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for Pseudomonas putida KT2440 nadE</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is free ammonium availability limiting for NadE-dependent NAD+ synthesis during nitrogen limitation in P. putida KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DF6" data-a="Q: Is free ammonium availability limiting for NadE-de..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure deamido-NAD and NAD+ pools across ammonium concentrations in wild type and strains with titratable nadE expression.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DF6" data-a="EXPERIMENT: Measure deamido-NAD and NAD+ pools across ammonium..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DF6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *nadE* (NH₃-dependent NAD⁺ synthetase, UniProt Q88DF6) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T15:40:20.105702</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nadE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="nadE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-nade-nh3-dependent-nad-synthetase-uniprot-q88df6-in-pseudomonas-putida-kt2440">Functional Annotation of <em>nadE</em> (NH₃-dependent NAD⁺ synthetase, UniProt Q88DF6) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-identity-verification-mandatory">0. Identity Verification (Mandatory)</h2>
+<p>The target is confirmed and unambiguous. UniProt <strong>Q88DF6</strong> (gene <strong>nadE</strong>, ordered locus <strong>PP_4869</strong>) from <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125) is a <strong>275-residue, ~29.3 kDa</strong> protein annotated as <strong>NH(3)-dependent NAD(+) synthetase, EC 6.3.1.5</strong> (HAMAP rule MF_00193). It belongs to the <strong>NAD synthetase family</strong> (Pfam PF02540; InterPro IPR003694 "NAD_synthase", IPR022926 "NH(3)-dep_NAD(+)_synth", IPR022310 "NAD/GMP_synthase", IPR014729 Rossmann-like α/β/α fold). The gene symbol, EC number, protein family and domain content are internally consistent and match the well-characterized bacterial NadE family. Function is described below from primary literature on the enzyme family (chiefly the near-identical <em>Bacillus subtilis</em> enzyme, whose structure/mechanism is solved to atomic resolution) combined with the organism-specific UniProt annotation; no gene-symbol ambiguity was encountered.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>NadE (Q88DF6) is the enzyme that catalyzes the <strong>final, committed step of NAD⁺ biosynthesis</strong>. It performs the <strong>ATP-dependent amidation of nicotinic acid adenine dinucleotide (NaAD, "deamido-NAD⁺") to NAD⁺</strong>, using <strong>ammonia (NH₄⁺)</strong> as the nitrogen donor:</p>
+<blockquote>
+<p><strong>deamido-NAD⁺ + NH₄⁺ + ATP → NAD⁺ + AMP + diphosphate (PPi) + H⁺</strong>  (EC 6.3.1.5)</p>
+</blockquote>
+<p>It is a <strong>cytoplasmic homodimer</strong> that acts through a <strong>two-step mechanism via a covalent NaAD-adenylate intermediate</strong>, and it is the single terminal enzyme on which both the <em>de novo</em> and salvage NAD⁺ pathways converge — making it central to redox metabolism and typically essential.</p>
+<hr />
+<h2 id="2-primary-function-reaction-catalyzed-and-substrate-specificity">2. Primary Function: Reaction Catalyzed and Substrate Specificity</h2>
+<p><strong>Reaction (from UniProt catalytic-activity annotation):</strong><br />
+deamido-NAD⁺ + NH₄⁺ + ATP = AMP + diphosphate + NAD⁺ + H⁺ (EC 6.3.1.5).</p>
+<p><strong>Pathway position:</strong> "Cofactor biosynthesis; NAD⁺ biosynthesis; NAD⁺ from deamido-NAD⁺ (ammonia route): step 1/1" — i.e., NadE is the <strong>terminal step</strong> that installs the amide nitrogen that chemically distinguishes NAD⁺ from its precursor NaAD.</p>
+<p>The final step of NAD⁺ biosynthesis "includes an amide transfer to nicotinic acid adenine dinucleotide (NaAD) catalyzed by NAD⁺ synthetase" (Symersky et al., 2002, PMID 12077433). The enzyme is ubiquitous and "transform[s] deamido-NAD⁺ into NAD⁺ by a two-step reaction" (Rizzi et al., 1998, PMID 9753692).</p>
+<p><strong>Substrate specificity / nitrogen-donor selectivity.</strong> Q88DF6 is a <strong>short-form, NH₃-dependent</strong> NAD synthetase: at 275 aa it consists of only the synthetase (Rossmann-like α/β/α) catalytic domain and <strong>lacks the N-terminal glutaminase (glutamine amidotransferase) domain</strong> found in glutamine-dependent enzymes (e.g., yeast Qns1, ~700 aa). Consequently it uses <strong>free ammonium from the cellular pool</strong> as the amide donor rather than generating ammonia in situ from glutamine. This contrasts with the two-domain glutamine-dependent enzyme, which "utilizes a glutamine aminotransferase domain to supply ammonia for amidation of nicotinic acid adenine dinucleotide (NaAD⁺) to NAD⁺" (Wojcik et al., 2006, PMID 16954203). (Note: many bacterial "NH₃-dependent" NadE enzymes retain some capacity to use glutamine in vitro, but the diagnostic architectural feature is the absence of a dedicated glutaminase domain; the physiological/annotated donor for Q88DF6 is ammonia.)</p>
+<p><strong>Cofactor requirements:</strong> ATP (hydrolyzed to AMP + PPi, characteristic of the N-type ATP pyrophosphatase superfamily) and divalent <strong>Mg²⁺</strong> (a binuclear Mg²⁺ cluster at the ATP site).</p>
+<hr />
+<h2 id="3-catalytic-mechanism-structuralmechanistic-evidence">3. Catalytic Mechanism (Structural/Mechanistic Evidence)</h2>
+<p>NadE is a member of the <strong>N-type ATP pyrophosphatase / PP-loop amidotransferase superfamily</strong>. Catalysis proceeds in two chemical steps:</p>
+<ol>
+<li><strong>Adenylation:</strong> the nicotinate carboxylate of NaAD attacks the α-phosphate of ATP to form a reactive <strong>NaAD-adenylate (NAD-adenylate) intermediate</strong>, releasing pyrophosphate; this step is assisted by a <strong>binuclear Mg²⁺ (trimetallic) constellation</strong> rather than by protein side-chain catalysis.</li>
+<li><strong>Amidation:</strong> <strong>ammonia performs a nucleophilic attack on the adenylate intermediate</strong>, displacing AMP and yielding NAD⁺.</li>
+</ol>
+<p>The mechanism is directly supported by high-resolution <em>B. subtilis</em> crystal structures that <strong>trapped the intermediate</strong>: the enzyme was solved "in complex with the trapped reaction intermediate NAD-adenylate" (Rizzi et al., 1998, PMID 9753692), and an atomic-resolution (1.0 Å) structure showed that "both binding sites are occupied by the NAD-adenylate intermediate, pyrophosphate and two magnesium ions," with "a mechanism … proposed for the second catalytic step, which includes a nucleophilic attack by the ammonia molecule on the intermediate" (Symersky et al., 2002, PMID 12077433).</p>
+<p><strong>Active-site / ligand-binding residues in Q88DF6 (UniProt features):</strong> an ATP/Mg-binding <strong>P-loop (SGGxDS motif, ⁵⁰GISGGVDS⁵⁷)</strong> and additional substrate-contacting residues at positions 56, 147, 167, 172, 180, 187, 196, 218, and 267–268. The SGGxD signature is the hallmark of the ATP-pyrophosphatase family and directly rationalizes the AMP + PPi product stoichiometry.</p>
+<p><strong>Evolutionary justification for transferring this mechanism (Iteration 2 analysis).</strong> Global pairwise alignment (Needleman–Wunsch) shows Q88DF6 shares <strong>52.4% amino-acid identity (140/267 aligned positions) with the experimentally characterized <em>E. coli</em> NadE</strong> (UniProt P18843, 275 aa) and <strong>48.5% identity (129/266) with the <em>B. subtilis</em> NAD synthetase</strong> (P08164, 272 aa) whose intermediate-trapped crystal structures defined the mechanism. All three are ~272–275 aa single-domain enzymes, and the catalytic PP-loop is conserved (Q88DF6 <strong>SGGVDS</strong> at res 52; <em>B. subtilis</em> <strong>SGGQDS</strong> at res 47). This level of identity across the full length, together with conservation of the catalytic motif, means the fold, active-site geometry, homodimeric assembly, and two-step adenylate chemistry established for the model enzymes apply directly to the <em>P. putida</em> protein. Critically, <strong>all 11 UniProt-annotated ATP/substrate-binding residues of Q88DF6 are strictly identical</strong> to their aligned positions in the <em>B. subtilis</em> structural enzyme (G50, D56, R147, T167, E172, K180, D187, K196, T218, H267, K268 — 11/11 conserved), confirming the active-site chemistry is preserved residue-for-residue.</p>
+<p><strong>Non-redundancy (Iteration 3 analysis).</strong> Proteome-wide UniProt queries of <em>P. putida</em> KT2440 (taxid 160488) return <strong>exactly one</strong> protein for EC 6.3.1.5, for the NAD synthetase family, and for gene <em>nadE</em> — Q88DF6 (PP_4869). There is <strong>no paralogous isozyme</strong>, so loss of NadE cannot be compensated, reinforcing its essential, non-redundant terminal role in NAD⁺ biosynthesis.</p>
+<hr />
+<h2 id="4-quaternary-structure-and-subcellular-localization">4. Quaternary Structure and Subcellular Localization</h2>
+<ul>
+<li><strong>Quaternary structure:</strong> <strong>Homodimer</strong> (UniProt SUBUNIT), consistent with "the <em>Bacillus subtilis</em> homodimeric NAD⁺ synthetase" (PMID 9753692). The deamido-NAD⁺ binding site lies at the subunit interface in the homolog, implying the dimer is the functional unit.</li>
+<li><strong>Localization:</strong> <strong>Cytoplasmic.</strong> The protein has no signal peptide, no transmembrane segment, and no lipidation/secretion signals; as a soluble metabolic enzyme it carries out its reaction in the bacterial cytosol where NaAD, ATP, Mg²⁺ and ammonium are available. This is the expected compartment for a central intermediary-metabolism enzyme.</li>
+</ul>
+<hr />
+<h2 id="5-pathway-context-and-biological-role">5. Pathway Context and Biological Role</h2>
+<p>NAD⁺ biosynthesis in bacteria funnels multiple inputs to a common intermediate, <strong>nicotinic acid mononucleotide (NaMN)</strong>, which is adenylylated by <strong>NadD (NaMN adenylyltransferase)</strong> to <strong>NaAD</strong>, and finally amidated by <strong>NadE</strong> to NAD⁺:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">de</span><span class="w"> </span><span class="n">novo</span><span class="o">:</span><span class="w">  </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">(</span><span class="n">NadB</span><span class="o">/</span><span class="n">NadA</span><span class="o">/</span><span class="n">NadC</span><span class="p">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">NaMN</span>
+<span class="w"> </span><span class="n">salvage</span><span class="o">:</span><span class="w">  </span><span class="n">nicotinamide</span><span class="o">/</span><span class="n">nicotinic</span><span class="w"> </span><span class="n">acid</span><span class="o">/</span><span class="n">NR</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">NaMN</span>
+<span class="w">                   </span><span class="err">│</span>
+<span class="w">                   </span><span class="err">▼</span>
+<span class="w">     </span><span class="n">NaMN</span><span class="w"> </span><span class="o">--</span><span class="n">NadD</span><span class="o">--&gt;</span><span class="w"> </span><span class="n">NaAD</span><span class="w"> </span><span class="o">--</span><span class="n">NadE</span><span class="o">--&gt;</span><span class="w"> </span><span class="n">NAD</span><span class="err">⁺</span>
+</code></pre></div>
+
+<p>Because <strong>both the de novo (aspartate) route and the salvage routes converge on NaAD</strong>, NadE is the <strong>single terminal enzyme producing NAD⁺</strong> in the cell; its activity cannot be bypassed by nicotinamide/nicotinic acid salvage. NAD⁺ (with NADH, and NADP(H) after phosphorylation by NAD kinase) is the electron carrier for respiration, redox balancing, and hundreds of biosynthetic and catabolic reactions.</p>
+<p><strong>Essentiality and target validation (inference from close relatives).</strong> In <em>M. tuberculosis</em>, NadD and NadE "were selected as promising candidate drug targets," and induced degradation of either enzyme "showed a strong bactericidal effect which coincided with anticipated changes in relative levels of NaMN and NaAD intermediates (substrates of NadD and NadE, respectively) and ultimate depletion of the NAD(H) pool," producing a metabolic catastrophe (Rodionova et al., 2014, PMID 24549842). More recent work confirms NadE (NAD synthesis) as metabolically distinct from and essential alongside NAD kinase in defining NAD(P) essentiality (Sharma et al., 2023, PMID 37350592). By strong homology and identical pathway position, NadE is expected to be essential in <em>P. putida</em> KT2440, where a robust NAD(H)/NADPH supply underpins the organism's noted redox-balancing systems (e.g., PntAB/SthA transhydrogenases, PMID 42335895) and industrial biotransformation capacity. Consistent with this, genome-wide transposon (Tn-seq/RB-TnSeq) studies of KT2440 build saturating libraries that disrupt "nearly all (4,778) non-essential genes" (Eng et al., 2021, PMID 33964456) — the terminal NAD-biosynthesis genes are expected to reside in the complementary essential-gene set that tolerates no insertions, although PP_4869 is not individually called out in those reports.</p>
+<hr />
+<h2 id="6-evidence-summary">6. Evidence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction = ATP-dependent amidation of deamido-NAD⁺ → NAD⁺, NH₄⁺ donor, EC 6.3.1.5</td>
+<td>Curated annotation (HAMAP MF_00193)</td>
+<td>UniProt Q88DF6</td>
+</tr>
+<tr>
+<td>Terminal step of NAD⁺ biosynthesis (step 1/1 from deamido-NAD⁺)</td>
+<td>Curated pathway annotation</td>
+<td>UniProt Q88DF6</td>
+</tr>
+<tr>
+<td>Two-step mechanism via trapped NAD-adenylate intermediate + Mg²⁺ + PPi</td>
+<td>Atomic-resolution crystal structures (homolog)</td>
+<td>PMID 9753692; PMID 12077433</td>
+</tr>
+<tr>
+<td>Ammonia nucleophilic attack in step 2</td>
+<td>Structural mechanism (homolog)</td>
+<td>PMID 12077433</td>
+</tr>
+<tr>
+<td>Homodimer; interfacial deamido-NAD⁺ site</td>
+<td>Curated + structural</td>
+<td>UniProt; PMID 9753692</td>
+</tr>
+<tr>
+<td>Short NH₃-dependent form lacks glutaminase domain (vs glutamine-dependent Qns1)</td>
+<td>Comparative/biochemical</td>
+<td>PMID 16954203; sequence length 275 aa</td>
+</tr>
+<tr>
+<td>Essential terminal enzyme / druggable, loss depletes NAD(H)</td>
+<td>Genetic knockdown + ¹³C metabolomics (homolog)</td>
+<td>PMID 24549842; PMID 37350592</td>
+</tr>
+<tr>
+<td>Cytoplasmic; ATP-pyrophosphatase P-loop (SGGxD, res 50–57)</td>
+<td>Sequence/feature analysis</td>
+<td>UniProt Q88DF6</td>
+</tr>
+<tr>
+<td>52.4% id to <em>E. coli</em> NadE, 48.5% to <em>B. subtilis</em> NadE; PP-loop conserved</td>
+<td>Pairwise alignment (this work)</td>
+<td>UniProt P18843, P08164</td>
+</tr>
+<tr>
+<td>11/11 annotated active-site residues identical to <em>B. subtilis</em> enzyme</td>
+<td>Alignment residue mapping (this work)</td>
+<td>UniProt Q88DF6, P08164</td>
+</tr>
+<tr>
+<td>Sole NAD synthetase (EC 6.3.1.5) in KT2440 — no paralog</td>
+<td>Proteome query (this work)</td>
+<td>UniProt taxid 160488</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> Q88DF6 is a bona fide NH₃-dependent NAD⁺ synthetase catalyzing the terminal amidation of NaAD to NAD⁺ via a NaAD-adenylate intermediate; it is a cytoplasmic homodimer of the ATP-pyrophosphatase superfamily; it occupies the essential convergence point of de novo and salvage NAD⁺ biosynthesis.</li>
+<li><strong>Refuted / excluded:</strong> It is <strong>not</strong> a glutamine-dependent (two-domain, glutaminase-containing) NAD synthetase (too short, no glutaminase domain); it is not a membrane, transport, structural, or signaling protein.</li>
+</ul>
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li>Direct enzymological/structural data are for <em>P. putida</em> <strong>inferred from homologs</strong> (chiefly <em>B. subtilis</em>, and mycobacterial genetics); no KT2440-specific kinetic study of PP_4869 was located. The family is highly conserved, so transfer of mechanism is well justified, but organism-specific K_m/k_cat, in-vivo essentiality (e.g., a KT2440 knockout), and glutamine-vs-ammonia usage remain to be measured directly.</li>
+<li>Future work: solve/AlphaFold-validate the KT2440 structure, measure ammonia vs glutamine kinetics, and confirm essentiality by conditional knockdown in <em>P. putida</em> KT2440.</li>
+</ul>
+<hr />
+<p><em>Report generated Iteration 1. Databases consulted: UniProt (Q88DF6, live REST fetch), PubMed. Key primary references: PMID 9753692, 12077433, 16954203, 24549842, 37350592.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nadE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="nadE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DF6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nade-curation-notes">nadE curation notes</h1>
+<h2 id="2026-07-20">2026-07-20</h2>
+<ul>
+<li>Target identity: PP_4869 / reviewed UniProtKB Q88DF6, a 275-aa<br />
+  ammonia-dependent NadE [UniProtKB:Q88DF6, "RecName: Full=NH(3)-dependent NAD(+) synthetase"].</li>
+<li>Reaction: deamido-NAD, ammonium, and ATP yield NAD+, AMP, and diphosphate<br />
+  [UniProtKB:Q88DF6, "Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) + H(+)"]<br />
+  [RHEA:21188, ammonia-dependent NAD synthetase reaction].</li>
+<li>Specificity: the target has IPR022926 (NH(3)-dependent NAD synthetase) and no<br />
+  glutaminase module [UniProtKB:Q88DF6, "InterPro; IPR022926; NH(3)-dep_NAD(+)_synth."].</li>
+<li>Family grounding: Q88DF6 and the E. coli ammonia-dependent exemplar P18843<br />
+  map to PTHR23090:SF7, whereas human glutamine-dependent Q6IA69 maps to<br />
+  PTHR23090:SF9 [file:interpro/panther/PTHR23090/PTHR23090-entries.csv].</li>
+<li>Curation: GO:0008795 is core. Electronic GO:0003952 and GO:0004359 were<br />
+  removed as broad-family over-propagation contradicted by the reviewed target<br />
+  architecture and reaction. PTHR23090 spans both ammonia- and<br />
+  glutamine-dependent NAD synthetases and cannot establish donor specificity.</li>
+<li>OpenScientist independently recovered the compact ammonia-dependent<br />
+  architecture and explicitly excluded a glutaminase-containing target, which<br />
+  supports the two REMOVE decisions. Its residue alignment, oligomeric state,<br />
+  and essentiality discussion remain homology-based rather than KT2440<br />
+  measurements and were not used to add annotations<br />
+  [file:PSEPK/nadE/nadE-deep-research-openscientist.md,<br />
+  "no KT2440-specific kinetic study of PP_4869 was located"].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DF6
+gene_symbol: nadE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Ammonia-dependent NAD+ synthetase of Pseudomonas putida KT2440. NadE uses
+  deamido-NAD, ATP, and free ammonium to form NAD+, AMP, and diphosphate in the
+  terminal reaction of the deamido-NAD completion branch. This compact bacterial
+  enzyme lacks the glutaminase module required for glutamine-dependent NAD+
+  synthesis.
+existing_annotations:
+  - term:
+      id: GO:0003952
+      label: NAD+ synthase (glutamine-hydrolyzing) activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Incorrect nitrogen-donor specificity propagated from a broad family.
+      action: REMOVE
+      reason: &gt;-
+        The reviewed target is explicitly an NH3-dependent NadE, carries the
+        NH(3)-dependent NAD synthetase subfamily assignment, and lacks a
+        glutaminase domain. Its defined reaction uses NH4+, not glutamine.
+      supported_by:
+        - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+          supporting_text: &#34;RecName: Full=NH(3)-dependent NAD(+) synthetase&#34;
+        - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+          supporting_text: &#34;Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +&#34;
+  - term:
+      id: GO:0004359
+      label: glutaminase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Incorrect InterPro over-propagation to an ammonia-dependent enzyme.
+      action: REMOVE
+      reason: &gt;-
+        Q88DF6 is a 275-residue ammonia-dependent NadE with only the NAD
+        synthetase module; no glutaminase catalytic module is present or needed
+        for RHEA:21188.
+      supported_by:
+        - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+          supporting_text: &#34;InterPro; IPR022926; NH(3)-dep_NAD(+)_synth.&#34;
+  - term:
+      id: GO:0005524
+      label: ATP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: Correct catalytic co-substrate binding, retained as non-core.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        ATP is a substrate of the NadE ligase reaction, but GO:0008795 is the
+        informative catalytic function.
+      supported_by:
+        - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+          supporting_text: &#34;Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +&#34;
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Correct expected location for soluble bacterial NadE.
+      action: ACCEPT
+      reason: The compact NadE enzyme is assigned to the bacterial cytoplasm.
+  - term:
+      id: GO:0008795
+      label: NAD+ synthase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Correct core molecular function for the ammonia-dependent enzyme.
+      action: ACCEPT
+      reason: &gt;-
+        The reviewed target and HAMAP rule specify the ammonium-dependent
+        deamido-NAD amidation reaction RHEA:21188.
+      supported_by:
+        - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+          supporting_text: &#34;Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +&#34;
+  - term:
+      id: GO:0009435
+      label: NAD+ biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Correct core biological process.
+      action: ACCEPT
+      reason: NadE performs the final conversion of deamido-NAD to NAD+.
+      supported_by:
+        - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+          supporting_text: &#34;PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; NAD(+) from&#34;
+  - term:
+      id: GO:0016879
+      label: ligase activity, forming carbon-nitrogen bonds
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: Correct parent chemistry but too broad for this specific enzyme.
+      action: MODIFY
+      reason: GO:0008795 captures the NAD+ synthase reaction and correct nitrogen-donor class.
+      proposed_replacement_terms:
+        - id: GO:0008795
+          label: NAD+ synthase activity
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/nadE/nadE-uniprot.txt
+    title: UniProtKB entry Q88DF6 for Pseudomonas putida KT2440 nadE
+    findings:
+      - statement: The reviewed target is an ammonia-dependent NAD+ synthetase.
+        supporting_text: &#34;RecName: Full=NH(3)-dependent NAD(+) synthetase&#34;
+        reference_section_type: RESULTS
+      - statement: Its reaction uses ammonium rather than glutamine.
+        supporting_text: &#34;Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +&#34;
+        reference_section_type: RESULTS
+      - statement: Its domain assignment is specific for ammonia-dependent NadE.
+        supporting_text: &#34;InterPro; IPR022926; NH(3)-dep_NAD(+)_synth.&#34;
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Reviewed UniProt entry for exact accession Q88DF6; HAMAP, the reaction, size, and ammonia-dependent subfamily assignments support removal of glutaminase-derived GO terms.
+  - id: file:PSEPK/nadE/nadE-deep-research-openscientist.md
+    title: OpenScientist research report for Pseudomonas putida KT2440 nadE
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: UNVERIFIED
+      review_notes: &gt;-
+        Provider-generated synthesis assessed critically; family-level
+        descriptions of glutamine-dependent homologs are not applied to this
+        ammonia-dependent target. Exact sequence/residue comparisons lack a
+        retained alignment artifact, and oligomeric state and essentiality
+        remain ortholog context rather than KT2440 observations.
+core_functions:
+  - description: &gt;-
+      Ammonia-dependent NAD+ synthetase that amidates deamido-NAD using free
+      ammonium and ATP, completing NAD+ biosynthesis through the deamido-NAD
+      branch.
+    molecular_function:
+      id: GO:0008795
+      label: NAD+ synthase activity
+    directly_involved_in:
+      - id: GO:0009435
+        label: NAD+ biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/nadE/nadE-uniprot.txt
+        supporting_text: &#34;Reaction=deamido-NAD(+) + NH4(+) + ATP = AMP + diphosphate + NAD(+) +&#34;
+suggested_questions:
+  - question: Is free ammonium availability limiting for NadE-dependent NAD+ synthesis during nitrogen limitation in P. putida KT2440?
+suggested_experiments:
+  - description: &gt;-
+      Measure deamido-NAD and NAD+ pools across ammonium concentrations in wild
+      type and strains with titratable nadE expression.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

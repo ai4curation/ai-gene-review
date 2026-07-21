@@ -19,6 +19,8 @@
   and conserved NAPRTase architecture. Its generic PncA/NiaP nicotinamide-entry
   diagram and rate-limiting claim are not established for KT2440: the proteome
   search found no canonical PncA, and Q88DF7 itself only establishes direct
-  nicotinate entry. Those extensions were not added to the review
+  nicotinate entry. The exact 53.7% identity and His224 residue mapping are
+  also excluded from curated evidence because no alignment artifact was
+  retained. Those extensions were not added to the review
   [file:PSEPK/pncB/pncB-deep-research-openscientist.md,
   "No direct assay of the P. putida KT2440 enzyme."].

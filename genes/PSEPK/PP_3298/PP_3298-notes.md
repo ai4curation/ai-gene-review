@@ -25,3 +25,16 @@
   an unresolved CinA-C/PncC-family paralog. Do not place it in the catalytic
   module graph, assign GO:0019159, or describe it as an NMN deamidase without
   specificity evidence.
+- OpenScientist retrieval required a bounded retry: the initial
+  `max_iterations=3` job timed out at the provider's 7200-second ceiling
+  without a report, while the `max_iterations=2` retry completed in 5155
+  seconds with both artifacts. The final report promotes NMN deamidase,
+  cytoplasmic localization, and pathway physiology from a provider-computed
+  38.1% alignment, an asserted motif, and negative neighborhood context, but no
+  alignment or query artifact was retained. It also acknowledges that Q88HQ5
+  has no direct experiment, homology is moderate, family members can be
+  inactive, and substrate specificity is untested
+  [file:PSEPK/PP_3298/PP_3298-deep-research-openscientist.md, "No direct
+  experimental characterization of PP_3298."]. It does not compare Q88ME5/pncC,
+  the better-annotated paralog in the same proteome. The stronger assignment is
+  therefore rejected pending a direct product-forming specificity assay.

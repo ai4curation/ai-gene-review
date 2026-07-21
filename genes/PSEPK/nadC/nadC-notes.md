@@ -15,7 +15,11 @@
   degradation module in KT2440.
 - OpenScientist recovered the NadC reaction and conserved QPRTase active-site
   context while explicitly noting that no KT2440 protein study was found. Its
-  rejection of a "catabolic" role is interpreted narrowly: NadC is not part of
+  exact 61.2% pairwise identity and target residue mapping are not retained as
+  curated evidence because no alignment artifact was saved; oligomeric state
+  and essentiality are likewise ortholog context rather than Q88PR1
+  measurements. The report's rejection of a "catabolic" role is interpreted
+  narrowly: NadC is not part of
   the `nic*` nicotinate degradation pathway, but the seeded GO:0034213 term can
   still describe consumption of quinolinate and is therefore retained only as
   non-core [file:PSEPK/nadC/nadC-deep-research-openscientist.md,

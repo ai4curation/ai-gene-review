@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nadC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nadC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PR1" target="_blank" class="term-link">
+                        Q88PR1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nadC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PR1" data-a="DESCRIPTION: Quinolinate phosphoribosyltransferase of Pseudomon..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Quinolinate phosphoribosyltransferase of Pseudomonas putida KT2440. NadC uses quinolinate and 5-phospho-alpha-D-ribose 1-diphosphate to form nicotinate D-ribonucleotide (NaMN), carbon dioxide, and diphosphate. This reaction links quinolinate formation to the shared NaMN completion branch of de novo NAD+ biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    GO:0004514
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide diphosphorylase (carboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PR1" data-a="GO:0004514" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct specific molecular function for NadC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The NadC-family assignment, EC 2.4.2.19, and RHEA:12733 support quinolinate phosphoribosylation to NaMN in the physiological direction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadC/nadC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PR1" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for a soluble bacterial NadC enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cytoplasmic assignment is consistent with the soluble de novo pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PR1" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly places NadC in production of NaMN from quinolinate in NAD+ biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadC/nadC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; nicotinate D-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016763" target="_blank" class="term-link">
+                                    GO:0016763
+                                </a>
+                            </span>
+                            <span class="term-label">pentosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PR1" data-a="GO:0016763" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent chemistry but too broad for the known NadC reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004514 captures the substrate-specific phosphoribosyltransferase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                                    nicotinate-nucleotide diphosphorylase (carboxylating) activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034213" target="_blank" class="term-link">
+                                    GO:0034213
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PR1" data-a="GO:0034213" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chemically defensible substrate-level process, but not the core pathway framing.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NadC consumes quinolinate, so the term is not false. Its physiological role here is constructive NAD+ biosynthesis rather than a separate quinolinate-degradation pathway, making GO:0009435 the core process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Quinolinate phosphoribosyltransferase that converts quinolinate and PRPP to NaMN, carbon dioxide, and diphosphate in de novo NAD+ biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88PR1" data-a="FUNCTION: Quinolinate phosphoribosyltransferase that convert..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004514" target="_blank" class="term-link">
+                            nicotinate-nucleotide diphosphorylase (carboxylating) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                NAD+ biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/nadC/nadC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/nadC/nadC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88PR1 for Pseudomonas putida KT2440 nadC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The target carries the reversible NadC reaction between quinolinate plus PRPP and NaMN plus carbon dioxide and diphosphate.</div>
+
+                        <div class="finding-text">"Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate ="</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places the reaction in NAD+ biosynthesis.</div>
+
+                        <div class="finding-text">"PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; nicotinate D-"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/nadC/nadC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for Pseudomonas putida KT2440 nadC</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does NadC abundance control flux at the quinolinate-to-NaMN transition under nicotinate-limited growth?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PR1" data-a="Q: Does NadC abundance control flux at the quinolinat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare quinolinate, NaMN, and NAD+ pools in wild type and a titratable nadC knockdown across defined nicotinate concentrations.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PR1" data-a="EXPERIMENT: Compare quinolinate, NaMN, and NAD+ pools in wild ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PR1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *nadC* (PP_0787, UniProt Q88PR1) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T15:30:25.625163</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nadC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="nadC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-nadc-pp_0787-uniprot-q88pr1-in-pseudomonas-putida-kt2440">Functional Annotation of <em>nadC</em> (PP_0787, UniProt Q88PR1) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="geneprotein-identity-verified">Gene/Protein Identity — Verified</h2>
+<ul>
+<li><strong>UniProt:</strong> Q88PR1 — "Probable nicotinate-nucleotide pyrophosphorylase [carboxylating]", EC 2.4.2.19; AltName <strong>Quinolinate phosphoribosyltransferase [decarboxylating]</strong>.</li>
+<li><strong>Gene / locus:</strong> <em>nadC</em> / PP_0787.</li>
+<li><strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125).</li>
+<li><strong>Family / domains:</strong> NadC/ModD family; Aldolase_TIM (IPR013785), NadC (IPR004393), NadC/ModD (IPR027277), Nicotinate_pribotase-like_C (IPR036068), Quinolinate_PRibosylTase_N (IPR037128).</li>
+</ul>
+<p><strong>Verification:</strong> The gene symbol <em>nadC</em>, the enzyme name (quinolinate phosphoribosyltransferase / nicotinate-nucleotide pyrophosphorylase [carboxylating]), the EC number 2.4.2.19, and the domain architecture are fully mutually consistent and correspond to a single, deeply conserved enzyme of NAD⁺ biosynthesis. <strong>This is an unambiguous identification.</strong> The one caveat is that no biochemical or genetic study has been published on the <em>P. putida</em> KT2440 protein itself; its function is assigned by strong orthology to biochemically and structurally characterized NadC enzymes from <em>Salmonella</em>, <em>E. coli</em>, <em>Helicobacter pylori</em>, <em>Mycobacterium tuberculosis</em>, and eukaryotes. Given &gt;30% sequence identity across this family and full conservation of catalytic residues and fold, the transfer of annotation is robust.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><em>nadC</em> encodes <strong>quinolinate phosphoribosyltransferase (QPRTase / QAPRTase; also called nicotinate-nucleotide pyrophosphorylase [carboxylating]), EC 2.4.2.19</strong>. It catalyzes the committed, magnesium-dependent step of <em>de novo</em> NAD⁺ biosynthesis: the transfer of a phosphoribosyl group from 5-phosphoribosyl-1-pyrophosphate (PRPP) onto <strong>quinolinic acid</strong>, coupled to decarboxylation, yielding <strong>nicotinic acid mononucleotide (NaMN)</strong>, <strong>CO₂</strong>, and <strong>pyrophosphate (PPi)</strong>. It is a soluble <strong>cytoplasmic</strong> enzyme, a structural prototype of the <strong>type II PRTase</strong> family with a TIM-barrel catalytic fold, and functions as a dimer (active site at the subunit interface), frequently assembling into a hexameric trimer-of-dimers. It is the single, essential gateway converting the aspartate/tryptophan-derived intermediate quinolinate into the NAD⁺ pathway.</p>
+<hr />
+<h2 id="2-primary-function-the-catalyzed-reaction">2. Primary Function — The Catalyzed Reaction</h2>
+<p><strong>Reaction:</strong></p>
+<blockquote>
+<p>quinolinic acid (pyridine-2,3-dicarboxylic acid) + PRPP + H⁺ → nicotinic acid mononucleotide (NaMN) + CO₂ + PPi</p>
+</blockquote>
+<p>The chemistry proceeds as a <strong>phosphoribosyl transfer followed by decarboxylation</strong> — the pyridine N1 of quinolinate is ribosylated by PRPP (displacing PPi), and the C3 carboxyl of the resulting intermediate is lost as CO₂, producing NaMN [PMID 24949952]. The full stoichiometry (NaMN + CO₂ + PPi from PRPP + quinolinate) was established for the <em>Salmonella typhimurium</em> enzyme [PMID 11876660]. The reaction is strictly <strong>divalent-metal dependent, with Mg²⁺ optimal</strong> [PMID 24949952].</p>
+<p><strong>Substrate specificity.</strong> The substrate is the <strong>dicarboxylic</strong> pyridine quinolinate. Specificity is enforced by a cluster of cationic active-site residues (in <em>S. typhimurium</em>: Arg118, Arg152, Arg175, Lys185, His188) that recognize the 2,3-dicarboxylate. <strong>Arg175 is catalytically essential</strong> (R175A is inactive), while R152A and K185A shift activity toward the normally inactive monocarboxylate analogue nicotinic acid — K185A shows ~300-fold higher kcat/Km for nicotinate than for quinolinate — demonstrating that these residues both catalyze the reaction and select quinolinate over related pyridines [PMID 20047306]. Consistent kinetic parameters have been measured for orthologs (e.g., <em>M. tuberculosis</em>: Km(QA) ≈ 0.08 mM, Km(PRPP) ≈ 0.39 mM) [PMID 24949952]; the QA analogue <strong>pyrazinamide</strong> inhibits the mycobacterial enzyme [PMID 24949952], and <strong>phthalic acid</strong> is a classic competitive inhibitor/QA mimic used in structural studies [PMID 24038671].</p>
+<p><strong>Kinetic mechanism.</strong> The <em>Salmonella</em> enzyme follows a <strong>predominantly ordered mechanism</strong>: quinolinate binds productively first (the E·QA complex is catalytically competent, E·PRPP is not), and <strong>on-enzyme phosphoribosyl-transfer chemistry is rate-determining</strong> [PMID 11876660].</p>
+<hr />
+<h2 id="3-pathway-context">3. Pathway Context</h2>
+<p><em>nadC</em> is the third enzyme of the bacterial <strong>aspartate → NAD⁺ <em>de novo</em> pathway</strong>:</p>
+<ol>
+<li><strong>NadB</strong> (L-aspartate oxidase) oxidizes L-aspartate to iminoaspartate.</li>
+<li><strong>NadA</strong> (quinolinate synthase) condenses iminoaspartate with dihydroxyacetone phosphate to form <strong>quinolinate</strong>.</li>
+<li><strong>NadC (this gene)</strong> converts quinolinate + PRPP → <strong>NaMN</strong> + CO₂ + PPi.</li>
+<li><strong>NadD</strong> (NaMN adenylyltransferase) → nicotinic acid adenine dinucleotide (NaAD).</li>
+<li><strong>NadE</strong> (NAD synthetase) → <strong>NAD⁺</strong>.</li>
+</ol>
+<p>Thus NadC sits at the junction where the ring precursor (quinolinate) enters the mononucleotide pool that all downstream NAD⁺ synthesis flows through. The <em>nadA/nadB/nadC</em> gene set is broadly conserved across bacteria; the products converge on the same NaMN node used by the salvage (Preiss–Handler) route [PMID 203571; PMID 20601509].</p>
+<p><strong>Regulation.</strong> Expression of the <em>de novo</em> genes (including <em>nadC</em>) is repressed by nicotinate through NrtR/NdnR-family transcriptional regulators (shown in <em>Corynebacterium glutamicum</em>: "NdnR acts as a transcriptional repressor of NAD de novo biosynthesis genes"), so cells down-regulate costly <em>de novo</em> synthesis when the salvage precursor nicotinate is available [PMID 20601509]. In <em>Bordetella</em>, an orphan <em>nadC</em> is controlled by a NadQ-family repressor and by nicotinic acid [PMID 27783449].</p>
+<p><strong>Confirmed in <em>P. putida</em> KT2440 (KEGG).</strong> The KT2440 genome encodes the <strong>complete</strong> de novo pathway, so NadC operates as a genuine biosynthetic enzyme (not an orphan salvage gene): nadB/L-aspartate oxidase = <strong>PP_1426</strong> (K00278), nadA/quinolinate synthase = <strong>PP_1231</strong> (K03517), <strong>nadC = PP_0787</strong> (K00767, EC 2.4.2.19, reaction R03348), nadD/NaMN adenylyltransferase = <strong>PP_4810</strong> (K00969), nadE/NAD synthetase = <strong>PP_4869</strong> (K01916). PP_0787 is assigned to KEGG module <strong>M00115</strong> ("NAD biosynthesis, aspartate ⇒ quinolinate ⇒ NAD") and pathways ppu00760 and ppu01240. It sits at genome position complement(902650..903498), flanked by <em>trxB</em> (PP_0786) and PP_0788 (unknown), and is <strong>monocistronic</strong> — the five nad genes are scattered rather than in a single operon.</p>
+<p><strong>Note specific to <em>P. putida</em> KT2440:</strong> this organism additionally possesses a well-known <strong>nicotinate catabolic (nic) locus</strong> that degrades nicotinic acid (via 6-hydroxynicotinate); the <em>P. putida</em> nic system is the reference for related organisms and modulates intracellular pyridine pools [PMID 29485696]. This is a distinct catabolic pathway; <em>nadC</em>/NadC belongs to the <strong>anabolic</strong> NAD⁺-biosynthetic route.</p>
+<hr />
+<h2 id="4-physiological-importance-essentiality">4. Physiological Importance (Essentiality)</h2>
+<p>NadC catalyzes "an indispensable step in NAD biosynthesis, one that is essential for cell survival in prokaryotes" [PMID 17763926]. Genetic evidence across species:<br />
+- <em>S. typhimurium nadC</em> mutants are <strong>nicotinate auxotrophs</strong> that <strong>accumulate and secrete quinolinate</strong> (2–8 µmol/100 ml) and cannot grow on quinolinate [PMID 203571].<br />
+- <em>C. glutamicum</em> Δ<em>nadC</em> (and Δ<em>nadA</em>, Δ<em>nadS</em>) require exogenous nicotinate [PMID 20601509].<br />
+- Even in organisms that have lost <em>nadA/nadB</em>, an "orphan" <em>nadC</em> is retained to allow <strong>quinolinate salvage</strong>; quinolinate as sole NAD precursor requires <em>nadC</em> [PMID 27783449; PMID 23204464].</p>
+<p>Because it is essential and structurally distinct in bacteria vs. humans, bacterial NadC is pursued as an <strong>antibacterial/anti-tuberculosis drug target</strong> [PMID 17763926; PMID 24949952].</p>
+<hr />
+<h2 id="5-structure-and-localization">5. Structure and Localization</h2>
+<ul>
+<li><strong>Fold / class:</strong> QPRTase is the defining structural prototype of the <strong>type II PRTase</strong> family ("the only type II PRTase whose X-ray structure is known") [PMID 11876660]. The catalytic domain is an <strong>(β/α)₈ TIM-barrel</strong> (Aldolase_TIM, IPR013785) with an N-terminal NadC domain and a nicotinate-phosphoribosyltransferase-like C-terminal region — exactly the domain set annotated for Q88PR1.</li>
+<li><strong>Quaternary structure:</strong> The minimal functional unit is a <strong>dimer</strong>, with the <strong>active site formed at the monomer–monomer interface</strong> (e.g., <em>S. typhimurium</em>, <em>H. pylori</em>). Many QPRTases (human, porcine, yeast, <em>H. pylori</em>) assemble into a <strong>hexamer (trimer of dimers)</strong> that is required for full activity/stability; e.g., disrupting the <em>H. pylori</em> α7–β8 loop hexamerization interface (Phe181Pro) abolishes activity [PMID 17763926; PMID 26805589; PMID 23626766].</li>
+<li><strong>Subcellular localization:</strong> The enzyme is a <strong>soluble cytoplasmic protein</strong>. It carries no signal peptide or transmembrane region and is routinely purified from the cytosol; it carries out its function in the <strong>cytoplasm</strong> as part of central NAD⁺ metabolism.</li>
+</ul>
+<hr />
+<h2 id="5b-direct-sequence-verification-of-q88pr1-protein-specific-evidence">5b. Direct Sequence Verification of Q88PR1 (protein-specific evidence)</h2>
+<p>Beyond generic family annotation, I aligned the P. putida KT2440 NadC sequence (Q88PR1, 282 aa) against the biochemically/structurally characterized <em>Salmonella typhimurium</em> QAPRTase (P30012, 297 aa) by global Needleman–Wunsch alignment:</p>
+<ul>
+<li><strong>61.2% amino-acid identity</strong> (172/281 aligned positions) — clear orthology, well above the ~30% typical for QPRTase cross-family comparisons.</li>
+<li><strong>All catalytic signature motifs are conserved verbatim in Q88PR1:</strong></li>
+<li><code>DTRKTLPGLR</code> — substrate/PRPP-binding loop bearing the catalytic Arg and Lys (identical in both proteins).</li>
+<li><code>CGG</code> — phosphate/metal-coordinating loop.</li>
+<li><code>NHR</code> — conserved His–Arg motif.</li>
+<li><code>GADIIMLD</code> — divalent-metal/catalytic-aspartate loop.</li>
+<li><code>(A)ETGVD</code> — TIM-barrel signature.</li>
+<li><code>ISIGA</code> — C-terminal PRPP-binding glycine motif (ISVGA in <em>Salmonella</em>).</li>
+<li><strong>No signal peptide or transmembrane segment</strong> is present, consistent with a soluble cytoplasmic enzyme.</li>
+</ul>
+<p>This demonstrates directly — not merely by database inference — that Q88PR1 possesses an intact QPRTase active site and is a catalytically competent quinolinate phosphoribosyltransferase, strongly validating the functional annotation for the <em>P. putida</em> protein itself.</p>
+<hr />
+<h2 id="6-supported-vs-refuted-hypotheses">6. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported (by orthology + conserved biochemistry/structure/genetics):</strong><br />
+- H1: Q88PR1/NadC is quinolinate phosphoribosyltransferase (EC 2.4.2.19). ✔<br />
+- H2: It catalyzes quinolinate + PRPP → NaMN + CO₂ + PPi, Mg²⁺-dependent, ordered mechanism. ✔<br />
+- H3: It is the committed, essential step of <em>de novo</em> NAD⁺ biosynthesis (nadB→nadA→<strong>nadC</strong>→nadD→nadE). ✔<br />
+- H4: It is a cytoplasmic type II PRTase / TIM-barrel enzyme acting as a dimer (± hexamer). ✔<br />
+- H5: Substrate selectivity for the dicarboxylate quinolinate is enforced by conserved cationic active-site residues. ✔<br />
+- H6: The Q88PR1 sequence itself retains an intact QPRTase active site (61% identity to Salmonella NadC; all catalytic motifs conserved). ✔ (direct sequence evidence)<br />
+- H7: In <em>P. putida</em> KT2440 specifically, nadC functions in a complete de novo NAD⁺ pathway (nadB PP_1426, nadA PP_1231, nadC PP_0787, nadD PP_4810, nadE PP_4869 all present; KEGG module M00115). ✔ (organism-specific genomic evidence)</p>
+<p><strong>Refuted / not supported:</strong><br />
+- The gene is NOT a nicotinate/NAD <em>catabolic</em> enzyme (the separate <em>P. putida</em> nic locus performs nicotinate degradation). ✘<br />
+- No evidence for a membrane-bound or secreted role. ✘</p>
+<hr />
+<h2 id="7-limitations-and-future-directions">7. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No direct study of the <em>P. putida</em> KT2440 protein.</strong> All biochemical, kinetic, structural, and genetic evidence is from orthologs; annotation transfer is well justified by conservation but not experimentally confirmed for PP_0787.</li>
+<li>Future work: recombinant expression and kinetic characterization of PP_0787; a <em>P. putida</em> Δ<em>nadC</em> growth/auxotrophy test with quinolinate; and an AlphaFold/experimental structure to confirm the TIM-barrel dimer and active-site cationic cluster in the <em>Pseudomonas</em> enzyme.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>PMID 11876660 — Cao, Pietrak, Grubmeyer (2002): kinetic mechanism of <em>Salmonella</em> QAPRTase; type II PRTase; reaction stoichiometry.</li>
+<li>PMID 20047306 — Bello &amp; Grubmeyer (2010): cationic active-site residues and substrate specificity.</li>
+<li>PMID 24949952 — Kim et al. (2014): <em>M. tuberculosis</em> QAPRTase biochemistry (Mg²⁺, kinetics, decarboxylation, pyrazinamide inhibition).</li>
+<li>PMID 203571 — Foster &amp; Moat (1978): <em>nadC</em> = QAPRTase; auxotrophy and quinolinate accumulation.</li>
+<li>PMID 17763926 — Kim et al. (2007): <em>H. pylori</em> NadC hexamer (trimer of dimers), essentiality.</li>
+<li>PMID 26805589 / 23626766 / 24038671 — human/porcine QPRT structures; hexameric mechanism; phthalate inhibitor.</li>
+<li>PMID 20601509 — Teramoto et al. (2010): NdnR repression of <em>de novo</em> NAD genes.</li>
+<li>PMID 27783449 — Brickman et al. (2017): orphan <em>nadC</em>, quinolinate salvage.</li>
+<li>PMID 23204464 — Sorci et al. (2013): NadC function and NAD metabolism reconstruction.</li>
+<li>PMID 29485696 — Brickman &amp; Armstrong (2018): <em>P. putida</em> KT2440 nicotinate catabolism (distinct pathway).</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nadC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="nadC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PR1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nadc-curation-notes">nadC curation notes</h1>
+<h2 id="2026-07-20">2026-07-20</h2>
+<ul>
+<li>Target identity: PP_0787 / UniProtKB Q88PR1, NadC-family quinolinate<br />
+  phosphoribosyltransferase [UniProtKB:Q88PR1, "Belongs to the NadC/ModD family."].</li>
+<li>Reaction: quinolinate plus PRPP yields NaMN, carbon dioxide, and diphosphate in<br />
+  the physiological biosynthetic direction [UniProtKB:Q88PR1,<br />
+  "Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate = quinolinate + 5-phospho-alpha-D-ribose 1-diphosphate + 2 H(+)"]<br />
+  [RHEA:12733, quinolinate phosphoribosyltransferase reaction].</li>
+<li>Family grounding: PTHR32179; PAINT node PTN000789406 carries GO:0004514 with<br />
+  characterized seed P30011 [GO_REF:0000033, PTHR32179 PAINT tree].</li>
+<li>Curation: GO:0004514 and NAD+ biosynthesis are core. GO:0034213 is retained as<br />
+  non-core because quinolinate is consumed, but this is not a separate<br />
+  degradation module in KT2440.</li>
+<li>OpenScientist recovered the NadC reaction and conserved QPRTase active-site<br />
+  context while explicitly noting that no KT2440 protein study was found. Its<br />
+  exact 61.2% pairwise identity and target residue mapping are not retained as<br />
+  curated evidence because no alignment artifact was saved; oligomeric state<br />
+  and essentiality are likewise ortholog context rather than Q88PR1<br />
+  measurements. The report's rejection of a "catabolic" role is interpreted<br />
+  narrowly: NadC is not part of<br />
+  the <code>nic*</code> nicotinate degradation pathway, but the seeded GO:0034213 term can<br />
+  still describe consumption of quinolinate and is therefore retained only as<br />
+  non-core [file:PSEPK/nadC/nadC-deep-research-openscientist.md,<br />
+  "All biochemical, kinetic, structural, and genetic evidence is from orthologs; annotation transfer is well justified by conservation but not experimentally confirmed for PP_0787."].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PR1
+gene_symbol: nadC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Quinolinate phosphoribosyltransferase of Pseudomonas putida KT2440. NadC uses
+  quinolinate and 5-phospho-alpha-D-ribose 1-diphosphate to form nicotinate
+  D-ribonucleotide (NaMN), carbon dioxide, and diphosphate. This reaction links
+  quinolinate formation to the shared NaMN completion branch of de novo NAD+
+  biosynthesis.
+existing_annotations:
+  - term:
+      id: GO:0004514
+      label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Correct specific molecular function for NadC.
+      action: ACCEPT
+      reason: &gt;-
+        The NadC-family assignment, EC 2.4.2.19, and RHEA:12733 support
+        quinolinate phosphoribosylation to NaMN in the physiological direction.
+      supported_by:
+        - reference_id: file:PSEPK/nadC/nadC-uniprot.txt
+          supporting_text: &#34;Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =&#34;
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: Correct expected location for a soluble bacterial NadC enzyme.
+      action: ACCEPT
+      reason: The cytoplasmic assignment is consistent with the soluble de novo pathway.
+  - term:
+      id: GO:0009435
+      label: NAD+ biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Correct core biological process.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt explicitly places NadC in production of NaMN from quinolinate in
+        NAD+ biosynthesis.
+      supported_by:
+        - reference_id: file:PSEPK/nadC/nadC-uniprot.txt
+          supporting_text: &#34;PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; nicotinate D-&#34;
+  - term:
+      id: GO:0016763
+      label: pentosyltransferase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Correct parent chemistry but too broad for the known NadC reaction.
+      action: MODIFY
+      reason: GO:0004514 captures the substrate-specific phosphoribosyltransferase activity.
+      proposed_replacement_terms:
+        - id: GO:0004514
+          label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+  - term:
+      id: GO:0034213
+      label: quinolinate catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: Chemically defensible substrate-level process, but not the core pathway framing.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        NadC consumes quinolinate, so the term is not false. Its physiological
+        role here is constructive NAD+ biosynthesis rather than a separate
+        quinolinate-degradation pathway, making GO:0009435 the core process.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/nadC/nadC-uniprot.txt
+    title: UniProtKB entry Q88PR1 for Pseudomonas putida KT2440 nadC
+    findings:
+      - statement: The target carries the reversible NadC reaction between quinolinate plus PRPP and NaMN plus carbon dioxide and diphosphate.
+        supporting_text: &#34;Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =&#34;
+        reference_section_type: RESULTS
+      - statement: UniProt places the reaction in NAD+ biosynthesis.
+        supporting_text: &#34;PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; nicotinate D-&#34;
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Exact target accession Q88PR1; the entry is unreviewed, but the NadC-specific domains, EC reaction, and NAD+ pathway placement agree.
+  - id: file:PSEPK/nadC/nadC-deep-research-openscientist.md
+    title: OpenScientist research report for Pseudomonas putida KT2440 nadC
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: UNVERIFIED
+      review_notes: &gt;-
+        Provider-generated synthesis assessed as context; direct target
+        evidence remains homology- and rule-based. The reported pairwise
+        identity and exact target residue mapping are unverified because no
+        alignment artifact was retained, and ortholog oligomer/essentiality
+        claims were not promoted to target facts.
+core_functions:
+  - description: &gt;-
+      Quinolinate phosphoribosyltransferase that converts quinolinate and PRPP
+      to NaMN, carbon dioxide, and diphosphate in de novo NAD+ biosynthesis.
+    molecular_function:
+      id: GO:0004514
+      label: nicotinate-nucleotide diphosphorylase (carboxylating) activity
+    directly_involved_in:
+      - id: GO:0009435
+        label: NAD+ biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/nadC/nadC-uniprot.txt
+        supporting_text: &#34;Reaction=nicotinate beta-D-ribonucleotide + CO2 + diphosphate =&#34;
+suggested_questions:
+  - question: Does NadC abundance control flux at the quinolinate-to-NaMN transition under nicotinate-limited growth?
+suggested_experiments:
+  - description: &gt;-
+      Compare quinolinate, NaMN, and NAD+ pools in wild type and a titratable nadC
+      knockdown across defined nicotinate concentrations.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

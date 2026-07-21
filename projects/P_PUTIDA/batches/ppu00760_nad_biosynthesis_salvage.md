@@ -18,6 +18,7 @@ autolink_gene_symbols: false
 - Excluded broad-map genes: 23
 - Selected reviews with PENDING actions: 0
 - OpenScientist provider: gene, generic module, and module/pathway/taxon runs
+- Selected gene OpenScientist reports: 8/8 complete and assessed
 
 ## Boundary
 
@@ -111,6 +112,13 @@ for `pncB` or recycling of NMN through `pncC`.
   nodes are retained only for NadB, NadC, and the generic PncA branch, where
   tracked local PAINT TSVs verify the node and catalytic GO term. NadA, PncB,
   NadD, the ammonia-specific NadE, and PncC carry no PTN assertion.
+- The glutamine-dependent NAD synthetase variant uses reviewed human NADSYN1
+  (UniProtKB Q6IA69) as an orthology exemplar. PANTHER PTHR23090:SF9 was
+  rejected as a selector because the local family export also contains compact
+  ammonia-dependent proteins, so the subfamily does not safely encode nitrogen
+  donor specificity. Rendered QC still calls this leaf ungrounded because it
+  counts family `representative_members` but not the concrete `ORTHOLOG_OF`
+  target; Q6IA69 is present and linked in the rendered node.
 - Provider reports were treated as literature-triage context, not as substitutes
   for target-specific evidence.
 - `pncC` core function is restricted to GO:0019159. Its role in the salvage
@@ -125,36 +133,65 @@ for `pncB` or recycling of NMN through `pncC`.
 
 ## OpenScientist Assessment
 
-The PSEPK pathway report independently recovered the seven catalytic genes, the
-constructive-versus-catabolic boundary, the ammonia-dependent identity of NadE,
-and the absence of canonical PncA/NadV entries. Several additional claims were
-checked rather than accepted verbatim:
+The fresh PSEPK pathway/taxon report was generated from the final route graph
+and the 30-gene ppu00760 candidate inventory. It independently recovered the
+seven catalytic genes, the constructive-versus-catabolic boundary, the
+ammonia-dependent identity of NadE, and the absence of canonical PncA/NadV
+entries. Several provider extensions were checked rather than accepted
+verbatim:
 
-- The generic report supports the NaMN/NMN branch split, shared deamido-NAD
-  completion, and family-level variant framing. Its NR/NadR discussion and
-  mammalian NMNAT2/SARM1 disease section are contextual extensions; they do not
-  expand this module, and the NAD-consuming SARM1 reaction remains out of scope.
-- PP_3298 (Q88HQ5) is a second 167-aa protein with IPR008136, PF02464, and
-  TIGR00199. It lacks a submitted PncC name, EC assignment, GO activity, and
-  experimental evidence. It is included as an unresolved, domain-based
-  hole-fill and module knowledge gap, but is not substituted for Q88ME5 or
-  promoted into the catalytic graph.
-- PP_2860 (Q88IY9) is annotated as a PnuC nicotinamide-riboside transporter, but
-  the report did not establish a downstream NR kinase/completion route. It is
-  outside the commissioned ppu00760 inventory and is retained as a future
-  salvage question rather than added to the module realization.
-- PP_3103 (Q88I96) independently resolves to InterPro IPR028238/IPR049195 and
-  Pfam PF15538/PF21724 toxin domains. This supports exclusion as an NAD+
-  consumer, while its exact physiological target remains untested.
-- The report's suggestion that PncC handles nicotinamide released by NAD+
-  consumers was rejected. PncC deamidates NMN; without PncA or NadV, free
-  nicotinamide is the actual unresolved salvage gap.
-- The report's GO:0003952 recommendation for `nadE` was rejected. That term is
-  glutamine-hydrolyzing NAD+ synthase activity, whereas Q88DF6 is the compact
-  ammonia-dependent enzyme represented by GO:0008795.
+- The report alternates between "about eight" in-scope genes and a seven-gene
+  catalytic list. The curated count is seven catalytic genes plus PP_3298 as an
+  unresolved manual hole-fill; PP_3298 was not in the commissioned ppu00760
+  candidate list and was not assessed by this pathway run.
+- Q88JT5/PP_2562 was proposed as the sole cryptic PncA candidate from its
+  isochorismatase-like annotation. It is one of ten KT2440 proteins carrying
+  broad PF00857, has no EC 3.5.1.19 assignment or specificity assay, and was not
+  promoted. The canonical PncA gap remains open without a nominee.
+- The report's single-copy and low-paralog-ambiguity language was not adopted
+  for NMN deamidation. PP_3298 is a second compact PF02464/TIGR00199 protein and
+  remains unresolved rather than transferred into the PncC catalytic role.
+- PncC deamidates NMN, not nicotinamide. Without PncA or NadV, its presence does
+  not establish nicotinamide salvage; the report's "indirect" wording does not
+  create a route from free nicotinamide.
+- PnuC/Q88IY9 and Q88IZ0 were useful transporter/regulatory leads, but neither
+  establishes the missing NR-to-NAD+ chemistry. They remain future questions
+  outside this module realization.
+- Exact negative-search, copy-number, and network-context claims in the report
+  have no retained query or alignment artifacts. Curated assignments remain
+  grounded in the fetched target records, local inventory, and verified
+  reaction identifiers.
+- The fresh generic report reflects the final two-topology route graph: NaMN
+  sources require adenylylation plus deamido-NAD amidation, while NAMPT-derived
+  NMN requires direct NMN adenylylation. Its NadD/NMNAT family alternatives and
+  ammonia/glutamine donor variants are useful literature-triage context.
+- Cross-species claims about physical NadB-NadA channeling, strict bacterial
+  NadD substrate exclusion, PncC turnover physiology, universal essentiality,
+  detailed PncA mechanism, and ancestral route order were not promoted. The
+  curated reactions and route requiredness remain authoritative.
+- The generic report's provenance figure is illustrative, not a route
+  enumeration. Its Markdown image name does not match the archived provenance
+  filename, so the bundled provider HTML/PDF is the intact visual artifact; the
+  provider Markdown was not edited.
+
+The first PP_3298 OpenScientist job (`max_iterations=3`) timed out at the
+7200-second provider ceiling without a file. A bounded `max_iterations=2`
+retry completed in 5155 seconds and retained both HTML and PDF artifacts. The
+report correctly identifies a compact CinA-C/PncC-family protein, but promotes
+NMN deamidase activity, cytoplasmic localization, and pathway physiology from
+an unsaved 38.1% alignment, asserted motif conservation, and negative genomic
+context, while omitting comparison with the better-annotated Q88ME5/pncC
+paralog. It simultaneously acknowledges no direct Q88HQ5 experiment, moderate
+identity, inactive family members, and untested specificity. Those stronger
+claims were not propagated: PP_3298 remains MF-dark, outside the catalytic
+graph, and absent from representative members pending a product-forming
+specificity assay.
 
 ## Research Artifacts
 
+- Both refreshed module-level OpenScientist reports record
+  `max_iterations: 3` and provider `timeout: 7200` in their generated
+  frontmatter.
 - Generic module report:
   `modules/nad_biosynthesis_salvage-deep-research-openscientist.md`
 - PSEPK ppu00760 module report:
@@ -168,7 +205,7 @@ checked rather than accepted verbatim:
 - [x] Fetch selected gene scaffolds.
 - [x] Curate all selected GOA rows with no PENDING actions.
 - [x] Revise the reusable species-neutral module.
-- [ ] Complete and assess all OpenScientist runs.
-- [ ] Validate all selected reviews and the module.
-- [ ] Render all touched gene, module, and project pages.
+- [x] Complete and assess all OpenScientist runs.
+- [x] Validate all selected reviews and the module.
+- [x] Render all touched gene, module, and project pages.
 - [ ] Open the batch pull request.

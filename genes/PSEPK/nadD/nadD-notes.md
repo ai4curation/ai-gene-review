@@ -18,7 +18,9 @@
   were modified to the specific leaf activity or pathway term.
 - OpenScientist independently recovered the reviewed NaMN-to-NaAD reaction and
   NadD-family assignment. Its stronger claims of absolute NMN exclusion,
-  essentiality, and detailed mechanism in KT2440 are ortholog-based and remain
-  testable rather than curated target facts
+  essentiality, and detailed mechanism in KT2440 are ortholog-based. The exact
+  38.8% identity and target motif mapping are not used as curated evidence
+  because no alignment artifact was retained. These claims remain testable
+  rather than curated target facts
   [file:PSEPK/nadD/nadD-deep-research-openscientist.md,
   "No enzymatic, structural, or knockout study exists for the P. putida KT2440 NadD specifically"].
