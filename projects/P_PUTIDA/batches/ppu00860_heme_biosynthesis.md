@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Selected glutamyl-tRNA-to-heme-b genes: 11
 - Curated review files in this batch: 11
 - Corrected module/pathway OpenScientist reports: 0 of 2 (final reruns pending)
-- Gene-level OpenScientist reports: 10 of 11
+- Gene-level OpenScientist reports: 11 of 11
 
 ## Required Workflow
 
@@ -22,7 +22,7 @@ autolink_gene_symbols: false
 - [ ] Run module-level OpenScientist research from the corrected module.
 - [ ] Run module + ppu00860 + PSEPK OpenScientist research from the corrected module.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
-- [ ] Run OpenScientist research for every selected gene.
+- [x] Run OpenScientist research for every selected gene.
 - [x] Curate every selected GOA row with no pending actions.
 - [ ] Validate and render the module, genes, and batch page.
 - [ ] Open one non-draft PR for this module/pathway.
@@ -40,7 +40,7 @@ autolink_gene_symbols: false
 | [x] | `hemD` | PP_0187 | Q88RE4 | CURATED | PRESENT | covered: uroporphyrinogen III synthesis | Uroporphyrinogen-III synthase |
 | [x] | `hemE` | PP_5074 | Q88CV6 | CURATED | PRESENT | covered: coproporphyrinogen III synthesis | Uroporphyrinogen decarboxylase |
 | [x] | `hemF` | PP_0073 | Q88RQ6 | CURATED | PRESENT | covered: oxygen-dependent late-step variant | Oxygen-dependent coproporphyrinogen-III oxidase |
-| [x] | `hemN` | PP_4264 | Q88F35 | CURATED | PENDING | covered: oxygen-independent radical-SAM variant | Coproporphyrinogen-III oxidase |
+| [x] | `hemN` | PP_4264 | Q88F35 | CURATED | PRESENT | covered: oxygen-independent radical-SAM variant | Coproporphyrinogen-III oxidase |
 | [x] | `PP_0431` | PP_0431 | Q88QQ7 | CURATED | PRESENT | covered: HemJ membrane-electron-transfer variant | Protoporphyrinogen IX oxidase |
 | [x] | `hemH` | PP_0744 | Q88PV4 | CURATED | PRESENT | covered: terminal ferrochelation | Ferrochelatase |
 
