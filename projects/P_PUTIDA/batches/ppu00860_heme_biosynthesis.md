@@ -13,13 +13,13 @@ autolink_gene_symbols: false
 - KEGG candidate genes considered from the pathway bucket: 46
 - Selected glutamyl-tRNA-to-heme-b genes: 11
 - Curated review files in this batch: 11
-- Corrected module/pathway OpenScientist reports: 0 of 2 (final reruns pending)
+- Corrected module/pathway OpenScientist reports: 1 of 2 (pathway/taxon report pending)
 - Gene-level OpenScientist reports: 11 of 11
 
 ## Required Workflow
 
 - [x] Refactor the module into a reusable multi-route heme-b pathway.
-- [ ] Run module-level OpenScientist research from the corrected module.
+- [x] Run module-level OpenScientist research from the corrected module.
 - [ ] Run module + ppu00860 + PSEPK OpenScientist research from the corrected module.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist research for every selected gene.
@@ -60,5 +60,15 @@ Both `hemB` and `hemBB` remain selected. Sequence-based records support ALAD act
 ## Known Gaps
 
 No local FEBA/RB-TnSeq fitness records were available for the 11 genes, so essentiality and condition-specific dominance were not inferred. Direct KT2440 experiments are still needed to resolve `hemB` versus `hemBB` flux, the oxygen range over which HemF and HemN contribute, and the native membrane electron acceptor used by PP_0431. Gene-level assignments are therefore conservative where evidence is family- or rule-based rather than strain-specific biochemistry.
+
+## OpenScientist Assessment
+
+The final generic module report supports the protoporphyrin-dependent boundary,
+the shared HemB-HemE trunk, and independent entry and late-oxidation axes. It
+also contains claims that were not adopted: HemB-HemE is called a six-enzyme
+trunk, entry chemistry and late-enzyme use are generalized as universally fixed
+by oxygen, and membrane association or substrate channeling is extended across
+families without equivalent evidence. Its generated pathway figure is treated
+as a conceptual summary rather than independent evidence.
 
 Generated UTC: 2026-07-20
