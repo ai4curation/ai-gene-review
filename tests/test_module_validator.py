@@ -24,6 +24,7 @@ from ai_gene_review.validation.module_validator import (
     validate_terms,
     validate_module_file,
     load_oak_adapter_map,
+    load_term_label_aliases,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -430,6 +431,17 @@ def test_validate_terms_flags_wrong_label():
     assert "GO:0005774" in errors[0]
 
 
+def test_validate_terms_accepts_reviewed_label_alias():
+    terms = [("GO:0005774", "new live label")]
+    resolver = _resolver_factory({"GO:0005774": ("stale snapshot label", set())})
+    aliases = {"GO:0005774": {"new live label"}}
+    errors, warnings = validate_terms(
+        terms, {"GO": "real"}, resolver, label_aliases=aliases
+    )
+    assert errors == []
+    assert warnings == []
+
+
 def test_validate_terms_flags_unresolvable_id():
     terms = [("GO:9999999", "nonexistent")]
     resolver = _resolver_factory({})  # nothing known -> not_found
@@ -526,6 +538,13 @@ def test_load_oak_adapter_map():
     # PO and SBO must be configured so module terms get validated.
     assert "PO" in cfg
     assert "SBO" in cfg
+
+
+def test_load_term_label_aliases():
+    aliases = load_term_label_aliases(PROJECT_ROOT / "conf" / "oak_config.yaml")
+    assert aliases["GO:0008883"] == {
+        "glutamyl-tRNA reductase (NADP+) activity"
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -629,6 +648,27 @@ def test_validate_supporting_text_no_literature_is_noop():
     assert errors == [] and warnings == []
 
 
+def test_validate_supporting_text_fetch_exception_is_warning(monkeypatch):
+    class RaisingValidator:
+        def validate(self, supporting_text, source_id):
+            raise RuntimeError("transient fetch failure")
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.module_validator._build_supporting_text_validator",
+        lambda publications_dir: (RaisingValidator(), None),
+    )
+    doc = {
+        "module": {
+            "evidence": [
+                {"source_id": "PMID:123", "supporting_text": "a real quote"}
+            ]
+        }
+    }
+    errors, warnings = validate_supporting_text(doc)
+    assert errors == []
+    assert any("transient fetch failure" in warning for warning in warnings)
+
+
 @pytest.mark.integration
 def test_validate_supporting_text_verbatim_pass():
     """A quote that is a verbatim substring of the cached abstract passes."""
@@ -703,6 +743,22 @@ def test_iter_reference_titles_only_literature():
 def test_validate_reference_titles_no_literature_is_noop():
     doc = {"references": [{"id": "GO:1", "title": "x"}]}
     assert validate_reference_titles(doc) == ([], [])
+
+
+def test_validate_reference_titles_fetch_exception_is_warning(monkeypatch):
+    class RaisingValidator:
+        def validate_title(self, ref_id, title):
+            raise RuntimeError("transient fetch failure")
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.module_validator._build_supporting_text_validator",
+        lambda publications_dir: (RaisingValidator(), None),
+    )
+    errors, warnings = validate_reference_titles(
+        {"references": [{"id": "PMID:123", "title": "A real title"}]}
+    )
+    assert errors == []
+    assert any("transient fetch failure" in warning for warning in warnings)
 
 
 @pytest.mark.integration
