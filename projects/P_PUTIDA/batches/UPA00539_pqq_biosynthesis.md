@@ -13,7 +13,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 7
 - Existing review files: 8
 - Curated review files: 8
-- Existing OpenScientist research files: 7
+- Existing OpenScientist research files: 8
 
 ## Scope
 
@@ -34,10 +34,10 @@ PqqF reaction or the conserved module core.
 ## Required Workflow
 
 - [x] Curate or update the species-neutral module.
-- [ ] Run module-level OpenScientist deep research.
-- [ ] Run module + pathway + PSEPK OpenScientist deep research.
+- [x] Run module-level OpenScientist deep research.
+- [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Confirm all eight selected gene folders are present.
-- [ ] Run OpenScientist deep research for selected genes.
+- [x] Run OpenScientist deep research for selected genes.
 - [x] Review each selected gene review for pathway consistency.
 - [x] Validate module and gene reviews.
 - [ ] Open one PR for this module/pathway.
@@ -50,7 +50,7 @@ PqqF reaction or the conserved module core.
 | [x] | `PP_0375` (`pqqG` candidate) | PP_0375 | Q88QV9 | orphan:domain_only_no_pathway | PRESENT | CURATED | COMPLETE | Prolyl oligopeptidase family protein |
 | [x] | `pqqE` | PP_0376 | Q88QV8 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | PqqA peptide cyclase (EC 1.21.98.4) |
 | [x] | `pqqD1` | PP_0377 | Q88QV7 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | PqqA binding protein 1 |
-| [x] | `pqqC` | PP_0378 | Q88QV6 | unipathway:UPA00539 | PRESENT | CURATED | RUNNING | Pyrroloquinoline-quinone synthase (EC 1.3.3.11) |
+| [x] | `pqqC` | PP_0378 | Q88QV6 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Pyrroloquinoline-quinone synthase (EC 1.3.3.11) |
 | [x] | `pqqB` | PP_0379 | Q88QV5 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein B |
 | [x] | `pqqA` | PP_0380 | Q88QV4 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein A |
 | [x] | `pqqF` | PP_0381 | Q88QV3 | unipathway:UPA00539 | PRESENT | CURATED | COMPLETE | Coenzyme PQQ synthesis protein F (EC 3.4.24.-) |
@@ -119,3 +119,9 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
   work but gives an incorrect one-O2/one-H2O2 net equation. The curated
   three-O2/two-H2O2 Rhea stoichiometry is retained, and non-KT2440 structural
   and quinoprotein studies are treated as family or physiological context.
+- The final pathway/taxon report correctly resolves KT2440 to the single-chain
+  M16 PqqF route and distinguishes S9-family PP_0375 from the unrelated M16B
+  PqqG subunit. Its proposed PqqC identifier `GO:0033735` is wrong (the reviewed
+  term is `GO:0033732`), and `GO:0018189` is the pathway BP rather than a PqqE
+  molecular function. Its neighborhood-based PqqD2 specialization and
+  inconsistent alternative-protease status were not propagated.
