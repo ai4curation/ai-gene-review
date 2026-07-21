@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>folD2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>folD2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KM5" target="_blank" class="term-link">
+                        Q88KM5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "folD2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KM5" data-a="DESCRIPTION: folD2 encodes one of two soluble bifunctional FolD..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>folD2 encodes one of two soluble bifunctional FolD enzymes in Pseudomonas putida KT2440. It catalyzes NADP+-linked oxidation of 5,10-methylene-THF to 5,10-methenyl-THF and hydrolysis of 5,10-methenyl-THF to 10-formyl-THF. FolD2 and FolD1 have the same predicted catalytic repertoire, and their condition-specific physiological roles are unknown.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004477" target="_blank" class="term-link">
+                                    GO:0004477
+                                </a>
+                            </span>
+                            <span class="term-label">methenyltetrahydrofolate cyclohydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KM5" data-a="GO:0004477" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cyclohydrolase activity is one of the two conserved functions of the full-length bifunctional FolD2 protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt/HAMAP assignment specifies EC 3.5.4.9 and RHEA:23700, and PAINT places this activity at the supported PTHR48099 ancestral node.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0004477; F:methenyltetrahydrofolate cyclohydrolase activity; IEA:UniProtKB-UniRule.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR48099/PTHR48099-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR48099	PTN000002250	GO:0004477	F	IBD	false</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004488" target="_blank" class="term-link">
+                                    GO:0004488
+                                </a>
+                            </span>
+                            <span class="term-label">methylenetetrahydrofolate dehydrogenase (NADP+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KM5" data-a="GO:0004488" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FolD2 has the conserved NADP+-linked dehydrogenase half of bifunctional bacterial FolD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt/HAMAP record specifies EC 1.5.1.5 and RHEA:22812, while the local PANTHER member table places Q88KM5 in the bacterial FolD-containing PTHR48099:SF5 subfamily.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0004488; F:methylenetetrahydrofolate dehydrogenase (NADP+) activity; IEA:UniProtKB-UniRule.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   PANTHER; PTHR48099:SF5; C-1-TETRAHYDROFOLATE SYNTHASE, CYTOPLASMIC; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR48099/PTHR48099-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR48099	PTN000002250	GO:0004488	F	IBD	false</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KM5" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is compatible with FolD2 but is redundant with the more specific cytosol annotation already present.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The parent compartment is not wrong, but it adds no information beyond the existing cytosol child and is therefore retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KM5" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A cytosolic location is consistent with a soluble bacterial FolD enzyme lacking export or membrane-targeting features.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The localization is computational rather than experimentally measured in KT2440, but it is biologically appropriate and is the least redundant of the two existing compartment annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KM5" data-a="GO:0016491" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FolD2 is an oxidoreductase, but this class term omits its folate substrate and NADP+ specificity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016491 is correct but broad; GO:0004488 is the informative child term, so the parent is retained without treating it as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0004488; F:methylenetetrahydrofolate dehydrogenase (NADP+) activity; IEA:UniProtKB-UniRule.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035999" target="_blank" class="term-link">
+                                    GO:0035999
+                                </a>
+                            </span>
+                            <span class="term-label">tetrahydrofolate interconversion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KM5" data-a="GO:0035999" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The two FolD2 reactions directly interconvert methylene-, methenyl-, and 10-formyl-THF carrier states.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This process term precisely describes the shared biochemical consequence of the accepted dehydrogenase and cyclohydrolase activities without importing downstream consumers.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/folD2/folD2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0035999; P:tetrahydrofolate interconversion; IEA:UniProtKB-UniRule.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FolD2 oxidizes 5,10-methylene-THF with NADP+ to form 5,10-methenyl-THF and NADPH (EC 1.5.1.5; RHEA:22812), one of its two independently modeled catalytic activities.</h3>
+                <span class="vote-buttons" data-g="Q88KM5" data-a="FUNCTION: FolD2 oxidizes 5,10-methylene-THF with NADP+ to fo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004488" target="_blank" class="term-link">
+                            methylenetetrahydrofolate dehydrogenase (NADP+) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035999" target="_blank" class="term-link">
+                                tetrahydrofolate interconversion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/folD2/folD2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Xref=Rhea:RHEA:22812</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FolD2 hydrolyzes 5,10-methenyl-THF to 10-formyl-THF (EC 3.5.4.9; RHEA:23700), a distinct cyclohydrolase reaction fused in the same protein.</h3>
+                <span class="vote-buttons" data-g="Q88KM5" data-a="FUNCTION: FolD2 hydrolyzes 5,10-methenyl-THF to 10-formyl-TH..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004477" target="_blank" class="term-link">
+                            methenyltetrahydrofolate cyclohydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035999" target="_blank" class="term-link">
+                                tetrahydrofolate interconversion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/folD2/folD2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Xref=Rhea:RHEA:23700</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/folD2/folD2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for folD2 (Q88KM5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record assigns both EC 1.5.1.5/RHEA:22812 and EC 3.5.4.9/RHEA:23700 to a full-length bifunctional FolD protein.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR48099/PTHR48099-paint.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PAINT annotations for PTHR48099</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PTN000002250 carries positive, non-negated IBD assertions for both FolD molecular functions.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR48099/PTHR48099-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER members for PTHR48099</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The local member table assigns Q88LI7 and Q88KM5 to PTHR48099:SF5 and MTHFD1 P11586 to PTHR48099:SF1.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/folD2/folD2-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for KT2440 folD2 (Q88KM5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers the target UniProt/HAMAP assignment of both NADP-linked FolD activities and explicitly notes that no KT2440-specific biochemical or knockout study was found and paralog division of labor is unresolved.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for KT2440 folate one-carbon interconversion</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The final report maps Q88KM5 and Q88LI7 to both FolD core operations, explicitly frames the in-target evidence as homology/domain based rather than direct KT2440 enzymology, and leaves expression and dominance for future study.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do FolD2 and FolD1 differ in expression, kinetic properties, or condition- specific contribution to the KT2440 folate carrier pool?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KM5" data-a="Q: Do FolD2 and FolD1 differ in expression, kinetic p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified FolD2 and FolD1 dehydrogenase and cyclohydrolase kinetics, then measure single- and double-mutant fitness across carbon and nitrogen regimes that alter one-carbon demand.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme kinetics and comparative mutant fitness</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KM5" data-a="EXPERIMENT: Compare purified FolD2 and FolD1 dehydrogenase and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(folD2-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KM5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: FolD2 (Q88KM5, PP_2265) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T17:00:58.496478</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="folD2-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="folD2-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-fold2-q88km5-pp_2265-in-pseudomonas-putida-kt2440">Functional Annotation Report: FolD2 (Q88KM5, PP_2265) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="geneprotein-identity-verified">Gene/Protein Identity — Verified</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88KM5</td>
+</tr>
+<tr>
+<td>Gene</td>
+<td><em>folD2</em> (syn. <em>folD-2</em>); ordered locus <strong>PP_2265</strong></td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125), NCBI taxid 160488</td>
+</tr>
+<tr>
+<td>Length / MW</td>
+<td>284 aa / 30.6 kDa</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Bifunctional protein FolD 2</td>
+</tr>
+<tr>
+<td>EC numbers</td>
+<td>1.5.1.5 (dehydrogenase) + 3.5.4.9 (cyclohydrolase)</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Tetrahydrofolate dehydrogenase/cyclohydrolase family (HAMAP MF_01576)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>THF_DH/CycHdrlase catalytic (IPR020630); NAD(P)-binding (IPR020631, IPR036291); Aminoacid_DH-like N (IPR046346)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Identity confirmed.</strong> The gene symbol <em>folD2</em> matches the protein description (bifunctional methylenetetrahydrofolate dehydrogenase / methenyltetrahydrofolate cyclohydrolase), the organism is correct, and the domain architecture (an N-terminal folate-binding domain plus a Rossmann-like NAD(P)-binding domain) is exactly that of the FolD family. Literature on bacterial FolD (E. coli, <em>P. aeruginosa</em>, <em>A. baumannii</em>, <em>C. perfringens</em>) is directly applicable. Note: <em>P. putida</em> KT2440 carries <strong>two</strong> FolD paralogs — <em>folD1</em> (Q88LI7, 291 aa) and <em>folD2</em> (Q88KM5, PP_2265, 284 aa) — a duplication not present in <em>E. coli</em>.</p>
+<p><strong>Quantitative homology transfer (own sequence analysis).</strong> Global pairwise alignment (Needleman–Wunsch) shows FolD2 is <strong>86.6% identical</strong> to the crystallographically and kinetically characterized <em>P. aeruginosa</em> PAO1 FolD (Q9I2U6, identical 284-aa length; structure in PMID 22558288) and <strong>67.3% identical</strong> to the biochemically characterized <em>E. coli</em> FolD (P24186). By contrast, the <em>P. putida</em> paralog FolD1 shares only <strong>53.5%</strong> identity with FolD2 and is more divergent from characterized orthologs (~53% <em>E. coli</em>, ~55% <em>P. aeruginosa</em>). Thus <strong>FolD2 is the close, canonical FolD ortholog</strong>, and structural/kinetic conclusions from <em>P. aeruginosa</em> and <em>E. coli</em> FolD transfer to FolD2 with high confidence; FolD1 is the more divergent copy.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>FolD2 is a <strong>soluble, cytoplasmic, NADP⁺-dependent bifunctional enzyme</strong> of folate (one-carbon) metabolism. As a homodimer it catalyzes two consecutive reactions on the tetrahydrofolate (THF) scaffold: (i) NADP⁺-dependent <strong>oxidation of 5,10-methylene-THF to 5,10-methenyl-THF</strong> (methylenetetrahydrofolate dehydrogenase, EC 1.5.1.5), and (ii) <strong>hydrolysis of 5,10-methenyl-THF to 10-formyl-THF</strong> (methenyltetrahydrofolate cyclohydrolase, EC 3.5.4.9). Its product, 10-formyl-THF, is the one-carbon donor for <strong>de novo purine biosynthesis</strong> and for <strong>formylation of initiator Met-tRNA^fMet</strong>, while the interconverted folate pool also supports thymidylate, methionine and histidine metabolism. The enzyme acts in the cytoplasm as a central housekeeping node distributing one-carbon units.</p>
+<hr />
+<h2 id="2-primary-function-the-reactions-catalyzed">2. Primary Function: The Reactions Catalyzed</h2>
+<p>FolD interconverts oxidized one-carbon-loaded folates through two tightly coupled steps in a single active-site cleft:</p>
+<ol>
+<li><strong>Dehydrogenase (EC 1.5.1.5):</strong><br />
+   (6R)-5,10-methylene-THF + NADP⁺ → (6R)-5,10-methenyl-THF + NADPH</li>
+<li><strong>Cyclohydrolase (EC 3.5.4.9):</strong><br />
+   (6R)-5,10-methenyl-THF + H₂O → (6R)-10-formyl-THF + H⁺</li>
+</ol>
+<p>The net effect is oxidation of the methylene one-carbon unit up to the formyl oxidation level, generating both NADPH and 10-formyl-THF. "Most organisms possess bifunctional FolD … to generate NADPH and 10-formyltetrahydrofolate (10-CHO-THF) required in various metabolic steps" (Aluri et al., 2016, PMID 26531681), and FolD "catalyzes interconversion of 5,10-methylene-tetrahydrofolate and 10-formyl-tetrahydrofolate in the one-carbon metabolic pathway" (Sah &amp; Varshney, 2015, PMID 25988590).</p>
+<p><strong>Substrate specificity / cofactor.</strong> The folate substrate is polyglutamylated tetrahydrofolate bearing a one-carbon unit at N5/N10; the dehydrogenase step is specific for <strong>NADP⁺</strong> (not NAD⁺) in this HAMAP-annotated FolD. The reaction is reversible in vitro but physiologically drives methylene→formyl flux.</p>
+<p><strong>Mechanistic separability.</strong> Structure-guided mutagenesis of <em>E. coli</em> FolD shows the two activities are catalytically distinct yet co-located: "the R191E mutant showed high cyclohydrolase activity, it retained only a residual dehydrogenase activity … the K54S mutant lacked the cyclohydrolase activity but possessed high dehydrogenase activity" (Sah &amp; Varshney, 2015, PMID 25988590). Residues D121/G122 are shared and essential for both. This supports a shared cleft between the two domains with the labile 5,10-methenyl-THF intermediate channeled from the dehydrogenase to the cyclohydrolase site.</p>
+<p><strong>Active site is intact in FolD2 (own residue-level analysis).</strong> Alignment of FolD2 to <em>E. coli</em> FolD shows <strong>all seven</strong> functionally characterized residues are conserved at identical positions in FolD2: <strong>Y50, K54, C58, Q98, D121, G122, R191</strong>. Critically, the cyclohydrolase-specific <strong>K54</strong> and the dehydrogenase-specific <strong>R191</strong> are both present. This provides direct residue-level evidence that FolD2 is a <strong>genuinely bifunctional</strong> enzyme retaining both EC 1.5.1.5 and EC 3.5.4.9 activities — not a monofunctional or degenerate paralog (contrast with <em>C. perfringens</em>, where FolD is dehydrogenase-only and a separate FchA supplies cyclohydrolase activity; PMID 26531681).</p>
+<hr />
+<h2 id="3-localization">3. Localization</h2>
+<p>FolD2 is a <strong>cytoplasmic</strong> enzyme. It has no signal peptide, no transmembrane segment, and no membrane-anchoring motif; UniProt annotates it as a soluble <strong>homodimer</strong>. Its substrates (folates, NADP⁺) are cytosolic metabolites, and all characterized bacterial FolD orthologs are soluble cytoplasmic proteins purified in recombinant systems (e.g., <em>P. aeruginosa</em>, <em>A. baumannii</em>; PMIDs 22558288, 23050773). It therefore performs its function within the bacterial cytoplasm as part of the soluble one-carbon metabolic machinery.</p>
+<hr />
+<h2 id="4-pathway-context-and-biological-processes">4. Pathway Context and Biological Processes</h2>
+<p>FolD occupies a branch point of the <strong>tetrahydrofolate one-carbon cycle</strong>. 5,10-methylene-THF is generated mainly from serine by serine hydroxymethyltransferase (GlyA) and from glycine cleavage. FolD oxidizes this pool to <strong>10-formyl-THF</strong>, which is consumed by:</p>
+<ul>
+<li><strong>De novo purine biosynthesis</strong> — two transformylase steps (GAR and AICAR transformylases) that build the purine ring (UniProt keyword: Purine biosynthesis).</li>
+<li><strong>Initiator tRNA formylation</strong> — 10-formyl-THF is the formyl donor for methionyl-tRNA formyltransferase (Fmt), producing fMet-tRNA^fMet to prime translation. FolD is genetically tied to this process: resistance to the peptide deformylase inhibitor actinonin arises from mutations in "the fmt gene … and the folD gene encoding the bifunctional enzyme methylenetetrahydrofolate-dehydrogenase and -cyclohydrolase" (Nilsson et al., 2006, PMID 16636273).</li>
+<li><strong>Amino-acid/nucleotide metabolism</strong> — the interconverted folate pool feeds methionine (via methyl-THF and methionine synthase), histidine, and thymidylate synthesis (UniProt keywords: Methionine/Histidine biosynthesis; One-carbon metabolism).</li>
+</ul>
+<p><strong>Essentiality and phenotypes (ortholog evidence).</strong> In <em>E. coli</em>, FolD is essential; both of its activities are required to rescue a ΔfolD strain, and loss produces "formate and glycine auxotrophies" and altered antifolate/UV susceptibility (Aluri et al., 2016, PMID 26531681). FolD is widely conserved and "involved in the biosynthesis of folate cofactors that are essential for growth and cellular development" (Eadsforth et al., 2012, PMID 23050773). In some bacteria (e.g., <em>C. perfringens</em>) the two activities are split between separate monofunctional proteins (FolD dehydrogenase + FchA cyclohydrolase) with Fhs providing an alternative 10-formyl-THF route (PMID 26531681) — but in <em>P. putida</em> FolD2 retains both activities in one polypeptide per HAMAP annotation.</p>
+<hr />
+<h2 id="5-structural-basis">5. Structural Basis</h2>
+<p>FolD enzymes are two-domain proteins: an N-terminal folate/substrate-binding domain (Aminoacid_DH-like N; IPR046346) and a Rossmann-like <strong>NAD(P)-binding domain</strong> (IPR036291/IPR020631) that positions NADP⁺. The active site lies in the interdomain cleft. High-resolution crystal structures of closely related Pseudomonad and Acinetobacter FolD confirm this architecture: "The crystal structure of <em>P. aeruginosa</em> FolD was determined at 2.2 Å resolution … for modelling of ligand complexes as well as for comparisons with the human enzyme" (Eadsforth et al., 2012, PMID 22558288). The strong structural conservation between bacterial and human FolD/MTHFD1 has been noted as a challenge for selective antibacterial inhibitor design (PMID 22558288). FolD2 (284 aa, 30.6 kDa, homodimer) conforms to this conserved fold.</p>
+<hr />
+<h2 id="6-supported-and-refuted-hypotheses">6. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- FolD2 is a bifunctional NADP⁺-dependent 5,10-methylene-THF dehydrogenase / 5,10-methenyl-THF cyclohydrolase (EC 1.5.1.5 + 3.5.4.9). <em>(UniProt catalytic annotation; ortholog biochemistry PMIDs 26531681, 25988590.)</em><br />
+- Its product 10-formyl-THF feeds purine synthesis and fMet-tRNA formylation. <em>(Keywords; PMID 16636273.)</em><br />
+- It is a soluble cytoplasmic homodimer with a conserved two-domain fold. <em>(UniProt SUBUNIT; structures PMIDs 22558288, 23050773.)</em><br />
+- FolD2 is the canonical close FolD ortholog (86.6% identical to structurally solved <em>P. aeruginosa</em> FolD) with all seven key catalytic residues (Y50/K54/C58/Q98/D121/G122/R191) conserved — including cyclohydrolase-specific K54 and dehydrogenase-specific R191 — confirming an intact, genuinely bifunctional active site. <em>(Own sequence analysis; PMIDs 22558288, 25988590.)</em></p>
+<p><strong>Refuted / cautioned</strong><br />
+- FolD2 is NOT NAD⁺-specific and NOT membrane-associated.<br />
+- Essentiality of <em>folD2</em> specifically in <em>P. putida</em> should NOT be assumed: because a paralog (<em>folD1</em>) exists, folD2 loss may be buffered — an inference from gene copy number, not a knockout in this strain.</p>
+<hr />
+<h2 id="7-limitations-and-future-directions">7. Limitations and Future Directions</h2>
+<ul>
+<li>No <em>P. putida</em>-specific biochemical or knockout study of FolD2 was found; functional assignment rests on strong homology (HAMAP MF_01576) and well-characterized orthologs.</li>
+<li>The division of labor between <em>folD1</em> and <em>folD2</em> (redundancy, differential regulation, or kinetic specialization) is unresolved. The two paralogs share only 53.5% identity; FolD2 is the closer match to canonical FolD (86.6% to <em>P. aeruginosa</em>), suggesting FolD2 is the principal housekeeping copy while FolD1 may be specialized. Suggested experiments: single/double knockouts with growth/auxotrophy tests, RNA-seq under one-carbon-limiting conditions, and enzyme kinetics of purified FolD1 vs FolD2.</li>
+<li>No <em>P. putida</em> transposon-essentiality or CRISPRi dataset specific to PP_2265 was located in the searched literature; its individual essentiality (given FolD1) remains an open experimental question.</li>
+<li>Direct localization (fractionation) and structure determination for FolD2 would confirm the inferred cytoplasmic, homodimeric, NADP-dependent properties.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Aluri et al. 2016, <em>FEBS J</em>-type study, PMID <strong>26531681</strong> — bifunctional FolD physiology; ΔfolD rescue and auxotrophies.</li>
+<li>Sah &amp; Varshney 2015, PMID <strong>25988590</strong> — catalytic residues separating dehydrogenase vs cyclohydrolase activities.</li>
+<li>Eadsforth et al. 2012 (<em>P. aeruginosa</em> FolD), PMID <strong>22558288</strong> — 2.2 Å crystal structure; drug target.</li>
+<li>Eadsforth et al. 2012 (<em>A. baumannii</em> FolD), PMID <strong>23050773</strong> — conservation, essentiality, inhibitor complexes.</li>
+<li>Nilsson et al. 2006, PMID <strong>16636273</strong> — folD/fmt link to initiator-tRNA formylation.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="folD2-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="folD2-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(folD2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KM5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fold2-curation-notes">folD2 curation notes</h1>
+<h2 id="evidence">Evidence</h2>
+<p>The reviewed UniProt record identifies Q88KM5 as bifunctional FolD2 and assigns<br />
+RHEA:22812 and RHEA:23700<br />
+[file:PSEPK/folD2/folD2-uniprot.txt<br />
+"DE   RecName: Full=Bifunctional protein FolD 2"; "Xref=Rhea:RHEA:22812";<br />
+"Xref=Rhea:RHEA:23700"]. Q88KM5 and Q88LI7 are both assigned to<br />
+PTHR48099:SF5 in the local member table, while PTN000002250 has positive IBD<br />
+rows for GO:0004488 and GO:0004477<br />
+[file:interpro/panther/PTHR48099/PTHR48099-paint.tsv].</p>
+<p>The final OpenScientist gene report independently recovers the bifunctional<br />
+NADP-linked FolD assignment, but it also reports unsaved pairwise identities<br />
+and exact residue alignments, transfers E. coli essentiality as ortholog<br />
+context, and suggests FolD2 is the principal housekeeping copy. Those claims<br />
+are not propagated because the report itself states that no KT2440-specific<br />
+biochemical or knockout study was found and that paralog division of labor is<br />
+unresolved<br />
+[file:PSEPK/folD2/folD2-deep-research-openscientist.md<br />
+"No <em>P. putida</em>-specific biochemical or knockout study of FolD2 was found"].</p>
+<p>The refreshed max3 OpenScientist pathway report maps both full-length FolD<br />
+paralogs to both core operations but frames the target assignments as homology<br />
+rather than direct KT2440 enzymology. It still treats expression, essentiality,<br />
+and the identity of any dominant copy as open questions<br />
+[file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md<br />
+"check expression/essentiality context and which is the housekeeping copy"].</p>
+<h2 id="assessment">Assessment</h2>
+<p>The catalytic assignments are high-confidence family inferences rather than<br />
+direct KT2440 measurements. Both specific activities are accepted. The<br />
+cytoplasm parent is retained as non-core because cytosol is already present,<br />
+and the broad oxidoreductase parent is likewise retained as non-core. No<br />
+paralog-specific physiological claim is made.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KM5
+gene_symbol: folD2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  folD2 encodes one of two soluble bifunctional FolD enzymes in Pseudomonas
+  putida KT2440. It catalyzes NADP+-linked oxidation of
+  5,10-methylene-THF to 5,10-methenyl-THF and hydrolysis of
+  5,10-methenyl-THF to 10-formyl-THF. FolD2 and FolD1 have the same predicted
+  catalytic repertoire, and their condition-specific physiological roles are
+  unknown.
+existing_annotations:
+- term:
+    id: GO:0004477
+    label: methenyltetrahydrofolate cyclohydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The cyclohydrolase activity is one of the two conserved functions of the
+      full-length bifunctional FolD2 protein.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt/HAMAP assignment specifies EC 3.5.4.9 and RHEA:23700, and
+      PAINT places this activity at the supported PTHR48099 ancestral node.
+    supported_by:
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0004477; F:methenyltetrahydrofolate cyclohydrolase activity; IEA:UniProtKB-UniRule.&#34;
+    - reference_id: file:interpro/panther/PTHR48099/PTHR48099-paint.tsv
+      supporting_text: &#34;PTHR48099	PTN000002250	GO:0004477	F	IBD	false&#34;
+- term:
+    id: GO:0004488
+    label: methylenetetrahydrofolate dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FolD2 has the conserved NADP+-linked dehydrogenase half of bifunctional
+      bacterial FolD.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt/HAMAP record specifies EC 1.5.1.5 and RHEA:22812, while the
+      local PANTHER member table places Q88KM5 in the bacterial
+      FolD-containing PTHR48099:SF5 subfamily.
+    supported_by:
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0004488; F:methylenetetrahydrofolate dehydrogenase (NADP+) activity; IEA:UniProtKB-UniRule.&#34;
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   PANTHER; PTHR48099:SF5; C-1-TETRAHYDROFOLATE SYNTHASE, CYTOPLASMIC; 1.&#34;
+    - reference_id: file:interpro/panther/PTHR48099/PTHR48099-paint.tsv
+      supporting_text: &#34;PTHR48099	PTN000002250	GO:0004488	F	IBD	false&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasm is compatible with FolD2 but is redundant with the more
+      specific cytosol annotation already present.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The parent compartment is not wrong, but it adds no information beyond
+      the existing cytosol child and is therefore retained as non-core.
+    supported_by:
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      A cytosolic location is consistent with a soluble bacterial FolD enzyme
+      lacking export or membrane-targeting features.
+    action: ACCEPT
+    reason: &gt;-
+      The localization is computational rather than experimentally measured in
+      KT2440, but it is biologically appropriate and is the least redundant of
+      the two existing compartment annotations.
+    supported_by:
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0005829; C:cytosol; IEA:TreeGrafter.&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FolD2 is an oxidoreductase, but this class term omits its folate substrate
+      and NADP+ specificity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GO:0016491 is correct but broad; GO:0004488 is the informative child term,
+      so the parent is retained without treating it as a core function.
+    supported_by:
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0004488; F:methylenetetrahydrofolate dehydrogenase (NADP+) activity; IEA:UniProtKB-UniRule.&#34;
+- term:
+    id: GO:0035999
+    label: tetrahydrofolate interconversion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The two FolD2 reactions directly interconvert methylene-, methenyl-, and
+      10-formyl-THF carrier states.
+    action: ACCEPT
+    reason: &gt;-
+      This process term precisely describes the shared biochemical consequence
+      of the accepted dehydrogenase and cyclohydrolase activities without
+      importing downstream consumers.
+    supported_by:
+    - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0035999; P:tetrahydrofolate interconversion; IEA:UniProtKB-UniRule.&#34;
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/folD2/folD2-uniprot.txt
+  title: UniProtKB entry for folD2 (Q88KM5)
+  findings:
+  - statement: &gt;-
+      The reviewed record assigns both EC 1.5.1.5/RHEA:22812 and EC
+      3.5.4.9/RHEA:23700 to a full-length bifunctional FolD protein.
+- id: file:interpro/panther/PTHR48099/PTHR48099-paint.tsv
+  title: PANTHER PAINT annotations for PTHR48099
+  findings:
+  - statement: &gt;-
+      PTN000002250 carries positive, non-negated IBD assertions for both FolD
+      molecular functions.
+- id: file:interpro/panther/PTHR48099/PTHR48099-entries.csv
+  title: PANTHER members for PTHR48099
+  findings:
+  - statement: &gt;-
+      The local member table assigns Q88LI7 and Q88KM5 to PTHR48099:SF5 and
+      MTHFD1 P11586 to PTHR48099:SF1.
+- id: file:PSEPK/folD2/folD2-deep-research-openscientist.md
+  title: OpenScientist gene research for KT2440 folD2 (Q88KM5)
+  findings:
+  - statement: &gt;-
+      The report recovers the target UniProt/HAMAP assignment of both
+      NADP-linked FolD activities and explicitly notes that no KT2440-specific
+      biochemical or knockout study was found and paralog division of labor is
+      unresolved.
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The catalytic-role summary is consistent with independently checked
+      Q88KM5 evidence. Unsaved pairwise identities, exact residue mapping, the
+      proposed FolD2 housekeeping hierarchy, and E. coli essentiality transfer
+      are not treated as target-level evidence in this review.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md
+  title: OpenScientist pathway research for KT2440 folate one-carbon interconversion
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The final max3 report maps both KT2440 FolD proteins to both core
+      reactions and acknowledges that the assignment is homology-based. Its
+      redundancy, genome-neighborhood, and broad candidate-inventory claims do
+      not establish expression, essentiality, or paralog dominance.
+  findings:
+  - statement: &gt;-
+      The final report maps Q88KM5 and Q88LI7 to both FolD core operations,
+      explicitly frames the in-target evidence as homology/domain based rather
+      than direct KT2440 enzymology, and leaves expression and dominance for
+      future study.
+core_functions:
+- description: &gt;-
+    FolD2 oxidizes 5,10-methylene-THF with NADP+ to form
+    5,10-methenyl-THF and NADPH (EC 1.5.1.5; RHEA:22812), one of its two
+    independently modeled catalytic activities.
+  supported_by:
+  - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+    supporting_text: &#34;Xref=Rhea:RHEA:22812&#34;
+  molecular_function:
+    id: GO:0004488
+    label: methylenetetrahydrofolate dehydrogenase (NADP+) activity
+  directly_involved_in:
+  - id: GO:0035999
+    label: tetrahydrofolate interconversion
+- description: &gt;-
+    FolD2 hydrolyzes 5,10-methenyl-THF to 10-formyl-THF (EC 3.5.4.9;
+    RHEA:23700), a distinct cyclohydrolase reaction fused in the same protein.
+  supported_by:
+  - reference_id: file:PSEPK/folD2/folD2-uniprot.txt
+    supporting_text: &#34;Xref=Rhea:RHEA:23700&#34;
+  molecular_function:
+    id: GO:0004477
+    label: methenyltetrahydrofolate cyclohydrolase activity
+  directly_involved_in:
+  - id: GO:0035999
+    label: tetrahydrofolate interconversion
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Do FolD2 and FolD1 differ in expression, kinetic properties, or condition-
+    specific contribution to the KT2440 folate carrier pool?
+suggested_experiments:
+- description: &gt;-
+    Compare purified FolD2 and FolD1 dehydrogenase and cyclohydrolase kinetics,
+    then measure single- and double-mutant fitness across carbon and nitrogen
+    regimes that alter one-carbon demand.
+  experiment_type: enzyme kinetics and comparative mutant fitness
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

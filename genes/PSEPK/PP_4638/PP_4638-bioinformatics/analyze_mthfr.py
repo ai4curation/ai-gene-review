@@ -118,7 +118,12 @@ def write_tsv(path: Path, rows: list[dict[str, object]]) -> None:
     if not rows:
         raise ValueError(f"No rows produced for {path}")
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), delimiter="\t")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=list(rows[0]),
+            delimiter="\t",
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 

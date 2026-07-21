@@ -24,6 +24,23 @@ conditions"]. The reverse-direction MTHFR paper concerns BAK65950.1, not
 PP_4638, and is used only as a functional-diversity comparator
 [PMID:40016375 "Type 4 MTHFRs constitute a distinct family of enzymes"].
 
+The max3 OpenScientist gene report found no direct enzymatic or genetic
+characterization of PP_4638 and explicitly leaves its physiological electron
+donor unknown. Its stronger claims about canonical MTHFR chemistry,
+methionine-pathway placement, cytosolic localization, an Fe-S center, exact
+residues, and genomic or interaction-network coupling are inference-only (and
+the sequence calculations were not saved as reproducible artifacts), so they
+do not override the conservative review
+[file:PSEPK/PP_4638/PP_4638-deep-research-openscientist.md
+"No direct experimental characterization of PP_4638 exists"].
+
+The refreshed max3 pathway report independently holds PP_4638 as
+candidate_uncertain and advises against MTHFR GO propagation. Its stronger
+classification of the DUF5981 fusion as a regulatory-architecture MTHFR and
+its unsaved 1,230-protein survey are not adopted
+[file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md
+"silently merge with metF or dismiss as noise"].
+
 ## Assessment
 
 The evidence supports an FAD-binding MTHFR-like fold, not equivalence to MetF.

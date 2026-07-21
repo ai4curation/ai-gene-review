@@ -11,11 +11,21 @@ paralogs in PTHR48099:SF5, and canonical PAINT assigns GO:0004488 and
 GO:0004477 at PTN000002250
 [file:interpro/panther/PTHR48099/PTHR48099-paint.tsv].
 
-The OpenScientist pathway report treats folD1 and folD2 as coverage for both
-FolD reactions but explicitly leaves their paralog-specific division of labor
-unresolved
+The max3 OpenScientist gene report independently recapitulates both activities
+from the reviewed target record, states that no PP_1945-specific biochemical
+or genetic study was found, and leaves paralog usage unresolved. Its unsaved
+pairwise identities and exact residue mapping, gene-neighborhood model,
+transferred essentiality/druggability, and downstream-consumer claims are not
+used as target-level evidence
+[file:PSEPK/folD1/folD1-deep-research-openscientist.md
+"No direct experimental data on PP_1945"].
+
+The refreshed max3 OpenScientist pathway report maps both full-length FolD
+paralogs to both core operations but frames the target assignments as homology
+rather than direct KT2440 enzymology. Its coverage call does not resolve
+expression, essentiality, or paralog dominance
 [file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md
-"two full-length bifunctional FolD copies (folD1, folD2)"].
+"two full-length FolD paralogs"; "direct KT2440 enzymology"].
 
 ## Assessment
 

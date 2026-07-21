@@ -13,11 +13,21 @@ not restricted to de novo folate-ring synthesis
 [file:interpro/panther/PTHR23407/PTHR23407-paint.tsv
 "PTHR23407\tPTN000601268\tGO:0009396\tP\tIBD\tfalse"].
 
-The OpenScientist pathway report correctly recognizes fau as the
-5-formyl-THF salvage operation even though the local primary pathway
-partition assigns it to ppu04981
+The max3 OpenScientist gene report found no direct biochemical or genetic
+characterization of Q88CH8. It independently recapitulates the target
+UniProt/family assignment, but its pairwise identities, exact residue mapping,
+generic cytosolic localization, and phenotypes transferred from other
+bacteria were not saved as reproducible analyses or demonstrated in KT2440;
+those claims are not used here
+[file:PSEPK/fau/fau-deep-research-openscientist.md
+"No direct biochemical characterization of the P. putida enzyme"].
+
+The refreshed max3 OpenScientist pathway report maps fau to the optional
+5-formyl-THF salvage operation and treats its ppu04981 primary-bucket
+assignment as a cross-mapping discrepancy. This remains homology/domain
+evidence rather than a target enzyme assay
 [file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md
-"functionally this is Step 4 of the carrier-interconversion module"].
+"Covers the optional salvage branch"].
 
 ## Assessment
 

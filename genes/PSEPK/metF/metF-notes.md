@@ -15,6 +15,22 @@ showed no significant phenotype across 101 experiments
 "The fitness pattern for metF from P. putida (PP_4977) is virtually identical
 to that of the methionine synthase metH (PP_2375; r = 0.96)"].
 
+The max3 OpenScientist gene report found no PP_4977-specific biochemical or
+structural study and independently recapitulates the target record's compact
+NADH-linked MetF assignment. Its unsaved 40.7% alignment and exact residue
+mapping, imported non-KT2440 auxotrophy/essentiality and transcriptional
+regulation, universal bacterial/eukaryotic cofactor shorthand, and
+"housekeeping" division from PP_4638 are not used as target-level evidence
+[file:PSEPK/metF/metF-deep-research-openscientist.md
+"No PP_4977-specific biochemical or structural study exists"].
+
+The refreshed max3 pathway report maps PP_4977 to the compact NADH-linked
+MetF branch and separately holds PP_4638 uncertain. Its assertion that KT2440
+has no MetE is false (PP_4637 is outside this batch and owned by PR #2080), so
+that downstream statement is not used
+[file:projects/P_PUTIDA/deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md
+"NADH-linked compact MetF"].
+
 ## Assessment
 
 The combined bacterial-family, reaction, and organism-level fitness evidence

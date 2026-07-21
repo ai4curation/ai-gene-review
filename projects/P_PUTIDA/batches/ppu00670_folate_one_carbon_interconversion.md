@@ -13,31 +13,31 @@ autolink_gene_symbols: false
 - KEGG candidate genes from membership table: 31
 - Selected focused genes reviewed here: 5
 - Curated review files in this batch: 5
-- Module/pathway OpenScientist reports: 1 of 2 complete
-- Gene-level OpenScientist reports currently present: 0 of 5
+- Module/pathway OpenScientist reports: 2 of 2 complete
+- Gene-level OpenScientist reports currently present: 5 of 5
 
 ## Required Workflow
 
 - [x] Curate the species-neutral multi-operation module.
-- [ ] Complete module-level OpenScientist deep research.
+- [x] Complete module-level OpenScientist deep research.
 - [x] Complete module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
-- [ ] Complete OpenScientist deep research for all selected genes.
+- [x] Complete OpenScientist deep research for all selected genes.
 - [x] Curate every GOA row with no `PENDING` actions.
 - [x] Validate the current module and gene reviews.
-- [ ] Render the touched module, genes, and project page.
-- [ ] Open one non-draft PR for this module/pathway.
+- [x] Render the touched module, genes, and project page.
+- [x] Open one non-draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Focused Candidates
 
 | Done | Gene | Locus | UniProt | Primary bucket | Curation | OpenScientist research | Module interpretation | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `folD1` | PP_1945 | Q88LI7 | kegg:ppu00670 | CURATED | RUNNING | covered: NADP FolD dehydrogenase and cyclohydrolase | Bifunctional protein FolD 1 |
-| [x] | `folD2` | PP_2265 | Q88KM5 | kegg:ppu00670 | CURATED | RUNNING | covered: NADP FolD dehydrogenase and cyclohydrolase | Bifunctional protein FolD 2 |
-| [x] | `metF` | PP_4977 | Q88D51 | kegg:ppu00670 | CURATED | RUNNING | covered: compact NADH-linked MetF | Methylenetetrahydrofolate reductase |
-| [x] | `PP_4638` | PP_4638 | Q88E30 | kegg:ppu00670 | CURATED | RUNNING | candidate_uncertain: MTHFR-like fold, reaction not supported | MTHFR-like FAD-linked oxidoreductase |
-| [x] | `fau` | PP_5203 | Q88CH8 | kegg:ppu04981 | CURATED | RUNNING | covered: 5-formyl-THF salvage | 5-formyltetrahydrofolate cyclo-ligase |
+| [x] | `folD1` | PP_1945 | Q88LI7 | kegg:ppu00670 | CURATED | PRESENT | covered: NADP FolD dehydrogenase and cyclohydrolase | Bifunctional protein FolD 1 |
+| [x] | `folD2` | PP_2265 | Q88KM5 | kegg:ppu00670 | CURATED | PRESENT | covered: NADP FolD dehydrogenase and cyclohydrolase | Bifunctional protein FolD 2 |
+| [x] | `metF` | PP_4977 | Q88D51 | kegg:ppu00670 | CURATED | PRESENT | covered: compact NADH-linked MetF | Methylenetetrahydrofolate reductase |
+| [x] | `PP_4638` | PP_4638 | Q88E30 | kegg:ppu00670 | CURATED | PRESENT | candidate_uncertain: MTHFR-like fold, reaction not supported | MTHFR-like FAD-linked oxidoreductase |
+| [x] | `fau` | PP_5203 | Q88CH8 | kegg:ppu04981 | CURATED | PRESENT | covered: 5-formyl-THF salvage | 5-formyltetrahydrofolate cyclo-ligase |
 
 ## Boundary
 
@@ -53,15 +53,27 @@ plus FchA implementation. The MTHFR alternatives separately represent compact
 NADH-linked MetF, plant regulatory-architecture NADH MTHFR, and regulatory
 NADPH MTHFR rather than treating taxon as a cofactor selector.
 
-The completed
+The final
+[generic module report embedded in the module page](../../../modules/folate_one_carbon_interconversion.html)
+recovers the four distinct reactions, the coupled dehydrogenase/cyclohydrolase
+chemistry, independent MTHFR and Fau branches, and the fused versus
+monofunctional MtdA/FchA implementations. It also recognizes plant NADH-linked
+and human NADPH-linked regulatory-architecture MTHFRs. Its stronger statements
+that the two core reactions are universally obligatory, globally ordered, and
+implemented by two physically independent active centers with substrate
+channeling are not adopted; the module represents reversible chemistry without
+a global order and treats the activities as distinct reaction leaves.
+
+The final
 [module/pathway/taxon report](../deep-research/PSEPK__folate_one_carbon_interconversion__ppu00670-deep-research-openscientist.md)
-supports all four operations in KT2440 through folD1/folD2, metF, and fau.
-It independently flags PP_4638 as uncertain. The report is useful for pathway
-partitioning and family-level transfer, but it did not retrieve the strongest
-PP_4638 evidence: the primary KT2440 fitness comparison in PMID:33534785. Its
-claim that all four operations are jointly required and its bacterial/eukaryotic
-cofactor shorthand are not adopted in the final module; route logic and variant
-labels were corrected independently.
+maps folD1 and folD2 to both FolD operations, metF to the compact NADH branch,
+and fau to 5-formyl-THF salvage while holding PP_4638 uncertain. It supports the
+focused boundary and rejects loading, downstream-use, regeneration, PurU-drain,
+and osmolyte/sulfur candidates. Its classification of PP_4638 as a regulatory-
+architecture MTHFR, unsaved 1,230-protein survey, inferred copy redundancy, and
+claim that KT2440 lacks MetE are not adopted. In particular, PP_4637 is a MetE
+candidate owned by open PR #2080. Neither report establishes direct KT2440
+enzymology or a FolD1/FolD2 division of labor.
 
 ## Gene Decisions
 
@@ -100,10 +112,12 @@ labels were corrected independently.
   `PTN002224686`.
 - `PTHR45754:SF3` contains both E. coli NADH MetF P0AEZ1 and human MTHFR
   P42898, plus Arabidopsis, rice, and maize NADH-labeled proteins, despite its
-  NADPH label. The module therefore uses architecture-specific InterPro terms
-  and reaction/exemplar evidence to distinguish cofactor variants. Reviewed
-  Arabidopsis MTHFR2 O80585 is an experimentally supported RHEA:19821 exemplar
-  for the NADH-linked regulatory plant implementation.
+  NADPH label. The compact bacterial selector therefore uses the exact
+  IPR004620 family only, with NADH specificity grounded separately by
+  Q88D51/P0AEZ1 and RHEA:19821. The regulatory-domain InterPro records also do
+  not distinguish cofactor use, so those variants use orthology selectors
+  anchored to reviewed experimental exemplars: Arabidopsis MTHFR2 O80585 for
+  the NADH-linked implementation and human P42898 for the NADPH-linked one.
 - The local `PTHR23407` PAINT file supports GO:0030272 at
   `PTN000601268` and also has a positive non-negated GO:0009396 IBD row;
   E. coli YgfA P0AC28 is included as an experimental seed alongside KT2440 Fau.
@@ -129,6 +143,9 @@ MtdA/FchA implementation is experimentally supported in M. extorquens AM1, not
 KT2440. The physiological division between FolD1 and FolD2 is unknown.
 For PP_4638, published fitness data argue against redundant canonical MetF
 activity in the tested conditions but do not reveal its actual substrate,
-redox partner, or direction.
+redox partner, or direction. The five gene-level reports likewise add no direct
+target experiments; unsaved identities, residue mappings, imported phenotypes,
+and housekeeping claims are recorded as unverified and excluded from the
+curation evidence.
 
-Generated UTC: 2026-07-20T21:02:00Z
+Generated UTC: 2026-07-21T03:14:48Z
