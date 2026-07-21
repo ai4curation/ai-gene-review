@@ -208,4 +208,4 @@ specificity assay.
 - [x] Complete and assess all OpenScientist runs.
 - [x] Validate all selected reviews and the module.
 - [x] Render all touched gene, module, and project pages.
-- [ ] Open the batch pull request.
+- [x] Open the batch pull request.
