@@ -40,7 +40,7 @@ PqqF reaction or the conserved module core.
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Review each selected gene review for pathway consistency.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [#2197](https://github.com/ai4curation/ai-gene-review/pull/2197).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
