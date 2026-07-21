@@ -38,11 +38,11 @@ map00790 are also outside scope.
 ## Required Workflow
 
 - [x] Fetch missing selected-gene scaffolds.
-- [ ] Run OpenScientist research for every selected gene.
+- [x] Run OpenScientist research for every selected gene.
 - [ ] Run generic module OpenScientist research.
 - [ ] Run module + ppu00790 + PSEPK OpenScientist research.
 - [x] Curate every GOA row with no `PENDING` actions.
-- [ ] Revise and validate the reusable module.
+- [x] Revise and validate the reusable module.
 - [ ] Validate and render selected gene reviews and batch artifacts.
 - [ ] Open one non-draft PR for this module/pathway.
 - [ ] Shepherd the PR through review and CI.
@@ -93,10 +93,90 @@ the missing MogA-equivalent. Direct MPT-AMP and MoeA-coupled assays are needed.
 
 ## Evidence Assessment
 
-Final-module generic and PSEPK pathway OpenScientist runs are still in progress.
-Only reports with completed provider files and artifacts will be cited as
-complete. The stale report generated from the earlier human-oriented seed is not
-accepted as evidence and will be replaced before publication.
+All 13 selected gene-level OpenScientist runs now have complete provider reports
+and artifacts. The `moaB-I` report is retained as low-quality retrieval
+support: it correctly states that MoaB physiology and Q88L15 substrate specificity
+are unresolved, but overpredicts a MogA-equivalent catalytic role from synteny and
+family homology. The target UniProt statement and the report's explicit limitations
+therefore support retaining the pathway and catalytic assignments as `UNDECIDED`.
+
+The `moaB-II` report is also retained as low-quality retrieval support. It
+correctly states that no Q88E67 experiment establishes a physiological reaction
+and keeps that role unresolved, but its exact proteome census, alignment values,
+genomic-context interpretation, and structural predictions were not saved as a
+reproducible local analysis. No catalytic assignment is added from those claims.
+
+The `PP_2482` report is assessed as `MISCITED` for the same paralog-resolution
+failure seen for PP_1969: it declares Q88K11 the essential, nonredundant canonical
+MoaA/GTP 3',8'-cyclase despite canonical Q88E69 and the locally demonstrated
+three-paralog uncertainty, and presents unsaved residue and neighborhood analyses.
+Only its explicit no-target-assay limitation is retained.
+
+The `moaC` report is also assessed as `MISCITED`. Its conserved cPMP-synthase
+reaction agrees with Q88NC0 UniProt and is retained, but it calls PP_3457 `mogA`
+instead of `mobA`, overstates PP_1292 uniqueness/essentiality, and relies on
+unsaved target alignment, residue, and operon analyses. Those organism-specific
+claims are not propagated.
+
+The `mobA` report is assessed as `MISCITED`. Its one-MGD reaction agrees with
+reviewed Q88HA3 UniProt, but it assigns `moaA` to PP_2123 (actually `moeA`) and a
+`moeA`-family gene to PP_1294 (actually `moaE`). It also conflates the direct
+Mo-MPT guanylyltransferase reaction with bis-MGD assembly, delivery, and predicted
+client roles, and relies on unsaved target alignment, motif, neighborhood,
+MobB-absence, and client analyses. Only the independently supported reaction and
+its explicit no-target-experiment limitation are retained.
+
+The `moeB` report is assessed as `LOW_QUALITY`. It correctly gives the conserved
+MoaD acyl-adenylation reaction and acknowledges the absence of direct Q88PW3
+experiments, but it presents unsaved motif, zinc-site, global-alignment,
+architecture, partner, and broad physiological analyses as target evidence.
+The E1-like evolutionary analogy does not supply the thiolester-forming chemistry
+required by GO:0008641, so that electronic annotation remains `REMOVE`.
+
+The `moaA` report is assessed as `LOW_QUALITY`. Its canonical GTP cyclase
+assignment and division of labor with MoaC agree with reviewed Q88E69 UniProt,
+and it acknowledges that mechanistic and structural evidence comes from
+orthologs. Unsaved target residue analysis, target homodimer/structure transfer,
+heterologous xanthine-oxidase production, and rate-defining or nonredundant
+claims are not propagated, especially while PP_2482 and PP_1969 remain
+unresolved MoaA-family candidates.
+
+The completed `PP_1969` report is assessed as `MISCITED`: it incorrectly declares
+Q88LG4 canonical MoaA/GTP 3',8'-cyclase, assigns `moaB` to PP_1294 (actually
+`moaE`) and `mogA` to PP_3457 (actually `mobA`), and presents unsaved
+residue-level analysis. None of those claims are propagated. Q88LG4 remains the
+divergent MoaA-like candidate supported by its target record and the saved local
+sequence analysis.
+
+The `PP_4230` report is also assessed as `MISCITED`. It treats a heterologous
+*Cellulosimicrobium* `CsXodCBA` production experiment in KT2440 as evidence for
+the native PP_4230/PP_4231 locus, puts PP_2482 rather than PP_2483 in its second
+MocA-cluster table, and relies on unsaved motif and AlphaFold analyses. The
+predicted MocA assignment is retained from the saved K07141, PANTHER, target
+UniProt, and local reproducible-analysis evidence; CTP specificity and client
+dedication still require direct testing.
+
+The completed `PP_2483` report is assessed as `MISCITED`. It promotes the
+unresolved PP_2482 paralog to canonical MoaA, treats indirect neighborhood and
+orthologous-enzyme evidence as decisive support for dedicated delivery to one
+KT2440 client, and presents unsaved target alignment and residue analyses. The
+predicted MocA assignment is retained from the saved K07141, PANTHER, target
+UniProt, and local reproducible-analysis evidence; direct CTP specificity and
+client dedication remain untested.
+
+An ontology ancestor scan using both `is_a` and `part_of` relationships found no
+remaining pair in which both a parent and its more specific child are positively
+retained. Redundant cytoplasm parents in `moeA`/`moeB`, broad iron-sulfur binding
+parents in the three MoaA-family reviews, broad pathway parents in `moaE`/`moeA`,
+and the two MobA process ancestors are marked `MARK_AS_OVER_ANNOTATED`; the more
+specific child rows remain retained.
+
+Final-module generic and PSEPK pathway OpenScientist runs remain pending until
+the active gene wave finishes, so neither is claimed complete here. Only reports
+with completed provider files and artifacts will be cited as complete. The stale
+report generated from the earlier human-oriented seed is not accepted as evidence
+and will be replaced before publication using a 7200-second provider timeout and
+`max_iterations=3`.
 
 The local sequence analysis shows that PP_2482 and PP_1969 retain radical-SAM
 motifs but are only 36-38% identical to canonical Q88E69 and lack its two
