@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Selected glutamyl-tRNA-to-heme-b genes: 11
 - Curated review files in this batch: 11
 - Corrected module/pathway OpenScientist reports: 0 of 2 (final reruns pending)
-- Gene-level OpenScientist reports: 7 of 11
+- Gene-level OpenScientist reports: 8 of 11
 
 ## Required Workflow
 
@@ -38,7 +38,7 @@ autolink_gene_symbols: false
 | [x] | `hemBB` | PP_3322 | Q88HN1 | CURATED | PRESENT | covered candidate: Mg-site ALAD paralog | Delta-aminolevulinate dehydratase |
 | [x] | `hemC` | PP_0186 | Q88RE5 | CURATED | PRESENT | covered: hydroxymethylbilane synthesis | Porphobilinogen deaminase |
 | [x] | `hemD` | PP_0187 | Q88RE4 | CURATED | PENDING | covered: uroporphyrinogen III synthesis | Uroporphyrinogen-III synthase |
-| [x] | `hemE` | PP_5074 | Q88CV6 | CURATED | PENDING | covered: coproporphyrinogen III synthesis | Uroporphyrinogen decarboxylase |
+| [x] | `hemE` | PP_5074 | Q88CV6 | CURATED | PRESENT | covered: coproporphyrinogen III synthesis | Uroporphyrinogen decarboxylase |
 | [x] | `hemF` | PP_0073 | Q88RQ6 | CURATED | PENDING | covered: oxygen-dependent late-step variant | Oxygen-dependent coproporphyrinogen-III oxidase |
 | [x] | `hemN` | PP_4264 | Q88F35 | CURATED | PENDING | covered: oxygen-independent radical-SAM variant | Coproporphyrinogen-III oxidase |
 | [x] | `PP_0431` | PP_0431 | Q88QQ7 | CURATED | PRESENT | covered: HemJ membrane-electron-transfer variant | Protoporphyrinogen IX oxidase |
