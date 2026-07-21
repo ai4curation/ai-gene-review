@@ -13,18 +13,18 @@ autolink_gene_symbols: false
 - KEGG candidate genes considered from the pathway bucket: 46
 - Selected glutamyl-tRNA-to-heme-b genes: 11
 - Curated review files in this batch: 11
-- Corrected module/pathway OpenScientist reports: 1 of 2 (pathway/taxon report pending)
+- Corrected module/pathway OpenScientist reports: 2 of 2
 - Gene-level OpenScientist reports: 11 of 11
 
 ## Required Workflow
 
 - [x] Refactor the module into a reusable multi-route heme-b pathway.
 - [x] Run module-level OpenScientist research from the corrected module.
-- [ ] Run module + ppu00860 + PSEPK OpenScientist research from the corrected module.
+- [x] Run module + ppu00860 + PSEPK OpenScientist research from the corrected module.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist research for every selected gene.
 - [x] Curate every selected GOA row with no pending actions.
-- [ ] Validate and render the module, genes, and batch page.
+- [x] Validate and render the module, genes, and batch page.
 - [ ] Open one non-draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
@@ -70,5 +70,16 @@ trunk, entry chemistry and late-enzyme use are generalized as universally fixed
 by oxygen, and membrane association or substrate channeling is extended across
 families without equivalent evidence. Its generated pathway figure is treated
 as a conceptual summary rather than independent evidence.
+
+The final PSEPK pathway/taxon report supports a complete C5-route realization,
+the selected 11 genes, and exclusion of the neighboring cobalamin, siroheme,
+heme-use, and heme-modification branches in `ppu00860`. Several recommendations
+were not adopted: `gltX` remains upstream substrate supply, HemJ-family
+`PP_0431` retains GO:0070818 rather than the report's oxygen-acceptor
+GO:0004729, and the existing HemB/HemBB metal-site predictions are retained.
+Claims of anaerobic flexibility and proteome-wide absence of additional late
+oxidases remain unverified because no KT2440 experiment or archived scan was
+provided. The out-of-scope `PP_0109` heme-A-synthase recommendation was not
+adjudicated as part of this batch.
 
 Generated UTC: 2026-07-20
