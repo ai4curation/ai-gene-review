@@ -39,11 +39,11 @@ map00790 are also outside scope.
 
 - [x] Fetch missing selected-gene scaffolds.
 - [x] Run OpenScientist research for every selected gene.
-- [ ] Run generic module OpenScientist research.
-- [ ] Run module + ppu00790 + PSEPK OpenScientist research.
+- [x] Run generic module OpenScientist research.
+- [x] Run module + ppu00790 + PSEPK OpenScientist research.
 - [x] Curate every GOA row with no `PENDING` actions.
 - [x] Revise and validate the reusable module.
-- [ ] Validate and render selected gene reviews and batch artifacts.
+- [x] Validate and render selected gene reviews and batch artifacts.
 - [ ] Open one non-draft PR for this module/pathway.
 - [ ] Shepherd the PR through review and CI.
 
@@ -171,12 +171,37 @@ parents in the three MoaA-family reviews, broad pathway parents in `moaE`/`moeA`
 and the two MobA process ancestors are marked `MARK_AS_OVER_ANNOTATED`; the more
 specific child rows remain retained.
 
-Final-module generic and PSEPK pathway OpenScientist runs remain pending until
-the active gene wave finishes, so neither is claimed complete here. Only reports
-with completed provider files and artifacts will be cited as complete. The stale
-report generated from the earlier human-oriented seed is not accepted as evidence
-and will be replaced before publication using a 7200-second provider timeout and
-`max_iterations=3`.
+Both final-module OpenScientist reports were regenerated after the source was
+tightened to an explicitly prokaryotic scope. Their frontmatter records
+`cached: false`, `max_iterations: 3`, a 7200-second provider timeout, and start
+times later than the final module YAML. The earlier human-oriented outputs were
+overwritten; both refreshed reports and their provider artifacts are present.
+
+The refreshed generic report is assessed as `LOW_QUALITY` retrieval support. It
+now uses the prokaryotic title, explicitly places MOCS/CNX/GPHN organization and
+human disease outside scope, and correctly describes the four-part sequence,
+the MoaD2-MoaE2 synthase, lineage-restricted MoaB competence, and optional
+dinucleotide maturation. It nevertheless conflates MobA production of one MGD
+with bis-MGD assembly and calls the MGD/MCD fates mutually exclusive; its
+generated schematic also mixes one-MGD and bis-MGD/client labels. Those claims
+are not propagated into the module.
+
+The refreshed PSEPK pathway report is assessed as `MISCITED`. It correctly
+separates the broad folate/riboflavin/queuosine candidates, recovers `moaD` and
+`moeB`, retains both PP_2483 and PP_4230 as MocA candidates, and acknowledges
+that sequence identity alone cannot resolve them. However, it forces
+`moaB-I`/`moaB-II` into a covered MogA-equivalent role despite their target
+UniProt statements and curated uncertainty, recommends GO:0061598 for those
+paralogs, recommends the rejected thiolester-requiring GO:0008641 term for
+`moeB`, gives `moeA` GO:0061604 instead of the verified GO:0061599, and presents
+unsaved alignment values inconsistent with the local reproducible TSV. Its
+heterologous client-maturation evidence also does not identify the responsible
+KT2440 MocA gene. None of those catalytic, GO, alignment, or client-specific
+claims are propagated.
+
+For both reports, upstream sulfur supply, molybdate transport, terminal
+sulfuration, cofactor insertion, mature client reactions, and regulation remain
+outside the curated boundary even when discussed as retrieval context.
 
 The local sequence analysis shows that PP_2482 and PP_1969 retain radical-SAM
 motifs but are only 36-38% identical to canonical Q88E69 and lack its two
@@ -185,7 +210,7 @@ MobA from MocA; PP_2483 and PP_4230 are therefore assigned as predicted MocA
 proteins from concordant K07141, PTHR43777:SF1, and neighborhood evidence, not
 from global sequence identity alone.
 
-The reusable module uses family or ortholog selectors according to the local
+The reusable prokaryotic module uses family or ortholog selectors according to the local
 resolution of each role and exposes the curated KT2440 UniProt proteins as
 concrete representatives. Q88K11, Q88LG4, Q88L15, and Q88E67 are recorded in
 knowledge gaps rather than forced into canonical MoaA or catalytic MoaB roles;
