@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Selected glutamyl-tRNA-to-heme-b genes: 11
 - Curated review files in this batch: 11
 - Corrected module/pathway OpenScientist reports: 0 of 2 (final reruns pending)
-- Gene-level OpenScientist reports: 1 of 11
+- Gene-level OpenScientist reports: 2 of 11
 
 ## Required Workflow
 
@@ -33,7 +33,7 @@ autolink_gene_symbols: false
 | Done | Gene | Locus | UniProt | Curation | OpenScientist | Module interpretation | Protein |
 |---|---|---|---|---|---|---|---|
 | [x] | `hemA` | PP_0732 | Q88PW6 | CURATED | PRESENT | covered: first C5 glutamyl-tRNA reaction | Glutamyl-tRNA reductase |
-| [x] | `hemL` | PP_4784 | Q88DP0 | CURATED | PENDING | covered: second C5 glutamyl-tRNA reaction | Glutamate-1-semialdehyde 2,1-aminomutase |
+| [x] | `hemL` | PP_4784 | Q88DP0 | CURATED | PRESENT | covered: second C5 glutamyl-tRNA reaction | Glutamate-1-semialdehyde 2,1-aminomutase |
 | [x] | `hemB` | PP_2913 | Q88IT6 | CURATED | PENDING | covered candidate: Zn/Mg-site ALAD paralog | Delta-aminolevulinate dehydratase |
 | [x] | `hemBB` | PP_3322 | Q88HN1 | CURATED | PENDING | covered candidate: Mg-site ALAD paralog | Delta-aminolevulinate dehydratase |
 | [x] | `hemC` | PP_0186 | Q88RE5 | CURATED | PENDING | covered: hydroxymethylbilane synthesis | Porphobilinogen deaminase |
