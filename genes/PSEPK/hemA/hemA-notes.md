@@ -20,7 +20,11 @@ species-level C5-route evidence. Its own limitations section states that no
 purified-enzyme kinetics were found for the KT2440 protein. Claims about
 heme-responsive turnover, a HemA-HemL channeling complex, and operon regulation
 derive from other organisms or genomic inference and were not promoted to
-KT2440 annotations.
+KT2440 annotations. The report also gives an unsaved 52.5% pairwise alignment,
+exact target-residue mapping, and codon-overlap measurements. Those calculations
+are not reproducible from report artifacts and were not used as evidence. PMID:
+7883699 supports P. putida use of the C5 route, while its complementation and
+hemA-prf1 operon experiments concern P. aeruginosa rather than KT2440.
 
 ## Curation decisions
 
