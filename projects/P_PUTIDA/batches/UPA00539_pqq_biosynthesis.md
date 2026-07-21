@@ -95,3 +95,18 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
   overinterprets proximity and STRING associations as Ped-system
   specialization. Without pqqD2-specific expression, genetics, or binding
   evidence, that remains a suggested experiment rather than a module claim.
+- The PP_0375 report retrieves the correct S9-family and locus context but
+  treats an ortholog's extracellular-PQQ phenotype as proof of a distinct
+  excretion role. Its unsaved AlphaFold, STRING, and alignment measurements are
+  also excluded; only independently reproduced comparisons are used.
+- The PqqB report retrieves direct hydroxylase and target-structure studies but
+  promotes a modeled substrate, AHQQ product, and fixed protease-to-PqqB order
+  to established native chemistry. The gene review and module retain those as
+  explicit knowledge gaps.
+- The PqqE report is useful family-level retrieval, but its direct enzymology
+  and auxiliary-cluster structures are from non-KT2440 orthologs and its
+  conservation analysis was not retained. Target claims remain grounded in
+  UniProt and accessible primary evidence.
+- The PqqA report correctly identifies the target peptide and Glu15/Tyr19 pair.
+  Its conservation artifact omits source accessions, so exact conservation
+  percentages and the inferred leader boundary are not treated as verified.
