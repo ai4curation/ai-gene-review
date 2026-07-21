@@ -115,3 +115,7 @@ Generated UTC: 2026-07-09T23:18:04.620542+00:00
   proteolysis-versus-PqqB ordering as the main mechanistic gap. One section
   nevertheless states that excision must precede all small-molecule steps; that
   internal overstatement was not propagated into the graph.
+- The PqqC report retrieves the correct terminal enzyme and ortholog structural
+  work but gives an incorrect one-O2/one-H2O2 net equation. The curated
+  three-O2/two-H2O2 Rhea stoichiometry is retained, and non-KT2440 structural
+  and quinoprotein studies are treated as family or physiological context.
