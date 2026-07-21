@@ -30,6 +30,13 @@
   synthesis. The cached primary abstract only establishes loss of PQQ excretion
   and does not report intracellular PQQ, so that stronger inference was not
   adopted in the review.
+- The same report gives exact AlphaFold confidence/active-site distances,
+  STRING scores, and an unsaved global-alignment identity. Its artifacts contain
+  only the final report, so those calculations are not reproducible. The
+  independently scripted MMseqs2 comparisons in `PP_0375-bioinformatics/` are
+  used instead. The OpenScientist source is marked `MISCITED` for combining
+  these unretained calculations with the unsupported excretion-versus-synthesis
+  conclusion.
 
 ## Curation boundary
 
