@@ -46,7 +46,7 @@ autolink_gene_symbols: false
 
 ## Boundary And Adjudication
 
-KT2440 realizes the C5 glutamyl-tRNA entry route through `hemA` and `hemL`; the reusable module does not restrict that route to bacteria because homologous C5 routes also occur in archaea and plastid-bearing eukaryotes. The middle pathway is represented by ALAD, HemC, HemD, and HemE, followed by oxygen-dependent `hemF` and oxygen-independent `hemN` alternatives, HemJ-family `PP_0431`, and `hemH`.
+KT2440 realizes the C5 glutamyl-tRNA entry route through `hemA` and `hemL`; the reusable module does not restrict that route to bacteria because homologous C5 routes also occur in archaea and plastid-bearing eukaryotes. The generalized graph models C5 and C4/Shemin ALA formation as one entry-chemistry axis, followed by one shared ALAD-HemC-HemD-HemE trunk. It selects HemF/HemN and HemJ/HemG/HemY/PPOX late chemistry independently of the entry route, avoiding duplicated trunks and an incorrect hard coupling between C4 entry and oxygen-dependent late enzymes. The KT2440 realization uses `hemF` and `hemN` alternatives, HemJ-family `PP_0431`, and `hemH`.
 
 Both `hemB` and `hemBB` remain selected. Sequence-based records support ALAD activity for both, but `hemB` has a predicted catalytic zinc triad plus magnesium site whereas `hemBB` has a magnesium-site prediction without the zinc triad. This supports distinct metal-site architectures, not a claim that one paralog is physiologically dominant. The module therefore requires an active ALAD-family enzyme without making both paralogs conjunctively required.
 
