@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2482 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2482</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88K11" target="_blank" class="term-link">
+                        Q88K11
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2482";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88K11" data-a="DESCRIPTION: PP_2482 encodes a MoaA-family radical-SAM protein ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2482 encodes a MoaA-family radical-SAM protein with the conserved CxxxCxxC iron-sulfur-binding motif. It is related to, but substantially diverged from, canonical KT2440 MoaA and lies next to a predicted MocA cytidylyltransferase; its physiological substrate and equivalence to the canonical cPMP-forming enzyme remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic activity is plausible for this radical-SAM family member, but the exact reaction is unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequence features establish family membership but do not prove use of GTP as the physiological substrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">- All three KT2440 proteins have comparable lengths (322-337 aa), the canonical
+  radical-SAM `CxxxCxxC` pattern near the N terminus, and two detected `CxxC`
+  patterns. These features support radical-SAM/MoaA-like family membership but
+  do not establish the same physiological substrate or pathway contribution.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">1. **No direct experimental study of the *P. putida* ortholog.** All functional claims for PP_2482 specifically are made by inference.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0006777" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Molybdenum-cofactor pathway involvement is plausible from family and locus context but lacks gene-specific evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_2482 may support a local MCD-requiring system, but redundancy with or independence from canonical moaA has not been demonstrated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The sequence analysis therefore supports keeping PP_2482 and PP_1969 as
+MoaA-family candidates while reserving the unqualified GTP 3&#39;,8&#39;-cyclase role
+for Q88E69 unless gene-specific biochemical, genetic, or stronger phylogenetic
+evidence resolves the paralogs.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">1. **No direct experimental study of the *P. putida* ortholog.** All functional claims for PP_2482 specifically are made by inference.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0046872" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal-ion binding is consistent with the radical-SAM iron-sulfur motif but is non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The sequence and UniProt record support an iron-sulfur-binding radical-SAM fold.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad iron-sulfur-cluster binding term is redundant with the more specific retained [4Fe-4S]-cluster binding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records a [4Fe-4S] cofactor for Q88K11, so GO:0051539 captures the supported cofactor binding more precisely.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0051539" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific [4Fe-4S]-cluster binding is plausible but is not an exact pathway-function assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt and the conserved cysteine motif support a radical-SAM [4Fe-4S] cluster.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061798" target="_blank" class="term-link">
+                                    GO:0061798
+                                </a>
+                            </span>
+                            <span class="term-label">GTP 3&#39;,8&#39;-cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0061798" data-r="GO_REF:0000118" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Exact GTP 3&#39;,8&#39;-cyclase activity cannot be established for this divergent paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88K11 lacks the MoaA-specific InterPro records present on reviewed Q88E69 and is only 36.25% identical to it; no direct assay resolves substrate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">- Q88E69 is 36.25% identical to Q88K11 (PP_2482) and 37.85% identical to Q88LG4
+  (PP_1969) over aligned residue pairs. Q88K11 and Q88LG4 are 66.15% identical
+  to one another. This pattern supports a closer relationship between the two
+  unreviewed candidates than either has to canonical moaA, and does not support
+  assuming that all three are interchangeable copies.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">1. **No direct experimental study of the *P. putida* ortholog.** All functional claims for PP_2482 specifically are made by inference.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061799" target="_blank" class="term-link">
+                                    GO:0061799
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic pyranopterin monophosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K11" data-a="GO:0061799" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cPMP synthase is the distinct MoaC reaction and should not be assigned to a stand-alone MoaA-family protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Even canonical bacterial MoaA forms the cyclic GTP intermediate; MoaC converts that intermediate to cPMP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaA/moaA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=GTP 3&#39;,8-cyclase {ECO:0000255|HAMAP-Rule:MF_01225};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaC/moaC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=Cyclic pyranopterin monophosphate synthase {ECO:0000255|HAMAP-Rule:MF_01224};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MoaA-family radical-SAM protein with iron-sulfur binding; its physiological substrate and pathway role are unresolved.</h3>
+                <span class="vote-buttons" data-g="Q88K11" data-a="FUNCTION: MoaA-family radical-SAM protein with iron-sulfur b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2482/PP_2482-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- COFACTOR:
+CC       Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;
+CC         Evidence={ECO:0000256|ARBA:ARBA00001966};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">The sequence analysis therefore supports keeping PP_2482 and PP_1969 as
+MoaA-family candidates while reserving the unqualified GTP 3&#39;,8&#39;-cyclase role
+for Q88E69 unless gene-specific biochemical, genetic, or stronger phylogenetic
+evidence resolves the paralogs.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">1. **No direct experimental study of the *P. putida* ortholog.** All functional claims for PP_2482 specifically are made by inference.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2482/PP_2482-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_2482</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88K11 as a MoaA-like radical-SAM protein.</div>
+
+                        <div class="finding-text">"DR   InterPro; IPR006638; Elp3/MiaA/NifB-like_rSAM.
+DR   InterPro; IPR040064; MoaA-like."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns a [4Fe-4S] cofactor by automated rule.</div>
+
+                        <div class="finding-text">"CC   -!- COFACTOR:
+CC       Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;
+CC         Evidence={ECO:0000256|ARBA:ARBA00001966};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2482/PP_2482-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_2482</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains adjacent TreeGrafter rows for both exact MoaA and MoaC activities.</div>
+
+                        <div class="finding-text">"UniProtKB	Q88K11	PP_2482	enables	GO:0061798	GTP 3&#39;,8&#39;-cyclase activity	molecular_function	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN008586334	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	Radical SAM core domain-containing protein	20260706
+UniProtKB	Q88K11	PP_2482	enables	GO:0061799	cyclic pyranopterin monophosphate synthase activity	molecular_function	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN008586334	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	Radical SAM core domain-containing protein	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_2482</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report incorrectly promotes the uncertain Q88K11 paralog to canonical MoaA with an exact catalytic assignment.</div>
+
+                        <div class="finding-text">"**PP_2482 (UniProt Q88K11) of *Pseudomonas putida* KT2440 encodes MoaA, a cytoplasmic radical S-adenosyl-L-methionine (radical SAM) enzyme that catalyzes the first committed step of molybdenum cofactor (Moco) biosynthesis.**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report incorrectly calls PP_2482 an essential, nonredundant pathway gate despite the other KT2440 MoaA-family loci.</div>
+
+                        <div class="finding-text">"MoaA (PP_2482) is a single-point, non-redundant gatekeeper: without it, none of these molybdoenzymes can be matured."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report presents unsaved residue-level analysis as decisive target evidence.</div>
+
+                        <div class="finding-text">"Direct inspection of the 322-residue Q88K11 protein sequence confirms both metal-cluster signatures rather than relying on annotation alone."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report acknowledges that no direct PP_2482 experiment was found.</div>
+
+                        <div class="finding-text">"1. **No direct experimental study of the *P. putida* ortholog.** All functional claims for PP_2482 specifically are made by inference."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reproducible sequence comparison of KT2440 MoaA-family and MobA-like proteins</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88K11 lacks the two MoaA-specific InterPro records found on Q88E69.</div>
+
+                        <div class="finding-text">"- The reviewed MoaA sequence Q88E69 is the only one of the three with the
+  MoaA-specific InterPro entries IPR013483 and IPR000385 in its UniProt record.
+  All three share broader MoaA-like/radical-SAM entries and PTHR22960."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88K11 is 36.25% identical to canonical Q88E69 and is closer to Q88LG4.</div>
+
+                        <div class="finding-text">"- Q88E69 is 36.25% identical to Q88K11 (PP_2482) and 37.85% identical to Q88LG4
+  (PP_1969) over aligned residue pairs. Q88K11 and Q88LG4 are 66.15% identical
+  to one another. This pattern supports a closer relationship between the two
+  unreviewed candidates than either has to canonical moaA, and does not support
+  assuming that all three are interchangeable copies."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaA/moaA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for canonical KT2440 moaA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Canonical KT2440 MoaA is specifically named as GTP 3&#39;,8&#39;-cyclase.</div>
+
+                        <div class="finding-text">"DE   RecName: Full=GTP 3&#39;,8-cyclase {ECO:0000255|HAMAP-Rule:MF_01225};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaC/moaC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for KT2440 moaC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 MoaC is specifically named as cyclic pyranopterin monophosphate synthase.</div>
+
+                        <div class="finding-text">"DE   RecName: Full=Cyclic pyranopterin monophosphate synthase {ECO:0000255|HAMAP-Rule:MF_01224};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_2482 cyclize GTP, act on another purine-derived substrate, or serve a specialized role in the adjacent MCD-dependent enzyme system?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K11" data-a="Q: Does PP_2482 cyclize GTP, act on another purine-de..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified PP_2482 with canonical MoaA for GTP turnover and cyclic intermediate formation, and test complementation of a moaA deletion.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative enzyme assay and genetic complementation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K11" data-a="EXPERIMENT: Compare purified PP_2482 with canonical MoaA for G..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2482-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K11" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_2482 (Q88K11) — MoaA, a Radical SAM GTP 3′,8-Cyclase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T18:28:51.220024</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2482-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2482-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_2482-q88k11-moaa-a-radical-sam-gtp-38-cyclase-in-pseudomonas-putida-kt2440">Functional Annotation Report: PP_2482 (Q88K11) — MoaA, a Radical SAM GTP 3′,8-Cyclase in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88K11 | <strong>Locus:</strong> PP_2482 | <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK)<br />
+<strong>Annotated name:</strong> Molybdenum cofactor biosynthesis protein A (MoaA)<br />
+<strong>Enzyme class:</strong> EC 4.1.99.22 — GTP 3′,8-cyclase (KEGG KO K03639; module M00880)</p>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_2482 (UniProt Q88K11) of <em>Pseudomonas putida</em> KT2440 encodes MoaA, a cytoplasmic radical S-adenosyl-L-methionine (radical SAM) enzyme that catalyzes the first committed step of molybdenum cofactor (Moco) biosynthesis.</strong> The enzyme is a <strong>GTP 3′,8-cyclase (EC 4.1.99.22)</strong> that converts 5′-GTP into 3′,8-cyclo-7,8-dihydro-GTP (3′,8-cH₂GTP), which its partner enzyme MoaC then processes into cyclic pyranopterin monophosphate (cPMP, historically "precursor Z"). This is the entry point of an ancient, highly conserved four-step pathway that produces Moco, the pterin-based cofactor required by essentially all molybdoenzymes across biology.</p>
+<p>The identification is robust and multiply corroborated. The 322-amino-acid Q88K11 sequence carries the two structural hallmarks that define the MoaA subfamily of radical SAM enzymes: an N-terminal <strong>CX₃CX₂C</strong> motif (residues C21–C25–C28) that ligates the SAM-cleaving [4Fe-4S] cluster (cluster I), and a C-terminal "twitch" domain (Pfam PF06463) that provides a second, substrate-binding [4Fe-4S] cluster (cluster II). The protein terminates in the conserved C-terminal di-glycine gate (…SALIMKSV<strong>GG</strong>), which is essential for radical initiation in characterized MoaA orthologs. InterPro, Pfam (PF04055 Radical_SAM), KEGG (ppu:PP_2482 → K03639, EC 4.1.99.22, module M00880), and BioCyc all converge on the same GTP 3′,8-cyclase / Moco-biosynthesis assignment, and the gene sits in a molybdoenzyme-associated genomic neighborhood.</p>
+<p>Mechanistically, MoaA is one of the founding and most conserved members of the radical SAM superfamily. Its N-terminal cluster reductively cleaves SAM to generate a transient, highly reactive 5′-deoxyadenosyl radical; its C-terminal cluster binds GTP through direct coordination of the guanine N1 nitrogen to the cluster's unique iron. Radical abstraction and a novel C3′–C8 carbon–carbon bond formation produce the cyclized product. Because Moco is required to activate more than 50 bacterial molybdoenzymes (nitrate reductase, DMSO reductase, formate dehydrogenase, xanthine dehydrogenase, and others), MoaA occupies an essential, upstream, non-redundant position: loss of MoaA function causes pleiotropic loss of all molybdoenzyme activities. In <em>P. putida</em> KT2440—a metabolically versatile soil bacterium—MoaA (PP_2482) supplies the Moco needed for anaerobic/microaerobic respiration and purine/nitrogen metabolism carried out by its molybdoenzyme repertoire.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity checks required by the research brief were completed and <strong>passed</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Verification step</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "PP_2482" matches protein description</td>
+<td>✅ UniProt Q88K11 = "Molybdenum cofactor biosynthesis protein A" (MoaA); OrderedLocusNames PP_2482</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>Pseudomonas putida</em> strain ATCC 47054 / DSM 6125 / KT2440 (PSEPK); KEGG ppu:PP_2482</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✅ Radical SAM (IPR006638/PF04055), MoaA-like (IPR040064), MoaA_twitch (IPR010505), MoCo_biosynth MoaA/MoaC family (IPR050105), TIM-barrel-like core (IPR013785) — all consistent with the MoaA GTP 3′,8-cyclase</td>
+</tr>
+<tr>
+<td>No conflicting literature for a different gene</td>
+<td>✅ "MoaA" is unambiguous for this function; the domain architecture and KEGG/BioCyc annotations are internally consistent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> This report describes the correct gene/protein. The literature cited concerns the MoaA enzyme family and the Moco biosynthesis pathway. Because no MoaA-specific experimental study has been published <em>for the P. putida ortholog itself</em>, functional claims for PP_2482 are made by rigorous inference from (a) the direct sequence/domain signatures present in Q88K11, (b) authoritative biochemical/structural studies of MoaA orthologs (chiefly <em>Staphylococcus aureus</em> and <em>Escherichia coli</em>), and (c) database orthology assignments. This inferential basis is explicitly flagged in the Limitations section.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_2482-q88k11-is-moaa-a-radical-sam-gtp-38-cyclase-catalyzing-the-first-step-of-moco-biosynthesis">Finding 1 — PP_2482 (Q88K11) is MoaA, a radical SAM GTP 3′,8-cyclase catalyzing the first step of Moco biosynthesis</h3>
+<p>UniProt accession Q88K11 / locus PP_2482 in <em>P. putida</em> KT2440 is annotated as "Molybdenum cofactor biosynthesis protein A." The InterPro domain complement is diagnostic of the MoaA subfamily: a radical SAM domain (IPR006638), the MoaA-like domain (IPR040064), the MoaA "twitch" domain (IPR010505), membership in the MoCo_biosynth MoaA/MoaC family (IPR050105), and a TIM-barrel–like (aldolase-type) partial β-barrel core (IPR013785). The MoaA reaction is one of the most conserved in all of biology: acting together with MoaC, MoaA initiates Moco biosynthesis by converting 5′-GTP into cyclic pyranopterin monophosphate (cPMP, "precursor Z"), the first committed intermediate of the pathway.</p>
+<p>The biochemical identity of this first step is well established in the literature. Reviews of <em>E. coli</em> Moco biosynthesis state that "the starting point is the formation of the cyclic pyranopterin monophosphate (cPMP) from 5′-GTP" <a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">PMID: 32239579</a>. Mechanistic studies specify that MoaA (and its human ortholog MOCS1A) mediates "the conversion of guanosine 5′-triphosphate (GTP) into cyclic pyranopterin monophosphate" <a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a>, and the <em>E. coli</em> molybdoenzyme maturation review confirms "formation of the cyclic pyranopterin monophosphate" as step one <a href="https://pubmed.ncbi.nlm.nih.gov/23201473/">PMID: 23201473</a>. The alignment of Q88K11's domain architecture with this precisely defined reaction is the foundation of the annotation.</p>
+<h3 id="finding-2-catalytic-mechanism-two-4fe-4s-clusters-a-sam-derived-5-deoxyadenosyl-radical-and-a-c-terminal-gg-motif-gate">Finding 2 — Catalytic mechanism: two [4Fe-4S] clusters, a SAM-derived 5′-deoxyadenosyl radical, and a C-terminal GG-motif gate</h3>
+<p>MoaA is a founding radical SAM enzyme and is bifunctional in its metal-cluster architecture. An <strong>N-terminal [4Fe-4S] cluster (cluster I)</strong>, coordinated by the canonical CX₃CX₂C cysteine triad, reductively cleaves SAM to generate a transient 5′-deoxyadenosyl radical. A <strong>second C-terminal [4Fe-4S] cluster (cluster II)</strong>, housed in the "twitch" domain, binds the GTP substrate. Electron-nuclear double resonance (ENDOR) spectroscopy demonstrated that the guanine <strong>N1</strong> nitrogen of GTP directly coordinates the unique iron of cluster II—"only one nitrogen nucleus is bound to the cluster" <a href="https://pubmed.ncbi.nlm.nih.gov/19566093/">PMID: 19566093</a>—with the guanine O6 forming a hydrogen bond to a cluster sulfide. This binding mode positions C3′ of the ribose and C8 of the guanine for the subsequent cyclization that forms a new carbon–carbon bond.</p>
+<p>Radical initiation is gated by a conserved <strong>C-terminal di-glycine (GG) motif</strong>. Biochemical dissection showed that "the C-terminal tail containing the GG motif interacts with the SAM-binding pocket of MoaA, and is essential for the binding of SAM and subsequent radical initiation" <a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a>, and that "the GG motif is essential for the activity of MoaA to produce 3′,8-cH₂GTP from GTP" <a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a>. The overall chemistry rests on the defining radical SAM feature: "reductive cleavage of SAM using an oxygen sensitive 4Fe-4S cluster to transiently generate 5′-deoxyadenosyl radical" <a href="https://pubmed.ncbi.nlm.nih.gov/29072833/">PMID: 29072833</a>. The oxygen sensitivity of the clusters explains why this cytoplasmic reaction is optimally supported under low-oxygen conditions and why MoaA is technically demanding to study in vitro.</p>
+<h3 id="finding-3-cytoplasmic-moaa-feeds-the-four-step-moco-pathway-that-activates-molybdoenzymes">Finding 3 — Cytoplasmic MoaA feeds the four-step Moco pathway that activates molybdoenzymes</h3>
+<p>Moco biosynthesis is an ancient, ubiquitous, and highly conserved <strong>cytoplasmic</strong> pathway comprising four steps: (1) formation of cPMP from GTP (MoaA + MoaC); (2) sulfur insertion converting cPMP to molybdopterin (MPT), catalyzed by the MoaD/MoaE synthase with MoaB accessory function; (3) molybdenum insertion by MogA/MoeA to form mature Moco; and (4) optional attachment of a nucleotide (GMP or CMP) to yield dinucleotide cofactor variants (bis-Mo-MPT, MGD, MCD). Reviews confirm "the biosynthesis of Moco can be divided into four steps" <a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">PMID: 32239579</a> with MoaA's reaction as step one.</p>
+<p>The product cofactor is inserted into a large downstream enzyme set: "More than 50 molybdoenzymes were identified in bacteria to date" <a href="https://pubmed.ncbi.nlm.nih.gov/23201473/">PMID: 23201473</a>, including nitrate reductase, DMSO reductase, formate dehydrogenase, and xanthine dehydrogenase—enzymes that catalyze oxygen-atom-transfer redox reactions central to anaerobic respiration and carbon/nitrogen metabolism. Critically, MoaA sits at the non-redundant head of this pathway: "A defect in any of the steps of Moco biosynthesis results in the pleiotropic loss of all Mo enzyme activities" <a href="https://pubmed.ncbi.nlm.nih.gov/16261263/">PMID: 16261263</a>. In <em>P. putida</em> KT2440, MoaA (PP_2482) therefore provides the committed entry point supplying Moco to the organism's entire molybdoenzyme complement.</p>
+<h3 id="finding-4-the-q88k11-sequence-directly-confirms-both-radical-sam-signatures">Finding 4 — The Q88K11 sequence directly confirms both radical SAM signatures</h3>
+<p>Direct inspection of the 322-residue Q88K11 protein sequence confirms both metal-cluster signatures rather than relying on annotation alone. The canonical radical SAM [4Fe-4S]-binding motif <strong>CX₃CX₂C</strong> is present at residues 21–28 (C21-NYA-C25-TY-C28). The protein matches <strong>Pfam PF04055 (Radical_SAM)</strong>, with the radical SAM core spanning approximately residues 5–217, and matches <strong>Pfam PF06463 (MoaA C-terminal / Mob_synth_C "twitch" domain)</strong>, which supplies the second [4Fe-4S] cluster via three conserved C-terminal cysteines. Finally, the protein terminates in <strong>…SALIMKSVGG</strong>, placing the conserved C-terminal di-glycine (GG) gate at positions 321–322. Database cross-references (KEGG ppu:PP_2482; BioCyc PPUT160488:G1G01-2657-MONOMER) are consistent.</p>
+<p>These sequence features map one-to-one onto the mechanistically characterized elements of MoaA. The terminal …VGG matches "the GG motif [that] is essential for the activity of MoaA to produce 3′,8-cH₂GTP from GTP" <a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a>, and the CX₃CX₂C triad at residues 21–28 is the cysteine cluster that "generate[s] [the] 5′-deoxyadenosyl radical" via reductive SAM cleavage <a href="https://pubmed.ncbi.nlm.nih.gov/29072833/">PMID: 29072833</a>. The presence of both signatures in the actual Q88K11 sequence upgrades the functional assignment from database inference to sequence-level evidence.</p>
+<h3 id="finding-5-kegg-assigns-pp_2482-to-gtp-38-cyclase-in-a-molybdoenzyme-associated-neighborhood">Finding 5 — KEGG assigns PP_2482 to GTP 3′,8-cyclase in a molybdoenzyme-associated neighborhood</h3>
+<p>KEGG maps ppu:PP_2482 to orthology <strong>K03639 = "GTP 3′,8-cyclase [EC:4.1.99.22]"</strong>, pathway ppu00790 (folate/pterin biosynthesis), and module <strong>M00880 "Molybdenum cofactor biosynthesis, GTP ⇒ molybdenum cofactor."</strong> The gene occupies genomic coordinates 2,829,397–2,830,365 (969 bp; 322 aa). Its immediate neighbors reinforce the functional context: PP_2481 (adjacent, same strand) and PP_2480 (a putative xanthine dehydrogenase accessory factor—i.e., a molybdoenzyme maturation function), with an ArsR-family regulator (PP_2484) nearby. The physical co-localization of MoaA with a molybdoenzyme accessory gene is consistent with coordinated Moco-biosynthesis / molybdoenzyme functional organization.</p>
+<p>The KEGG EC/KO assignment corresponds exactly to the characterized reaction: EC 4.1.99.22 / K03639 (GTP 3′,8-cyclase) matches "the conversion of guanosine 5′-triphosphate (GTP) into cyclic pyranopterin monophosphate" <a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a>, and module M00880's "GTP ⇒ cPMP" step matches "the starting point is the formation of the cyclic pyranopterin monophosphate (cPMP) from 5′-GTP" <a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">PMID: 32239579</a>.</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<h3 id="the-reaction-moaa-catalyzes">The reaction MoaA catalyzes</h3>
+<p>MoaA performs the chemically remarkable first half of the GTP → cPMP conversion. In modern nomenclature, MoaA is the GTP 3′,8-cyclase that produces <strong>3′,8-cyclo-7,8-dihydro-GTP (3′,8-cH₂GTP)</strong>; MoaC then rearranges this intermediate into cyclic pyranopterin monophosphate (cPMP). The MoaA step forms a new <strong>C3′–C8 carbon–carbon bond</strong>, an unusual transformation that required decades to resolve and is a signature achievement of radical SAM chemistry.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">MoaA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_2482</span><span class="p">)</span><span class="w">                          </span><span class="n">MoaC</span>
+<span class="w">   </span><span class="n">radical</span><span class="w"> </span><span class="n">SAM</span><span class="w">                             </span><span class="p">(</span><span class="n">partner</span><span class="p">)</span>
+<span class="w">   </span><span class="n">GTP</span><span class="w"> </span><span class="mi">3</span><span class="s1">&#39;,8-cyclase                        isomerase/</span>
+<span class="w">                           </span><span class="n">cyclase</span>
+<span class="err">│</span><span class="w">                                      </span><span class="err">│</span>
+<span class="err">▼</span><span class="w">                                      </span><span class="err">▼</span>
+<span class="w">  </span><span class="mi">5</span><span class="s1">&#39;-GTP ──────────► 3&#39;</span><span class="p">,</span><span class="mi">8</span><span class="o">-</span><span class="n">cH2GTP</span><span class="w"> </span><span class="err">──────────►</span><span class="w"> </span><span class="n">cPMP</span><span class="w"> </span><span class="p">(</span><span class="n">precursor</span><span class="w"> </span><span class="n">Z</span><span class="p">)</span>
+<span class="err">│</span><span class="w">                                      </span><span class="err">│</span>
+<span class="w">   </span><span class="n">SAM</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="mi">5</span><span class="s1">&#39;-dAdo•                         [step 1 complete]</span>
+<span class="w">   </span><span class="p">(</span><span class="n">cluster</span><span class="w"> </span><span class="n">I</span><span class="p">)</span><span class="w">                                 </span><span class="err">│</span>
+<span class="w">   </span><span class="n">guanine</span><span class="w"> </span><span class="n">N1</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">cluster</span><span class="w"> </span><span class="n">II</span><span class="w">                     </span><span class="err">▼</span>
+<span class="w">                     </span><span class="n">MPT</span><span class="w"> </span><span class="err">─►</span><span class="w"> </span><span class="n">Moco</span><span class="w"> </span><span class="err">─►</span><span class="w"> </span><span class="p">(</span><span class="n">MGD</span><span class="o">/</span><span class="n">MCD</span><span class="w"> </span><span class="n">variants</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="n">steps</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="w">                              </span><span class="err">│</span>
+<span class="w">                              </span><span class="err">▼</span>
+<span class="w">                   </span><span class="o">&gt;</span><span class="mi">50</span><span class="w"> </span><span class="n">molybdoenzymes</span><span class="w"> </span><span class="n">activated</span>
+<span class="w">              </span><span class="p">(</span><span class="n">nitrate</span><span class="w"> </span><span class="n">reductase</span><span class="p">,</span><span class="w"> </span><span class="n">DMSO</span><span class="w"> </span><span class="n">reductase</span><span class="p">,</span>
+<span class="w">               </span><span class="n">formate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">xanthine</span><span class="w"> </span><span class="n">DH</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="the-two-cluster-architecture">The two-cluster architecture</h3>
+<p>MoaA is unusual even among radical SAM enzymes in requiring <strong>two</strong> distinct [4Fe-4S] clusters:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Cluster I (N-terminal)</th>
+<th>Cluster II (C-terminal / "twitch")</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ligating motif</td>
+<td>CX₃CX₂C (residues 21–28 in Q88K11)</td>
+<td>3 conserved Cys in PF06463 twitch domain</td>
+</tr>
+<tr>
+<td>Role</td>
+<td>Reductive cleavage of SAM → 5′-deoxyadenosyl radical</td>
+<td>Binds GTP substrate</td>
+</tr>
+<tr>
+<td>Substrate contact</td>
+<td>SAM (via GG-gated pocket)</td>
+<td>Guanine N1 → unique Fe; O6···sulfide H-bond</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>Sequence motif + PMID: 29072833</td>
+<td>ENDOR spectroscopy, PMID: 19566093</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>C-terminal GG motif</strong> (…SVGG in Q88K11) acts as a conformational gate: it docks into the SAM-binding pocket and is required for productive SAM binding and radical initiation. Mutation of this motif abolishes activity in characterized MoaA orthologs and, in the human ortholog MOCS1A, causes molybdenum cofactor deficiency (a severe, often lethal inborn error of metabolism) <a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a>. This human-disease link underscores how tightly the mechanism is conserved from bacteria to humans.</p>
+<h3 id="localization">Localization</h3>
+<p>Moco biosynthesis is a <strong>cytoplasmic</strong> process; MoaA operates in the cytosol, where GTP, SAM, and the reducing systems needed to regenerate its clusters are available. There is no signal peptide or transmembrane region expected for this soluble enzyme. The oxygen sensitivity of its [4Fe-4S] clusters means the reaction is favored under microaerobic/anaerobic conditions—consistent with the physiological demand for molybdoenzymes (e.g., nitrate/DMSO respiration) under low oxygen.</p>
+<h3 id="pathway-context-and-physiological-role-in-p-putida">Pathway context and physiological role in <em>P. putida</em></h3>
+<p><em>P. putida</em> KT2440 is a metabolically versatile, biotechnologically important soil bacterium. Its molybdoenzymes (nitrate reductase, formate dehydrogenase, xanthine/purine-degrading dehydrogenases, and others) depend entirely on a functional Moco supply. Because "a defect in any of the steps of Moco biosynthesis results in the pleiotropic loss of all Mo enzyme activities" <a href="https://pubmed.ncbi.nlm.nih.gov/16261263/">PMID: 16261263</a>, MoaA (PP_2482) is a single-point, non-redundant gatekeeper: without it, none of these molybdoenzymes can be matured. The gene's location beside a xanthine dehydrogenase accessory factor (PP_2480) reflects this functional coupling between cofactor supply and cofactor use.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25697423/">PMID: 25697423</a></td>
+<td><em>C-Terminal glycine-gated radical initiation by GTP 3′,8-cyclase…</em></td>
+<td>Defines the GTP→cPMP reaction; establishes the essential C-terminal GG gate and SAM-dependent radical initiation (F1, F2, F4, F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19566093/">PMID: 19566093</a></td>
+<td><em>ENDOR spectroscopy shows guanine N1 binds [4Fe-4S] cluster II of MoaA</em></td>
+<td>Direct spectroscopic evidence for GTP coordination to cluster II via guanine N1 (F2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29072833/">PMID: 29072833</a></td>
+<td><em>Radical Breakthroughs in Natural Product and Cofactor Biosynthesis</em></td>
+<td>Describes the radical SAM mechanism—oxygen-sensitive [4Fe-4S] cluster generating 5′-dAdo radical (F2, F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">PMID: 32239579</a></td>
+<td><em>The biosynthesis of the molybdenum cofactors in E. coli</em></td>
+<td>cPMP formation from 5′-GTP as step 1; four-step pathway structure (F1, F3, F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23201473/">PMID: 23201473</a></td>
+<td><em>Molybdenum enzymes, their maturation and Moco biosynthesis in E. coli</em></td>
+<td>Confirms cPMP formation as step 1; &gt;50 bacterial molybdoenzymes depend on Moco (F1, F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16261263/">PMID: 16261263</a></td>
+<td><em>Molybdenum cofactor biosynthesis and deficiency</em></td>
+<td>Defect in any Moco step → pleiotropic loss of all Mo-enzyme activity, placing MoaA upstream and essential (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35480226/">PMID: 35480226</a></td>
+<td><em>Resolving the Multidecade-Long Mystery in MoaA Radical SAM Enzyme…</em></td>
+<td>Reviews the mechanistic resolution of MoaA chemistry and its health relevance (supporting context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30097104/">PMID: 30097104</a></td>
+<td><em>Lessons From the Studies of a CC Bond Forming Radical SAM Enzyme…</em></td>
+<td>MoaA as a founding radical SAM enzyme forming a C–C bond (supporting context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22684071/">PMID: 22684071</a></td>
+<td><em>…MoaC2 from M. tuberculosis</em></td>
+<td>Confirms MoaA + MoaC jointly convert GTP → precursor Z, the first step (partner-enzyme context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23539623/">PMID: 23539623</a></td>
+<td><em>The molybdenum cofactor</em></td>
+<td>Four-step, six-protein pathway; Moco deficiency is lethal (pathway context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16669776/">PMID: 16669776</a></td>
+<td><em>Molybdenum cofactor biosynthesis and molybdenum enzymes</em></td>
+<td>Ancient conserved pathway; Moco synthesized from GTP via cPMP, MPT, adenylated MPT (pathway context)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence:</strong> All lines of evidence converge. No paper in the reviewed literature contradicts the MoaA / GTP 3′,8-cyclase assignment. The mechanistic studies (PMIDs 25697423, 19566093, 29072833) are precise, low-throughput biochemical/spectroscopic investigations—exactly the type of evidence prioritized by the research brief—performed on MoaA orthologs whose active-site residues and domain architecture are shared by Q88K11.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental study of the <em>P. putida</em> ortholog.</strong> All functional claims for PP_2482 specifically are made by inference. The mechanistic and structural data derive from MoaA orthologs (chiefly <em>Staphylococcus aureus</em>, <em>E. coli</em>, and human MOCS1A). While MoaA is one of the most conserved enzymes known—reducing the risk of divergence—the <em>P. putida</em> protein has not itself been purified, assayed, crystallized, or genetically knocked out in a published study identified here.</p>
+</li>
+<li>
+<p><strong>Sequence-motif inference for cluster II cysteines.</strong> The N-terminal CX₃CX₂C motif and the C-terminal GG gate were confirmed at defined positions in Q88K11. The precise identities and spacing of the three twitch-domain cysteines ligating cluster II were inferred from Pfam PF06463 membership rather than mapped residue-by-residue in this investigation; explicit alignment to characterized orthologs would strengthen this.</p>
+</li>
+<li>
+<p><strong>Downstream molybdoenzyme repertoire of KT2440 not enumerated.</strong> The report asserts MoaA feeds the organism's molybdoenzymes but does not provide a validated inventory of which specific molybdoenzymes are encoded and expressed in <em>P. putida</em> KT2440, nor their physiological conditions of use.</p>
+</li>
+<li>
+<p><strong>Product nomenclature nuance.</strong> Historically, MoaA + MoaC together were said to make "precursor Z"/cPMP. Modern work partitions the chemistry so that MoaA alone produces 3′,8-cH₂GTP and MoaC completes cPMP formation. Some cited abstracts use the older combined description; this report reflects the modern partitioning but readers should be aware of the terminology evolution.</p>
+</li>
+<li>
+<p><strong>Regulation and expression are uncharacterized here.</strong> The nearby ArsR-family regulator (PP_2484) and operon structure were noted but not experimentally connected to <em>moaA</em> expression control in KT2440.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-and-actions">Proposed Follow-up Experiments and Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymatic confirmation.</strong> Heterologously express and purify Q88K11 (anaerobically, with iron–sulfur cluster reconstitution) and assay GTP 3′,8-cyclase activity in vitro—monitoring conversion of GTP to 3′,8-cH₂GTP (and, with MoaC, to cPMP) by LC-MS. This would upgrade the assignment from inference to direct evidence.</p>
+</li>
+<li>
+<p><strong>Genetic complementation / knockout.</strong> Delete PP_2482 in <em>P. putida</em> KT2440 and test for the predicted pleiotropic loss of molybdoenzyme activities (e.g., nitrate reductase, formate dehydrogenase); complement with the wild-type gene and with a GG-motif mutant to confirm the gate's essentiality in this organism.</p>
+</li>
+<li>
+<p><strong>Residue-level cluster mapping.</strong> Perform a multiple sequence alignment of Q88K11 against biochemically characterized MoaA orthologs to explicitly identify the cluster II cysteines and the substrate-binding residues, and/or generate an AlphaFold model to inspect the two-cluster architecture and GG-gate geometry.</p>
+</li>
+<li>
+<p><strong>Molybdoenzyme inventory.</strong> Bioinformatically enumerate and, ideally, transcriptomically profile the molybdoenzymes of KT2440 to define the physiological demand MoaA serves, and correlate <em>moaA</em> expression with anaerobic/microaerobic growth conditions.</p>
+</li>
+<li>
+<p><strong>Operon and regulation analysis.</strong> Determine the transcriptional unit containing PP_2482 (RNA-seq / promoter mapping) and test whether the adjacent ArsR-family regulator (PP_2484) or Moco/molybdate availability modulates its expression.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_2482 (Q88K11) of <em>Pseudomonas putida</em> KT2440 is <strong>MoaA, a cytoplasmic radical SAM GTP 3′,8-cyclase (EC 4.1.99.22)</strong> that catalyzes the first committed step of molybdenum cofactor biosynthesis. Using two [4Fe-4S] clusters—an N-terminal CX₃CX₂C cluster that cleaves SAM to a 5′-deoxyadenosyl radical and a C-terminal twitch-domain cluster that binds GTP via guanine N1—and a C-terminal GG gate that controls radical initiation, it converts 5′-GTP into 3′,8-cyclo-7,8-dihydro-GTP, forming a new C3′–C8 carbon–carbon bond. Partner enzyme MoaC then completes cyclic pyranopterin monophosphate, launching the conserved four-step pathway that matures Moco for the organism's molybdoenzymes. The assignment is supported at the sequence, domain, database-orthology, genomic-context, and mechanistic-literature levels, with the principal limitation being that the <em>P. putida</em> ortholog itself has not yet been directly characterized experimentally.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_2482-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_2482-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:32239579</li>
+<li>PMID:25697423</li>
+<li>PMID:23201473</li>
+<li>PMID:19566093</li>
+<li>PMID:29072833</li>
+<li>PMID:16261263</li>
+<li>PMID:35480226</li>
+<li>PMID:30097104</li>
+<li>PMID:22684071</li>
+<li>PMID:23539623</li>
+<li>PMID:16669776</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2482-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K11" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_2482-curation-notes">PP_2482 curation notes</h1>
+<h2 id="2026-07-20-openscientist-report-assessment">2026-07-20 OpenScientist report assessment</h2>
+<p>The generated OpenScientist report is retained unchanged as provider output but is<br />
+assessed as <code>MISCITED</code> for target-level curation. It declares Q88K11 canonical MoaA,<br />
+assigns exact GTP 3',8'-cyclase activity, and calls PP_2482 an essential,<br />
+nonredundant gate despite the distinct reviewed canonical KT2440 MoaA Q88E69 and<br />
+the unresolved PP_2482/PP_1969 paralog relationship. It also presents unsaved<br />
+residue, motif, and neighborhood analyses as decisive evidence. Those claims are<br />
+not propagated.</p>
+<p>The conservative decision is unchanged: Q88K11 is a divergent MoaA-like<br />
+radical-SAM candidate whose physiological substrate, exact catalytic activity, and<br />
+necessity remain <code>UNDECIDED</code>. This conclusion is grounded in the target UniProt<br />
+record and the saved local sequence comparison; the provider report contributes<br />
+only its explicit statement that no direct PP_2482 experiment was found.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88K11
+gene_symbol: PP_2482
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_2482 encodes a MoaA-family radical-SAM protein with the conserved
+  CxxxCxxC iron-sulfur-binding motif. It is related to, but substantially
+  diverged from, canonical KT2440 MoaA and lies next to a predicted MocA
+  cytidylyltransferase; its physiological substrate and equivalence to the
+  canonical cPMP-forming enzyme remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Catalytic activity is plausible for this radical-SAM family member, but the exact reaction is unresolved.
+    action: UNDECIDED
+    reason: Sequence features establish family membership but do not prove use of GTP as the physiological substrate.
+    supported_by:
+    - reference_id: file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+      supporting_text: |-
+        - All three KT2440 proteins have comparable lengths (322-337 aa), the canonical
+          radical-SAM `CxxxCxxC` pattern near the N terminus, and two detected `CxxC`
+          patterns. These features support radical-SAM/MoaA-like family membership but
+          do not establish the same physiological substrate or pathway contribution.
+    - reference_id: file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+      supporting_text: &gt;-
+        1. **No direct experimental study of the *P. putida* ortholog.** All
+        functional claims for PP_2482 specifically are made by inference.
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Molybdenum-cofactor pathway involvement is plausible from family and locus context but lacks gene-specific evidence.
+    action: UNDECIDED
+    reason: PP_2482 may support a local MCD-requiring system, but redundancy with or independence from canonical moaA has not been demonstrated.
+    supported_by:
+    - reference_id: file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+      supporting_text: |-
+        The sequence analysis therefore supports keeping PP_2482 and PP_1969 as
+        MoaA-family candidates while reserving the unqualified GTP 3&#39;,8&#39;-cyclase role
+        for Q88E69 unless gene-specific biochemical, genetic, or stronger phylogenetic
+        evidence resolves the paralogs.
+    - reference_id: file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+      supporting_text: &gt;-
+        1. **No direct experimental study of the *P. putida* ortholog.** All
+        functional claims for PP_2482 specifically are made by inference.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Metal-ion binding is consistent with the radical-SAM iron-sulfur motif but is non-core.
+    action: KEEP_AS_NON_CORE
+    reason: The sequence and UniProt record support an iron-sulfur-binding radical-SAM fold.
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This broad iron-sulfur-cluster binding term is redundant with the more specific retained [4Fe-4S]-cluster binding annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: UniProt records a [4Fe-4S] cofactor for Q88K11, so GO:0051539 captures the supported cofactor binding more precisely.
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Specific [4Fe-4S]-cluster binding is plausible but is not an exact pathway-function assignment.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt and the conserved cysteine motif support a radical-SAM [4Fe-4S] cluster.
+- term:
+    id: GO:0061798
+    label: GTP 3&#39;,8&#39;-cyclase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Exact GTP 3&#39;,8&#39;-cyclase activity cannot be established for this divergent paralog.
+    action: UNDECIDED
+    reason: Q88K11 lacks the MoaA-specific InterPro records present on reviewed Q88E69 and is only 36.25% identical to it; no direct assay resolves substrate specificity.
+    supported_by:
+    - reference_id: file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+      supporting_text: |-
+        - Q88E69 is 36.25% identical to Q88K11 (PP_2482) and 37.85% identical to Q88LG4
+          (PP_1969) over aligned residue pairs. Q88K11 and Q88LG4 are 66.15% identical
+          to one another. This pattern supports a closer relationship between the two
+          unreviewed candidates than either has to canonical moaA, and does not support
+          assuming that all three are interchangeable copies.
+    - reference_id: file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+      supporting_text: &gt;-
+        1. **No direct experimental study of the *P. putida* ortholog.** All
+        functional claims for PP_2482 specifically are made by inference.
+- term:
+    id: GO:0061799
+    label: cyclic pyranopterin monophosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: cPMP synthase is the distinct MoaC reaction and should not be assigned to a stand-alone MoaA-family protein.
+    action: REMOVE
+    reason: Even canonical bacterial MoaA forms the cyclic GTP intermediate; MoaC converts that intermediate to cPMP.
+    supported_by:
+    - reference_id: file:PSEPK/moaA/moaA-uniprot.txt
+      supporting_text: &#34;DE   RecName: Full=GTP 3&#39;,8-cyclase {ECO:0000255|HAMAP-Rule:MF_01225};&#34;
+    - reference_id: file:PSEPK/moaC/moaC-uniprot.txt
+      supporting_text: &#34;DE   RecName: Full=Cyclic pyranopterin monophosphate synthase {ECO:0000255|HAMAP-Rule:MF_01224};&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_2482/PP_2482-uniprot.txt
+  title: UniProtKB entry for PP_2482
+  findings:
+  - statement: UniProt identifies Q88K11 as a MoaA-like radical-SAM protein.
+    supporting_text: |-
+      DR   InterPro; IPR006638; Elp3/MiaA/NifB-like_rSAM.
+      DR   InterPro; IPR040064; MoaA-like.
+  - statement: UniProt assigns a [4Fe-4S] cofactor by automated rule.
+    supporting_text: |-
+      CC   -!- COFACTOR:
+      CC       Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;
+      CC         Evidence={ECO:0000256|ARBA:ARBA00001966};
+- id: file:PSEPK/PP_2482/PP_2482-goa.tsv
+  title: QuickGO GOA annotations for PP_2482
+  findings:
+  - statement: The fetched table contains adjacent TreeGrafter rows for both exact MoaA and MoaC activities.
+    supporting_text: |-
+      UniProtKB	Q88K11	PP_2482	enables	GO:0061798	GTP 3&#39;,8&#39;-cyclase activity	molecular_function	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN008586334	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	Radical SAM core domain-containing protein	20260706
+      UniProtKB	Q88K11	PP_2482	enables	GO:0061799	cyclic pyranopterin monophosphate synthase activity	molecular_function	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN008586334	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	Radical SAM core domain-containing protein	20260706
+- id: file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_2482
+  reference_review:
+    relevance: HIGH
+    correctness: MISCITED
+    review_notes: &gt;-
+      The report is miscited for target-level curation: it declares Q88K11 the
+      essential, nonredundant canonical GTP 3&#39;,8&#39;-cyclase despite the distinct
+      reviewed canonical KT2440 MoaA Q88E69 and the unresolved three-paralog
+      relationship. It also presents unsaved residue, motif, neighborhood, and
+      target-sequence analyses as decisive. None of its catalytic, essentiality,
+      or residue-level claims are propagated; only its explicit no-target-assay
+      limitation is retained.
+  findings:
+  - statement: The report incorrectly promotes the uncertain Q88K11 paralog to canonical MoaA with an exact catalytic assignment.
+    supporting_text: &gt;-
+      **PP_2482 (UniProt Q88K11) of *Pseudomonas putida* KT2440 encodes MoaA, a
+      cytoplasmic radical S-adenosyl-L-methionine (radical SAM) enzyme that
+      catalyzes the first committed step of molybdenum cofactor (Moco)
+      biosynthesis.**
+  - statement: The report incorrectly calls PP_2482 an essential, nonredundant pathway gate despite the other KT2440 MoaA-family loci.
+    supporting_text: &gt;-
+      MoaA (PP_2482) is a single-point, non-redundant gatekeeper: without it, none
+      of these molybdoenzymes can be matured.
+  - statement: The report presents unsaved residue-level analysis as decisive target evidence.
+    supporting_text: &gt;-
+      Direct inspection of the 322-residue Q88K11 protein sequence confirms both
+      metal-cluster signatures rather than relying on annotation alone.
+  - statement: The report acknowledges that no direct PP_2482 experiment was found.
+    supporting_text: &gt;-
+      1. **No direct experimental study of the *P. putida* ortholog.** All
+      functional claims for PP_2482 specifically are made by inference.
+- id: file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+  title: Reproducible sequence comparison of KT2440 MoaA-family and MobA-like proteins
+  findings:
+  - statement: Q88K11 lacks the two MoaA-specific InterPro records found on Q88E69.
+    supporting_text: |-
+      - The reviewed MoaA sequence Q88E69 is the only one of the three with the
+        MoaA-specific InterPro entries IPR013483 and IPR000385 in its UniProt record.
+        All three share broader MoaA-like/radical-SAM entries and PTHR22960.
+  - statement: Q88K11 is 36.25% identical to canonical Q88E69 and is closer to Q88LG4.
+    supporting_text: |-
+      - Q88E69 is 36.25% identical to Q88K11 (PP_2482) and 37.85% identical to Q88LG4
+        (PP_1969) over aligned residue pairs. Q88K11 and Q88LG4 are 66.15% identical
+        to one another. This pattern supports a closer relationship between the two
+        unreviewed candidates than either has to canonical moaA, and does not support
+        assuming that all three are interchangeable copies.
+- id: file:PSEPK/moaA/moaA-uniprot.txt
+  title: UniProtKB entry for canonical KT2440 moaA
+  findings:
+  - statement: Canonical KT2440 MoaA is specifically named as GTP 3&#39;,8&#39;-cyclase.
+    supporting_text: &#34;DE   RecName: Full=GTP 3&#39;,8-cyclase {ECO:0000255|HAMAP-Rule:MF_01225};&#34;
+- id: file:PSEPK/moaC/moaC-uniprot.txt
+  title: UniProtKB entry for KT2440 moaC
+  findings:
+  - statement: KT2440 MoaC is specifically named as cyclic pyranopterin monophosphate synthase.
+    supporting_text: &#34;DE   RecName: Full=Cyclic pyranopterin monophosphate synthase {ECO:0000255|HAMAP-Rule:MF_01224};&#34;
+core_functions:
+- description: MoaA-family radical-SAM protein with iron-sulfur binding; its physiological substrate and pathway role are unresolved.
+  supported_by:
+  - reference_id: file:PSEPK/PP_2482/PP_2482-uniprot.txt
+    supporting_text: |-
+      CC   -!- COFACTOR:
+      CC       Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;
+      CC         Evidence={ECO:0000256|ARBA:ARBA00001966};
+  - reference_id: file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+    supporting_text: |-
+      The sequence analysis therefore supports keeping PP_2482 and PP_1969 as
+      MoaA-family candidates while reserving the unqualified GTP 3&#39;,8&#39;-cyclase role
+      for Q88E69 unless gene-specific biochemical, genetic, or stronger phylogenetic
+      evidence resolves the paralogs.
+  - reference_id: file:PSEPK/PP_2482/PP_2482-deep-research-openscientist.md
+    supporting_text: &gt;-
+      1. **No direct experimental study of the *P. putida* ortholog.** All
+      functional claims for PP_2482 specifically are made by inference.
+proposed_new_terms: []
+suggested_questions:
+- question: Does PP_2482 cyclize GTP, act on another purine-derived substrate, or serve a specialized role in the adjacent MCD-dependent enzyme system?
+suggested_experiments:
+- description: Compare purified PP_2482 with canonical MoaA for GTP turnover and cyclic intermediate formation, and test complementation of a moaA deletion.
+  experiment_type: comparative enzyme assay and genetic complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
