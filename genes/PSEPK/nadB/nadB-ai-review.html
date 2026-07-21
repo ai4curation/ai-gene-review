@@ -1,0 +1,2382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nadB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nadB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MZ2" target="_blank" class="term-link">
+                        Q88MZ2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nadB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MZ2" data-a="DESCRIPTION: FAD-dependent L-aspartate oxidase of Pseudomonas p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FAD-dependent L-aspartate oxidase of Pseudomonas putida KT2440. NadB catalyzes oxidation of L-aspartate to iminoaspartate with formation of hydrogen peroxide, initiating de novo NAD+ biosynthesis from L-aspartate. The unstable iminoaspartate product is used by quinolinate synthase NadA in the next step.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MZ2" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for a soluble bacterial NadB enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns the target protein to the cytoplasm, consistent with its soluble role in de novo NAD+ biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadB/nadB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008734" target="_blank" class="term-link">
+                                    GO:0008734
+                                </a>
+                            </span>
+                            <span class="term-label">L-aspartate oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MZ2" data-a="GO:0008734" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target is assigned to the NadB subfamily and its UniProt reaction is the defining L-aspartate oxidase reaction (RHEA:25876).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadB/nadB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidation of L-aspartate to iminoaspartate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MZ2" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct pathway assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NadB supplies iminoaspartate at the first committed reaction of the L-aspartate de novo NAD+ route.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadB/nadB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; iminoaspartate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MZ2" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct chemistry but unnecessarily broad relative to the known activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NadB is an oxidoreductase, but GO:0008734 identifies its substrate and reaction and is therefore the informative molecular-function term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008734" target="_blank" class="term-link">
+                                    L-aspartate oxidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019363" target="_blank" class="term-link">
+                                    GO:0019363
+                                </a>
+                            </span>
+                            <span class="term-label">pyridine nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MZ2" data-a="GO:0019363" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but broader than the established L-aspartate route.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact pathway is de novo NAD+ biosynthesis from L-aspartate, which is captured by GO:0034628.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034628" target="_blank" class="term-link">
+                                    &#39;de novo&#39; NAD+ biosynthetic process from L-aspartate
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034628" target="_blank" class="term-link">
+                                    GO:0034628
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MZ2" data-a="GO:0034628" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> L-aspartate oxidation by NadB is the entry reaction for this de novo NAD+ biosynthetic route.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/nadB/nadB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidation of L-aspartate to iminoaspartate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent L-aspartate oxidase that converts L-aspartate to iminoaspartate at the first step of de novo NAD+ biosynthesis from L-aspartate.</h3>
+                <span class="vote-buttons" data-g="Q88MZ2" data-a="FUNCTION: FAD-dependent L-aspartate oxidase that converts L-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008734" target="_blank" class="term-link">
+                            L-aspartate oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034628" target="_blank" class="term-link">
+                                &#39;de novo&#39; NAD+ biosynthetic process from L-aspartate
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/nadB/nadB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the oxidation of L-aspartate to iminoaspartate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/nadB/nadB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88MZ2 for Pseudomonas putida KT2440 nadB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The target protein is assigned the defining L-aspartate oxidase reaction.</div>
+
+                        <div class="finding-text">"Catalyzes the oxidation of L-aspartate to iminoaspartate."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places the target in de novo NAD+ biosynthesis.</div>
+
+                        <div class="finding-text">"PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; iminoaspartate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/nadB/nadB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for Pseudomonas putida KT2440 nadB</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is flux through NadB coordinated with oxygen availability and the downstream iron-sulfur enzyme NadA in P. putida KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88MZ2" data-a="Q: How is flux through NadB coordinated with oxygen a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure growth and intracellular quinolinate, NaMN, and NAD+ in a clean nadB deletion strain with and without nicotinate supplementation, then restore the phenotype by chromosomal complementation.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88MZ2" data-a="EXPERIMENT: Measure growth and intracellular quinolinate, NaMN..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MZ2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *nadB* (L-Aspartate Oxidase) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T15:28:53.859893</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nadB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="nadB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-nadb-l-aspartate-oxidase-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>nadB</em> (L-Aspartate Oxidase) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88MZ2 | <strong>Gene:</strong> <em>nadB</em> | <strong>Ordered locus:</strong> PP_1426 | <strong>EC:</strong> 1.4.3.16<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)<br />
+<strong>Protein family:</strong> FAD-dependent oxidoreductase 2 family, NadB subgroup</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The <em>Pseudomonas putida</em> KT2440 gene <strong><em>nadB</em></strong> (locus PP_1426; UniProt <strong>Q88MZ2</strong>) encodes <strong>L-aspartate oxidase (LASPO, EC 1.4.3.16)</strong>, a <strong>FAD-dependent flavoenzyme</strong> that catalyzes the <strong>first committed step of the <em>de novo</em> biosynthesis of nicotinamide adenine dinucleotide (NAD⁺)</strong>. The enzyme oxidizes <strong>L-aspartate to α-iminosuccinate (iminoaspartate)</strong>, an unstable imino acid that is the entry-point metabolite for the bacterial <em>de novo</em> NAD⁺ pathway. This annotation is anchored by strong sequence and domain homology (identical InterPro/TIGRFAM signatures for the NadB family) between Q88MZ2 and biochemically and structurally characterized orthologs from <em>Escherichia coli</em> and <em>Bacillus subtilis</em>.</p>
+<p>Mechanistically, NadB is a member of the <strong>succinate dehydrogenase / fumarate reductase (SDH/FRD) structural and functional superfamily</strong>. It carries a <strong>non-covalently bound FAD</strong> cofactor within a three-domain fold (an FAD/dinucleotide-binding domain, an α+β capping domain, and a C-terminal three-helical bundle). A distinctive and biologically important feature is that the enzyme can re-oxidize its reduced flavin using <strong>either molecular oxygen (oxidase mode, producing H₂O₂) or fumarate (dehydrogenase mode, producing succinate)</strong> as the terminal electron acceptor, allowing the <em>de novo</em> NAD⁺ pathway to operate under <strong>both aerobic and anaerobic conditions</strong>. Substrate specificity for L-aspartate — as opposed to the dicarboxylate substrates of its SDH/FRD relatives — is enforced by a strictly conserved active-site glutamate (Glu121 in the <em>E. coli</em> numbering) that reads the α-amino group of the substrate.</p>
+<p>Functionally, NadB acts in the <strong>cytoplasm</strong> and operates as the first enzyme of the linear <strong>NadB → NadA → NadC</strong> route: its product, iminoaspartate, is condensed with dihydroxyacetone phosphate by <strong>quinolinate synthase (NadA, a [4Fe–4S] enzyme)</strong> to form quinolinate, which <strong>quinolinate phosphoribosyltransferase (NadC)</strong> then converts to nicotinate mononucleotide, feeding into the universal NAD⁺ assembly steps. A direct, non-species-specific physical interaction between NadA and NadB has been demonstrated, consistent with substrate channeling of the labile iminoaspartate intermediate. Because this L-aspartate-oxidase route to quinolinate is <strong>bacterial and absent in mammals</strong> (which synthesize quinolinate from tryptophan via the kynurenine pathway), NadB is regarded as a <strong>candidate antibacterial drug target</strong>. Loss of NadB produces the classic NAD⁺/nicotinamide-auxotrophic (Nic⁻) phenotype in the characterized orthologs.</p>
+<blockquote>
+<p><strong>Identity verification:</strong> The gene symbol <em>nadB</em>, the protein description (L-aspartate oxidase, EC 1.4.3.16), the FAD-dependent oxidoreductase 2 / NadB family assignment, and the domain architecture (IPR005288 NadB; IPR003953 FAD-dep_OxRdtase_2_FAD-bd; IPR015939 Fum_Rdtase/Succ_DH_flav-like_C) are fully mutually consistent. The literature identified describes the <em>bona fide</em> L-aspartate oxidase / NAD-biosynthesis NadB, not an unrelated gene sharing the symbol. Direct experimental characterization exists for <em>E. coli</em> and <em>B. subtilis</em> orthologs; the assignment transfers to <em>P. putida</em> Q88MZ2 by strong homology and identical family/domain signatures. No <em>P. putida</em>-specific enzymological study of PP_1426 was located.</p>
+</blockquote>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-nadb-is-l-aspartate-oxidase-catalyzing-the-first-committed-step-of-de-novo-nad-biosynthesis">Finding 1 — NadB is L-aspartate oxidase, catalyzing the first committed step of <em>de novo</em> NAD⁺ biosynthesis</h3>
+<p>UniProt Q88MZ2 annotates PP_1426/<em>nadB</em> of <em>P. putida</em> KT2440 as <strong>L-aspartate oxidase (EC 1.4.3.16)</strong>, a member of the FAD-dependent oxidoreductase 2 family (NadB subgroup). In biochemically characterized homologs, the enzyme catalyzes the oxidation of <strong>L-aspartate to iminoaspartate (α-iminosuccinate)</strong> — the first reaction of the bacterial <em>de novo</em> NAD⁺ pathway. This reaction feeds directly into quinolinate synthase (NadA), which condenses iminoaspartate with dihydroxyacetone phosphate to generate quinolinate.</p>
+<p>The functional definition is unambiguous in the primary literature. As summarized for the pathway, "<em>In many eubacteria, including several pathogens, the first two steps in the de novo synthesis of NAD are catalyzed by l-aspartate oxidase (NadB) and quinolinate synthase (NadA)</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/18959769/">PMID: 18959769</a>. The specific reaction was defined by the enzyme's structural characterization: "<em>L-Aspartate oxidase (Laspo) catalyzes the conversion of L-Asp to iminoaspartate, the first step in the de novo biosynthesis of NAD(+)</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">PMID: 11863440</a>.</p>
+<p>The genetic link between <em>nadB</em> and this function is directly demonstrated: in uropathogenic <em>E. coli</em>, "<em>A mutation in the nadB gene, encoding L-aspartate oxidase, was shown to be responsible for the nicotinamide requirement of UTI89</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/22174382/">PMID: 22174382</a>. This establishes both that <em>nadB</em> encodes L-aspartate oxidase and that its loss produces NAD⁺ (nicotinamide) auxotrophy — the metabolic signature of a lesion at the entry point of the <em>de novo</em> pathway.</p>
+<p><strong>Reaction catalyzed:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">FAD</span><span class="w">  </span><span class="o">-&gt;</span><span class="w">  </span><span class="n">iminoaspartate</span><span class="w"> </span><span class="p">(</span><span class="n">alpha</span><span class="o">-</span><span class="n">iminosuccinate</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">FADH2</span>
+<span class="n">FADH2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">acceptor</span><span class="w">   </span><span class="o">-&gt;</span><span class="w">  </span><span class="n">FAD</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">reduced</span><span class="w"> </span><span class="n">acceptor</span>
+<span class="w">   </span><span class="n">acceptor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">O2</span><span class="w">       </span><span class="p">(</span><span class="n">oxidase</span><span class="w"> </span><span class="n">mode</span><span class="p">)</span><span class="w">  </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">H2O2</span>
+<span class="w">   </span><span class="n">acceptor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fumarate</span><span class="w"> </span><span class="p">(</span><span class="n">dehydrogenase</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">succinate</span>
+</code></pre></div>
+
+<h3 id="finding-2-nadb-is-an-fad-flavoenzyme-using-either-o2-or-fumarate-as-electron-acceptor">Finding 2 — NadB is an FAD flavoenzyme using either O₂ or fumarate as electron acceptor</h3>
+<p>Crystallographic studies of the <em>E. coli</em> enzyme (apo form at 2.2 Å; FAD-bound R386L holoenzyme at 2.5 Å) revealed a <strong>non-covalently bound FAD</strong> housed in a three-domain fold: an <strong>FAD-binding (dinucleotide-binding) domain</strong>, an <strong>α+β capping domain</strong>, and a <strong>C-terminal three-helical bundle</strong>. The enzyme oxidizes L-aspartate and then re-oxidizes the reduced flavin using either molecular oxygen or fumarate as the electron acceptor. This dual acceptor capability is functionally significant: it enables the <em>de novo</em> NAD⁺ pathway to proceed under aerobic conditions (oxidase mode, generating H₂O₂) and under anaerobic conditions (fumarate-reducing dehydrogenase mode, generating succinate).</p>
+<p>The primary structural paper describes NadB as "<em>a flavoenzyme that converts aspartate to iminoaspartate using either molecular oxygen or fumarate as electron acceptors</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/10425677/">PMID: 10425677</a>, and specifies the fold as "<em>an FAD-binding domain with the dinucleotide-binding fold, a C-terminal three-helical bundle domain, and an alpha + beta capping domain</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/10425677/">PMID: 10425677</a>.</p>
+<p>Cofactor binding is not merely structural scaffolding — it is coupled to active-site assembly. The FAD-bound holoenzyme structure showed that "<em>cofactor incorporation leads to the ordering of two polypeptide segments (residues 44-53 and 104-141) and to a 27 degree rotation of the capping domain</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">PMID: 11863440</a>. This conformational transition forms the active-site cavity at the interface between the FAD-binding and capping domains, meaning the enzyme is only catalytically competent once FAD is loaded. Such domain-hinge behavior of two-domain enzymes generally underlies substrate access and catalytic cycling <a href="https://pubmed.ncbi.nlm.nih.gov/10593256/">PMID: 10593256</a>.</p>
+<h3 id="finding-3-nadb-belongs-structurally-and-mechanistically-to-the-succinate-dehydrogenase-fumarate-reductase-family">Finding 3 — NadB belongs structurally and mechanistically to the succinate dehydrogenase / fumarate reductase family</h3>
+<p>L-aspartate oxidase shares sequence homology and overall folding topology with the flavoprotein subunits of <strong>succinate dehydrogenase (SDH)</strong> and <strong>fumarate reductase (FRD)</strong>. Strictly conserved residues cluster in the FAD-binding site and the catalytic center. The succinate-bound holoenzyme structure showed an active-site cavity whose surface is decorated by two clusters of hydrogen-bond donors that anchor the ligand's carboxylate groups, with the strictly conserved <strong>Glu121</strong> positioned to interact with the L-aspartate α-amino group.</p>
+<p>The structural paper places NadB firmly within this superfamily: "<em>LASPO, SDH and FRD form a class of functionally and structurally related oxidoreductases that are all able to reduce fumarate and to oxidise a dicarboxyla[te]</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/10425677/">PMID: 10425677</a>. The active-site conservation extends the analogy to catalysis: "<em>The architecture of the active site of the Laspo holoenzyme is remarkably similar to that of respiratory fumarate reductases, providing strong evidence for a common mechanism of catalysis in Laspo and flavoproteins of the succinate dehydrogenase/fumarate reductase family</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">PMID: 11863440</a>.</p>
+<p>This membership is precisely what the UniProt annotation of Q88MZ2 reflects: assignment to the <strong>FAD-dependent oxidoreductase 2 family</strong> with <strong>Fum_Rdtase/Succ_DH_flav-like_C</strong> (IPR015939) and <strong>FAD-dep_OxRdtase_2_FAD-bd</strong> (IPR003953) domains. The domain signatures of the <em>P. putida</em> protein therefore independently corroborate the SDH/FRD-family mechanistic assignment inferred from the <em>E. coli</em> structures.</p>
+<h3 id="finding-4-nadb-acts-in-the-cytoplasm-and-functionally-partners-with-quinolinate-synthase-nada">Finding 4 — NadB acts in the cytoplasm and functionally partners with quinolinate synthase (NadA)</h3>
+<p>In the <em>de novo</em> pathway, NadB oxidizes L-aspartate to iminoaspartate, which <strong>NadA (quinolinate synthase, a [4Fe–4S] enzyme)</strong> condenses with dihydroxyacetone phosphate to yield <strong>quinolinate</strong>. <strong>NadC (quinolinate phosphoribosyltransferase)</strong> then converts quinolinate to nicotinate mononucleotide, feeding the shared, universal NAD⁺ assembly steps. Both LASPO and NadA are <strong>soluble enzymes</strong>; LASPO was purified as a soluble cytoplasmic flavoprotein and crystallized from solution, indicating a <strong>cytoplasmic site of action</strong>.</p>
+<p>Crucially, a <strong>direct, non-species-specific physical interaction</strong> between the two entry enzymes has been demonstrated — <em>B. subtilis</em> NadB interacts with <em>E. coli</em> NadA — consistent with <strong>substrate channeling</strong> of the chemically labile iminoaspartate intermediate between the two active sites. The characterization of the <em>B. subtilis</em> enzymes reported that "<em>the interaction between NadA and NadB is not species-specific between B. subtilis and Escherichia coli</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/18959769/">PMID: 18959769</a>, and identified the partner as an iron-sulfur enzyme: "<em>NadA from B. subtilis possesses a [4Fe-4S]2+ cluster</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/18959769/">PMID: 18959769</a>.</p>
+<p>The pathway logic — that NadB and NadA together produce quinolinate — is explicit: "<em>two enzymes, L-aspartate oxidase (NadB) and quinolinate synthase (NadA), are required for the synthesis of QUIN</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/24120364/">PMID: 24120364</a>. Loss of either enzyme (via <em>nadB</em> or <em>nadA</em> mutation/silencing) produces the nicotinic-acid/NAD-auxotrophic (Nic⁻) phenotype, further tying NadB's function to this cytoplasmic biosynthetic route.</p>
+<h3 id="finding-5-nadb-is-strictly-specific-for-l-aspartate-and-the-pathway-it-initiates-is-a-validated-antibacterial-drug-target">Finding 5 — NadB is strictly specific for L-aspartate, and the pathway it initiates is a validated antibacterial drug target</h3>
+<p>The FAD-bound holoenzyme active site anchors the substrate's dicarboxylate through two hydrogen-bond-donor clusters, while the strictly conserved <strong>Glu121</strong> reads the L-aspartate α-amino group — a specificity determinant that distinguishes L-aspartate from the succinate/fumarate dicarboxylates handled by the homologous SDH/FRD enzymes. This narrow specificity underlies the enzyme's dedicated, non-redundant role in NAD⁺ biosynthesis: "<em>the cavity surface is decorated by two clusters of H-bond donors that anchor the ligand carboxylates</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">PMID: 11863440</a>, and "<em>Glu121, which is strictly conserved among Laspo sequences, is positioned to interact with the L-Asp alpha-amino group</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">PMID: 11863440</a>.</p>
+<p>Because the L-aspartate-oxidase → quinolinate-synthase route to quinolinate is bacterial and absent in mammals (which produce quinolinate from tryptophan), NadB and NadA are considered attractive targets for antibacterial drug design: "<em>This bacterial pathway represents a potential drug target since it is absent in mammals</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">PMID: 11863440</a>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>NadB is best understood as the <strong>flavin-dependent gatekeeper</strong> that draws carbon and nitrogen from central metabolism (L-aspartate, itself derived from oxaloacetate) into the pyridine-nucleotide (NAD⁺) pool. Its position, cofactor chemistry, structural family, and partner interactions form a coherent picture.</p>
+<h3 id="the-de-novo-nad-pathway-aspartate-route">The <em>de novo</em> NAD⁺ pathway (aspartate route)</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span>
+<span class="w">     </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">  </span><span class="n">NadB</span><span class="w">  </span><span class="p">(</span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">oxidase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">1.4.3.16</span><span class="p">)</span><span class="w">  </span><span class="o">&lt;--</span><span class="w"> </span><span class="n">THIS</span><span class="w"> </span><span class="n">PROTEIN</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1426</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Q88MZ2</span><span class="p">)</span>
+<span class="w">     </span><span class="o">|</span><span class="w">        </span><span class="n">FAD</span><span class="o">-</span><span class="n">dependent</span><span class="p">;</span><span class="w"> </span><span class="n">O2</span><span class="w"> </span><span class="p">(</span><span class="n">aerobic</span><span class="p">)</span><span class="w"> </span><span class="kr">or</span><span class="w"> </span><span class="n">fumarate</span><span class="w"> </span><span class="p">(</span><span class="n">anaerobic</span><span class="p">)</span><span class="w"> </span><span class="n">acceptor</span>
+<span class="w">     </span><span class="n">v</span>
+<span class="w">      </span><span class="n">iminoaspartate</span><span class="w">  </span><span class="p">(</span><span class="n">alpha</span><span class="o">-</span><span class="n">iminosuccinate</span><span class="p">;</span><span class="w"> </span><span class="n">labile</span><span class="p">)</span>
+<span class="w">     </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">  </span><span class="n">NadA</span><span class="w">  </span><span class="p">(</span><span class="n">quinolinate</span><span class="w"> </span><span class="n">synthase</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mf">4F</span><span class="n">e</span><span class="o">-</span><span class="mi">4</span><span class="n">S</span><span class="p">])</span><span class="w">   </span><span class="o">&lt;--</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="n">physical</span><span class="w"> </span><span class="n">partner</span>
+<span class="w">     </span><span class="o">|</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">dihydroxyacetone</span><span class="w"> </span><span class="n">phosphate</span><span class="w"> </span><span class="p">(</span><span class="n">DHAP</span><span class="p">)</span>
+<span class="w">     </span><span class="n">v</span>
+<span class="n">quinolinate</span><span class="w">  </span><span class="p">(</span><span class="n">QUIN</span><span class="p">)</span>
+<span class="w">     </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">  </span><span class="n">NadC</span><span class="w">  </span><span class="p">(</span><span class="n">quinolinate</span><span class="w"> </span><span class="n">phosphoribosyltransferase</span><span class="p">)</span>
+<span class="w">     </span><span class="o">|</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">PRPP</span><span class="w">  </span><span class="p">(</span><span class="o">-</span><span class="w"> </span><span class="n">CO2</span><span class="p">)</span>
+<span class="w">     </span><span class="n">v</span>
+<span class="w">    </span><span class="n">nicotinate</span><span class="w"> </span><span class="n">mononucleotide</span><span class="w"> </span><span class="p">(</span><span class="n">NaMN</span><span class="p">)</span>
+<span class="w">     </span><span class="o">|</span>
+<span class="w">     </span><span class="n">v</span>
+<span class="w">   </span><span class="p">...</span><span class="w"> </span><span class="n">universal</span><span class="w"> </span><span class="n">NAD</span><span class="o">+</span><span class="w"> </span><span class="n">assembly</span><span class="w"> </span><span class="p">(</span><span class="n">NadD</span><span class="p">,</span><span class="w"> </span><span class="n">NadE</span><span class="p">)</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">NAD</span><span class="o">+</span>
+</code></pre></div>
+
+<h3 id="reaction-and-cofactor-logic">Reaction and cofactor logic</h3>
+<p>The chemistry is a classic flavoprotein amino-acid oxidation: FAD abstracts electrons/hydride from the Cα–N center of L-aspartate to form the α-imino acid (iminoaspartate), leaving reduced FADH₂. The distinctive feature relative to canonical D-amino-acid oxidases is the <strong>reoxidation branch point</strong>: FADH₂ can hand electrons to O₂ (oxidase activity → H₂O₂) or to fumarate (fumarate-reductase-like dehydrogenase activity → succinate). This dual capability is a direct consequence of NadB's membership in the SDH/FRD superfamily, whose members intrinsically interconvert succinate/fumarate at a flavin center. Biologically, it ensures NAD⁺ can be synthesized <em>de novo</em> whether the cell is respiring aerobically or under oxygen-limited conditions — a useful robustness property for a metabolically versatile soil organism such as <em>P. putida</em>.</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<p>The enzyme must select L-aspartate over the structurally similar dicarboxylates (succinate/fumarate) that its SDH/FRD relatives act on. The solution is a bipartite recognition apparatus: two hydrogen-bond-donor clusters clamp the two carboxylates, and the conserved <strong>Glu121</strong> specifically reads the substrate α-amino group. This explains the enzyme's strict L-aspartate specificity and its non-redundant, dedicated placement at the head of NAD⁺ biosynthesis.</p>
+<h3 id="channeling-and-localization">Channeling and localization</h3>
+<p>Both NadB and NadA are soluble cytoplasmic enzymes, and they physically interact. Because iminoaspartate is chemically unstable (it readily hydrolyzes to oxaloacetate and ammonia), a <strong>substrate-channeling handoff</strong> from NadB to NadA is metabolically advantageous, protecting the intermediate and increasing pathway flux. The non-species-specific NadA–NadB interaction observed between <em>B. subtilis</em> and <em>E. coli</em> proteins argues that this partnership is an evolutionarily conserved feature of the family, and can reasonably be inferred to hold for the <em>P. putida</em> pair (PP_1426 NadB and its cognate NadA).</p>
+<h3 id="comparison-to-related-flavoenzymes-and-dehydrogenases">Comparison to related flavoenzymes and dehydrogenases</h3>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>Reaction / substrate</th>
+<th>Cofactor</th>
+<th>Relationship to NadB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NadB / LASPO</strong> (this protein)</td>
+<td>L-Asp → iminoaspartate; O₂ or fumarate acceptor</td>
+<td>FAD (non-covalent)</td>
+<td>The subject enzyme; SDH/FRD family</td>
+</tr>
+<tr>
+<td>Succinate dehydrogenase (SDH)</td>
+<td>succinate ⇌ fumarate</td>
+<td>FAD (covalent)</td>
+<td>Same structural superfamily; shared active-site architecture</td>
+</tr>
+<tr>
+<td>Fumarate reductase (FRD)</td>
+<td>fumarate → succinate</td>
+<td>FAD</td>
+<td>Same superfamily; "remarkably similar" active site [PMID: 11863440]</td>
+</tr>
+<tr>
+<td>D-aspartate oxidase (DASPO)</td>
+<td>D-Asp → oxaloacetate + NH₃</td>
+<td>FAD</td>
+<td>Different family/fold; opposite stereospecificity [PMID: 10209293]</td>
+</tr>
+<tr>
+<td>L-aspartate dehydrogenase (AspDH)</td>
+<td>OAA + NH₃ ⇌ L-Asp</td>
+<td>NAD(P)</td>
+<td>Different mechanism; makes/consumes Asp, not NAD precursor [PMID: 21468714]</td>
+</tr>
+</tbody>
+</table>
+<p>The last two rows are important negative controls for identity: NadB is <em>not</em> a D-aspartate oxidase (different stereochemistry and fold) and <em>not</em> an L-aspartate dehydrogenase (a distinct NAD(P)-dependent amino-acid dehydrogenase). These distinctions reinforce that Q88MZ2's annotation — L-aspartate oxidase of the SDH/FRD (NadB) family committing aspartate to NAD⁺ synthesis — is the correct one.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Organism/system</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10425677/">10425677</a></td>
+<td><em>Structure of L-aspartate oxidase: implications for the SDH/FRD family</em></td>
+<td><em>E. coli</em> (apo, 2.2 Å)</td>
+<td>Establishes FAD flavoenzyme; dual O₂/fumarate acceptor; three-domain fold; SDH/FRD family membership (Findings 2, 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11863440/">11863440</a></td>
+<td><em>Structure of FAD-bound L-aspartate oxidase: substrate specificity and catalysis</em></td>
+<td><em>E. coli</em> (holo, 2.5 Å)</td>
+<td>Defines reaction (L-Asp → iminoaspartate); FAD-induced active-site assembly (27° capping rotation); Glu121 specificity; carboxylate-anchoring donors; drug-target statement (Findings 1, 2, 3, 5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18959769/">18959769</a></td>
+<td><em>Characterization of L-aspartate oxidase and quinolinate synthase from B. subtilis</em></td>
+<td><em>B. subtilis</em></td>
+<td>NadB + NadA are the first two <em>de novo</em> NAD steps; direct non-species-specific NadA–NadB interaction; NadA is a [4Fe–4S] enzyme (Findings 1, 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22174382/">22174382</a></td>
+<td><em>Nicotinamide dependence of UPEC UTI89; nadB as neutral insertion site</em></td>
+<td><em>E. coli</em> UTI89</td>
+<td>Genetic proof that <em>nadB</em> encodes L-aspartate oxidase and its loss causes NAD/nicotinamide auxotrophy (Finding 1)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24120364/">24120364</a></td>
+<td><em>Molecular evolution of nicotinic acid requirement in Shigella/EIEC</em></td>
+<td><em>Shigella</em>/EIEC</td>
+<td>NadB + NadA together synthesize quinolinate; pathway loss → Nic⁻ auxotrophy (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10593256/">10593256</a></td>
+<td><em>Folding funnels and conformational transitions via hinge-bending</em></td>
+<td>General/theoretical</td>
+<td>Context for domain-hinge motions relevant to FAD-coupled capping-domain rotation (Finding 2, supporting)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10209293/">10209293</a></td>
+<td><em>Beef kidney D-aspartate oxidase</em></td>
+<td>Mammalian (contrast)</td>
+<td>Negative control: distinguishes NadB (L-specific, NAD pathway) from D-aspartate oxidase</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21468714/">21468714</a></td>
+<td><em>L-aspartate dehydrogenase from P. aeruginosa PAO1</em></td>
+<td><em>Pseudomonas</em> (contrast)</td>
+<td>Negative control: an NAD(P)-dependent Asp dehydrogenase, distinct from FAD-dependent NadB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Strength of evidence.</strong> The mechanistic, structural, and substrate-specificity conclusions rest on <strong>high-resolution crystal structures and biochemistry of the <em>E. coli</em> and <em>B. subtilis</em> orthologs</strong>, which are gold-standard, precise studies. The genetic function (auxotrophy upon <em>nadB</em> loss) is confirmed in multiple enterobacterial systems. What transfers to <em>P. putida</em> Q88MZ2 is done by <strong>homology and identical InterPro/TIGRFAM/family signatures</strong> rather than direct <em>P. putida</em> enzymology; the domain architecture of Q88MZ2 (NadB IPR005288; FAD-dep_OxRdtase_2_FAD-bd; Fum_Rdtase/Succ_DH_flav-like_C) matches the characterized enzymes exactly, giving high confidence in the transfer.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific enzymology.</strong> All direct biochemical and structural data derive from <em>E. coli</em> and <em>B. subtilis</em> (and enterobacterial genetics from UPEC/<em>Shigella</em>). No purification, kinetic characterization, crystal structure, or knockout of <em>P. putida</em> KT2440 PP_1426 itself was located. The functional assignment for Q88MZ2 is a well-supported homology inference, not a direct measurement.</p>
+</li>
+<li>
+<p><strong>Aerobic vs. oxygen-limited acceptor usage in <em>P. putida</em> is untested.</strong> <em>P. putida</em> KT2440 is a predominantly aerobic soil bacterium. Whether its NadB physiologically uses fumarate as an alternative electron acceptor (as <em>E. coli</em> NadB can) has not been demonstrated. The dual-acceptor capability is inferred from the family, not from <em>P. putida</em> data.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters unknown for Q88MZ2.</strong> K_m for L-aspartate, k_cat, the O₂-vs-fumarate partition, and any regulation (e.g., NAD⁺/NADH feedback) are not available for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>NadA/NadC partners in <em>P. putida</em> not explicitly mapped here.</strong> While the NadB→NadA→NadC logic is well established generally, the specific <em>P. putida</em> KT2440 loci for <em>nadA</em> and <em>nadC</em> and any operonic organization or physical complex were not characterized in this investigation. The channeling hypothesis is inferred from cross-species interaction data.</p>
+</li>
+<li>
+<p><strong>Regulation and physiological context.</strong> How <em>nadB</em> expression is controlled in <em>P. putida</em> (e.g., in response to NAD⁺ status, redox state, or during growth on aromatic/lignin-derived substrates for which this strain is notable) was not established.</p>
+</li>
+<li>
+<p><strong>Drug-target claim is general.</strong> The statement that the pathway is a mammalian-absent antibacterial target is well founded pharmacologically but has not been pursued specifically against <em>P. putida</em> NadB (an environmental, largely non-pathogenic organism where the clinical rationale is less pressing).</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzymology of PP_1426.</strong> Clone, over-express, and purify <em>P. putida</em> KT2440 NadB; confirm non-covalent FAD content spectroscopically; measure steady-state kinetics (K_m, k_cat) for L-aspartate, and quantify the partition between O₂ (H₂O₂ production) and fumarate (succinate production) as electron acceptors.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity panel.</strong> Test candidate substrates (L-Asp, D-Asp, L-Glu, succinate, other dicarboxylates/amino acids) to confirm strict L-aspartate specificity, and verify the predicted role of the conserved active-site glutamate by site-directed mutagenesis (Glu→Gln/Ala) equivalent to <em>E. coli</em> Glu121.</p>
+</li>
+<li>
+<p><strong>Genetic knockout / complementation.</strong> Construct a <em>P. putida</em> KT2440 Δ<em>nadB</em> mutant and test for NAD⁺/nicotinic-acid auxotrophy (growth rescue by nicotinamide, nicotinate, or quinolinate). Confirm that <em>nadB</em> can serve as a neutral insertion site as in UPEC, useful for strain engineering.</p>
+</li>
+<li>
+<p><strong>Partner-interaction and channeling assay.</strong> Test for a physical NadA–NadB complex in <em>P. putida</em> (co-purification, pull-down, or crosslinking) and probe substrate channeling of the labile iminoaspartate intermediate (e.g., transient-time kinetics with coupled NadA).</p>
+</li>
+<li>
+<p><strong>Structural confirmation.</strong> Solve or model (AlphaFold + experimental validation) the PP_1426 structure to confirm the three-domain SDH/FRD-like fold, FAD-binding site, and the α+β capping-domain arrangement; compare to <em>E. coli</em> LASPO (PDB entries from PMIDs 10425677/11863440).</p>
+</li>
+<li>
+<p><strong>Oxygen-limited/redox physiology.</strong> Determine whether fumarate-dependent dehydrogenase mode is physiologically relevant in <em>P. putida</em> under microaerobic conditions, and whether <em>nadB</em> expression responds to redox or NAD⁺ status.</p>
+</li>
+<li>
+<p><strong>Pathway mapping.</strong> Identify and annotate the cognate <em>nadA</em> and <em>nadC</em> loci in KT2440, determine operon structure and co-regulation, and place <em>nadB</em> in the broader NAD⁺ biosynthesis/salvage network of this strain.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>Pseudomonas putida</em> KT2440 <strong>NadB (PP_1426; UniProt Q88MZ2) is L-aspartate oxidase (EC 1.4.3.16)</strong> — a <strong>cytoplasmic, FAD-dependent flavoenzyme of the succinate dehydrogenase / fumarate reductase superfamily</strong> that catalyzes the <strong>first committed step of <em>de novo</em> NAD⁺ biosynthesis</strong>, oxidizing <strong>L-aspartate to iminoaspartate</strong> using <strong>either molecular O₂ (oxidase mode, → H₂O₂) or fumarate (dehydrogenase mode, → succinate)</strong> as the terminal electron acceptor. Its labile product is channeled to <strong>quinolinate synthase (NadA)</strong> and then <strong>quinolinate phosphoribosyltransferase (NadC)</strong> to build quinolinate/NAD⁺. The enzyme is <strong>strictly specific for L-aspartate</strong> via a conserved active-site glutamate, and the mammalian-absent pathway it initiates is a <strong>candidate antibacterial drug target</strong>. Direct experimental evidence is from <em>E. coli</em> and <em>B. subtilis</em> orthologs; the assignment transfers to Q88MZ2 by strong sequence homology and identical family/domain signatures.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nadB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="nadB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:18959769</li>
+<li>PMID:11863440</li>
+<li>PMID:22174382</li>
+<li>PMID:10425677</li>
+<li>PMID:10593256</li>
+<li>PMID:24120364</li>
+<li>PMID:10209293</li>
+<li>PMID:21468714</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MZ2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nadb-curation-notes">nadB curation notes</h1>
+<h2 id="2026-07-20">2026-07-20</h2>
+<ul>
+<li>Target identity: PP_1426 / UniProtKB Q88MZ2, a 534-aa NadB-family protein<br />
+  [UniProtKB:Q88MZ2, "Belongs to the FAD-dependent oxidoreductase 2 family. NadB subfamily."].</li>
+<li>Reaction: L-aspartate oxidation produces iminoaspartate and hydrogen peroxide<br />
+  [UniProtKB:Q88MZ2, "Catalyzes the oxidation of L-aspartate to iminoaspartate."]<br />
+  [RHEA:25876, "L-aspartate + O2 = iminosuccinate + H2O2"].</li>
+<li>Family grounding: PTHR42716; PAINT node PTN000908494 carries GO:0008734 and<br />
+  GO:0034628 with experimentally characterized NadB seed P10902<br />
+  [GO_REF:0000033, PTHR42716 PAINT tree].</li>
+<li>Curation: GO:0008734 and GO:0034628 are core. GO:0016491 and GO:0019363 are<br />
+  valid but unnecessarily broad and were modified to the specific activity and<br />
+  pathway terms.</li>
+<li>OpenScientist independently recovered the NadB family identity, L-aspartate<br />
+  oxidase reaction, and de novo NAD+ entry role. Its proposed physical<br />
+  NadB-NadA channeling and physiological fumarate acceptor use in KT2440 are<br />
+  ortholog-based hypotheses, not target observations, and were not converted<br />
+  into annotations [file:PSEPK/nadB/nadB-deep-research-openscientist.md,<br />
+  "The functional assignment for Q88MZ2 is a well-supported homology inference, not a direct measurement."].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MZ2
+gene_symbol: nadB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  FAD-dependent L-aspartate oxidase of Pseudomonas putida KT2440. NadB catalyzes
+  oxidation of L-aspartate to iminoaspartate with formation of hydrogen
+  peroxide, initiating de novo NAD+ biosynthesis from L-aspartate. The unstable
+  iminoaspartate product is used by quinolinate synthase NadA in the next step.
+existing_annotations:
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: Correct expected location for a soluble bacterial NadB enzyme.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns the target protein to the cytoplasm, consistent with its
+        soluble role in de novo NAD+ biosynthesis.
+      supported_by:
+        - reference_id: file:PSEPK/nadB/nadB-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0008734
+      label: L-aspartate oxidase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Correct and specific core molecular function.
+      action: ACCEPT
+      reason: &gt;-
+        The target is assigned to the NadB subfamily and its UniProt reaction is
+        the defining L-aspartate oxidase reaction (RHEA:25876).
+      supported_by:
+        - reference_id: file:PSEPK/nadB/nadB-uniprot.txt
+          supporting_text: Catalyzes the oxidation of L-aspartate to iminoaspartate.
+  - term:
+      id: GO:0009435
+      label: NAD+ biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Correct pathway assignment.
+      action: ACCEPT
+      reason: &gt;-
+        NadB supplies iminoaspartate at the first committed reaction of the
+        L-aspartate de novo NAD+ route.
+      supported_by:
+        - reference_id: file:PSEPK/nadB/nadB-uniprot.txt
+          supporting_text: &#34;PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; iminoaspartate&#34;
+  - term:
+      id: GO:0016491
+      label: oxidoreductase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Correct chemistry but unnecessarily broad relative to the known activity.
+      action: MODIFY
+      reason: &gt;-
+        NadB is an oxidoreductase, but GO:0008734 identifies its substrate and
+        reaction and is therefore the informative molecular-function term.
+      proposed_replacement_terms:
+        - id: GO:0008734
+          label: L-aspartate oxidase activity
+  - term:
+      id: GO:0019363
+      label: pyridine nucleotide biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: True but broader than the established L-aspartate route.
+      action: MODIFY
+      reason: &gt;-
+        The exact pathway is de novo NAD+ biosynthesis from L-aspartate, which is
+        captured by GO:0034628.
+      proposed_replacement_terms:
+        - id: GO:0034628
+          label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate&#34;
+  - term:
+      id: GO:0034628
+      label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate&#34;
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: Correct and specific core biological process.
+      action: ACCEPT
+      reason: &gt;-
+        L-aspartate oxidation by NadB is the entry reaction for this de novo NAD+
+        biosynthetic route.
+      supported_by:
+        - reference_id: file:PSEPK/nadB/nadB-uniprot.txt
+          supporting_text: &#34;Catalyzes the oxidation of L-aspartate to iminoaspartate.&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/nadB/nadB-uniprot.txt
+    title: UniProtKB entry Q88MZ2 for Pseudomonas putida KT2440 nadB
+    findings:
+      - statement: The target protein is assigned the defining L-aspartate oxidase reaction.
+        supporting_text: Catalyzes the oxidation of L-aspartate to iminoaspartate.
+        reference_section_type: RESULTS
+      - statement: UniProt places the target in de novo NAD+ biosynthesis.
+        supporting_text: &#34;PATHWAY: Cofactor biosynthesis; NAD(+) biosynthesis; iminoaspartate&#34;
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Exact target accession Q88MZ2; the entry is unreviewed, but the reaction, NadB-specific family assignments, and pathway placement agree.
+  - id: file:PSEPK/nadB/nadB-deep-research-openscientist.md
+    title: OpenScientist research report for Pseudomonas putida KT2440 nadB
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: UNVERIFIED
+      review_notes: &gt;-
+        Provider-generated synthesis is useful for literature triage, while
+        curation decisions are grounded in independently checked UniProt, GO,
+        Rhea, and family records. Proposed NadB-NadA channeling and
+        physiological fumarate use in KT2440 remain ortholog-based hypotheses
+        and were not promoted.
+core_functions:
+  - description: &gt;-
+      FAD-dependent L-aspartate oxidase that converts L-aspartate to
+      iminoaspartate at the first step of de novo NAD+ biosynthesis from
+      L-aspartate.
+    molecular_function:
+      id: GO:0008734
+      label: L-aspartate oxidase activity
+    directly_involved_in:
+      - id: GO:0034628
+        label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate&#34;
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/nadB/nadB-uniprot.txt
+        supporting_text: Catalyzes the oxidation of L-aspartate to iminoaspartate.
+suggested_questions:
+  - question: How is flux through NadB coordinated with oxygen availability and the downstream iron-sulfur enzyme NadA in P. putida KT2440?
+suggested_experiments:
+  - description: &gt;-
+      Measure growth and intracellular quinolinate, NaMN, and NAD+ in a clean
+      nadB deletion strain with and without nicotinate supplementation, then
+      restore the phenotype by chromosomal complementation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
