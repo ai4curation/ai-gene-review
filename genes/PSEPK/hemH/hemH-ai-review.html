@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PV4" target="_blank" class="term-link">
+                        Q88PV4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_0744</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PV4" data-a="DESCRIPTION: HemH is the cytoplasmic ferrochelatase that cataly..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemH is the cytoplasmic ferrochelatase that catalyzes the terminal reaction of heme-b biosynthesis. It inserts ferrous iron into protoporphyrin IX to form protoheme (heme b), supplying the cofactor used by respiratory and other hemoproteins.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004325" target="_blank" class="term-link">
+                                    GO:0004325
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrin ferrochelatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PV4" data-a="GO:0004325" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term precisely describes the terminal HemH reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 4.98.1.1 and explicitly describes ferrous insertion into protoporphyrin IX.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemH/hemH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the ferrous insertion into protoporphyrin IX.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PV4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is explicitly predicted for the KT2440 enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns HemH to the cytoplasm and does not predict a membrane anchor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemH/hemH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PV4" data-a="GO:0006779" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad porphyrin process is correct but can be replaced by the exact product process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemH directly produces heme B, so GO:0006785 is a supported live replacement for this broad porphyrin-biosynthesis annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    heme B biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemH/hemH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">biosynthesis; protoheme from protoporphyrin-IX: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PV4" data-a="GO:0006783" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemH directly performs the final heme-b biosynthetic step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Insertion of Fe2+ into protoporphyrin IX creates heme b, so the broader heme-biosynthesis row is correct. GO:0006785 captures the endpoint more specifically in the replacement and core-function records.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemH/hemH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">biosynthesis; protoheme from protoporphyrin-IX: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Inserts ferrous iron into protoporphyrin IX to form heme b in the terminal reaction of the pathway.</h3>
+                <span class="vote-buttons" data-g="Q88PV4" data-a="FUNCTION: Inserts ferrous iron into protoporphyrin IX to for..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004325" target="_blank" class="term-link">
+                            protoporphyrin ferrochelatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                heme B biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemH/hemH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the ferrous insertion into protoporphyrin IX.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemH/hemH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemH inserts ferrous iron into protoporphyrin IX.</div>
+
+                        <div class="finding-text">"Catalyzes the ferrous insertion into protoporphyrin IX."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemH is the sole protoheme-forming step represented by this reaction.</div>
+
+                        <div class="finding-text">"biosynthesis; protoheme from protoporphyrin-IX: step 1/1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemH/hemH-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report confirms that its target-specific functional assignment is family-based because no dedicated KT2440 HemH experiment was found.</div>
+
+                        <div class="finding-text">"No dedicated biochemical or genetic study of the *P. putida* KT2440 HemH protein was found"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which iron-delivery factors supply ferrous iron to HemH in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PV4" data-a="Q: Which iron-delivery factors supply ferrous iron to..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify protoporphyrin IX and heme b after conditional hemH depletion, iron perturbation, and complementation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemH is the terminal ferrochelatase required for heme-b production.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PV4" data-a="EXPERIMENT: Quantify protoporphyrin IX and heme b after condit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemH-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PV4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *hemH* (Ferrochelatase, Q88PV4) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T20:23:37.914125</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemH-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemH-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-hemh-ferrochelatase-q88pv4-in-pseudomonas-putida-kt2440">Functional Annotation of <em>hemH</em> (Ferrochelatase, Q88PV4) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary / Answer to the Research Question</h2>
+<p><strong>hemH</strong> (locus <strong>PP_0744</strong>; UniProt <strong>Q88PV4</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>protoporphyrin ferrochelatase</strong> (heme synthase / protoheme ferro-lyase; <strong>EC 4.98.1.1</strong>), the terminal enzyme of the tetrapyrrole/heme‑biosynthetic pathway. Its primary function is to catalyze the insertion of one <strong>ferrous iron (Fe²⁺) ion into protoporphyrin IX</strong>, releasing two protons and producing <strong>protoheme IX (heme <em>b</em>)</strong> — the essential cofactor of cytochromes, catalases, and peroxidases. Because <em>P. putida</em> is a Gram‑negative (diderm) bacterium, its ferrochelatase belongs to the classical <strong>protoporphyrin‑dependent</strong> branch of heme biosynthesis and acts on <strong>protoporphyrin IX</strong> (not coproporphyrin III). The enzyme works in the <strong>cytoplasm / at the cytoplasmic face of the inner membrane</strong>, where it obtains Fe²⁺ and the porphyrin precursor and hands off heme to apo‑hemoproteins.</p>
+<hr />
+<h2 id="2-gene-protein-identity-verification">2. Gene / Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><em>hemH</em></td>
+</tr>
+<tr>
+<td>Ordered locus</td>
+<td>PP_0744</td>
+</tr>
+<tr>
+<td>UniProt</td>
+<td>Q88PV4</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125), a Gram‑negative γ‑proteobacterium</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Ferrochelatase / heme synthase / protoheme ferro‑lyase</td>
+</tr>
+<tr>
+<td>EC</td>
+<td>4.98.1.1 (reclassified from the historical 4.99.1.1)</td>
+</tr>
+<tr>
+<td>Length / mass</td>
+<td>338 aa / 37.8 kDa</td>
+</tr>
+<tr>
+<td>Family / domains</td>
+<td>Ferrochelatase family; PF00762, Ferrochelatase_N (IPR033659), Ferrochelatase_C (IPR033644)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification outcome — identity confirmed and unambiguous.</strong> The gene symbol <em>hemH</em> is the canonical bacterial designation for ferrochelatase and is fully consistent with the protein description, family, and Pfam/InterPro domains. Orthology is quantitatively confirmed: Q88PV4 shares <strong>43.9 % sequence identity with <em>E. coli</em> HemH (P23871)</strong> with full conservation of the catalytic core (see §4). The catalytic activity, pathway assignment (protoheme from protoporphyrin‑IX, step 1/1), and the presence of the diagnostic ferrochelatase sequence motifs (see §4) all agree. There is no ambiguity of the kind that affects poorly characterized symbols; <em>hemH</em> → ferrochelatase is a one‑to‑one, well‑established assignment across bacteria. Direct genetic proof exists for orthologues: the cloned <em>hemH</em> gene is <em>necessary and sufficient</em> to rescue ferrochelatase‑deficient mutants, and its purified ~39‑kDa product carries ferrochelatase activity (Frustaci &amp; O'Brian, 1993; PMID 8368826).</p>
+<hr />
+<h2 id="3-primary-function-the-reaction-catalyzed">3. Primary Function: The Reaction Catalyzed</h2>
+<p>Ferrochelatase catalyzes the <strong>final committed step</strong> of heme biosynthesis:</p>
+<blockquote>
+<p><strong>Protoporphyrin IX + Fe²⁺ → protoheme IX (heme <em>b</em>) + 2 H⁺</strong><br />
+(UniProt/Rhea RHEA:22584, written in the reverse sense as heme <em>b</em> + 2 H⁺ = protoporphyrin IX + Fe²⁺; EC 4.98.1.1)</p>
+</blockquote>
+<p>"Ferrochelatase catalyzes the insertion of ferrous iron into a porphyrin macrocycle to produce the essential cofactor, heme" (Medlock et al., 2021; PMID 34402499). UniProt assigns the pathway as <em>"protoheme biosynthesis; protoheme from protoporphyrin‑IX: step 1/1"</em> — i.e., this enzyme performs the single, terminal metallation step. The product, heme <em>b</em>, is the prosthetic group of respiratory cytochromes (b/o/d oxidases, cytochrome <em>bc₁</em>), catalases and peroxidases, and other hemoproteins that are indispensable for the aerobic, respiratory lifestyle of <em>P. putida</em>.</p>
+<p><strong>Substrate specificity.</strong> <em>P. putida</em> is a diderm, so it uses the <strong>protoporphyrin‑dependent</strong> pathway and its ferrochelatase is a <strong>protoporphyrin ferrochelatase (PpfC‑type)</strong> whose porphyrin substrate is <strong>protoporphyrin IX</strong> (2 propionate + 2 vinyl substituents). This contrasts with the <strong>coproporphyrin‑dependent</strong> pathway "used almost exclusively by monoderm bacteria" (Gabler et al., 2024; PMID 38390750), discovered in 2015 (Gabler et al., 2022; PMID 34719106), in which coproporphyrin ferrochelatases (CpfC) act on the four‑propionate substrate coproporphyrin III. Correctly placing HemH in the protoporphyrin‑dependent branch is essential for defining its true substrate.</p>
+<p><strong>Metal‑ion selectivity.</strong> In vitro, ferrochelatases can insert several divalent metals (Fe²⁺, Co²⁺, Ni²⁺, Zn²⁺, Cu²⁺), but <strong>Fe²⁺ is the physiological and kinetically preferred substrate</strong> and, uniquely, is not subject to severe substrate inhibition (Hunter et al., 2008; PMID 18593702). Metals such as Mn²⁺, Pb²⁺, Cd²⁺, Hg²⁺ act as inhibitors; high‑resolution crystallography shows that this "inhibition" is <strong>not</strong> a failure to insert the metal but is set at the <strong>product‑release</strong> step via a conserved π‑helix conformational switch (Medlock et al., 2009; PMID 19703464). Thus physiological Fe²⁺ specificity is achieved largely through iron delivery and controlled product release rather than by simple exclusion of competing metals.</p>
+<hr />
+<h2 id="4-mechanism-and-structurefunction-mapping">4. Mechanism and Structure–Function Mapping</h2>
+<p>Sequence analysis of Q88PV4 localizes the invariant ferrochelatase catalytic apparatus onto the <em>P. putida</em> protein:</p>
+<ul>
+<li><strong>N‑terminal <code>LGSP</code> motif (residues 11–14)</strong> — part of the conserved porphyrin/metal‑binding pocket signature of the family.</li>
+<li><strong>His189</strong>, embedded in the diagnostic <strong><code>SFHGLP</code></strong> motif — the conserved active‑site histidine (positionally homologous to <em>B. subtilis</em> His183 and human His263); annotated by UniProt as a binding site.</li>
+<li><strong>Glu294</strong> — the conserved catalytic glutamate (homologous to <em>B. subtilis</em> Glu264 / human Glu343); annotated by UniProt as a binding site.</li>
+</ul>
+<p>The catalytic cycle, established from structural, kinetic, HDX‑MS and QM/MM studies of homologues, comprises:</p>
+<ol>
+<li><strong>Porphyrin binding and distortion.</strong> Binding induces distortion of the tetrapyrrole macrocycle that exposes the pyrrole nitrogens; "distortion of the tetrapyrrole has been proposed to be an important component of the mechanism of metallation" (Karlberg et al., 2008; PMID 18423489, <em>B. subtilis</em> ferrochelatase).</li>
+<li><strong>Proton abstraction / metal insertion.</strong> The conserved His participates in metal handling and the conserved Glu drives deprotonation and product release: "structural data support a role for E343 in proton abstraction and product release" (Medlock et al., 2021; PMID 34402499). Fe²⁺ is delivered from the face opposite pyrrole‑proton abstraction.</li>
+<li><strong>Product release</strong> of heme <em>b</em>, gated by the conserved π‑helix conformational change that also underlies metal selectivity (Medlock et al., 2009; PMID 19703464).</li>
+</ol>
+<p><strong>Possible [2Fe‑2S] cluster (bioinformatic + structural inference, not annotated).</strong> Q88PV4 has 8 cysteines; four of them (<strong>C213, C214, C225, C230</strong>) fall within an internal ~18‑residue segment (<code>AADCC…VSSVCYRGQC</code>). This pattern matches the "new class" of bacterial protoporphyrin ferrochelatases that ligate a <strong>[2Fe‑2S] cluster via four cysteines in an internal ~20‑residue segment</strong> (Shepherd et al., 2006; PMID 16548850), distinct from the C‑terminal cluster of animal enzymes; such clusters were also confirmed in <em>Caulobacter</em> and <em>Mycobacterium</em> ferrochelatases (Dailey &amp; Dailey, 2002; PMID 11948160).</p>
+<p><em>Structural support (Iteration 2).</em> The AlphaFold model <strong>AF‑Q88PV4‑F1</strong> (overall mean pLDDT 96.5) shows these internal cysteines converging into a compact pocket — SG–SG distances <strong>C214–C225 = 3.4 Å, C213–C225 = 4.1 Å, C213–C214 = 3.9 Å</strong> (with C230 ~8.6 Å away), all at high local confidence (pLDDT 85–98). Because AlphaFold does not place metals, the convergence of three thiols within ~3.5–4 Å is the geometric signature of a <strong>metal/cofactor‑coordination site</strong> rather than random surface cysteines.</p>
+<p><em>Comparative‑genomics support (Iteration 3).</em> Global alignment of Q88PV4 against <em>E. coli</em> HemH (P23871) — an enzyme <strong>experimentally known to lack a [2Fe‑2S] cluster</strong> — gives 43.9 % identity (clear orthology) with a fully conserved catalytic core (P. putida His189 ↔ <em>E. coli</em> His194; Glu294 ↔ Glu275; N‑terminal Leu11 ↔ Leu13). Crucially, <em>E. coli</em> HemH has only 4 cysteines total, and <strong>three of P. putida's four internal cysteines are absent in <em>E. coli</em></strong> at the aligned positions: C213 ↔ <em>E. coli</em> Arg210, C225 ↔ Thr214, C230 ↔ Glu217 (only C214 ↔ <em>E. coli</em> Cys211). Thus <em>P. putida</em> carries exactly the extra cysteines expected of the cluster‑containing subclass, precisely where the cluster‑less enzyme does not.</p>
+<p>Importantly, HAMAP rule MF_00323 does <strong>not</strong> annotate a cluster for Q88PV4, so this remains a <strong>testable hypothesis</strong> (best resolved by EPR/UV‑vis of the purified protein and Cys→Ser mutagenesis), not an established fact; if present, the cluster is proposed to modulate iron affinity/activity rather than be strictly required for catalysis.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>UniProt annotates the subcellular location of Q88PV4 as <strong>cytoplasm</strong>. Consistent with this, bacterial ferrochelatases are commonly <strong>peripheral inner‑membrane proteins acting at the cytoplasmic face</strong>; for example, the <em>Caulobacter crescentus</em> enzyme "is a homodimeric, membrane‑associated protein" (Dailey &amp; Dailey, 2002; PMID 11948160). This localization places HemH where it can draw Fe²⁺ and protoporphyrin IX from the cytoplasm and deliver newly made heme <em>b</em> to membrane‑embedded apo‑hemoproteins (e.g., respiratory oxidases of the inner membrane).</p>
+<hr />
+<h2 id="6-pathway-context">6. Pathway Context</h2>
+<p>HemH acts at the very end of the conserved tetrapyrrole pathway:<br />
+glutamate → 5‑aminolevulinate (Hem A/L pathway) → porphobilinogen (HemB) → hydroxymethylbilane (HemC) → uroporphyrinogen III (HemD) → coproporphyrinogen III (HemE) → protoporphyrinogen IX (HemF/HemN) → <strong>protoporphyrin IX (HemG/HemY)</strong> → <strong>heme <em>b</em> (HemH / ferrochelatase)</strong>. In diderms such as <em>P. putida</em>, HemH is the sole terminal metallation step supplying heme for the respiratory chain and for oxidative‑stress defense enzymes (catalase/peroxidases). Its product heme <em>b</em> is also the precursor for heme <em>o</em>/heme <em>d</em> and <em>c</em>-type cytochrome maturation. Because heme is essential and Fe²⁺ is potentially toxic, this step sits at the intersection of iron homeostasis and respiratory metabolism, which is why the pathway (and ferrochelatase specifically) is an attractive antimicrobial target in pathogens (e.g., N‑methyl mesoporphyrin inhibition; Wu et al., 2009; PMID 19597542).</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- H1 — HemH/Q88PV4 is a protoporphyrin ferrochelatase catalyzing Fe²⁺ insertion into protoporphyrin IX to form heme <em>b</em> (EC 4.98.1.1). <em>Strongly supported</em> (UniProt/Rhea, HAMAP MF_00323, conserved motifs, homologue genetics PMID 8368826).<br />
+- H2 — Substrate is protoporphyrin IX because <em>P. putida</em> is a diderm using the protoporphyrin‑dependent pathway. <em>Supported</em> (PMID 34719106, 38390750).<br />
+- H3 — Catalysis proceeds via porphyrin distortion + His/Glu‑mediated proton abstraction/metal insertion; His189 and Glu294 are the catalytic residues. <em>Supported</em> (PMID 18423489, 34402499).<br />
+- H4 — Physiological Fe²⁺ specificity is governed by iron delivery / product release. <em>Supported</em> (PMID 19703464, 18593702).<br />
+- H5 — Enzyme functions in the cytoplasm / cytoplasmic face of the inner membrane. <em>Supported</em> (UniProt; PMID 11948160).</p>
+<p><strong>Open / Not yet resolved</strong><br />
+- H6 — P. putida HemH binds an internal‑ligand [2Fe‑2S] cluster (four internal Cys). <em>Plausible but unproven, now with three converging lines of inference</em>: (i) internal 4‑Cys motif matching the Shepherd/Dailey cluster subclass (PMID 16548850, 11948160); (ii) AlphaFold geometry placing three thiols within 3.4–4.1 Å; (iii) comparative alignment showing three of these cysteines are absent in the cluster‑less <em>E. coli</em> enzyme. Still requires experimental spectroscopy/mutagenesis; not annotated by UniProt/HAMAP.</p>
+<p><strong>Refuted / Excluded</strong><br />
+- The enzyme is <strong>not</strong> a coproporphyrin ferrochelatase (CpfC) and does <strong>not</strong> use coproporphyrin III as its physiological substrate, because that pathway is restricted to monoderm bacteria (PMID 38390750).</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>Evidence is largely by homology.</strong> No dedicated biochemical or genetic study of the <em>P. putida</em> KT2440 HemH protein was found in targeted PubMed searches (Iterations 1–2); functional assignment rests on the highly conserved ferrochelatase family, UniProt/HAMAP rule‑based annotation, sequence‑motif mapping, AlphaFold structure, and experiments on orthologues (<em>B. subtilis</em>, human, <em>B. japonicum</em>, <em>E. coli</em>, <em>L. lactis</em>). This absence is expected for a housekeeping enzyme in a non‑pathogen and does <strong>not</strong> indicate ambiguity: the <em>hemH</em> → ferrochelatase assignment is unambiguous. Precise kinetics (kcat, Km for protoporphyrin IX and Fe²⁺) for the <em>P. putida</em> enzyme remain to be measured.</li>
+<li><strong>[2Fe‑2S] status unresolved.</strong> The internal four‑cysteine motif is suggestive but must be tested directly (EPR/UV‑vis, Cys→Ser variants), since related γ‑proteobacteria (e.g., <em>E. coli</em>) lack the cluster.</li>
+<li><strong>Localization inferred.</strong> UniProt lists "cytoplasm"; the degree of inner‑membrane association specific to <em>P. putida</em> has not been experimentally mapped.</li>
+<li><strong>Future work:</strong> heterologous expression and purification of PP_0744; steady‑state kinetics and metal/porphyrin specificity; cofactor spectroscopy; crystal/cryo‑EM structure; conditional knockdown to confirm essentiality and heme auxotrophy in <em>P. putida</em>.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Medlock et al. 2021, <em>Insight into the function of active site residues in the catalytic mechanism of human ferrochelatase</em> — PMID 34402499</li>
+<li>Karlberg et al. 2008, <em>Porphyrin binding and distortion… B. subtilis ferrochelatase</em> — PMID 18423489</li>
+<li>Medlock et al. 2009, <em>Product release rather than chelation determines metal specificity</em> — PMID 19703464</li>
+<li>Hunter et al. 2008, <em>Metal ion substrate inhibition of ferrochelatase</em> — PMID 18593702</li>
+<li>Gabler et al. 2024/2022, <em>Coproporphyrin ferrochelatase / coproporphyrin‑dependent pathway</em> — PMID 38390750, 34719106</li>
+<li>Shepherd et al. 2006 &amp; Dailey &amp; Dailey 2002, <em>[2Fe‑2S]‑cluster‑containing bacterial ferrochelatases</em> — PMID 16548850, 11948160</li>
+<li>Frustaci &amp; O'Brian 1993, <em>hemH encodes ferrochelatase (B. japonicum)</em> — PMID 8368826</li>
+<li>Wu et al. 2009, <em>Heme pathway/ferrochelatase as drug target</em> — PMID 19597542</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemH-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemH-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemH-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PV4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hemh-assessment-notes">hemH assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88PV4 (PP_0744) is the reviewed KT2440 ferrochelatase assigned EC 4.98.1.1.<br />
+UniProt predicts insertion of ferrous iron into protoporphyrin IX to form heme<br />
+b, identifies the reaction as the single protoheme-forming step, and assigns a<br />
+cytoplasmic location<br />
+[file:PSEPK/hemH/hemH-uniprot.txt "Catalyzes the ferrous insertion into protoporphyrin IX."]<br />
+[file:PSEPK/hemH/hemH-uniprot.txt "biosynthesis; protoheme from protoporphyrin-IX: step 1/1."].<br />
+The record is reviewed, but these functional details are HAMAP-rule based rather<br />
+than direct KT2440 biochemistry.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies the target, reaction, endpoint,<br />
+and absence of a dedicated KT2440 HemH experiment. It also presents unsaved<br />
+sequence, pairwise-alignment, and AlphaFold analyses and uses them to propose an<br />
+internal [2Fe-2S] cluster. Ortholog studies do not establish that cofactor,<br />
+inner-membrane association, detailed metal specificity, catalytic mechanism, or<br />
+essentiality for Q88PV4. Its pathway sketch names HemG/HemY but omits the<br />
+KT2440 HemJ protein PP_0431. These extrapolations were not used as target<br />
+evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0004325 is accepted as the exact predicted molecular function, and the<br />
+cytoplasm annotation is accepted from the UniProt/HAMAP assignment. The broad<br />
+porphyrin-biosynthesis row is modified to the live endpoint term GO:0006785.<br />
+The imported broad heme-biosynthesis annotation remains correct, while the<br />
+endpoint term and terminal catalytic activity carry the core interpretation.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PV4
+gene_symbol: hemH
+product_type: PROTEIN
+aliases:
+  - PP_0744
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemH is the cytoplasmic ferrochelatase that catalyzes the terminal reaction of
+  heme-b biosynthesis. It inserts ferrous iron into protoporphyrin IX to form
+  protoheme (heme b), supplying the cofactor used by respiratory and other
+  hemoproteins.
+existing_annotations:
+  - term:
+      id: GO:0004325
+      label: protoporphyrin ferrochelatase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This term precisely describes the terminal HemH reaction.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 4.98.1.1 and explicitly describes ferrous insertion
+        into protoporphyrin IX.
+      supported_by:
+        - reference_id: file:PSEPK/hemH/hemH-uniprot.txt
+          supporting_text: Catalyzes the ferrous insertion into protoporphyrin IX.
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Cytoplasmic localization is explicitly predicted for the KT2440 enzyme.
+      action: ACCEPT
+      reason: UniProt assigns HemH to the cytoplasm and does not predict a membrane anchor.
+      supported_by:
+        - reference_id: file:PSEPK/hemH/hemH-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: The broad porphyrin process is correct but can be replaced by the exact product process.
+      action: MODIFY
+      reason: &gt;-
+        HemH directly produces heme B, so GO:0006785 is a supported live
+        replacement for this broad porphyrin-biosynthesis annotation.
+      proposed_replacement_terms:
+        - id: GO:0006785
+          label: heme B biosynthetic process
+      supported_by:
+        - reference_id: file:PSEPK/hemH/hemH-uniprot.txt
+          supporting_text: &#34;biosynthesis; protoheme from protoporphyrin-IX: step 1/1.&#34;
+  - term:
+      id: GO:0006783
+      label: heme biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: HemH directly performs the final heme-b biosynthetic step.
+      action: ACCEPT
+      reason: &gt;-
+        Insertion of Fe2+ into protoporphyrin IX creates heme b, so the broader
+        heme-biosynthesis row is correct. GO:0006785 captures the endpoint more
+        specifically in the replacement and core-function records.
+      supported_by:
+        - reference_id: file:PSEPK/hemH/hemH-uniprot.txt
+          supporting_text: &#34;biosynthesis; protoheme from protoporphyrin-IX: step 1/1.&#34;
+references:
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemH/hemH-uniprot.txt
+    title: UniProtKB entry for PSEPK hemH
+    findings:
+      - statement: HemH inserts ferrous iron into protoporphyrin IX.
+        supporting_text: Catalyzes the ferrous insertion into protoporphyrin IX.
+      - statement: HemH is the sole protoheme-forming step represented by this reaction.
+        supporting_text: &#34;biosynthesis; protoheme from protoporphyrin-IX: step 1/1.&#34;
+  - id: file:PSEPK/hemH/hemH-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemH
+    findings:
+      - statement: &gt;-
+          The report confirms that its target-specific functional assignment is
+          family-based because no dedicated KT2440 HemH experiment was found.
+        supporting_text: &gt;-
+          No dedicated biochemical or genetic study of the *P. putida* KT2440
+          HemH protein was found
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly recovers the ferrochelatase reaction and the lack
+        of direct KT2440 experiments. It presents unsaved target-sequence,
+        alignment, and AlphaFold analyses; proposes an unverified [2Fe-2S]
+        cluster; transfers inner-membrane association, metal specificity,
+        mechanism, and essentiality from orthologs; and omits HemJ from its
+        KT2440 pathway sketch. Those claims were not retained.
+core_functions:
+  - description: &gt;-
+      Inserts ferrous iron into protoporphyrin IX to form heme b in the terminal
+      reaction of the pathway.
+    molecular_function:
+      id: GO:0004325
+      label: protoporphyrin ferrochelatase activity
+    directly_involved_in:
+      - id: GO:0006785
+        label: heme B biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/hemH/hemH-uniprot.txt
+        supporting_text: Catalyzes the ferrous insertion into protoporphyrin IX.
+suggested_questions:
+  - question: Which iron-delivery factors supply ferrous iron to HemH in KT2440?
+suggested_experiments:
+  - hypothesis: HemH is the terminal ferrochelatase required for heme-b production.
+    description: &gt;-
+      Quantify protoporphyrin IX and heme b after conditional hemH depletion,
+      iron perturbation, and complementation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

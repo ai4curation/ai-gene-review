@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RQ6" target="_blank" class="term-link">
+                        Q88RQ6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_0073</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RQ6" data-a="DESCRIPTION: HemF is the cytoplasmic oxygen-dependent coproporp..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemF is the cytoplasmic oxygen-dependent coproporphyrinogen-III oxidase. It uses molecular oxygen and a divalent metal cofactor to oxidatively decarboxylate two propionate side chains of coproporphyrinogen III, producing protoporphyrinogen IX. KT2440 also encodes HemN, providing a distinct oxygen-independent alternative for this pathway position.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004109" target="_blank" class="term-link">
+                                    GO:0004109
+                                </a>
+                            </span>
+                            <span class="term-label">coproporphyrinogen oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ6" data-a="GO:0004109" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term captures the oxygen-dependent HemF reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 1.3.3.3 and explicitly describes aerobic oxidative decarboxylation of coproporphyrinogen III to protoporphyrinogen IX.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemF/hemF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the aerobic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ6" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is explicitly predicted for HemF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The soluble enzyme has a direct UniProt cytoplasm assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemF/hemF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ6" data-a="GO:0006779" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The pathway assignment is correct and can be made endpoint-specific for KT2440.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemF forms protoporphyrinogen IX in the oxygen-dependent late route leading to heme B, supporting the live endpoint term GO:0006785.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    heme B biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemF/hemF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">route): step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ6" data-a="GO:0006783" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemF is a late enzyme in an aerobic realization of heme-b synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its protoporphyrinogen IX product is oxidized to protoporphyrin IX and then ferrochelated to heme b.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemF/hemF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Involved in the heme biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ6" data-a="GO:0042803" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Homodimerization is a plausible structural property of HemF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt predicts a homodimer, but oligomerization is ancillary to the substrate-level oxidase function and should not define the core activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemF/hemF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ6" data-a="GO:0042803" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This independent orthology transfer supports the same non-core oligomeric property.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate evidence is not intrinsically erroneous; both records can be retained as non-core while catalysis remains the defining function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemF/hemF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses molecular oxygen to oxidatively decarboxylate coproporphyrinogen III to protoporphyrinogen IX in the aerobic late-step route to heme b.</h3>
+                <span class="vote-buttons" data-g="Q88RQ6" data-a="FUNCTION: Uses molecular oxygen to oxidatively decarboxylate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004109" target="_blank" class="term-link">
+                            coproporphyrinogen oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                heme B biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemF/hemF-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the aerobic</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemF/hemF-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemF catalyzes aerobic coproporphyrinogen oxidation.</div>
+
+                        <div class="finding-text">"Catalyzes the aerobic"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemF is a cytoplasmic homodimer.</div>
+
+                        <div class="finding-text">"SUBUNIT: Homodimer."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemF/hemF-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers the oxygen-dependent HemF reaction while acknowledging the absence of direct KT2440 enzymology or genetics.</div>
+
+                        <div class="finding-text">"not by direct kinetic characterization of the KT2440 enzyme or a PP_0073 knockout"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which oxygen ranges does KT2440 switch flux between HemF and HemN?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RQ6" data-a="Q: Under which oxygen ranges does KT2440 switch flux ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare hemF and hemN single and double mutants across oxygen gradients, measuring growth, heme b, and coproporphyrinogen/protoporphyrinogen ratios.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemF is the principal coproporphyrinogen oxidase during aerobic growth.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RQ6" data-a="EXPERIMENT: Compare hemF and hemN single and double mutants ac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemF-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RQ6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hemF* (PP_0073, UniProt Q88RQ6) — Oxygen-dependent Coproporphyrinogen-III Oxidase from *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T20:56:31.545357</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemF-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemF-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-hemf-pp_0073-uniprot-q88rq6-oxygen-dependent-coproporphyrinogen-iii-oxidase-from-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hemF</em> (PP_0073, UniProt Q88RQ6) — Oxygen-dependent Coproporphyrinogen-III Oxidase from <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>hemF</strong> (ordered locus <strong>PP_0073</strong>; UniProt <strong>Q88RQ6</strong>) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>oxygen-dependent coproporphyrinogen-III oxidase</strong> (HemF; also called CPO, coprogen oxidase, coproporphyrinogenase; <strong>EC 1.3.3.3</strong>). This enzyme catalyzes the sixth step — the antepenultimate reaction — of the heme (protoheme IX) biosynthetic pathway: the <strong>O₂-dependent oxidative decarboxylation of coproporphyrinogen III to protoporphyrinogen IX</strong>. Mechanistically, HemF converts the two propionate side chains on pyrrole rings A and B of the tetrapyrrole macrocycle into vinyl groups, releasing two molecules of CO₂ and consuming molecular oxygen as the terminal electron acceptor. The canonical reaction (RHEA:18257) is: <em>coproporphyrinogen III + O₂ + 2 H⁺ → protoporphyrinogen IX + 2 CO₂ + 2 H₂O</em>.</p>
+<p>The gene identification is <strong>unambiguous and internally consistent</strong>. The gene symbol <em>hemF</em>, the organism (<em>P. putida</em> KT2440, an aerobic γ-proteobacterium), the EC number, and the protein family (aerobic coproporphyrinogen-III oxidase; Pfam <strong>PF01218</strong>; InterPro <strong>IPR001260 / IPR036406 / IPR018375</strong>) all denote the same well-defined enzyme. Direct inspection of the Q88RQ6 sequence confirms the diagnostic aerobic-CPO family signatures. No cross-gene confusion exists: <em>hemF</em> is universally used for the <strong>oxygen-dependent</strong> isoenzyme, distinct from the non-homologous, oxygen-independent radical-SAM enzyme <strong>HemN</strong>.</p>
+<p>HemF is a <strong>soluble, cytoplasmic, homodimeric enzyme</strong> that operates without a heme, flavin, or iron-sulfur cofactor (a divalent-metal requirement is predicted by the HAMAP rule but was not observed in the human crystal structure — an unresolved point). It is one of two functionally analogous but structurally unrelated isoenzymes catalyzing the same reaction: HemF is the <strong>O₂-dependent</strong> route used during aerobic growth (the physiological norm for <em>P. putida</em>), whereas <strong>HemN</strong> (a radical-SAM [4Fe-4S] enzyme, encoded separately at Q88F35 in KT2440) provides an <strong>oxygen-independent</strong> backup at low oxygen tension. The heme end-product supports the cytochromes, catalases, and peroxidases essential to aerobic respiration and oxidative-stress defense in this metabolically versatile soil bacterium.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hemf-catalyzes-the-o2-dependent-oxidative-decarboxylation-of-coproporphyrinogen-iii-to-protoporphyrinogen-ix">Finding 1 — HemF catalyzes the O₂-dependent oxidative decarboxylation of coproporphyrinogen III to protoporphyrinogen IX</h3>
+<p>HemF (Q88RQ6) is the <strong>oxygen-dependent isoenzyme</strong> of coproporphyrinogen-III oxidase (EC 1.3.3.3). It acts on the highly reactive, colorless, reduced tetrapyrrole <strong>coproporphyrinogen III</strong>, which bears four propionate and four methyl side chains around its four pyrrole rings. HemF selectively converts <strong>the two propionate substituents on rings A and B into vinyl groups</strong>, releasing two molecules of carbon dioxide and yielding <strong>protoporphyrinogen IX</strong>; the ring C and D propionates are retained. This is the sixth of eight enzymatic steps in heme biosynthesis and prepares the macrocycle for the subsequent oxidation (protoporphyrinogen oxidase) and iron insertion (ferrochelatase, HemH) that complete protoheme IX. The specific substrate is the <strong>III isomer</strong> of coproporphyrinogen.</p>
+<p>Classical bacterial genetics established this function definitively. In <em>Salmonella typhimurium</em>, mutants defective in <strong>both</strong> <em>hemN</em> and <em>hemF</em> are heme auxotrophs during aerobic growth and fail to convert the substrate to product (<a href="https://pubmed.ncbi.nlm.nih.gov/1317844/">PMID: 1317844</a>): <em>"double mutants are described that are auxotrophic for heme during aerobic growth and fail to convert coproporphyrinogen III to protoporphyrinogen IX. These mutant strains are defective in two genes, hemN and hemF."</em> The same study showed <em>"either hemN or hemF is sufficient for aerobic heme synthesis. These phenotypes are consistent with the requirement of a well-characterized class of coproporphyrinogen oxidase for molecular oxygen,"</em> pinpointing HemF as the <strong>oxygen-requiring</strong> member of the pair. The precise chemistry was defined by mechanistic modeling (<a href="https://pubmed.ncbi.nlm.nih.gov/18226911/">PMID: 18226911</a>): <em>"coproporphyrinogen III oxidase catalyzes the conversion of two propionate substituents from the highly reactive substrate coproporphyrinogen III into vinyl substituents, yielding protoporphyrinogen IX."</em> UniProt/Rhea assigns this as the single step ("step 1/1") of protoporphyrinogen-IX formation from coproporphyrinogen III via the O₂ route.</p>
+<h3 id="finding-2-stepwise-cofactor-independent-mechanism-proceeding-through-the-harderoporphyrinogen-intermediate">Finding 2 — Stepwise, cofactor-independent mechanism proceeding through the harderoporphyrinogen intermediate</h3>
+<p>The two decarboxylations do not occur simultaneously; they proceed <strong>sequentially</strong> through a monovinyl-monopropionate intermediate, <strong>harderoporphyrinogen</strong> (ring-A propionate first, then ring-B). The reality of this intermediate is demonstrated by the human disease <strong>harderoporphyria</strong>, a variant of hereditary coproporphyria caused by a specific CPO mutation (K404E in current human numbering; historically K304E) that traps the reaction at the intermediate stage, causing massive harderoporphyrin excretion. The mutant enzyme's Michaelis constant is ~<strong>10-fold higher</strong> than wild-type (<a href="https://pubmed.ncbi.nlm.nih.gov/7757079/">PMID: 7757079</a>): <em>"this amino acid substitution was responsible for the important decrease in the enzyme activity and for the accumulation of harderoporphyrin. The Michaelis constant of the mutated enzyme was 10-fold higher than normal suggesting that the lysine at position 304 is important for binding the substrate."</em> An independent clinical study reported Km elevated <strong>15–20-fold</strong> and confirmed that coproporphyrinogen and harderoporphyrinogen are metabolized at the same catalytic center (<a href="https://pubmed.ncbi.nlm.nih.gov/6886003/">PMID: 6886003</a>).</p>
+<p>Remarkably, HemF/CPO achieves oxidative decarboxylation <strong>without any metal ion or organic cofactor</strong> — unusual for an oxidase — as stated in the human CPO structural study (<a href="https://pubmed.ncbi.nlm.nih.gov/16176984/">PMID: 16176984</a>): <em>"The mechanism by which CPO catalyzes oxidative decarboxylation, in an extraordinary metal- and cofactor-independent manner, is poorly understood."</em> Density-functional (DFT) modeling proposed a chemically plausible route (<a href="https://pubmed.ncbi.nlm.nih.gov/18226911/">PMID: 18226911</a>): <em>"O(2) addition to the (preferentially deprotonated) pyrrole substrate (yielding a hydroperoxide, which then abstracts a proton from the reactive propionate substituent) is compatible with the observed experimental reaction rate, and that the reaction may then proceed through HO2- elimination, followed by decarboxylation."</em> Molecular oxygen serves as the immediate electron acceptor, and the reaction passes through a substrate radical/carbanion intermediate, with the deprotonated pyrrole nitrogen key to activating O₂.</p>
+<h3 id="finding-3-a-soluble-homodimer-with-a-novel-fold-acting-in-the-bacterial-cytoplasm">Finding 3 — A soluble homodimer with a novel fold, acting in the bacterial cytoplasm</h3>
+<p>The three-dimensional architecture of the aerobic CPO family was revealed by the <strong>1.58-Å crystal structure of the human ortholog</strong>, which showed a <strong>previously uncharacterized tertiary fold</strong>: an unusually flat seven-stranded β-sheet sandwiched by α-helices (<a href="https://pubmed.ncbi.nlm.nih.gov/16176984/">PMID: 16176984</a>): <em>"we report the crystal structure of human CPO at 1.58-A resolution. The structure reveals a previously uncharacterized tertiary topology comprising an unusually flat seven-stranded beta-sheet sandwiched by alpha-helices."</em> The enzyme is an <strong>obligate homodimer</strong> (K_D ≈ 5 × 10⁻⁷ M) in which one monomer rotates ~40° relative to the other to form an intersubunit interface adjacent to the two independent catalytic sites: <em>"In the biologically active dimer (K(D) = 5 x 10(-7) M), one monomer rotates relative to the second by approximately 40 degrees to create an intersubunit interface in close proximity to two independent enzymatic sites."</em> The structure assigned the active-site residues: <em>"allows us to assign Ser-244, His-258, Asn-260, Arg-262, Asp-282, and Arg-332 as residues mediating substrate recognition and decarboxylation."</em></p>
+<p>Regarding <strong>localization</strong>, the eukaryotic aerobic CPO resides in the mitochondrial intermembrane space. Bacteria such as <em>P. putida</em> lack mitochondria, so the soluble HemF operates in the <strong>cytoplasm</strong>, consistent with the UniProt cytoplasmic assignment for Q88RQ6 and the soluble, membrane-independent nature of the family. The Coprogen_oxidase_aer domain (PF01218 / IPR001260) present in Q88RQ6 is diagnostic of this cofactor-free enzyme class.</p>
+<h3 id="finding-4-sequence-level-evidence-confirms-q88rq6-is-a-genuine-aerobic-hemf">Finding 4 — Sequence-level evidence confirms Q88RQ6 is a genuine aerobic HemF</h3>
+<p>Direct examination of the Q88RQ6 sequence provides organism-specific confirmation. The protein is <strong>303 amino acids</strong> long and annotated as cytoplasmic. UniProt/Rhea assigns the exact reaction <strong>RHEA:18257</strong> as the sole step of the "protoporphyrinogen IX from coproporphyrinogen III (O₂ route)" sub-pathway. The sequence carries:</p>
+<ul>
+<li>the <strong>invariant aerobic-CPO family signature GGGFDLTP</strong> at residues 127–134, matching the Coprogen_oxidase_CS signature (IPR018375);</li>
+<li>the conserved catalytic <strong>proton-donor His107</strong> and a cluster of conserved active-site histidines (<strong>His97, His146, His176</strong>) plus substrate-binding residues at positions 93, 109–111, and 259–261;</li>
+<li>a <strong>dimerization region (residues 241–276)</strong>, consistent with the obligate-homodimer architecture;</li>
+<li>only <strong>five cysteines</strong>, <strong>not</strong> arranged in the CxxxCxxC [4Fe-4S] radical-SAM motif of HemN.</li>
+</ul>
+<p>The absence of the radical-SAM motif rules out an iron-sulfur identity and confirms HemF as a non-metallo, aerobic oxidase. HemN — not HemF — is <em>"the established radical SAM enzyme, HemN or oxygen-independent coproporphyrinogen III oxidase from Escherichia coli"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16218869/">PMID: 16218869</a>).</p>
+<p>One annotation discrepancy is noted: <strong>HAMAP rule MF_00333</strong> lists a divalent metal cation cofactor (CHEBI:60240) for aerobic CPO, whereas the human CPO crystal structure explicitly reported the enzyme as <strong>metal-independent</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16176984/">PMID: 16176984</a>). The metal requirement of aerobic CPO therefore remains <strong>debated</strong>; structural evidence favors metal-independence, but a loosely bound divalent cation cannot be fully excluded.</p>
+<h3 id="finding-5-p-putida-kt2440-encodes-both-isoenzymes-hemf-hemn-giving-o2-dependent-and-o2-independent-routes">Finding 5 — <em>P. putida</em> KT2440 encodes both isoenzymes (HemF + HemN), giving O₂-dependent and O₂-independent routes</h3>
+<p>A targeted survey of the <em>P. putida</em> KT2440 proteome (NCBI taxid 160488) confirms the genome encodes <strong>both</strong> coproporphyrinogen-oxidase isoenzymes for the same reaction, plus the terminal ferrochelatase:</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>UniProt</th>
+<th>Gene</th>
+<th>Length</th>
+<th>O₂ dependence</th>
+<th>Cofactor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coproporphyrinogen-III oxidase (aerobic)</td>
+<td><strong>Q88RQ6</strong></td>
+<td><strong>hemF (PP_0073)</strong></td>
+<td>303 aa</td>
+<td>O₂-<strong>dependent</strong></td>
+<td>none (metal debated)</td>
+</tr>
+<tr>
+<td>Coproporphyrinogen-III oxidase (anaerobic)</td>
+<td>Q88F35</td>
+<td>hemN</td>
+<td>460 aa</td>
+<td>O₂-<strong>independent</strong></td>
+<td>[4Fe-4S] radical-SAM, SAM</td>
+</tr>
+<tr>
+<td>Ferrochelatase (terminal step)</td>
+<td>Q88PV4</td>
+<td>hemH</td>
+<td>338 aa</td>
+<td>—</td>
+<td>inserts Fe²⁺</td>
+</tr>
+</tbody>
+</table>
+<p>This arrangement parallels <em>E. coli</em> and <em>Salmonella</em>, where <strong>either</strong> <em>hemN</em> or <em>hemF</em> suffices aerobically while <em>hemN</em> is required anaerobically (<a href="https://pubmed.ncbi.nlm.nih.gov/1317844/">PMID: 1317844</a>). Because <em>P. putida</em> is an aerobic soil organism, <strong>HemF is the primary physiological route</strong> for this step, with HemN as an oxygen-independent backup when oxygen tension falls. The same division of labor is documented in the cyanobacterium <em>Synechocystis</em> sp. PCC 6803, where HemF is the sole CPO under aerobic conditions and HemN operates under micro-oxic conditions, ensuring <em>"stable supply of tetrapyrrole pigments under environments where oxygen levels fluctuate greatly"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20194361/">PMID: 20194361</a>). The E. coli complementation work likewise showed the cloned <em>hemF</em> gene <em>"complemented exclusively under aerobic conditions"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/7768836/">PMID: 7768836</a>).</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<p>HemF occupies a defined position in the universal heme biosynthetic pathway:</p>
+<div class="codehilite"><pre><span></span><code>   Uroporphyrinogen III
+│  HemE (UROD)  — 4× decarboxylation
+▼
+   Coproporphyrinogen III  ◄──── SUBSTRATE
+│
+│   ┌─────────────────────────────────────────────┐
+│   │  STEP 6 (this enzyme, EC 1.3.3.3)           │
+│   │  HemF (aerobic, O2-dependent)  ── OR ──      │
+│   │  HemN (anaerobic, radical-SAM, O2-indep.)   │
+│   │                                             │
+│   │  ring-A propionate → vinyl  (−CO2)          │
+│   │        ▼ harderoporphyrinogen (intermediate)│
+│   │  ring-B propionate → vinyl  (−CO2)          │
+│   └─────────────────────────────────────────────┘
+▼
+   Protoporphyrinogen IX  ◄──── PRODUCT
+│  HemG/HemY (protoporphyrinogen oxidase)
+▼
+   Protoporphyrin IX
+│  HemH (ferrochelatase)  — inserts Fe2+
+▼
+   Protoheme IX (heme b)  →  cytochromes, catalases, peroxidases
+</code></pre></div>
+
+<p><strong>Reaction catalyzed (RHEA:18257, EC 1.3.3.3):</strong></p>
+<div class="codehilite"><pre><span></span><code>coproporphyrinogen III + O2 + 2 H+  →  protoporphyrinogen IX + 2 CO2 + 2 H2O
+</code></pre></div>
+
+<p>The synthesized model is coherent and complete. HemF is a <strong>soluble, cytoplasmic, cofactor-free homodimer</strong> with a novel β-sheet-and-α-helix fold and two active sites at the dimer interface. It selectively oxidatively decarboxylates the ring-A and ring-B propionates of coproporphyrinogen III to vinyl groups in a <strong>two-step, ordered manner</strong> passing through the isolable intermediate harderoporphyrinogen. Catalysis uses molecular O₂ as the electron acceptor, likely via a deprotonated-pyrrole/hydroperoxide route, and requires no organic prosthetic group (with the caveat that HAMAP annotates a divalent metal). This positions HemF as the <strong>aerobic gatekeeper</strong> of the antepenultimate heme step in <em>P. putida</em> — functionally interchangeable with, but structurally and mechanistically unrelated to, the radical-SAM enzyme HemN that the same genome also encodes for low-oxygen conditions.</p>
+<p>The biological significance is direct: the heme end-product is indispensable for the <strong>cytochromes</strong> (respiratory electron transport), <strong>catalases and peroxidases</strong> (oxidative-stress defense), and other hemoproteins that underpin the aerobic, metabolically versatile lifestyle of <em>P. putida</em> KT2440. HemF ensures this supply is maintained efficiently under the oxygenated conditions the organism normally inhabits.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1317844/">1317844</a></td>
+<td><em>Genes required for heme synthesis in Salmonella — aerobic/anaerobic coproporphyrinogen oxidation</em></td>
+<td>Genetic proof that hemF/hemN convert coproporphyrinogen III → protoporphyrinogen IX; establishes HemF as the O₂-requiring isoenzyme and hemF/hemN redundancy</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18226911/">18226911</a></td>
+<td><em>Comparative DFT study of the O2-dependent CPO reaction mechanism</em></td>
+<td>Defines the two-propionate-to-vinyl chemistry; proposes the deprotonated-pyrrole/hydroperoxide O₂ mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16176984/">16176984</a></td>
+<td><em>Structural basis of hereditary coproporphyria</em></td>
+<td>1.58-Å human CPO structure: novel fold, obligate homodimer (K_D 5×10⁻⁷ M), active-site residues, metal-independence</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7757079/">7757079</a></td>
+<td><em>Molecular defect causing harderoporphyria</em></td>
+<td>K→E substitution traps harderoporphyrinogen intermediate; ~10-fold higher Km identifies a substrate-binding residue</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6886003/">6886003</a></td>
+<td><em>Harderoporphyria: a variant hereditary coproporphyria</em></td>
+<td>Clinical/biochemical confirmation of the intermediate; 15–20-fold higher Km; single catalytic center for both steps</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16218869/">16218869</a></td>
+<td><em>Structural/functional comparison of HemN to radical SAM enzymes</em></td>
+<td>Confirms HemN (not HemF) is the radical-SAM/[4Fe-4S] enzyme — supports exclusion of that motif in Q88RQ6</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20194361/">20194361</a></td>
+<td><em>Functional differentiation of two analogous CPOs in Synechocystis</em></td>
+<td>HemF as sole aerobic CPO; HemN under micro-oxic conditions — models the division of labor in P. putida</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7768836/">7768836</a></td>
+<td><em>Cloning of E. coli hemN (oxygen-independent CPO)</em></td>
+<td>Establishes HemF (aerobic, complements only aerobically) vs HemN (oxygen-independent) distinction</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/398301/">398301</a></td>
+<td><em>The porphyrias</em></td>
+<td>Situates CPO within the human heme pathway and disease context</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence fits together.</strong> Bacterial genetics (<a href="https://pubmed.ncbi.nlm.nih.gov/1317844/">PMID: 1317844</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7768836/">PMID: 7768836</a>) fixes the <em>function</em> and the aerobic/anaerobic division of labor; the human structural and disease studies (<a href="https://pubmed.ncbi.nlm.nih.gov/16176984/">PMID: 16176984</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7757079/">PMID: 7757079</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/6886003/">PMID: 6886003</a>) supply the <em>fold, oligomeric state, active-site residues, and reaction intermediate</em>; the DFT study (<a href="https://pubmed.ncbi.nlm.nih.gov/18226911/">PMID: 18226911</a>) supplies the <em>chemical mechanism</em>; and the radical-SAM literature (<a href="https://pubmed.ncbi.nlm.nih.gov/16218869/">PMID: 16218869</a>) plus direct sequence inspection of Q88RQ6 confirm that this specific <em>P. putida</em> protein belongs to the aerobic, non-iron-sulfur class. The alignment of the conserved GGGFDLTP signature, catalytic His107, and dimerization region within the actual Q88RQ6 sequence provides organism-specific verification.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology on the <em>P. putida</em> protein.</strong> The function of Q88RQ6 is assigned by strong homology, conserved sequence signatures, HAMAP rule MF_00333, and the universal biochemistry of the aerobic CPO family — not by direct kinetic characterization of the KT2440 enzyme or a PP_0073 knockout. The assignment is nonetheless high-confidence because the family is deeply conserved and diagnostic signatures are present.</p>
+</li>
+<li>
+<p><strong>Cofactor ambiguity.</strong> HAMAP annotates a divalent metal cation cofactor, whereas the human crystal structure reported metal- and cofactor-independence. This discrepancy is unresolved for the family and specifically for Q88RQ6.</p>
+</li>
+<li>
+<p><strong>Structural inference from a eukaryotic ortholog.</strong> The fold, dimer interface, and catalytic-residue assignments derive from the human enzyme; residue numbering and precise contacts in the <em>P. putida</em> protein are inferred, not observed.</p>
+</li>
+<li>
+<p><strong>Localization inferred, not demonstrated.</strong> Cytoplasmic localization follows from the soluble nature of the family and the absence of mitochondria/signal peptides in bacteria, consistent with UniProt — but has not been experimentally verified for PP_0073.</p>
+</li>
+<li>
+<p><strong>Relative HemF/HemN contribution unstudied in this organism.</strong> The in vivo contributions of HemF versus HemN across the oxygen tensions <em>P. putida</em> experiences (rhizosphere, biofilm interiors, aerated culture) have not been directly measured in KT2440.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and assay.</strong> Overexpress and purify PP_0073 (Q88RQ6); assay coproporphyrinogen-III oxidase activity aerobically; determine kcat and Km for coproporphyrinogen III; confirm O₂ dependence and lack of activity under strict anaerobiosis.</p>
+</li>
+<li>
+<p><strong>Metal-dependence test.</strong> Assay purified HemF ± metal chelators and with defined divalent-metal supplementation, and perform ICP-MS for bound metal, to resolve the HAMAP-vs-structure cofactor discrepancy.</p>
+</li>
+<li>
+<p><strong>Genetic dissection in KT2440.</strong> Construct ΔhemF, ΔhemN, and ΔhemF ΔhemN mutants; score heme auxotrophy and growth across an oxygen gradient (aerobic → micro-oxic → anaerobic) to confirm the predicted division of labor and any conditional essentiality.</p>
+</li>
+<li>
+<p><strong>Intermediate trapping.</strong> Engineer an active-site substitution analogous to the human harderoporphyria mutation and test for harderoporphyrin(ogen) accumulation, validating the ordered two-step mechanism in this ortholog.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the <em>P. putida</em> HemF structure (crystallography or cryo-EM) to confirm the fold, dimer interface (residues ~241–276), and active-site geometry, and to settle the metal question.</p>
+</li>
+<li>
+<p><strong>Expression profiling.</strong> Use RT-qPCR or reporter fusions to measure hemF vs hemN transcription under varying oxygen tension in KT2440, testing whether hemN is induced under low O₂ as in <em>E. coli</em> and <em>Synechocystis</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The identification is unambiguous and well supported: <strong>hemF / PP_0073 / Q88RQ6 encodes the oxygen-dependent coproporphyrinogen-III oxidase (HemF, CPO; EC 1.3.3.3) of <em>Pseudomonas putida</em> KT2440.</strong> It is a soluble, cytoplasmic, cofactor-free homodimer that catalyzes the sixth step of heme biosynthesis — the O₂-dependent oxidative decarboxylation of coproporphyrinogen III to protoporphyrinogen IX via the harderoporphyrinogen intermediate — and serves as the primary aerobic route for this step, complemented by the oxygen-independent radical-SAM enzyme HemN under low-oxygen conditions.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemF-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemF-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:1317844</li>
+<li>PMID:18226911</li>
+<li>PMID:7757079</li>
+<li>PMID:6886003</li>
+<li>PMID:16176984</li>
+<li>PMID:16218869</li>
+<li>PMID:20194361</li>
+<li>PMID:7768836</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemF-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RQ6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hemf-assessment-notes">hemF assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88RQ6 (PP_0073) is the reviewed KT2440 oxygen-dependent<br />
+coproporphyrinogen-III oxidase. UniProt assigns EC 1.3.3.3 and RHEA:18257,<br />
+where molecular oxygen supports oxidative decarboxylation of the A- and B-ring<br />
+propionates of coproporphyrinogen III to form protoporphyrinogen IX, two carbon<br />
+dioxide molecules, and two waters<br />
+[file:PSEPK/hemF/hemF-uniprot.txt "Catalyzes the aerobic"]<br />
+[file:PSEPK/hemF/hemF-uniprot.txt "Reaction=coproporphyrinogen III + O2 + 2 H(+)"].<br />
+UniProt also predicts a divalent-metal cofactor, a homodimer, and cytoplasmic<br />
+localization through HAMAP-rule transfer rather than direct KT2440 assays.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies the target, reaction, and<br />
+oxygen-dependent distinction from radical-SAM HemN, and it explicitly notes<br />
+the lack of direct KT2440 kinetics or genetics. It presents unsaved target<br />
+sequence analysis and exact residue mapping, transfers detailed mechanism and<br />
+dimer architecture from the human ortholog, and concludes that Q88RQ6 is<br />
+cofactor-free despite the target record's predicted divalent-metal sites. The<br />
+report also assumes HemF is the principal aerobic route and HemN a low-oxygen<br />
+backup without KT2440 flux data, and its pathway sketch omits HemJ-family<br />
+PP_0431. These claims were not used as target evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0004109 is accepted as the predicted core molecular function, with<br />
+GO:0006785 as the endpoint-specific heme-b process and cytoplasm as the core<br />
+location. The two imported homodimer rows are retained as non-core structural<br />
+properties. The broad porphyrin-biosynthesis row is modified to GO:0006785.<br />
+Whether the predicted divalent metal is required and how flux is divided<br />
+between HemF and HemN remain experimental questions.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RQ6
+gene_symbol: hemF
+product_type: PROTEIN
+aliases:
+  - PP_0073
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemF is the cytoplasmic oxygen-dependent coproporphyrinogen-III oxidase. It
+  uses molecular oxygen and a divalent metal cofactor to oxidatively
+  decarboxylate two propionate side chains of coproporphyrinogen III, producing
+  protoporphyrinogen IX. KT2440 also encodes HemN, providing a distinct
+  oxygen-independent alternative for this pathway position.
+existing_annotations:
+  - term:
+      id: GO:0004109
+      label: coproporphyrinogen oxidase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This term captures the oxygen-dependent HemF reaction.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 1.3.3.3 and explicitly describes aerobic oxidative
+        decarboxylation of coproporphyrinogen III to protoporphyrinogen IX.
+      supported_by:
+        - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+          supporting_text: Catalyzes the aerobic
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Cytoplasmic localization is explicitly predicted for HemF.
+      action: ACCEPT
+      reason: The soluble enzyme has a direct UniProt cytoplasm assignment.
+      supported_by:
+        - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: The pathway assignment is correct and can be made endpoint-specific for KT2440.
+      action: MODIFY
+      reason: &gt;-
+        HemF forms protoporphyrinogen IX in the oxygen-dependent late route
+        leading to heme B, supporting the live endpoint term GO:0006785.
+      proposed_replacement_terms:
+        - id: GO:0006785
+          label: heme B biosynthetic process
+      supported_by:
+        - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+          supporting_text: &#34;route): step 1/1.&#34;
+  - term:
+      id: GO:0006783
+      label: heme biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: HemF is a late enzyme in an aerobic realization of heme-b synthesis.
+      action: ACCEPT
+      reason: &gt;-
+        Its protoporphyrinogen IX product is oxidized to protoporphyrin IX and
+        then ferrochelated to heme b.
+      supported_by:
+        - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+          supporting_text: &#34;FUNCTION: Involved in the heme biosynthesis.&#34;
+  - term:
+      id: GO:0042803
+      label: protein homodimerization activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: Homodimerization is a plausible structural property of HemF.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        UniProt predicts a homodimer, but oligomerization is ancillary to the
+        substrate-level oxidase function and should not define the core activity.
+      supported_by:
+        - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+          supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+  - term:
+      id: GO:0042803
+      label: protein homodimerization activity
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: enables
+    review:
+      summary: This independent orthology transfer supports the same non-core oligomeric property.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Duplicate evidence is not intrinsically erroneous; both records can be
+        retained as non-core while catalysis remains the defining function.
+      supported_by:
+        - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+          supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemF/hemF-uniprot.txt
+    title: UniProtKB entry for PSEPK hemF
+    findings:
+      - statement: HemF catalyzes aerobic coproporphyrinogen oxidation.
+        supporting_text: Catalyzes the aerobic
+      - statement: HemF is a cytoplasmic homodimer.
+        supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+  - id: file:PSEPK/hemF/hemF-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemF
+    findings:
+      - statement: &gt;-
+          The report recovers the oxygen-dependent HemF reaction while
+          acknowledging the absence of direct KT2440 enzymology or genetics.
+        supporting_text: &gt;-
+          not by direct kinetic characterization of the KT2440 enzyme or a
+          PP_0073 knockout
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly identifies RHEA:18257, cytoplasmic localization,
+        and the HemF/HemN oxygen-regime question. It presents unsaved sequence
+        analysis and exact residue mapping, transfers human structure,
+        mechanism, and dimer details, calls the target cofactor-free despite
+        its UniProt-predicted divalent-metal sites, and assumes HemF dominance
+        during aerobic KT2440 growth. Its pathway sketch also omits the
+        HemJ-family PP_0431 step. Those target-specific claims were not retained.
+core_functions:
+  - description: &gt;-
+      Uses molecular oxygen to oxidatively decarboxylate coproporphyrinogen III
+      to protoporphyrinogen IX in the aerobic late-step route to heme b.
+    molecular_function:
+      id: GO:0004109
+      label: coproporphyrinogen oxidase activity
+    directly_involved_in:
+      - id: GO:0006785
+        label: heme B biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/hemF/hemF-uniprot.txt
+        supporting_text: Catalyzes the aerobic
+suggested_questions:
+  - question: Under which oxygen ranges does KT2440 switch flux between HemF and HemN?
+suggested_experiments:
+  - hypothesis: HemF is the principal coproporphyrinogen oxidase during aerobic growth.
+    description: &gt;-
+      Compare hemF and hemN single and double mutants across oxygen gradients,
+      measuring growth, heme b, and coproporphyrinogen/protoporphyrinogen ratios.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
