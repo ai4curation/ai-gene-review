@@ -26,6 +26,7 @@ used as target evidence.
 GO:0004853 is accepted as the core molecular function. The broad
 porphyrin-biosynthesis row is modified to the endpoint-specific live term
 GO:0006785, while the existing broad heme-biosynthesis row remains correct.
-The two machine-sourced cytoplasm/cytosol rows are compatible; only cytoplasm
-is retained in the core function, and no target-specific essentiality or
-kinetic claim is added.
+The more specific cytosol row is accepted and retained in the core function.
+The biologically compatible cytoplasm parent is marked over-annotated because
+retaining both location terms would be redundant. No target-specific
+essentiality or kinetic claim is added.
