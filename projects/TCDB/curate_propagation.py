@@ -123,27 +123,149 @@ CAP = 500  # UniProt page size; n at the cap is a floor, not an exact count
 def verdict(n: int, k: int, level: int) -> tuple[str, str, str]:
     """(predicate_id, predicate_label, label) from member count n, GO-carrying count k, TC level.
 
-    Class/subclass-level xrefs (level <= 2) and capped member sets are too coarse to score, so
-    they stay UNCERTAIN regardless of fraction.
+    Six categories:
+      JUSTIFIED (exactMatch)        -- n>=2, k/n>=0.7 (or 1/1): activity shared, safe to propagate.
+      NOT_JUSTIFIED_AT_LEVEL(narrow)-- n>=3, k/n<0.5: GO term is a minority/subfamily property.
+      CLASS_LEVEL (broadMatch)      -- level<=2: a whole TC class/subclass; broad by construction,
+                                       out of scope for substrate-level propagation (not scored).
+      GAP_CANDIDATE (relatedMatch)  -- specific system (level>=4), member(s) exist but NONE carry the
+                                       term: a reverse-gap lead (member under-annotated), not a
+                                       propagation basis.
+      NO_REVIEWED_MEMBER(relatedM.) -- n==0: only TrEMBL members, or the reviewed protein lacks a
+                                       DR TCDB xref; cannot assess from reviewed evidence.
+      UNCERTAIN (relatedMatch)      -- capped counts or the ambiguous small-n middle.
     """
-    if level <= 2 or n >= CAP:
+    if level <= 2:
+        return "skos:broadMatch", "broad match", "CLASS_LEVEL"
+    if n == 0:
+        return "skos:relatedMatch", "related match", "NO_REVIEWED_MEMBER"
+    if n >= CAP:
         return "skos:relatedMatch", "related match", "UNCERTAIN"
-    frac = k / n if n else 0.0
+    frac = k / n
     if (n >= 2 and frac >= 0.7) or (n == 1 and frac == 1.0):
         return "skos:exactMatch", "exact match", "JUSTIFIED"
     if n >= 3 and frac < 0.5:
         return "skos:narrowMatch", "narrow match", "NOT_JUSTIFIED_AT_LEVEL"
+    if level >= 4 and k == 0:
+        return "skos:relatedMatch", "related match", "GAP_CANDIDATE"
     return "skos:relatedMatch", "related match", "UNCERTAIN"
+
+
+COLS = ["tc", "go", "go_label", "level", "n", "k", "frac", "verdict", "members"]
+
+
+def _comment(r: dict) -> str:
+    v, tc, go, k, n = r["verdict"], r["tc"], r["go"], r["k"], r["n"]
+    if v == "CLASS_LEVEL":
+        return (f"Propagation: CLASS_LEVEL. TC {tc} is a whole class/subclass (level {r['level']}); "
+                f"the GO term is broad by construction and out of scope for substrate-level "
+                f"propagation (evidence {k}/{n}, not scored). Source: GO xref.")
+    if v == "NO_REVIEWED_MEMBER":
+        return (f"Propagation: NO_REVIEWED_MEMBER. No reviewed Swiss-Prot protein carries a DR TCDB "
+                f"xref to {tc} (TrEMBL-only, or the reviewed protein lacks the xref), so propagation "
+                f"cannot be assessed from reviewed evidence. Source: GO xref.")
+    if v == "GAP_CANDIDATE":
+        return (f"Propagation: GAP_CANDIDATE. {tc} is a specific system (level {r['level']}) with "
+                f"{n} reviewed member(s), but 0 carry {go} (closure) -- a reverse-gap lead (the "
+                f"member is under-annotated), not a propagation basis. Source: GO xref + UniProt.")
+    return (f"Propagation: {v}. Evidence: {k}/{n} reviewed Swiss-Prot proteins carrying TC {tc} "
+            f"(level {r['level']}) also carry {go} (GO closure). Source: GO xref + UniProt member "
+            f"evidence.")
+
+
+def emit(rows: list[dict]) -> None:
+    """Write data/propagation_evidence.tsv and tc2go.propagation.sssom.yaml from scored rows."""
+    DATA.mkdir(exist_ok=True)
+    with EVIDENCE_TSV.open("w") as f:
+        f.write("\t".join(COLS) + "\n")
+        for r in rows:
+            f.write("\t".join(str(r[c]) for c in COLS) + "\n")
+
+    counts: dict[str, int] = defaultdict(int)
+    mappings = []
+    for r in sorted(rows, key=lambda r: (r["tc"], r["go"])):
+        counts[r["verdict"]] += 1
+        mappings.append({
+            "subject_id": f"TC:{r['tc']}",
+            "subject_label": "",
+            "predicate_id": r["pred_id"],
+            "predicate_label": r["pred_lab"],
+            "object_id": r["go"],
+            "object_label": r["go_label"],
+            "mapping_justification": "semapv:CompositeMatching",
+            "comment": _comment(r),
+        })
+    doc = {
+        "curie_map": {
+            "TC": "http://www.tcdb.org/search/result.php?tc=",
+            "GO": "http://purl.obolibrary.org/obo/GO_",
+            "skos": "http://www.w3.org/2004/02/skos/core#",
+            "semapv": "https://w3id.org/semapv/vocab/",
+        },
+        "mapping_set_id": "https://w3id.org/ai4curation/ai-gene-review/mappings/tc2go-propagation",
+        "mapping_set_title": "TC -> GO propagation verdicts (GO xref leads scored by UniProt evidence)",
+        "mapping_set_description": (
+            "Every GO->TC xref source (tc2go.from_go.sssom.yaml), scored for propagation against "
+            "UniProt member evidence: fraction of reviewed proteins carrying the TC id that also "
+            "carry the GO term (closure). exactMatch=JUSTIFIED; narrowMatch=NOT justified at this TC "
+            "level; broadMatch=CLASS_LEVEL (a whole TC class, out of scope for substrate propagation); "
+            "relatedMatch=GAP_CANDIDATE (specific system whose member is under-annotated) / "
+            "NO_REVIEWED_MEMBER / UNCERTAIN. Evidence per comment; full table in "
+            f"data/propagation_evidence.tsv. Verdicts: {dict(counts)}."
+        ),
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "creator_label": ["AI Gene Review project (curate_propagation.py; GO xref + UniProt evidence)"],
+        "subject_source": "tcdb",
+        "object_source": "GO",
+        "mappings": mappings,
+    }
+    header = (
+        "# TC -> GO PROPAGATION verdicts (SSSOM) -- GENERATED by curate_propagation.py\n"
+        "# Each GO TC-xref lead scored against UniProt member evidence (fraction of reviewed proteins\n"
+        "# with the TC id that also carry the GO term, closure-expanded). exactMatch=JUSTIFIED,\n"
+        "# narrowMatch=NOT justified at level, broadMatch=CLASS_LEVEL, relatedMatch=GAP_CANDIDATE/\n"
+        "# NO_REVIEWED_MEMBER/UNCERTAIN. Evidence in comments; table in data/propagation_evidence.tsv.\n"
+        "# DO NOT HAND-EDIT (regenerate: curate_propagation.py, or --reclassify from the cached TSV).\n"
+    )
+    (HERE / "tc2go.propagation.sssom.yaml").write_text(
+        header + yaml.safe_dump(doc, sort_keys=False, default_flow_style=False, width=100, allow_unicode=True)
+    )
+    print(f"# {len(rows)} pairs -> verdicts {dict(counts)}")
+    print(f"# wrote {EVIDENCE_TSV} and tc2go.propagation.sssom.yaml")
+
+
+def score_row(tc: str, go: str, go_label: str, level: int, n: int, k: int) -> dict:
+    pred_id, pred_lab, verd = verdict(n, k, level)
+    return {"tc": tc, "go": go, "go_label": go_label, "level": level, "n": n, "k": k,
+            "frac": round(k / n, 3) if n else 0.0, "verdict": verd,
+            "pred_id": pred_id, "pred_lab": pred_lab}
+
+
+def rows_from_tsv() -> list[dict]:
+    """Re-score from the cached evidence TSV (no UniProt calls)."""
+    rows = []
+    lines = EVIDENCE_TSV.read_text().splitlines()
+    for line in lines[1:]:
+        p = dict(zip(COLS, line.split("\t")))
+        r = score_row(p["tc"], p["go"], p["go_label"], int(p["level"]), int(p["n"]), int(p["k"]))
+        r["members"] = p.get("members", "")
+        rows.append(r)
+    return rows
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--limit", type=int, default=0, help="only process the first N TC ids (smoke test)")
     ap.add_argument("--delay", type=float, default=0.1, help="seconds between UniProt calls")
+    ap.add_argument("--reclassify", action="store_true",
+                    help="re-score + re-emit from the cached evidence TSV (no UniProt calls)")
     args = ap.parse_args(argv)
 
+    if args.reclassify:
+        emit(rows_from_tsv())
+        return 0
+
     src = yaml.safe_load(FROM_GO.read_text())
-    # tc -> list of (go, go_label)
     tc_map: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for m in src["mappings"]:
         tc_map[m["subject_id"].replace("TC:", "")].append((m["object_id"], m["object_label"]))
@@ -161,80 +283,14 @@ def main(argv: list[str] | None = None) -> int:
         for go, go_label in tc_map[tc]:
             targets = desc.get(go, {go})
             k = sum(1 for _acc, gos in members if gos & targets)
-            pred_id, pred_lab, verd = verdict(n, k, level)
-            rows.append({
-                "tc": tc, "go": go, "go_label": go_label,
-                "level": level, "n": n, "k": k,
-                "frac": round(k / n, 3) if n else 0.0,
-                "verdict": verd, "pred_id": pred_id, "pred_lab": pred_lab,
-                "members": ";".join(acc for acc, _ in members[:20]),
-            })
+            r = score_row(tc, go, go_label, level, n, k)
+            r["members"] = ";".join(acc for acc, _ in members[:20])
+            rows.append(r)
         print(f"[{i}/{len(tcs)}] TC:{tc}"
               + (f" (norm {norm})" if norm != tc else "") + f"  members={n}")
         time.sleep(args.delay)
 
-    # evidence TSV
-    DATA.mkdir(exist_ok=True)
-    cols = ["tc", "go", "go_label", "level", "n", "k", "frac", "verdict", "members"]
-    with EVIDENCE_TSV.open("w") as f:
-        f.write("\t".join(cols) + "\n")
-        for r in rows:
-            f.write("\t".join(str(r[c]) for c in cols) + "\n")
-
-    # SSSOM
-    counts = defaultdict(int)
-    mappings = []
-    for r in sorted(rows, key=lambda r: (r["tc"], r["go"])):
-        counts[r["verdict"]] += 1
-        mappings.append({
-            "subject_id": f"TC:{r['tc']}",
-            "subject_label": "",
-            "predicate_id": r["pred_id"],
-            "predicate_label": r["pred_lab"],
-            "object_id": r["go"],
-            "object_label": r["go_label"],
-            "mapping_justification": "semapv:CompositeMatching",
-            "comment": (
-                f"Propagation: {r['verdict']}. Evidence: {r['k']}/{r['n']} reviewed Swiss-Prot "
-                f"proteins carrying TC {r['tc']} (level {r['level']}) also carry {r['go']} "
-                f"(GO closure). Source: GO xref + UniProt member evidence."
-            ),
-        })
-    doc = {
-        "curie_map": {
-            "TC": "http://www.tcdb.org/search/result.php?tc=",
-            "GO": "http://purl.obolibrary.org/obo/GO_",
-            "skos": "http://www.w3.org/2004/02/skos/core#",
-            "semapv": "https://w3id.org/semapv/vocab/",
-        },
-        "mapping_set_id": "https://w3id.org/ai4curation/ai-gene-review/mappings/tc2go-propagation",
-        "mapping_set_title": "TC -> GO propagation verdicts (GO xref leads scored by UniProt evidence)",
-        "mapping_set_description": (
-            "Every GO->TC xref source (tc2go.from_go.sssom.yaml), scored for propagation "
-            "justifiability against UniProt member evidence: fraction of reviewed proteins carrying "
-            "the TC id that also carry the GO term (closure). exactMatch = JUSTIFIED (activity shared "
-            "across the TC group); narrowMatch = NOT justified at this TC level (minority/subfamily "
-            "property); relatedMatch = UNCERTAIN (no members or ambiguous). Evidence in each comment; "
-            f"full table in data/propagation_evidence.tsv. Verdicts: {dict(counts)}."
-        ),
-        "license": "https://creativecommons.org/licenses/by/4.0/",
-        "creator_label": ["AI Gene Review project (curate_propagation.py; GO xref + UniProt evidence)"],
-        "subject_source": "tcdb",
-        "object_source": "GO",
-        "mappings": mappings,
-    }
-    header = (
-        "# TC -> GO PROPAGATION verdicts (SSSOM) -- GENERATED by curate_propagation.py\n"
-        "# Each GO TC-xref lead scored against UniProt member evidence (fraction of reviewed proteins\n"
-        "# with the TC id that also carry the GO term, closure-expanded). exactMatch=JUSTIFIED,\n"
-        "# narrowMatch=NOT justified at this TC level, relatedMatch=UNCERTAIN. Evidence in comments;\n"
-        "# full table in data/propagation_evidence.tsv. DO NOT HAND-EDIT (regenerate).\n"
-    )
-    (HERE / "tc2go.propagation.sssom.yaml").write_text(
-        header + yaml.safe_dump(doc, sort_keys=False, default_flow_style=False, width=100, allow_unicode=True)
-    )
-    print(f"\n# {len(rows)} pairs scored -> verdicts {dict(counts)}")
-    print(f"# wrote {EVIDENCE_TSV} and tc2go.propagation.sssom.yaml")
+    emit(rows)
     return 0
 
 

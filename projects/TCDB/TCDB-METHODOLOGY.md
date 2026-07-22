@@ -48,13 +48,22 @@ The fraction `k/n` drives the verdict, encoded as the SSSOM predicate:
   5-level systems.
 - `narrowMatch` **NOT JUSTIFIED at this level** — `n≥3, k/n<0.5`: the GO term is a
   minority/subfamily property; wholesale propagation would over-annotate. **23**.
-- `relatedMatch` **UNCERTAIN** — no members, class/subclass-level (≤2), or the
-  ambiguous middle; kept as an unreviewed source. **91**.
+- `relatedMatch` **GAP_CANDIDATE** — specific system (level ≥4) with member(s) but
+  `k=0`: the member is annotated only to a parent/sibling term, so the specific GO
+  term is a refinement/gap lead, not a propagation basis. **62**.
+- `broadMatch` **CLASS_LEVEL** — a whole TC class/subclass (level ≤2): broad by
+  construction, out of scope for substrate-level propagation. **12**.
+- `relatedMatch` **NO_REVIEWED_MEMBER** — `n=0`: only TrEMBL members, or the
+  reviewed protein lacks a `DR TCDB` xref (e.g. MelB); cannot assess. **10**.
+- `relatedMatch` **UNCERTAIN** — the ambiguous small-`n` middle. **7**.
 
-A JUSTIFIED lead with `k<n` (e.g. `3.A.3.1.1 → GO:0005391`, 4/5) doubles as a
-reverse-gap find: the activity is shared, so the missing member is a genuine
-annotation gap. The hand-curated `tc2go.sssom.yaml` is a deeper, individually
-read-through pass over a handful of exemplars.
+Two of these are direct feeds to the gene-review workflow: a **JUSTIFIED** lead
+with `k<n` (e.g. `3.A.3.1.1 → GO:0005391`, 4/5) and every **GAP_CANDIDATE** are
+reverse-gap finds — the activity is real for the system but the member is missing
+the (specific) term. Re-score without re-querying via
+`curate_propagation.py --reclassify` (reads the cached evidence TSV). The
+hand-curated `tc2go.sssom.yaml` is a deeper, individually read-through pass over a
+handful of exemplars.
 
 2. **An `external2go` *annotation pipeline* — this does not exist.** Every other
    source-audit project here hangs off a public mapping file (`ec2go`, `rhea2go`,

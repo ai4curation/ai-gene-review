@@ -138,7 +138,10 @@ a more specific child still counts). The fraction is the propagation signal:
 |---|---|---:|
 | **JUSTIFIED** (`exactMatch`) | ≥2 members, ≥70% carry the term (or 1/1) | **80** |
 | **NOT JUSTIFIED at this TC level** (`narrowMatch`) | ≥3 members, <50% carry it | **23** |
-| **UNCERTAIN** (`relatedMatch`) | no members, class/subclass-level, or ambiguous | **91** |
+| **GAP_CANDIDATE** (`relatedMatch`) | specific system (≥4-level), member(s) exist but 0 carry it | **62** |
+| **CLASS_LEVEL** (`broadMatch`) | whole TC class/subclass (≤2-level); broad by construction | **12** |
+| **NO_REVIEWED_MEMBER** (`relatedMatch`) | no reviewed protein xref'd to the TC id | **10** |
+| **UNCERTAIN** (`relatedMatch`) | ambiguous small-n middle | **7** |
 
 Shipped as [`tc2go.propagation.sssom.yaml`](TCDB/tc2go.propagation.sssom.yaml)
 with the per-pair evidence (`k/n`) in every comment; the full table is
@@ -148,16 +151,23 @@ with the per-pair evidence (`k/n`) in every comment; the full table is
   5-level TC systems (e.g. `3.A.2.1.1 → GO:0046933 proton-motive-force-driven ATP
   synthase activity`, 8/8; `TC:2.A.19.2.- → GO:0015369 calcium:proton antiporter`,
   8/8) — the evidence backs the "curate at the system, not the family" rule.
-- **The `narrowMatch` set is where an xref would over-propagate.** e.g. the MFS
+- **`narrowMatch` is where an xref would over-propagate.** e.g. the MFS
   sugar-porter subfamily `2.A.1.1 → GO:0005351 carbohydrate:proton symporter
   activity` (only 35/88 members, 40%), or `1.A.9 → GO:0160039 serotonin-gated
   chloride channel activity` (1/59): correct for a few members, wrong for the rest.
-- **UNCERTAIN honestly flags what can't be scored** — 10 pairs have no reviewed
-  member to test at all, the rest are class/subclass-level xrefs too coarse to
-  propagate. These stay unreviewed sources, not silent inclusions.
-- **Several `k<n` JUSTIFIED cases are reverse-gap finds** — e.g. `3.A.3.1.1 →
-  GO:0005391` (4/5): the activity is shared, so the 5th member is a genuine
-  missing annotation.
+- **`GAP_CANDIDATE` is a reverse-gap harvest.** 62 leads are specific systems where
+  GO curates a precise term but the reviewed member is annotated only to a
+  *parent/sibling* — e.g. `2.A.1.1.10 → GO:0005364 maltose:proton symporter` whose
+  member P15685 carries the general `carbohydrate:proton symporter activity` but not
+  the maltose-specific child. These are refinement leads for the gene-review
+  workflow, not propagation bases.
+- **`CLASS_LEVEL` (12) and `NO_REVIEWED_MEMBER` (10) are honestly out of scope** —
+  class/subclass xrefs (`TC:1 → channel activity`) are broad by construction; the
+  no-member cases have only TrEMBL entries or a reviewed protein that lacks the
+  `DR TCDB` line (a UniProt xref gap, e.g. MelB). Neither is silently included.
+- **Several `k<n` JUSTIFIED cases are also gap finds** — e.g. `3.A.3.1.1 →
+  GO:0005391` (4/5): the activity is shared, so the 5th member is a missing
+  annotation.
 
 ## TCDB's own `go.py` dump: usable seed, but only after filtering
 
@@ -233,7 +243,8 @@ same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
   — not a mapping to adopt as-is.
 - **[`tc2go.propagation.sssom.yaml`](TCDB/tc2go.propagation.sssom.yaml)** — those
   same 194 leads **scored for propagation by UniProt member evidence** (80
-  JUSTIFIED `exactMatch`, 23 `narrowMatch`, 91 UNCERTAIN; see above). Evidence-
+  JUSTIFIED `exactMatch`, 23 `narrowMatch`, 62 GAP_CANDIDATE, 12 CLASS_LEVEL, 17 other;
+  see above). Evidence-
   derived (`semapv:CompositeMatching`), the systematic first pass over every lead.
 - **[`tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml)** — a second,
   noisier candidate pool: **machine-derived coverage extension** (154 families,
@@ -330,7 +341,8 @@ over-generality problem (prefer the subfamily-specific child term).
 | Exemplar gene reviews | Run the full review workflow on 2–3 confirmed-gap transporters already in this repo (353 candidates), mirroring the RHEA/UniPathway exemplar pattern. |
 | "No transporter-activity MF at all" family set | The 367 TC families with no MF-activity term in `go.py` → candidates for `proposed_new_terms` or accessory (class 8/9) exclusion. |
 | Propose a `tc2go` **propagation pipeline** to GO | The strategic deliverable: the 80 evidence-JUSTIFIED leads (mostly 5-level systems) are a ready `external2go` starter set; package them (plus reviewed extensions) so a protein's TC number yields a GAF annotation. |
-| Curate the 91 UNCERTAIN leads | Chase the 10 zero-member cases (are they real families?) and decide the class/subclass-level xrefs; promote where a system-level id and backing exist. |
+| Promote the 62 GAP_CANDIDATE leads | Specific systems whose reviewed member carries only a parent term — run them through the gene-review workflow to add the specific GO term. |
+| Chase the 10 NO_REVIEWED_MEMBER cases | Reviewed protein exists but lacks the `DR TCDB` xref (e.g. MelB) — a UniProt cross-reference gap to report upstream. |
 | Extend GO's 63 xref'd families | Promote the 110 novel `go.py`-generated families (and the 16 GO-xref families `go.py` misses) toward curated term-xrefs. |
 
 ## Project Status
@@ -338,7 +350,7 @@ over-generality problem (prefer the subfamily-specific child term).
 - **Started**: 2026-07-18
 - **Maturity**: SCOPING — GO's neglected TC term-xrefs extracted (194 leads) and
   **every one scored for propagation against UniProt evidence** (80 JUSTIFIED / 23
-  narrow / 91 uncertain); the missing piece identified as the *annotation
+  narrow / 62 gap-candidate / 12 class-level / 17 other); the missing piece identified as the *annotation
   pipeline*, not the mapping; TCDB's `go.py` dump characterised as a noisy second
   candidate pool; the structural reverse gap quantified; four SSSOM sets built and
   validated.
@@ -358,7 +370,8 @@ over-generality problem (prefer the subfamily-specific child term).
 - **Mapping sets** (all pass `just validate-tcdb-mappings`):
   [`tc2go.from_go.sssom.yaml`](TCDB/tc2go.from_go.sssom.yaml) — 194 GO-xref source
   leads; [`tc2go.propagation.sssom.yaml`](TCDB/tc2go.propagation.sssom.yaml) — the
-  same 194 scored for propagation (80 JUSTIFIED / 23 narrow / 91 uncertain);
+  same 194 scored for propagation (80 JUSTIFIED / 23 narrow / 62 gap-candidate / 12
+  class-level / 17 other);
   [`tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml) — 477
   machine-derived candidate rows; [`tc2go.sssom.yaml`](TCDB/tc2go.sssom.yaml) — 8
   hand-backed exemplars.
