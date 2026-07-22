@@ -15,7 +15,7 @@ terms against the local AIGR reviews. Project page: [`../AFFINAGE_EVALUATION.md`
 | `batch{2,3,4}-genes.txt` / `results/batch{2,3,4}/` | Extended, stress-test, and hard-case cohorts. |
 | `results/narrative-vs-go.md`, `results/hard-cases.md` | The two qualitative analyses. |
 | `affinage_deep_research.py` | **HUMAN-ONLY** tool that emits an Affinage record as an AIGR `-deep-research-affinage.md` source file (see below). |
-| `results/example-GPX4-deep-research-affinage.md` | Demo output of that tool. |
+| `results/example-<GENE>-deep-research-affinage.md` | Committed demo outputs (GPX4, ABCA1, ACADM, ADA, ACAT1). Kept under `results/` — **not** in the live `genes/` tree — so a future review can't ingest a wrong-protein record (see `results/backlog-slice.md`). |
 
 ## Rerun the comparison
 

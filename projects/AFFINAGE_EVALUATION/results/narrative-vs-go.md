@@ -1,7 +1,14 @@
 # The mechanism narrative — the complement to the GO layer
 
 The [GO-overlap analysis](summary.md) evaluates Affinage's `mechanism_profile` GO
-terms and finds them systematically over-general (1/42 specific core-MF captured).
+terms and finds them systematically over-general (1/42 specific **primary**-function
+matches). Note the distinction from the *raw script metric*: `compare_affinage.py`'s
+`core_mf_captured` flag is `True` for **4/42** genes (AATF, ABL1, KRAS, GAPDH — the
+per-batch `summary.md` headers show these un-refined counts), because it fires on *any*
+authored core-MF term. On manual inspection only **KRAS** (`GTPase activity`) is the
+gene's specific *primary* activity; AATF/ABL1/GAPDH match on general/secondary core terms
+(RNA binding, DNA binding). So "1/42" is an editorial refinement of the computed "4/42",
+not a separate hard-coded number.
 But that is Affinage's **weakest** output. Its actual product is the
 citation-anchored **`narrative.mechanistic_narrative`** plus the structured
 `timeline.discoveries`. This note evaluates that layer, because judging Affinage by

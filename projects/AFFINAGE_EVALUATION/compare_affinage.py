@@ -18,7 +18,7 @@ as such, never invented.
 
 Usage:
     python compare_affinage.py GPX4 TP53 ...      # specific genes
-    python compare_affinage.py --genes genes.txt  # one symbol per line
+    python compare_affinage.py --genes-file genes.txt  # one symbol per line
 Writes: results/per-gene.json, results/summary.csv, results/summary.md
 """
 from __future__ import annotations

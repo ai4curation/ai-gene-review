@@ -28,7 +28,7 @@ _Recorded for reference. The AIGR evaluation found this grounding is coarse (col
 
 - **molecular_activity:** GO:0140657 ATP-dependent activity, GO:0016787 hydrolase activity, GO:0005215 transporter activity, GO:0008289 lipid binding, GO:0140104 molecular carrier activity
 - **localization:** GO:0005886 plasma membrane, GO:0005768 endosome, GO:0005764 lysosome
-- **pathway (Reactome):** GO:0005215 transporter activity, R-HSA-1430728 Metabolism, R-HSA-382551 Transport of small molecules, R-HSA-168256 Immune System, R-HSA-5653656 Vesicle-mediated transport, R-HSA-74160 Gene expression (Transcription)
+- **pathway (Reactome):** R-HSA-1430728 Metabolism, R-HSA-382551 Transport of small molecules, R-HSA-168256 Immune System, R-HSA-5653656 Vesicle-mediated transport, R-HSA-74160 Gene expression (Transcription)
 - **partners:** APOA1, STX13, FLOT1, OSBP, PMP22, TRAK2, ARF6, CAV1
 - **complexes:** *(none)*
 

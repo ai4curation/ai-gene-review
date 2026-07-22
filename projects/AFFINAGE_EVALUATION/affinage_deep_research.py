@@ -143,8 +143,9 @@ def render(species: str, gene: str, data: dict, expected_acc: str | None) -> str
     L.append("")
 
     # mechanism profile (Affinage's own GO/Reactome grounding — recorded, not trusted)
-    def terms(key):
-        out = [f"{e.get('term_id')} {e.get('term_label')}" for e in (mp.get(key) or [])]
+    def terms(key, prefix=None):
+        out = [f"{e.get('term_id')} {e.get('term_label')}" for e in (mp.get(key) or [])
+               if prefix is None or str(e.get("term_id", "")).startswith(prefix)]
         return ", ".join(out) if out else "*(none)*"
     L.append("## Affinage mechanism profile (its own GO/Reactome grounding)")
     L.append("")
@@ -154,7 +155,7 @@ def render(species: str, gene: str, data: dict, expected_acc: str | None) -> str
     L.append("")
     L.append(f"- **molecular_activity:** {terms('molecular_activity')}")
     L.append(f"- **localization:** {terms('localization')}")
-    L.append(f"- **pathway (Reactome):** {terms('pathway')}")
+    L.append(f"- **pathway (Reactome):** {terms('pathway', 'R-')}")
     L.append(f"- **partners:** {', '.join(mp.get('partners') or []) or '*(none)*'}")
     L.append(f"- **complexes:** {', '.join(mp.get('complexes') or []) or '*(none)*'}")
     L.append("")
