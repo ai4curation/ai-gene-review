@@ -37,7 +37,7 @@ propanoate-metabolism hit as a module member.
 | [x] | `prpD` | PP_2338 | Q88KF2 | 2-methylcitrate dehydratase |
 | [ ] | `prpF` | PP_2337 | Q88KF3 | Methylaconitate isomerase |
 | [x] | `acnB` | PP_2339 | Q88KF1 | Bifunctional aconitase/2-methylisocitrate dehydratase; existing OpenScientist review |
-| [ ] | `prpB` | PP_2334 | Q88KF6 | 2-methylisocitrate lyase producing succinate and pyruvate |
+| [x] | `prpB` | PP_2334 | Q88KF6 | 2-methylisocitrate lyase producing succinate and pyruvate |
 
 The `acnA-II`/`prpD`/`prpF`/`acnB` cluster is retained for gene-level
 adjudication because the pathway may use more than one route between
