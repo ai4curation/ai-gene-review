@@ -10,8 +10,8 @@ autolink_gene_symbols: false
 
 This batch models the dissociated bacterial type-II fatty-acid synthase from
 malonyl-CoA formation and ACP loading through chain initiation, iterative
-elongation, and the cis-unsaturated branch. It is separate from the existing
-type-I, mammalian `fatty_acid_de_novo_synthesis` module.
+elongation, and an optional cis-unsaturated branch. It is separate from the
+existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 
 ## Workflow
 
