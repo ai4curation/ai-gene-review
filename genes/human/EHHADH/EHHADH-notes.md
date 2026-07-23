@@ -186,3 +186,26 @@ matrix (GO:0005782)**.
   author-stated but corroborated by experimental annotations.
 - Reactome TAS for the two activities and peroxisomal-matrix/cytosol → ACCEPT (activities/matrix)
   or MARK_AS_OVER_ANNOTATED (cytosol import-intermediate).
+
+## QA re-review — 2026-07-23
+
+Conservative QA pass of `EHHADH-ai-review.yaml` (50 annotations). No edits made; the
+review is biologically and curatorially sound and validates clean.
+
+- Validation: `✓ Valid` under default, `--strict`, `--verbose`, and `--terms`. No
+  warnings, no PENDING.
+- Same-term action consistency: verified by hand across all recurring terms — each has a
+  single consistent action across evidence types (GO:0003857 ACCEPT×6, GO:0004300 ACCEPT×4,
+  GO:0006635 ACCEPT×5, GO:0005777 ACCEPT×6, GO:0005515 MARK_AS_OVER_ANNOTATED×6,
+  GO:0018812 MODIFY×2, GO:0005829 MARK_AS_OVER_ANNOTATED×3, GO:0016863 over-annotated×2,
+  GO:0004165 KEEP_AS_NON_CORE×2, GO:0019899 KEEP_AS_NON_CORE×2, GO:0005782 ACCEPT×3).
+- `protein binding` (GO:0005515): all 6 HT-interactome IPIs are MARK_AS_OVER_ANNOTATED
+  (none ACCEPT); correct per IPI-never-REMOVE policy.
+- core_functions: two catalytic MFs (GO:0004300 hydratase, GO:0003857 dehydrogenase) are
+  captured with specific curated terms, not over-generalized; ids all in correct GO aspect.
+- Note (left as-is): the GO:0016509 long-chain-dehydrogenase annotations (IEA + IDA) use
+  the verbatim supporting_text "KM=0.3 uM for (2E)-hexadecenedioyl-CoA", which is an
+  *enoyl-CoA (hydratase-substrate)* KM from UniProt rather than a dehydrogenase-substrate
+  KM. It is verbatim, demonstrates long-chain/dicarboxylic substrate handling, and the
+  ACCEPT action is independently justified by the PMID:15060085 IDA; UniProt has no
+  long-chain dehydrogenase-specific KM to substitute, so no change was warranted.
