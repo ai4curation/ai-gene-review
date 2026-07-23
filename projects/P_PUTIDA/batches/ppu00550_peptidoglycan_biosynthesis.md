@@ -37,7 +37,7 @@ peptide cross-linking, which form a distinct multi-complex module.
 | [ ] | `ddlB` | PP_1339 | Q88N74 | D-Ala-D-Ala dipeptide synthesis |
 | [ ] | `murF` | PP_1333 | Q88N80 | D-Ala-D-Ala addition to UDP-MurNAc-tripeptide |
 | [ ] | `mraY` | PP_1334 | Q88N79 | Lipid I synthesis |
-| [ ] | `murG` | PP_1337 | Q88N76 | Lipid II synthesis |
+| [x] | `murG` | PP_1337 | Q88N76 | Lipid II synthesis |
 | [ ] | `murJ` | PP_0601 | Q88Q94 | Lipid II translocation |
 
 ## Boundary Decisions
