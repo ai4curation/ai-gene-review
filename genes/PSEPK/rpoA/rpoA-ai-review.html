@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QL1" target="_blank" class="term-link">
+                        Q88QL1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QL1" data-a="DESCRIPTION: rpoA (PP_0479) encodes the alpha subunit of the ba..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rpoA (PP_0479) encodes the alpha subunit of the bacterial DNA-directed RNA polymerase core enzyme. Two RpoA subunits form the alpha dimer that nucleates assembly of the beta, beta-prime, and omega subunits into the catalytic core. The N-terminal domain supports RNAP assembly and basal transcription, while the C-terminal domain contacts transcriptional regulators and upstream promoter elements. RpoA is a cytosolic core RNA-polymerase structural and assembly subunit that contributes to DNA-templated RNA synthesis as part of the alpha2-beta-beta-prime-omega enzyme.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA binding is plausible for the alpha subunit because the alpha C-terminal domain contacts upstream promoter elements and transcriptional regulators. It is less informative than the core RNAP complex role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as a broad supporting activity, but do not treat generic DNA binding as the main function of RpoA. The core role is alpha dimer assembly and contribution to complex-level RNA polymerase activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    GO:0003899
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0003899" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoA is required for the bacterial RNA polymerase core enzyme, but the alpha subunit does not independently catalyze RNA-chain elongation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is biologically correct as complex-level function, but the qualifier should be interpreted as contribution to the assembled core enzyme rather than standalone catalytic activity by RpoA alone.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is appropriate for a soluble bacterial RNA polymerase core subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RpoA functions in the bacterial cytoplasm/nucleoid as part of the transcription machinery.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0006351" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoA participates directly in DNA-templated transcription as an essential alpha subunit of the bacterial RNA polymerase core enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The process term correctly captures the biological process performed by the assembled RNAP core and sigma-factor-associated holoenzymes.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034062" target="_blank" class="term-link">
+                                    GO:0034062
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; RNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0034062" data-r="GO_REF:0000116" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The Rhea-derived polymerase activity reflects the RNA-chain extension reaction catalyzed by the assembled RNAP core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RpoA contributes to this complex-level polymerase activity but should not be interpreted as independently catalyzing the reaction outside the core enzyme.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    DNA-directed RNA polymerase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein dimerization is a specific and useful alpha-subunit activity: bacterial RNAP contains two alpha subunits and the alpha dimer provides the assembly platform.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as a subunit-specific molecular function that explains the alpha platform role in the core enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer. The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                                    GO:0000428
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0000428" data-r="file:PSEPK/rpoA/rpoA-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoA is part of the bacterial DNA-directed RNA polymerase core complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records Q88QL1 as a subunit of the alpha2-beta-beta-prime-omega RNAP catalytic core, so explicit complex membership is useful for interpreting the complex-level polymerase MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer. The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Alpha-subunit dimerization and assembly-platform function in the bacterial DNA-directed RNA polymerase core enzyme.</h3>
+                <span class="vote-buttons" data-g="Q88QL1" data-a="FUNCTION: Alpha-subunit dimerization and assembly-platform f..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                            protein dimerization activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                            DNA-directed RNA polymerase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Homodimer. The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The N-terminal domain is essential for RNAP assembly and basal</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO source for alpha-subunit protein dimerization; consistent with the alpha2 stoichiometry in UniProt.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Rhea-derived polymerase reaction annotation reviewed as complex-level activity for an RNAP core subunit.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA cytoplasm annotation is consistent with bacterial RNAP biology.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA source for broad DNA binding, polymerase activity, and transcription process terms; reviewed against UniProt core-enzyme context.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK rpoA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DNA-dependent RNA polymerase catalyzes the transcription of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Homodimer. The RNAP catalytic core consists of 2 alpha, 1"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The N-terminal domain is essential for RNAP assembly and basal"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should UniProt-derived DNA-directed RNA polymerase activity on bacterial core subunits be represented with contributes_to semantics in downstream GO curation, or retained as direct enables by current UniProt convention?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QL1" data-a="Q: Should UniProt-derived DNA-directed RNA polymerase..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QL1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *rpoA* (Q88QL1) — DNA-directed RNA polymerase subunit α in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">25 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-16T10:39:08.311753</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rpoA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="rpoA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-rpoa-q88ql1-dna-directed-rna-polymerase-subunit-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>rpoA</em> (Q88QL1) — DNA-directed RNA polymerase subunit α in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong><code>rpoA</code></strong> (ordered locus <strong>PP_0479</strong>; UniProt <strong>Q88QL1</strong>) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>α (alpha) subunit of the bacterial DNA-dependent RNA polymerase (RNAP)</strong>, the multisubunit enzyme responsible for all cellular messenger, ribosomal, and transfer RNA synthesis (EC 2.7.7.6). The identity of the target is unambiguous: the UniProt record, the InterPro domain complement (IPR011263 RpoA/D/Rpb3; IPR011773 DNA-dir_RpoA; IPR011262 insert domain; IPR011260 RNAP α C-terminal; IPR036603 RBP11-like), the gene symbol <code>rpoA</code>, and the organism all converge on the RNA polymerase alpha-chain family. There is no ambiguity in gene symbol or organism assignment, and the functional literature — spanning <em>Escherichia coli</em>, <em>Bacillus subtilis</em>, <em>Sinorhizobium meliloti</em>, <em>Streptomyces coelicolor</em>, and <em>P. putida</em> itself — describes a single, deeply conserved protein function.</p>
+<p>The α subunit is <strong>present in two copies</strong> in the RNAP core enzyme (stoichiometry α₂ββ′ω). It is <strong>not itself a catalytic subunit</strong> — the phosphodiester-bond-forming active site lies at the interface of the large β and β′ subunits — but it plays two essential and mechanistically distinct roles. First, its <strong>N-terminal domain (α-NTD)</strong> is the <strong>assembly scaffold</strong> of the enzyme: two α subunits dimerize as the first committed step of core-enzyme assembly, and the α₂ dimer then sequentially recruits β and then β′ to build the catalytically competent core. Second, its <strong>C-terminal domain (α-CTD)</strong>, tethered by a flexible interdomain linker, is a <strong>promoter-recognition and transcription-activation module</strong>: it binds AT-rich <strong>UP-element DNA</strong> upstream of the −35 hexamer and serves as the principal docking surface for a large class of transcription activator proteins (e.g., CRP, and in <em>P. putida</em> the σ54 activation machinery).</p>
+<p>Critically, direct experimental evidence exists <strong>in <em>P. putida</em> itself</strong>. At the σ54-dependent <strong>Pu promoter</strong> of the TOL plasmid — which drives catabolism of aromatic hydrocarbons (toluene/xylene) — recruitment of σ54-RNAP to the promoter requires the α-CTD contacting UP-element-like DNA upstream of the integration host factor (IHF) binding site. Reconstitution studies further show that the <em>P. putida</em> Pu promoter is regulated by direct CRP-activation-region-1 (AR1)/α-CTD contact. Thus, in <em>P. putida</em> the α subunit is not only the structural heart of the transcription machine but also an active participant in regulating the organism's signature environmental catabolic pathways. The protein functions in the <strong>cytoplasm</strong>, acting on chromosomal and plasmid DNA templates.</p>
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-rpoa-encodes-the-subunit-of-dna-dependent-rna-polymerase-the-catalytic-transcription-enzyme-ec-2776">Finding 1 — <em>rpoA</em> encodes the α subunit of DNA-dependent RNA polymerase, the catalytic transcription enzyme (EC 2.7.7.6)</h3>
+<p>The UniProt record Q88QL1 annotates <code>rpoA</code>/PP_0479 as "DNA-directed RNA polymerase subunit alpha" (EC 2.7.7.6), a member of the RNA polymerase alpha-chain family carrying the diagnostic InterPro domains IPR011263 (RpoA/D/Rpb3), IPR011773 (DNA-dir_RpoA), IPR011262 (insert domain), and IPR011260 (RNAP α C-terminal). The bacterial RNAP core enzyme has the subunit stoichiometry <strong>α₂ββ′ω</strong>, and the two α subunits are the pieces that <strong>initiate assembly</strong> of the complex.</p>
+<p>The formation of the <strong>α₂ dimer</strong> is the first committed step in building functional RNAP. As Kannan and colleagues demonstrated, "the formation of alpha(2) dimer in <em>Escherichia coli</em> core RNA polymerase (RNAP) is thought to be the first step toward the assembly of the functional enzyme" (<a href="https://pubmed.ncbi.nlm.nih.gov/11266593/">PMID: 11266593</a>). Structural work by Darst established the α N-terminal domain as "the first high-resolution structure of a core component required for RNA polymerase assembly and basal transcription" (<a href="https://pubmed.ncbi.nlm.nih.gov/10049799/">PMID: 10049799</a>). Quantitative reconstitution confirms the two-α-per-core stoichiometry: in <em>Streptomyces coelicolor</em>, "maximal reconstitution was obtained at alpha2:beta+beta' ratio of 1:2.3, indicating that the recombinant alpha protein is fully functional for subunit assembly" (<a href="https://pubmed.ncbi.nlm.nih.gov/8948650/">PMID: 8948650</a>).</p>
+<p>Together these establish the primary identity: <em>rpoA</em> encodes a non-catalytic but structurally indispensable subunit whose dimer nucleates the assembly of the enzyme that carries out DNA-templated RNA synthesis.</p>
+<h3 id="finding-2-the-subunit-is-a-two-domain-protein-an-n-terminal-assembly-domain-and-a-c-terminal-regulatory-domain-joined-by-a-flexible-linker">Finding 2 — The α subunit is a two-domain protein: an N-terminal assembly domain and a C-terminal regulatory domain joined by a flexible linker</h3>
+<p>Limited proteolysis of the <em>E. coli</em> α subunit (Blatter et al.) defined the architecture precisely: "the <em>Escherichia coli</em> RNA polymerase alpha subunit consists of an N-terminal domain comprised of amino acids 8–241, a C-terminal domain comprised of amino acids 249–329, and an unstructured and/or flexible interdomain linker" (<a href="https://pubmed.ncbi.nlm.nih.gov/8087855/">PMID: 8087855</a>). The isolated α-CTD (~85 amino acids) folds independently (~40% α-helix) and exhibits sequence-specific DNA binding.</p>
+<p>This division of labor maps neatly onto the two functions of the subunit. The α-NTD mediates dimerization and the sequential binding of β then β′ during assembly (<a href="https://pubmed.ncbi.nlm.nih.gov/11266593/">PMID: 11266593</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/9477962/">PMID: 9477962</a>). Sequence conservation analysis of an alkaliphilic <em>Bacillus</em> α confirmed the functional partition: of six conserved sequence blocks, "five of them are located in the N-terminal domain involved in assembly of the core enzyme, while one is located in the C-terminal domain, which interacts with several transcriptional factors and a specific DNA element" (<a href="https://pubmed.ncbi.nlm.nih.gov/9835038/">PMID: 9835038</a>).</p>
+<p>The interdomain linker is genuinely flexible, not merely a passive tether. In <em>E. coli</em> "it was possible to replace wild-type rpoA by mutant alleles encoding alpha subunits containing inter-domain linkers that were longer by as many as 16 amino acids" (<a href="https://pubmed.ncbi.nlm.nih.gov/15093137/">PMID: 15093137</a>), consistent with a mobile α-CTD that can reach out to variably positioned upstream DNA and activator proteins. Fe-BABE cleavage mapping (single-Cys α mutants) further showed that in the α₂ dimer, the assembly (N-terminal) domain of one subunit and the linker region of the other are in close proximity, and the two N-terminal domains contact one another (<a href="https://pubmed.ncbi.nlm.nih.gov/9477962/">PMID: 9477962</a>).</p>
+<h3 id="finding-3-the-ctd-is-a-key-transcription-activation-module-that-contacts-up-element-dna-and-activator-proteins">Finding 3 — The α-CTD is a key transcription-activation module that contacts UP-element DNA and activator proteins</h3>
+<p>The α-CTD binds AT-rich UP-element DNA immediately upstream of the −35 hexamer and is the target of many <strong>class-I transcription activators</strong>, which recruit RNAP by direct protein–protein contact with the α-CTD. As summarized in a genome-wide <em>B. subtilis</em> study, the α-CTD "is important for the transcriptional regulation of specific promoters in both <em>Escherichia coli</em> and <em>Bacillus subtilis</em>, through interactions with transcription factors and/or a DNA element called the 'UP element'" (<a href="https://pubmed.ncbi.nlm.nih.gov/26154296/">PMID: 26154296</a>).</p>
+<p>Numerous specific, residue-resolved examples support this generalization:</p>
+<table>
+<thead>
+<tr>
+<th>Activator / promoter</th>
+<th>Organism</th>
+<th>α-CTD determinant</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CRP (class-I activation, many promoters)</td>
+<td><em>E. coli</em></td>
+<td>α-CTD contact surface</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25034698/">PMID: 25034698</a></td>
+</tr>
+<tr>
+<td>CRP (repression at a distance)</td>
+<td><em>E. coli</em></td>
+<td>α-CTD contact (up- or down-regulation)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22967981/">PMID: 22967981</a></td>
+</tr>
+<tr>
+<td>MrkH / <em>mrkA</em> fimbrial operon</td>
+<td><em>Klebsiella pneumoniae</em></td>
+<td>R265, E273 + UP element</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24244411/">PMID: 24244411</a></td>
+</tr>
+<tr>
+<td>SoxS / oxidative-stress regulon</td>
+<td><em>E. coli</em></td>
+<td>DNA-binding determinant of α-CTD</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15465042/">PMID: 15465042</a></td>
+</tr>
+<tr>
+<td>TyrR</td>
+<td><em>E. coli</em></td>
+<td>D250 (Act⁻ substitution DN250)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34309399/">PMID: 34309399</a></td>
+</tr>
+<tr>
+<td>Fengycin synthetase operon UP element</td>
+<td><em>B. subtilis</em></td>
+<td>α-CTD binds −55 to −39</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19447911/">PMID: 19447911</a></td>
+</tr>
+<tr>
+<td>CRP / cspE cold-shock gene</td>
+<td><em>E. coli</em></td>
+<td>265 and 287 determinants (AR1)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21926233/">PMID: 21926233</a></td>
+</tr>
+</tbody>
+</table>
+<p>For CRP specifically, the paradigm class-I activator, transcription is activated "at many promoters by binding upstream of core promoter elements and interacting with the C-terminal domain of the RNA polymerase α subunit" (<a href="https://pubmed.ncbi.nlm.nih.gov/25034698/">PMID: 25034698</a>). For MrkH, "the R265 and E273 determinants in the C-terminal domain of RNA polymerase α subunit are needed for MrkH-mediated activation of mrkA transcription" (<a href="https://pubmed.ncbi.nlm.nih.gov/24244411/">PMID: 24244411</a>). Genome-wide, deletion of the <em>B. subtilis</em> α-CTD reduced transcription of secondary-carbon-source, transition-state, and ribosome-synthesis genes (<a href="https://pubmed.ncbi.nlm.nih.gov/26154296/">PMID: 26154296</a>), demonstrating that this regulatory module governs large, physiologically coherent regulons.</p>
+<h3 id="finding-4-rpoa-function-and-genomic-context-are-highly-conserved-heterologous-subunits-assemble-into-and-regulate-e-coli-rnap">Finding 4 — <em>rpoA</em> function and genomic context are highly conserved; heterologous α subunits assemble into and regulate <em>E. coli</em> RNAP</h3>
+<p>The <em>rpoA</em> gene lies in a conserved gene cluster — <strong>secY–adk–rpsM (S13)–rpsK (S11)–rpoA (α)–rplQ (L17)</strong> — shared across proteobacteria (<a href="https://pubmed.ncbi.nlm.nih.gov/12081950/">PMID: 12081950</a>). Despite modest sequence identity to <em>E. coli</em> α (~47–51%), α subunits from diverse bacteria are <strong>functionally interchangeable</strong>. The <em>Sinorhizobium meliloti</em> α (51% identical) provides the strongest demonstration: it "expressed in <em>Escherichia coli</em> complemented a temperature sensitive mutation in <em>E. coli</em> rpoA, demonstrating that <em>S. meliloti</em> alpha supports RNAP assembly, sequence-specific DNA binding, and interaction with transcriptional activators in the context of <em>E. coli</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12081950/">PMID: 12081950</a>). α subunits from <em>S. coelicolor</em> and alkaliphilic <em>Bacillus</em> likewise assemble with <em>E. coli</em> subunits (<a href="https://pubmed.ncbi.nlm.nih.gov/8948650/">PMID: 8948650</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/9835038/">PMID: 9835038</a>).</p>
+<p>Evolutionarily, the assembly domain is the most protected part of the protein. Analysis of RNA polymerases in strict endosymbionts with extreme genome reduction found that "in the α subunit, the amino-terminal domain is the most conserved" (<a href="https://pubmed.ncbi.nlm.nih.gov/34324516/">PMID: 34324516</a>), consistent with the essential, non-negotiable structural role of the α-NTD. <em>rpoA</em> is an essential gene in bacteria. This conservation is what licenses confident functional inference to <em>P. putida</em> from the extensive <em>E. coli</em>/<em>B. subtilis</em> mechanistic literature — the α subunit does the same job in every bacterium studied.</p>
+<h3 id="finding-5-in-pseudomonas-putida-itself-the-ctd-directly-mediates-rnap-recruitment-at-the-54-pu-promoter-via-up-element-like-dna">Finding 5 — In <em>Pseudomonas putida</em> itself, the α-CTD directly mediates RNAP recruitment at the σ54 Pu promoter via UP-element-like DNA</h3>
+<p>This is the pivotal organism-specific finding. In the <em>P. putida</em> TOL-plasmid system, at the σ54-dependent <strong>Pu promoter</strong> (which controls the upper pathway for toluene/xylene catabolism), recruitment of σ54-RNAP to the −12/−24 promoter motifs is stimulated by IHF-induced DNA bending and "requires the interaction of the C-terminal domain of the alpha subunit of RNAP with specific DNA sequences upstream of the IHF site which are reminiscent of the UP elements in sigma70 promoters" (<a href="https://pubmed.ncbi.nlm.nih.gov/9724648/">PMID: 9724648</a>). This demonstrates directly, in <em>P. putida</em>, that the α-CTD performs its UP-element-binding, RNAP-recruitment role — and does so even at a σ54 (rather than σ70) promoter, where the enhancer-binding-protein activation logic differs.</p>
+<p>The regulatory reach of the α-CTD at Pu extends to catabolite control. When reconstituted in <em>E. coli</em>, CRP–cAMP represses Pu by poising RNAP at the promoter, and "the activation region 1 (AR1) of CRP, which interacts directly with the αCTD (C-terminal domain of α-subunit) of RNA polymerase, was found essential for the CRP-mediated inhibition at Pu promoter" (<a href="https://pubmed.ncbi.nlm.nih.gov/24466213/">PMID: 24466213</a>). Earlier work on the related XylS/Pm activation system showed that transcription from the Pm promoter operates robustly across different RpoA (α-subunit) backgrounds, with growth-phase control layered through alternative σ factors (σ70 early, σS later) (<a href="https://pubmed.ncbi.nlm.nih.gov/8825089/">PMID: 8825089</a>). Collectively, these studies place the <em>P. putida</em> α subunit at the mechanistic center of the organism's environmentally important aromatic-compound catabolic regulation.</p>
+<h3 id="finding-6-the-rna-polymerase-in-which-functions-catalyzes-ntp-dependent-rna-synthesis-at-an-active-site-in-the-cleft-in-the-cytoplasm">Finding 6 — The RNA polymerase in which α functions catalyzes NTP-dependent RNA synthesis at an active site in the β/β′ cleft, in the cytoplasm</h3>
+<p>The enzyme that α helps build catalyzes the template-directed polymerization reaction: <strong>nucleoside triphosphate + RNA(n) → diphosphate + RNA(n+1)</strong> (EC 2.7.7.6). The catalytic architecture resides in the β and β′ subunits, not α. Structural studies define the mechanism: NTP substrates enter through the RNAP <strong>secondary channel</strong> to reach the active site, and folding of the β′ <strong>trigger loop</strong> into the trigger helix upon NTP binding is essential for efficient catalysis. As shown in the lasso-peptide inhibitor study, "both peptides bind within the RNAP secondary channel, through which NTP substrates enter the RNAP active site, and sterically block trigger-loop folding, which is essential for efficient catalysis by the RNAP" (<a href="https://pubmed.ncbi.nlm.nih.gov/30626643/">PMID: 30626643</a>). Complementary structural analysis of the cyanobacterial trigger-loop insertion Si3 reinforces the trigger-loop/helix transition mechanism at the active site (<a href="https://pubmed.ncbi.nlm.nih.gov/38260627/">PMID: 38260627</a>).</p>
+<p>The catalytic Mg²⁺ center lies at the β/β′ interface. The α subunits are <strong>not catalytic</strong>; instead they build the platform on which β and β′ assemble via the ordered pathway α₂ → α₂β → α₂ββ′ (<a href="https://pubmed.ncbi.nlm.nih.gov/11266593/">PMID: 11266593</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/8948650/">PMID: 8948650</a>). The complex acts on cytoplasmic bacterial chromosome and plasmid DNA templates, localizing the entire process to the cytoplasm.</p>
+<h3 id="finding-7-the-subunit-is-a-third-promoter-recognition-element-it-directly-binds-up-element-dna-to-stimulate-transcription-factor-independently-especially-at-rrna-promoters">Finding 7 — The α subunit is a "third promoter recognition element": it directly binds UP-element DNA to stimulate transcription factor-independently, especially at rRNA promoters</h3>
+<p>Beyond activator-mediated recruitment, α can stimulate transcription <strong>entirely on its own</strong> at strong promoters bearing an UP element. The founding study (Ross et al., 1993) showed that "a DNA sequence rich in (A+T), located upstream of the −10, −35 region of the <em>Escherichia coli</em> ribosomal RNA promoter rrnB P1 and called the UP element, stimulates transcription by a factor of 30 in vivo, as well as in vitro in the absence of protein factors other than RNA polymerase (RNAP)" (<a href="https://pubmed.ncbi.nlm.nih.gov/8248780/">PMID: 8248780</a>). The same study proved the direct molecular mechanism: "purified alpha binds specifically to the UP element, confirming that alpha acts directly in promoter recognition" (<a href="https://pubmed.ncbi.nlm.nih.gov/8248780/">PMID: 8248780</a>), and C-terminal α mutations abolished UP-element stimulation while leaving core-promoter transcription intact.</p>
+<p>Kinetic dissection showed that "the UP element mainly accelerates a step subsequent to the binding of RNA polymerase" (<a href="https://pubmed.ncbi.nlm.nih.gov/8955318/">PMID: 8955318</a>), i.e., it speeds open-complex formation. Thus the α-CTD constitutes a <strong>third recognition module</strong> alongside the two σ-recognized hexamers (−10 and −35). This mechanism drives high-level rRNA and ribosomal-protein transcription and is central to <strong>growth-rate control</strong> of the translational apparatus; consistently, α-CTD loss reduces ribosome-synthesis-gene transcription genome-wide in <em>B. subtilis</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26154296/">PMID: 26154296</a>).</p>
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The α subunit encoded by <em>rpoA</em> is best understood as a <strong>two-function, two-domain protein</strong> whose activities are separated in space and time within the transcription cycle.</p>
+<div class="codehilite"><pre><span></span><code>                THE RNA POLYMERASE α SUBUNIT (rpoA / PP_0479 / Q88QL1)
+
+   α-NTD (aa ~8-241)          flexible linker          α-CTD (aa ~249-329)
+ ┌───────────────────┐      ~~~~~~~~~~~~~~~~~       ┌────────────────────┐
+ │  ASSEMBLY DOMAIN  │                              │ REGULATORY DOMAIN  │
+ │  - dimerization   │                              │ - binds UP-element │
+ │  - binds β, then β&#39;│                             │   AT-rich DNA      │
+ │  - MOST conserved │                              │ - docks activators │
+ └───────────────────┘                              └────────────────────┘
+
+ STEP 1 — ASSEMBLY (α-NTD)                STEP 2 — PROMOTER FUNCTION (α-CTD)
+ ────────────────────────                ──────────────────────────────────
+   α + α  → α₂  (first step)               UP element    activator (e.g. CRP)
+   α₂ + β → α₂β                                  \         /
+   α₂β + β&#39; → α₂ββ&#39;                              [α-CTD]──contacts both
+   + ω, + σ → holoenzyme                            |
+                                  recruits/stabilizes RNAP at promoter
+│                                           │
+▼                                           ▼
+  CATALYSIS occurs in β/β&#39; cleft      →   Enhanced transcription initiation
+  (NTP via secondary channel;             (open-complex formation accelerated)
+   trigger loop folds for catalysis)
+</code></pre></div>
+
+<p><strong>Assembly role (α-NTD).</strong> Two α monomers dimerize as the obligatory first step of RNAP core assembly. The α₂ dimer presents docking surfaces that recruit β, forming α₂β, and then β′, forming the α₂ββ′ core; ω and a σ factor complete the holoenzyme. This role is structural, deeply conserved (the α-NTD is the most conserved part of the protein across all bacteria and even reduced endosymbiont genomes), and essential — without α there is no polymerase.</p>
+<p><strong>Regulatory role (α-CTD).</strong> Once RNAP is assembled, the two α-CTDs, dangling on flexible linkers, become the enzyme's primary interface with the regulatory landscape upstream of the promoter. They perform two overlapping jobs: (1) <strong>direct DNA reading</strong> of AT-rich UP elements, which by themselves can boost transcription up to ~30-fold at strong promoters such as rRNA operons (the "third recognition element"), and (2) <strong>activator docking</strong>, providing the contact surface for class-I activators (CRP, SoxS, MrkH, TyrR, and the σ54/enhancer machinery). Because there are two α-CTDs, one can read an UP element while the other contacts a bound activator, giving the enzyme combinatorial control.</p>
+<p><strong>Placing <em>P. putida</em> in the model.</strong> The general model is fully validated in <em>P. putida</em> by the Pu-promoter studies. There, the α-CTD binds UP-element-like DNA upstream of an IHF-bent site to recruit σ54-RNAP for aromatic-catabolism gene expression, and CRP-AR1/α-CTD contact imposes catabolite control. This connects the housekeeping transcription machine directly to <em>P. putida</em>'s hallmark metabolic versatility. Given the demonstrated interchangeability of α subunits across proteobacteria and the identical domain architecture, all mechanistic conclusions drawn from <em>E. coli</em>/<em>B. subtilis</em> transfer to the <em>P. putida</em> protein with high confidence.</p>
+<p><strong>Localization.</strong> All activities occur in the <strong>cytoplasm</strong>, on the nucleoid-associated chromosome and on plasmid DNA (e.g., the TOL plasmid). There is no evidence of, or structural basis for, membrane association or extracytoplasmic function.</p>
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Focus</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11266593/">11266593</a></td>
+<td>α₂ dimer interface (graph-spectral + mutation)</td>
+<td>α₂ dimer is the first step of RNAP assembly</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10049799/">10049799</a></td>
+<td>α-NTD X-ray/EM structure</td>
+<td>α-NTD required for assembly + basal transcription</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8948650/">8948650</a></td>
+<td><em>S. coelicolor</em> α cloning/reconstitution</td>
+<td>Two α per core; α is functional for subunit assembly</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8087855/">8087855</a></td>
+<td>Proteolytic domain mapping</td>
+<td>Defines α-NTD (8–241), α-CTD (249–329), flexible linker</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9835038/">9835038</a></td>
+<td>Alkaliphilic <em>Bacillus</em> α</td>
+<td>5 conserved blocks in NTD (assembly), 1 in CTD (regulation)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15093137/">15093137</a></td>
+<td>Linker insertions in <em>E. coli</em></td>
+<td>Interdomain linker tolerates +16 aa; α-CTD is mobile</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9477962/">9477962</a></td>
+<td>Fe-BABE proximity mapping</td>
+<td>Geometry of α₂ dimer; NTD–NTD and NTD–linker contacts</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26154296/">26154296</a></td>
+<td>Genome-wide α-CTD deletion in <em>B. subtilis</em></td>
+<td>α-CTD regulates UP-element/factor-dependent regulons</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25034698/">25034698</a></td>
+<td>Class-I activation spacing/CRP</td>
+<td>α-CTD is the class-I activator contact target</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24244411/">24244411</a></td>
+<td>MrkH/<em>mrkA</em> in <em>Klebsiella</em></td>
+<td>α R265/E273 + UP element needed for activation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15465042/">15465042</a></td>
+<td>SoxS in <em>E. coli</em></td>
+<td>Activator contacts α-CTD DNA-binding determinant</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34309399/">34309399</a></td>
+<td>TyrR activation</td>
+<td>Act⁻ maps to α residue D250</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19447911/">19447911</a></td>
+<td>Fengycin operon UP element</td>
+<td>α-CTD binds −55 to −39 UP element</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22967981/">22967981</a></td>
+<td>CRP repression at a distance</td>
+<td>Upstream CRP interacts with α-CTD (up or down)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21926233/">21926233</a></td>
+<td>CRP/<em>cspE</em> cold-shock</td>
+<td>AR1 + α-CTD residues 265/287 in class-I activation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12081950/">12081950</a></td>
+<td><em>S. meliloti</em> α complementation</td>
+<td>Cross-species interchangeability; conserved gene order</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34324516/">34324516</a></td>
+<td>Endosymbiont RNAP erosion</td>
+<td>α-NTD is the most conserved region</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9724648/">9724648</a></td>
+<td><strong>P. putida</strong> Pu promoter</td>
+<td>α-CTD binds UP-like DNA to recruit σ54-RNAP</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24466213/">24466213</a></td>
+<td><strong>P. putida</strong> Pu / CRP in <em>E. coli</em></td>
+<td>CRP-AR1/α-CTD contact regulates Pu</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8825089/">8825089</a></td>
+<td><strong>P. putida</strong> TOL Pm promoter</td>
+<td>XylS/Pm operates across RpoA backgrounds</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8248780/">8248780</a></td>
+<td>Third recognition element (Science)</td>
+<td>α binds UP element directly; 30-fold factor-independent</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8955318/">8955318</a></td>
+<td>UP-element kinetics</td>
+<td>UP element accelerates open-complex formation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30626643/">30626643</a></td>
+<td>Lasso-peptide inhibition</td>
+<td>NTP secondary channel + trigger loop define catalysis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38260627/">38260627</a></td>
+<td>Cyanobacterial Si3/trigger loop</td>
+<td>Trigger loop→helix transition at active site</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> All 24 mechanistic papers point in the same direction; there are no contradictory findings regarding the α subunit's dual role. The evidence spans direct biochemistry (purified α binding UP elements, reconstitution, proteolysis), genetics (complementation, residue-resolved activation-defective mutants), structural biology (X-ray/EM/cryo-EM), and genome-wide functional assays — a convergent, high-confidence picture. The single organism-specific caveat is that most residue-level detail comes from <em>E. coli</em>, but the <em>P. putida</em> Pu-promoter studies (<a href="https://pubmed.ncbi.nlm.nih.gov/9724648/">PMID: 9724648</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/24466213/">24466213</a>) directly confirm the α-CTD's UP-element/recruitment function in the target organism.</p>
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct structure of the <em>P. putida</em> KT2440 α subunit.</strong> Functional inference to Q88QL1 rests on strong homology and cross-species interchangeability, plus the two direct Pu-promoter studies. A <em>P. putida</em>-specific crystal/cryo-EM structure of RNAP has not been analyzed here.</p>
+</li>
+<li>
+<p><strong>Residue-level activator-contact maps are from <em>E. coli</em>.</strong> The specific α-CTD determinants (e.g., R265, E273, D250, 287) were mapped in <em>E. coli</em>/<em>Klebsiella</em>. While the α-CTD fold and UP-element function are conserved, the exact residue numbering and full activator repertoire in <em>P. putida</em> have not been individually verified.</p>
+</li>
+<li>
+<p><strong>The <em>P. putida</em> regulon governed by the α-CTD is not comprehensively defined.</strong> Genome-wide α-CTD-dependent transcription has been mapped in <em>B. subtilis</em> but not in <em>P. putida</em>. The full set of UP-element-containing and activator-dependent promoters in KT2440 remains to be catalogued.</p>
+</li>
+<li>
+<p><strong>Emerging non-canonical roles.</strong> A recent report describes "novel dual regulatory roles of RpoA in quorum sensing regulation and social behavior switching" (<a href="https://pubmed.ncbi.nlm.nih.gov/41874170/">PMID: 41874170</a>). Whether such a role exists in <em>P. putida</em> KT2440 is unknown and represents a genuine open question rather than an established function for this protein. It is flagged here only as a future direction, not a confirmed annotation.</p>
+</li>
+<li>
+<p><strong>ω subunit and holoenzyme dynamics in <em>P. putida</em></strong> were not examined in detail; the assembly pathway conclusions are drawn from <em>E. coli</em>/<em>S. coelicolor</em>.</p>
+</li>
+</ol>
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Solve or model the <em>P. putida</em> KT2440 RNAP structure.</strong> Use cryo-EM of purified endogenous RNAP, or an AlphaFold-Multimer model of the α₂ββ′ω core, to confirm the α-NTD dimer interface and α-CTD fold and to map the UP-element/activator surfaces onto Q88QL1's actual sequence.</p>
+</li>
+<li>
+<p><strong>ChIP-seq / genome-wide α-CTD dependence in <em>P. putida</em>.</strong> Engineer a KT2440 strain expressing an α-CTD-truncated α subunit (viable if the essential α-NTD is retained) and perform RNA-seq/ChIP-seq to define the organism's UP-element/activator-dependent regulon — the direct analogue of the <em>B. subtilis</em> study (<a href="https://pubmed.ncbi.nlm.nih.gov/26154296/">PMID: 26154296</a>).</p>
+</li>
+<li>
+<p><strong>Residue-resolved mutagenesis of <em>P. putida</em> α-CTD.</strong> Introduce the equivalents of R265A/E273A and DNA-binding-determinant substitutions and assay their effect on Pu/Pm aromatic-catabolism promoter activity and CRP-dependent regulation, testing whether <em>E. coli</em> determinants transfer.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution of <em>P. putida</em> RNAP with UP-element templates.</strong> Purify recombinant <em>P. putida</em> α, β, β′, ω and σ factors; reconstitute core enzyme; and measure factor-independent UP-element stimulation at Pu and at an rRNA promoter to quantify the "third recognition element" contribution in this organism.</p>
+</li>
+<li>
+<p><strong>Investigate the putative RpoA quorum-sensing / social-behavior role.</strong> Follow up on <a href="https://pubmed.ncbi.nlm.nih.gov/41874170/">PMID: 41874170</a> with targeted experiments in <em>P. putida</em> to determine whether α participates in quorum-sensing regulation beyond its canonical transcription role.</p>
+</li>
+<li>
+<p><strong>Essentiality and depletion phenotyping.</strong> Confirm essentiality of PP_0479 in KT2440 via a conditional-depletion (e.g., CRISPRi) strain and characterize the transcriptomic collapse upon α depletion to validate its central assembly role in vivo.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated from a 5-iteration autonomous investigation; 7 confirmed findings, 29 papers reviewed. Gene/organism identity verified: <code>rpoA</code> (PP_0479, UniProt Q88QL1) = DNA-directed RNA polymerase subunit α, RNA polymerase alpha-chain family, in</em> Pseudomonas putida <em>KT2440. No gene-symbol ambiguity was encountered.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rpoA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="rpoA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11266593</li>
+<li>PMID:10049799</li>
+<li>PMID:8948650</li>
+<li>PMID:8087855</li>
+<li>PMID:9477962</li>
+<li>PMID:9835038</li>
+<li>PMID:15093137</li>
+<li>PMID:26154296</li>
+<li>PMID:25034698</li>
+<li>PMID:22967981</li>
+<li>PMID:24244411</li>
+<li>PMID:15465042</li>
+<li>PMID:34309399</li>
+<li>PMID:19447911</li>
+<li>PMID:21926233</li>
+<li>PMID:12081950</li>
+<li>PMID:34324516</li>
+<li>PMID:9724648</li>
+<li>PMID:24466213</li>
+<li>PMID:8825089</li>
+<li>PMID:30626643</li>
+<li>PMID:38260627</li>
+<li>PMID:8248780</li>
+<li>PMID:8955318</li>
+<li>PMID:41874170</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QL1
+gene_symbol: rpoA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  rpoA (PP_0479) encodes the alpha subunit of the bacterial DNA-directed RNA
+  polymerase core enzyme. Two RpoA subunits form the alpha dimer that nucleates
+  assembly of the beta, beta-prime, and omega subunits into the catalytic core.
+  The N-terminal domain supports RNAP assembly and basal transcription, while
+  the C-terminal domain contacts transcriptional regulators and upstream
+  promoter elements. RpoA is a cytosolic core RNA-polymerase structural and
+  assembly subunit that contributes to DNA-templated RNA synthesis as part of
+  the alpha2-beta-beta-prime-omega enzyme.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      DNA binding is plausible for the alpha subunit because the alpha C-terminal
+      domain contacts upstream promoter elements and transcriptional regulators.
+      It is less informative than the core RNAP complex role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as a broad supporting activity, but do not treat generic DNA
+      binding as the main function of RpoA. The core role is alpha dimer
+      assembly and contribution to complex-level RNA polymerase activity.
+- term:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      RpoA is required for the bacterial RNA polymerase core enzyme, but the
+      alpha subunit does not independently catalyze RNA-chain elongation.
+    action: ACCEPT
+    reason: &gt;-
+      The term is biologically correct as complex-level function, but the
+      qualifier should be interpreted as contribution to the assembled core
+      enzyme rather than standalone catalytic activity by RpoA alone.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is appropriate for a soluble bacterial RNA
+      polymerase core subunit.
+    action: ACCEPT
+    reason: &gt;-
+      RpoA functions in the bacterial cytoplasm/nucleoid as part of the
+      transcription machinery.
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      RpoA participates directly in DNA-templated transcription as an essential
+      alpha subunit of the bacterial RNA polymerase core enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      The process term correctly captures the biological process performed by
+      the assembled RNAP core and sigma-factor-associated holoenzymes.
+- term:
+    id: GO:0034062
+    label: 5&#39;-3&#39; RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The Rhea-derived polymerase activity reflects the RNA-chain extension
+      reaction catalyzed by the assembled RNAP core.
+    action: MODIFY
+    reason: &gt;-
+      RpoA contributes to this complex-level polymerase activity but should not
+      be interpreted as independently catalyzing the reaction outside the core
+      enzyme.
+    proposed_replacement_terms:
+    - id: GO:0003899
+      label: DNA-directed RNA polymerase activity
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+- term:
+    id: GO:0046983
+    label: protein dimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Protein dimerization is a specific and useful alpha-subunit activity:
+      bacterial RNAP contains two alpha subunits and the alpha dimer provides
+      the assembly platform.
+    action: ACCEPT
+    reason: &gt;-
+      Retain as a subunit-specific molecular function that explains the alpha
+      platform role in the core enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: Homodimer. The RNAP catalytic core consists of 2 alpha, 1
+- term:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      RpoA is part of the bacterial DNA-directed RNA polymerase core complex.
+    action: NEW
+    reason: &gt;-
+      UniProt records Q88QL1 as a subunit of the alpha2-beta-beta-prime-omega
+      RNAP catalytic core, so explicit complex membership is useful for
+      interpreting the complex-level polymerase MF.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: Homodimer. The RNAP catalytic core consists of 2 alpha, 1
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: &gt;-
+      InterPro2GO source for alpha-subunit protein dimerization; consistent with
+      the alpha2 stoichiometry in UniProt.
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings:
+  - statement: &gt;-
+      Rhea-derived polymerase reaction annotation reviewed as complex-level
+      activity for an RNAP core subunit.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA cytoplasm annotation is consistent with bacterial RNAP biology.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: &gt;-
+      Combined IEA source for broad DNA binding, polymerase activity, and
+      transcription process terms; reviewed against UniProt core-enzyme context.
+- id: file:PSEPK/rpoA/rpoA-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK rpoA
+  findings:
+  - supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+  - supporting_text: Homodimer. The RNAP catalytic core consists of 2 alpha, 1
+  - supporting_text: The N-terminal domain is essential for RNAP assembly and basal
+core_functions:
+- description: &gt;-
+    Alpha-subunit dimerization and assembly-platform function in the bacterial
+    DNA-directed RNA polymerase core enzyme.
+  molecular_function:
+    id: GO:0046983
+    label: protein dimerization activity
+  contributes_to_molecular_function:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  directly_involved_in:
+  - id: GO:0006351
+    label: DNA-templated transcription
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  in_complex:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  supported_by:
+  - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+    supporting_text: Homodimer. The RNAP catalytic core consists of 2 alpha, 1
+  - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+    supporting_text: The N-terminal domain is essential for RNAP assembly and basal
+suggested_questions:
+- question: &gt;-
+    Should UniProt-derived DNA-directed RNA polymerase activity on bacterial
+    core subunits be represented with contributes_to semantics in downstream GO
+    curation, or retained as direct enables by current UniProt convention?
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
