@@ -22,16 +22,21 @@ sidecars:
 ---
 # Affinage Evaluation Project
 
-Systematic evaluation of **Affinage** (Cheeseman Lab, Whitehead Institute/MIT;
+**Affinage** (Cheeseman Lab, Whitehead Institute/MIT —
 [affinage.wi.mit.edu](https://affinage.wi.mit.edu), [arXiv:2607.02217](https://arxiv.org/abs/2607.02217))
-against the agent-adjudicated local AIGR gene reviews.
+is a genome-scale, literature-derived census of gene function: an LLM pipeline reads the
+primary literature once per gene and synthesizes a structured "current model" for **all
+19,293 human protein-coding genes**. Each gene gets its own page — see for example
+[SOD1](https://affinage.wi.mit.edu/gene/SOD1) — with three main parts:
 
-See for example, the [Affinage page for SOD1](https://affinage.wi.mit.edu/gene/SOD1). This
-has:
+- a **mechanistic narrative** — a PMID-grounded, chronological "current model" of how the gene works;
+- **open questions** — explicitly flagged gaps (what this repo calls "knowledge gaps");
+- a **mechanism profile** — a compact GO/Reactome-grounded summary of molecular function, localization, and pathway.
 
-- a PMID-grounded chronological mechanistic *narrative*
-- open questions (what we call "knowledge gaps" in this repo)
-- mechanistic "profile" (summarizes of function and pathway grounded in GO/Reactome)
+This project evaluates that output against the agent-adjudicated local AIGR gene reviews.
+The **mechanism profile is the GO-grounded part**, and is where most of this evaluation
+concentrates; the narrative and open-questions are assessed qualitatively in
+[`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
 
 ## GO term evaluation
 
