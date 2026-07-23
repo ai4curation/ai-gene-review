@@ -19,10 +19,10 @@ propanoate-metabolism hit as a module member.
 ## Workflow
 
 - [x] Fetch the five gene records not already present.
-- [ ] Run full OpenScientist research for each selected gene.
+- [x] Run full OpenScientist research for each selected gene.
 - [x] Curate all selected gene reviews, including every GOA row.
 - [x] Create and validate the species-neutral `methylcitrate_cycle` module.
-- [ ] Run full OpenScientist module research.
+- [x] Run full OpenScientist module research.
 - [x] Run full OpenScientist module + `ppu00640` + PSEPK research.
 - [x] Render the module and project page.
 - [ ] Open one non-draft PR and clear review and CI.
