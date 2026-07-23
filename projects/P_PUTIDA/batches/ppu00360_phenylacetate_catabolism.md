@@ -29,7 +29,7 @@ the relevant leaf annoton.
 
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
-| [ ] | `paaK` | PP_3279 | Q88HS4 | Phenylacetate activation to phenylacetyl-CoA |
+| [x] | `paaK` | PP_3279 | Q88HS4 | Phenylacetate activation to phenylacetyl-CoA |
 | [ ] | `paaA` | PP_3278 | Q88HS5 | Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit |
 | [ ] | `paaB` | PP_3277 | Q88HS6 | Epoxidase regulatory subunit |
 | [ ] | `paaC` | PP_3276 | Q88HS7 | Epoxidase beta subunit |
