@@ -34,7 +34,7 @@ the relevant leaf annoton.
 | [ ] | `paaB` | PP_3277 | Q88HS6 | Epoxidase regulatory subunit |
 | [x] | `paaC` | PP_3276 | Q88HS7 | Epoxidase beta subunit |
 | [x] | `paaD` | PP_3275 | Q88HS8 | Epoxidase-associated accessory factor |
-| [ ] | `paaE` | PP_3274 | Q88HS9 | Epoxidase reductase subunit |
+| [x] | `paaE` | PP_3274 | Q88HS9 | Epoxidase reductase subunit |
 | [ ] | `paaG` | PP_3283 | Q88HS0 | 1,2-epoxyphenylacetyl-CoA isomerase |
 | [ ] | `paaZ` | PP_3270 | Q88HT3 | Oxepin-CoA hydrolase and semialdehyde dehydrogenase |
 | [ ] | `paaF` | PP_3284 | Q88HR9 | Lower-pathway enoyl-CoA hydratase/isomerase |
