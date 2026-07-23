@@ -37,7 +37,7 @@ type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 | [ ] | `acpP` | PP_1915 | Q88LL5 | Acyl carrier protein |
 | [ ] | `PP_4379` | PP_4379 | Q88ES4 | FabH1 short-chain-acyl-CoA initiation |
 | [x] | `PP_4545` | PP_4545 | Q88EC1 | FabH2 medium-chain-acyl-CoA initiation |
-| [ ] | `PP_0262` | PP_0262 | Q88R72 | MadB malonyl-ACP decarboxylase initiation |
+| [x] | `PP_0262` | PP_0262 | Q88R72 | MadB malonyl-ACP decarboxylase initiation |
 | [x] | `fabB` | PP_4175 | Q88FC3 | KAS I condensation and unsaturated branch |
 | [ ] | `fabF` | PP_1916 | Q88LL4 | KAS II elongation |
 | [x] | `PP_3303` | PP_3303 | Q88HQ0 | Second KAS II candidate |
