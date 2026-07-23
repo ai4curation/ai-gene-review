@@ -33,7 +33,7 @@ propanoate-metabolism hit as a module member.
 |---|---|---|---|---|
 | [x] | `prpE` | PP_2351 | Q88KD9 | Propionate activation to propionyl-CoA |
 | [x] | `prpC` | PP_2335 | Q88KF5 | 2-methylcitrate synthase; existing OpenScientist review |
-| [ ] | `acnA-II` | PP_2336 | Q88KF4 | Cluster-associated aconitase-family pathway candidate |
+| [x] | `acnA-II` | PP_2336 | Q88KF4 | Cluster-associated aconitase-family pathway candidate |
 | [x] | `prpD` | PP_2338 | Q88KF2 | 2-methylcitrate dehydratase |
 | [ ] | `prpF` | PP_2337 | Q88KF3 | Methylaconitate isomerase |
 | [x] | `acnB` | PP_2339 | Q88KF1 | Bifunctional aconitase/2-methylisocitrate dehydratase; existing OpenScientist review |
