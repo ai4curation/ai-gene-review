@@ -31,7 +31,7 @@ the relevant leaf annoton.
 |---|---|---|---|---|
 | [x] | `paaK` | PP_3279 | Q88HS4 | Phenylacetate activation to phenylacetyl-CoA |
 | [x] | `paaA` | PP_3278 | Q88HS5 | Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit |
-| [ ] | `paaB` | PP_3277 | Q88HS6 | Epoxidase regulatory subunit |
+| [x] | `paaB` | PP_3277 | Q88HS6 | Epoxidase structural/assembly subunit |
 | [x] | `paaC` | PP_3276 | Q88HS7 | Epoxidase beta subunit |
 | [x] | `paaD` | PP_3275 | Q88HS8 | Epoxidase-associated accessory factor |
 | [x] | `paaE` | PP_3274 | Q88HS9 | Epoxidase reductase subunit |
