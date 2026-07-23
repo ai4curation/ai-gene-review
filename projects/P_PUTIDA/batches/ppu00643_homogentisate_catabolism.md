@@ -30,7 +30,7 @@ fumarylacetoacetate hydrolysis.
 |---|---|---|---|---|
 | [ ] | `hmgA` | PP_4621 | Q88E47 | Homogentisate 1,2-dioxygenase |
 | [ ] | `hmgC` | PP_4619 | Q88E49 | Maleylacetoacetate isomerase |
-| [ ] | `hmgB` | PP_4620 | Q88E48 | Fumarylacetoacetase |
+| [x] | `hmgB` | PP_4620 | Q88E48 | Fumarylacetoacetase |
 
 ## Excluded Candidates
 
