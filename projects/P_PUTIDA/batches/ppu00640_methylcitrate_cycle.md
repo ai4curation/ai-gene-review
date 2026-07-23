@@ -25,7 +25,7 @@ propanoate-metabolism hit as a module member.
 - [x] Run full OpenScientist module research.
 - [x] Run full OpenScientist module + `ppu00640` + PSEPK research.
 - [x] Render the module and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
 
