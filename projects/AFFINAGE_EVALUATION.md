@@ -1,0 +1,346 @@
+---
+title: "Affinage Evaluation Project"
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
+species: [human]
+sidecars:
+  pilot_genes: AFFINAGE_EVALUATION/pilot-genes.txt
+  per_gene: AFFINAGE_EVALUATION/results/per-gene.json
+  summary_csv: AFFINAGE_EVALUATION/results/summary.csv
+  summary_md: AFFINAGE_EVALUATION/results/summary.md
+  batch2_genes: AFFINAGE_EVALUATION/batch2-genes.txt
+  batch2_per_gene: AFFINAGE_EVALUATION/results/batch2/per-gene.json
+  batch2_summary_md: AFFINAGE_EVALUATION/results/batch2/summary.md
+  batch3_genes: AFFINAGE_EVALUATION/batch3-genes.txt
+  batch3_per_gene: AFFINAGE_EVALUATION/results/batch3/per-gene.json
+  batch3_summary_md: AFFINAGE_EVALUATION/results/batch3/summary.md
+  batch4_genes: AFFINAGE_EVALUATION/batch4-genes.txt
+  batch4_per_gene: AFFINAGE_EVALUATION/results/batch4/per-gene.json
+  batch4_summary_md: AFFINAGE_EVALUATION/results/batch4/summary.md
+  hard_cases: AFFINAGE_EVALUATION/results/hard-cases.md
+  narrative_vs_go: AFFINAGE_EVALUATION/results/narrative-vs-go.md
+---
+# Affinage Evaluation Project
+
+Systematic evaluation of **Affinage** (Cheeseman Lab, Whitehead Institute/MIT;
+[affinage.wi.mit.edu](https://affinage.wi.mit.edu), [arXiv:2607.02217](https://arxiv.org/abs/2607.02217))
+against the agent-adjudicated local AIGR gene reviews.
+
+See for example, the [Affinage page for SOD1](https://affinage.wi.mit.edu/gene/SOD1). This
+has:
+
+- a PMID-grounded chronological mechanistic *narrative*
+- open questions (what we call "knowledge gaps" in this repo)
+- mechanistic "profile" (summarizes of function and pathway grounded in GO/Reactome)
+
+## GO term evaluation
+
+**Bottom line (n=12 pilot, human):** Affinage *does* ground its literature
+findings to GO terms — but the grounding behaves like a **recall-oriented,
+frequency-weighted classifier**. It agrees well on **subcellular localization**,
+captures **general themes** via its Reactome layer, but **almost never grounds to
+the specific curated molecular function** (exact core-MF match: **2/12**), instead
+stopping at a general parent (`oxidoreductase activity` for a medium-chain
+acyl-CoA dehydrogenase; `molecular transducer activity` for a β2-adrenergic
+receptor). It also emits **co-mention / entity-collision groundings** — most
+sharply for **ADA**, where the synthesized narrative is about *E. coli* Ada
+(an alkyltransferase/transcription factor) while the record is keyed to human
+adenosine deaminase P00813.
+
+Three further cohorts — batch 2 (13 well-characterized genes), a batch-3 stress test
+(5 leaf/hormone cases), and a **batch-4 hard-case set** (12 pseudoenzymes /
+disputed-function / reclassified genes drawn from our own curation docs) — **reproduce
+the pattern**: across the **combined 42 genes** the specific curated primary function
+is captured just **1/42** (KRAS `GTPase activity`, whose GO term is simultaneously the
+specific function *and* a common mid-level term). Deep-leaf enzyme functions are
+collapsed to their parent, and enzymes are sometimes put on the *wrong* catalytic
+branch (`acting on a protein/DNA`, `ligase` for a transferase).
+
+**Crucially, this weakness is specific to the GO layer.** Affinage's free-text
+`mechanistic_narrative` — its actual product — is strong and specific, and recovers
+exactly the function the GO grounding drops (GPX4's narrative names "selenocysteine
+glutathione peroxidase reducing esterified phospholipid hydroperoxides… ferroptosis
+defense" with 29 inline PMIDs, where its GO layer says only `oxidoreductase
+activity`). See [The mechanism narrative](#the-mechanism-narrative-the-complement-to-go)
+below and [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
+
+This is still exploratory, not a finished benchmark: exact-GO-id agreement only,
+and the local AIGR references are mixed-maturity, not independently expert-signed
+ground truth.
+
+## What Affinage is (and how it differs from BioReason)
+
+Affinage annotates all 19,293 human protein-coding genes by running, once per
+gene, a **reading pass** (extract dated, citation-anchored findings from primary
+literature) and a **synthesis pass** (reason over those findings into a causal
+"current model" + year-by-year history). Unlike [BioReason](BIOREASON_COMPARISON.md) (which reasons *from*
+InterPro/GO-GPT domain inputs), Affinage reasons **bottom-up from the literature**
+and then, as a *summary* layer, maps its findings onto controlled-vocabulary
+terms in `narrative.mechanism_profile`:
+
+| Field | Content |
+|-------|---------|
+| `molecular_activity` | GO **MF** terms, each with `supporting_discovery_ids` (which literature findings back it) |
+| `localization` | GO **CC** terms + supporting discoveries |
+| `pathway` | **Reactome** (`R-HSA-…`) pathway terms |
+| `partners` / `complexes` | free-text partner names / complex memberships |
+
+Two features prove these GO terms are **Affinage-generated grounding, not a GOA
+import**: every term links back to Affinage's own discovery ids, and each carries
+a support **count** (an aggregation over *its* findings). The genuine imports live
+separately under `prefetch_data` (`uniprot`, `hpa`, `alphafold`, `depmap`, …).
+
+## Relationship to AIGR
+
+The two projects sit on opposite sides of the *structured ↔ narrative* divide and
+are complementary:
+
+- **Affinage:** literature → free-text findings → *maps up to* GO/Reactome terms.
+  No GO **evidence codes**, no per-annotation **ACCEPT/MODIFY/REMOVE** verdict, no
+  validation against GOA.
+- **AIGR (us):** *starts from* GOA's evidence-coded GO annotations → reviews each
+  one → keeps/modifies/removes, and authors validated, specific `core_functions`.
+
+So AIGR can act as the **GO-grounding + curation layer** Affinage lacks. The reverse
+direction — using Affinage's "current model" as a **deep-research input** to AIGR — is
+weaker than it first appears: on inspection it is **largely redundant** with AIGR's
+existing deep-research step (same biology, no independent perspective since both are
+Claude-generated, human-only, and its apparent citation advantages are trivial to
+replicate). See [The mechanism narrative](#the-mechanism-narrative-the-complement-to-go)
+and [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
+
+## Methods
+
+For each gene we (1) fetch the Affinage record from the JSON API
+(`https://affinage.wi.mit.edu/api/gene/<SYMBOL>`, cached under
+[`affinage-cache/`](AFFINAGE_EVALUATION/affinage-cache/)); (2) extract the
+`mechanism_profile` GO sets; (3) load the local review
+(`genes/human/<GENE>/<GENE>-ai-review.yaml`) — every GOA annotation (id, evidence,
+review action) plus the reviewer-authored `core_functions`; (4) compute exact-id
+agreement per aspect and whether Affinage's profile contains the **reviewed core
+MF term**. All numbers are recomputed from committed inputs by
+[`compare_affinage.py`](AFFINAGE_EVALUATION/compare_affinage.py) — nothing is
+hard-coded.
+
+```bash
+cd projects/AFFINAGE_EVALUATION
+python compare_affinage.py --genes-file pilot-genes.txt   # writes results/
+python compare_affinage.py --genes-file batch2-genes.txt --out-dir results/batch2
+python compare_affinage.py --genes-file batch3-genes.txt --out-dir results/batch3
+python compare_affinage.py --genes-file batch4-genes.txt --out-dir results/batch4
+```
+
+The exact-id metric is deliberately strict and **understates** agreement where
+Affinage grounds to a true GO *ancestor* of the curated term; those cases are read
+qualitatively below (and are the dominant pattern). Adding an ontology-aware
+ancestor/descendant relation is the top follow-up (see [Next steps](#next-steps)).
+
+## Pilot results (n=12)
+
+See the generated [summary](AFFINAGE_EVALUATION/results/summary.md) ·
+[CSV](AFFINAGE_EVALUATION/results/summary.csv) ·
+[per-gene JSON](AFFINAGE_EVALUATION/results/per-gene.json).
+
+- **Exact core-MF captured: 2/12.** Only AATF and ABL1 had *any* reviewed core
+  molecular-function term appear verbatim in Affinage's `molecular_activity` — and
+  in both cases the match is a **general secondary** core term (RNA binding for
+  AATF; DNA binding for ABL1), **not** the specific primary activity (transcription
+  coactivator; non-membrane-spanning tyrosine kinase), which Affinage grounds only
+  to the parent (`catalytic activity, acting on a protein`). So the true
+  specific-function capture rate is effectively **0/12** in this pilot.
+- **Localization agrees well.** Cytosol / mitochondrion / nucleus / plasma
+  membrane matches are common; localization is Affinage's strongest aspect.
+- **MF grounding is systematically less precise** — see taxonomy below.
+
+## Extended cohort (batch 2, n=13)
+
+A second cohort ([`batch2-genes.txt`](AFFINAGE_EVALUATION/batch2-genes.txt);
+[results](AFFINAGE_EVALUATION/results/batch2/summary.md)) of well-characterized
+enzymes, kinases, transcription factors and a channel was run to test whether the
+pilot pattern generalizes. It does — **0/13** specific core-MF captured. Every
+gene's defining activity is grounded only to a top-level parent:
+
+| Gene | AIGR core MF | Affinage top MF |
+|------|--------------|-----------------|
+| SOD1 | superoxide dismutase activity | oxidoreductase activity |
+| CASP3 | cysteine-type endopeptidase activity | catalytic activity, acting on a protein |
+| MAPK1 | MAP kinase activity | catalytic activity, acting on a protein |
+| HMOX1 | heme oxygenase (decyclizing) activity | oxidoreductase activity |
+| LDHA | L-lactate dehydrogenase (NAD+) activity | oxidoreductase activity |
+| CFTR | intracellularly ATP-gated chloride channel activity | transporter activity |
+| SIRT1 | NAD-dependent protein lysine deacetylase activity | catalytic activity, acting on a protein |
+
+## Stress-test cohort (batch 3, n=5) — *when* does capture happen?
+
+A third cohort ([`batch3-genes.txt`](AFFINAGE_EVALUATION/batch3-genes.txt);
+[results](AFFINAGE_EVALUATION/results/batch3/summary.md)) deliberately picked cases
+that *might* break the pattern — very specific/leaf enzyme functions plus a small
+GTPase and a hormone. Result: **1/5**, and the one hit is the tell.
+
+| Gene | AIGR core MF | Affinage top MF | captured |
+|------|--------------|-----------------|:--------:|
+| KRAS | **GTPase activity** (GO:0003924) | **GTPase activity** | ✅ |
+| CALM1 | calcium ion binding | molecular function regulator / sensor activity | ❌ |
+| OTC | ornithine carbamoyltransferase activity | transferase activity + `ligase activity` (wrong branch) | ❌ |
+| G6PD | glucose-6-phosphate dehydrogenase activity | oxidoreductase activity + `hydrolase activity` (wrong branch) | ❌ |
+| INS | insulin receptor binding | *(empty — no MF grounded at all)* | ❌ |
+
+**The rule this sharpens:** Affinage captures the specific function *only when that
+function's GO term is itself a common, mid-level term* — `GTPase activity` is both the
+specific KRAS function and a frequent annotation, so the frequency-weighted grounding
+lands on it. Deep-leaf enzyme terms (ornithine carbamoyltransferase,
+glucose-6-phosphate dehydrogenase) are collapsed to their parent. And for a peptide
+**hormone** (INS, function = receptor binding) Affinage grounds *no* molecular activity
+at all — the MF layer has nothing to say about non-enzymatic function.
+
+## Hard cases (batch 4, n=12) — pseudoenzymes & disputed functions
+
+Full analysis: [`results/hard-cases.md`](AFFINAGE_EVALUATION/results/hard-cases.md).
+A cohort of human genes our own docs flag as hard to curate — pseudoenzymes (ILK,
+ROR1, CPT1C, CASP12), contested activities (PARK7, UCHL1), reclassifications (HDAC6,
+NDUFA4, PLD3), a GAP mis-typed as a GTPase (RASA1), a moonlighter (GAPDH), and a
+family-label misdirection (KEAP1). GO capture stays low (**1/12**), but the two layers
+split sharply:
+
+- **The narrative is genuinely pseudoenzyme-/reclassification-aware** (literature-grounded,
+  not domain-grounded): it calls ILK a *"bona fide pseudokinase… no detectable activity,"*
+  ROR1 a *"pseudokinase devoid of intrinsic catalytic activity,"* CPT1C's transferase
+  *"weak… 20–300× lower,"* HDAC6 a *non-histone/tubulin* deacetylase, and it *adjudicates*
+  the PARK7 glyoxalase-vs-deglycase dispute. On **KEAP1** it lands on adaptor/sensor/ligase —
+  avoiding the actin-binding error a domain-based tool (BioReason/InterPro2GO) made.
+- **The GO layer is a lossy down-cast that can contradict its own narrative.** For **ROR1**
+  the narrative says *"devoid of intrinsic catalytic activity"* while `mechanism_profile`
+  grounds **`catalytic activity, acting on a protein`**; for **CPT1C** the narrative says
+  *"weak"* while the GO layer states flat `transferase activity`. Where the narrative itself
+  de-emphasises catalysis the GO layer more often avoids the trap (ILK→adaptor, RASA1→regulator,
+  PLD3→DNA-catalytic, KEAP1→adaptor, CASP12→empty).
+- **Controversy handling is mixed:** PARK7's narrative engages and resolves the dispute; UCHL1's
+  omits the contested ubiquitin-ligase activity entirely (the "current model" has no slot for a
+  positive-vs-NOT pair).
+
+Across the **combined 42-gene set** the specific curated primary function is captured
+**1/42** (KRAS). Three other nominal matches (AATF, ABL1, GAPDH) are general/secondary
+terms, not the primary activity.
+
+## Failure-mode taxonomy (verified by inspection)
+
+### 1. General-parent / less-precise MF grounding (dominant)
+
+Affinage grounds to a true but **generic ancestor**, missing the specific curated
+function. This mirrors the `LSP` ("less precise") and frequency-bias patterns the
+[BioReason project](BIOREASON_COMPARISON.md) found.
+
+| Gene | AIGR core MF | Affinage MF (top) |
+|------|--------------|-------------------|
+| GPX4 | phospholipid-hydroperoxide glutathione peroxidase activity (GO:0047066) | oxidoreductase activity (GO:0016491) |
+| ACADM | medium-chain fatty acyl-CoA dehydrogenase activity (GO:0070991) | oxidoreductase activity (GO:0016491) |
+| ADRB2 | β2-adrenergic receptor activity (GO:0004941) | molecular transducer activity (GO:0060089) |
+| AGO2 | RNA endonuclease activity (GO:0004521) | catalytic activity, acting on RNA (GO:0140098) |
+
+### 2. Co-mention / spurious MF grounding
+
+Terms grounded from literature co-mention that are **wrong for the protein's
+actual activity**: GPX4 gets `DNA binding` (GO:0003677) and `catalytic activity,
+acting on RNA` (GO:0140098); AGO2 gets `transcription regulator activity`
+(GO:0140110). Our reviews handle such biology as `KEEP_AS_NON_CORE` or `REMOVE`
+(e.g. GPX4 `protein binding` → REMOVE), which Affinage's summary layer cannot do.
+
+### 3. Entity / gene-symbol collision in retrieval (ADA)
+
+The sharpest failure. Affinage's record for **ADA** is keyed to human adenosine
+deaminase (`prefetch_data.uniprot.accession = P00813`), but the synthesized
+`current_model` is a **chimera of three different "ADA/Ada" entities**:
+
+> "The *E. coli* Ada protein is a bifunctional enzyme and transcriptional
+> regulator of the adaptive response to alkylating agents… in eukaryotes, the
+> orthologous ADA complex subunits (Ada2, Ada3) scaffold the GCN5 histone
+> acetyltransferase within the ADA and SAGA co-activator complexes… in humans,
+> ADA enzymatic activity (deamination of adenosine and deoxyadenosine) is
+> essential for lymphocyte survival…"
+
+Three unrelated proteins — *E. coli* Ada (DNA alkyltransferase/TF), the
+eukaryotic **ADA2/ADA3** transcriptional-adaptor subunits of SAGA/ATAC, and human
+**ADA** (adenosine deaminase) — are conflated by the shared symbol. The GO
+grounding latched onto the first two: every MF term (`DNA binding`, `transcription
+regulator activity`, `catalytic activity, acting on DNA/protein`, `transferase
+activity`) and the partners/complexes (`GCN5`, `ADA2`, `ADA3`, `SAGA`, `ATAC`)
+belong to those entities, while the actual **`adenosine deaminase activity`
+(GO:0004000)** — mentioned only in the narrative's trailing clause — is **dropped
+from the profile entirely** (0 shared GO ids with GOA; 0 localization terms).
+Tellingly, Affinage's *own* head-to-head `evaluation.pairwise` scores ADA a
+`"loss"` versus UniProt. This is a literature-retrieval symbol-ambiguity failure,
+analogous to the BioReason `csr-1` wrong-input case, and precisely what an
+accession-anchored GOA review catches.
+
+### 4. Wrong parent *branch* (metabolic enzymes → acting-on-protein/DNA)
+
+Beyond generic-ancestor grounding (mode 1), several small-molecule metabolic
+enzymes are grounded to the **wrong catalytic branch** entirely: SOD1, LDHA and
+PKM receive `catalytic activity, acting on a protein` (GO:0140096), and FASN and
+GSK3B receive `catalytic activity, acting on DNA` (GO:0140097), and OTC—a
+transferase—gets `ligase activity` (GO:0016874). None act on those substrates in
+the reaction the curated core function describes. This is worse than mere
+imprecision: the assigned parent is not an ancestor of the true term, so even
+ontology-aware ancestor scoring would (correctly) count it as wrong.
+
+## The mechanism narrative (the complement to GO)
+
+Full analysis: [`results/narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
+
+The GO `mechanism_profile` is Affinage's **weakest** output; its actual product is
+the citation-anchored `narrative.mechanistic_narrative` plus the structured
+`timeline.discoveries` (each a typed object: `year`, `finding`, `method`, `journal`,
+`confidence` + rationale, `pmids[]`, `is_preprint`), and a `teleology` track of what
+each advance *explained*. On the sampled genes the narrative **recovers the specific
+mechanism the GO layer drops** — the GO grounding is a lossy down-cast, not a measure
+of what Affinage knows:
+
+| Gene | GO layer (lossy) | Narrative (specific; distinct inline PMIDs) |
+|------|------------------|---------------------------------------------|
+| GPX4 | oxidoreductase activity | selenocysteine glutathione peroxidase reducing membrane phospholipid hydroperoxides; ferroptosis defense (29) |
+| CASP3 | catalytic activity, acting on a protein | executioner cysteine protease; zymogen→p20/p11; DEVD specificity; cleaves PARP (25) |
+| MAPK1 | catalytic activity, acting on a protein | ERK2 Ser/Thr kinase; MEK1 dual phosphorylation (25) |
+| ADRB2 | molecular transducer activity | β2-adrenergic GPCR, catecholamine-responsive (18) |
+
+**But the narrative has two failure modes.** (1) *Recency/novelty bias on canonical
+genes:* the ADRB2 narrative surveys recent specialized papers (HCC drug resistance,
+amyloid-β, CAR-T checkpoint, osteoclastogenesis) but omits the textbook core — no
+cAMP, adenylyl cyclase, Gs, or β-arrestin desensitization. (2) *Symbol collisions
+break the prose too:* ADA's narrative is the three-entity chimera (§3). Usefully,
+Affinage's own `evaluation.pairwise` tracks these tiers — GPX4/CASP3/MAPK1 = `win`,
+ADRB2 = `tie`, ADA = `loss` — a built-in triage flag for which narratives to trust.
+
+**Implication — but do not over-read it as an integration case.** The narrative is
+Affinage's real product, but as an *input source* it is **largely redundant** with
+AIGR's existing deep-research: the biology overlaps, the PMID-anchoring advantage is
+trivial to replicate (DOI/`[n]`→PMID is a converter call), "more citations" is not
+value (GPX4: Affinage 37 vs our review's 10, skewed to material curation prunes), it
+adds no independent perspective (both are Claude), and it is human-only. Its residual
+value is convenience — a free precomputed first pass for the human backlog — plus a
+weak dark-gene prioritization signal. Full argument in
+[`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md).
+
+## Next steps
+
+1. **Ontology-aware scoring.** Replace exact-id match with ancestor/descendant
+   distance (using the pinned GO release, as in the BioReason
+   [ontology-authority](BIOREASON_COMPARISON/verify_ontology_authority.py)
+   approach) to quantify the "general-parent" pattern instead of only counting it.
+2. **Scale the cohort.** 42 genes done (pilot + batches 2–4, incl. a hard-case set);
+   extend to a larger stratified sample (enzymes, TFs, transporters, receptors,
+   structural, uncharacterized) and report per-class capture rates. Test the "capture
+   only when the specific term is a common mid-level GO term" hypothesis (KRAS) directly.
+3. **Score the narrative, not just the GO layer.** Qualitative sampling done (see
+   [narrative-vs-go.md](AFFINAGE_EVALUATION/results/narrative-vs-go.md)); next apply
+   the BioReason correctness/completeness rubric on `mechanistic_narrative` across a
+   scored cohort, with a blinded second rater, and test whether `evaluation.pairwise`
+   predicts the human scores.
+4. **Symbol-collision sweep.** Systematically check `prefetch_data.uniprot.accession`
+   vs the organism/protein described in `current_model` to size the ADA-type
+   failure across the genome.
+5. **(Deprioritized) Integration.** A prior idea was to wire Affinage in as a
+   `deep-research` provider; the [narrative analysis](AFFINAGE_EVALUATION/results/narrative-vs-go.md)
+   argues against it (redundant with existing deep research, no independent
+   perspective, human-only). Only worth revisiting as a free first-pass for the human
+   backlog, or if a targeted test shows its retrieval recovers primary core-function
+   evidence our pipeline systematically misses (raw citation count does not show this).
