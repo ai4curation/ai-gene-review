@@ -24,10 +24,16 @@ sidecars:
 
 Systematic evaluation of **Affinage** (Cheeseman Lab, Whitehead Institute/MIT;
 [affinage.wi.mit.edu](https://affinage.wi.mit.edu), [arXiv:2607.02217](https://arxiv.org/abs/2607.02217))
-against the agent-adjudicated local AIGR gene reviews — a sibling exercise to the
-[BioReason-Pro Comparison Project](BIOREASON_COMPARISON.md), reusing its
-methodology (treat the external tool's output as preliminary research, diff it
-against GOA and the reviewed core functions).
+against the agent-adjudicated local AIGR gene reviews.
+
+See for example, the [Affinage page for SOD1](https://affinage.wi.mit.edu/gene/SOD1). This
+has:
+
+- a PMID-grounded chronological mechanistic *narrative*
+- open questions (what we call "knowledge gaps" in this repo)
+- mechanistic "profile" (summarizes of function and pathway grounded in GO/Reactome)
+
+## GO term evaluation
 
 **Bottom line (n=12 pilot, human):** Affinage *does* ground its literature
 findings to GO terms — but the grounding behaves like a **recall-oriented,
@@ -67,7 +73,7 @@ ground truth.
 Affinage annotates all 19,293 human protein-coding genes by running, once per
 gene, a **reading pass** (extract dated, citation-anchored findings from primary
 literature) and a **synthesis pass** (reason over those findings into a causal
-"current model" + year-by-year history). Unlike BioReason (which reasons *from*
+"current model" + year-by-year history). Unlike [BioReason](BIOREASON_COMPARISON.md) (which reasons *from*
 InterPro/GO-GPT domain inputs), Affinage reasons **bottom-up from the literature**
 and then, as a *summary* layer, maps its findings onto controlled-vocabulary
 terms in `narrative.mechanism_profile`:
