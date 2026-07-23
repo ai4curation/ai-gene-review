@@ -28,7 +28,7 @@ fumarylacetoacetate hydrolysis.
 
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
-| [ ] | `hmgA` | PP_4621 | Q88E47 | Homogentisate 1,2-dioxygenase |
+| [x] | `hmgA` | PP_4621 | Q88E47 | Homogentisate 1,2-dioxygenase |
 | [ ] | `hmgC` | PP_4619 | Q88E49 | Maleylacetoacetate isomerase |
 | [x] | `hmgB` | PP_4620 | Q88E48 | Fumarylacetoacetase |
 
