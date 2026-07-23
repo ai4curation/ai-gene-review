@@ -86,4 +86,38 @@ synthesis** in post-mitotic/quiescent tissues (skeletal muscle high expression).
 - Process: GO:0006264 (mitochondrial DNA replication) — the key physiological role (dNTP supply
   for mtDNA synthesis; disease-defining).
 - Location: GO:0005829 (cytosol).
+
+## QA re-review 2026-07-23 (conservative, no changes)
+
+Independent QA pass over the completed 45-annotation review. Outcome: **no edits made** —
+no problems met the bar for a confident conservative fix.
+
+Checks performed:
+- `uv run ai-gene-review validate` -> `✓ Valid`, no warnings.
+- `protein binding` (GO:0005515) x3 IPI and `identical protein binding` (GO:0042802) x3 IPI
+  are all `MARK_AS_OVER_ANNOTATED` (none ACCEPTed), each retained-not-removed per curation
+  policy with the functional context (TP53, ATM/MDM2, ORC4/RNF41, homodimer) noted in the
+  reason. Compliant.
+- Core function correctly captured and not over-generalized: two `core_functions` entries both
+  keyed on MF GO:0004748 (ribonucleoside-diphosphate reductase activity) — (1) de novo dNTP
+  supply via GO:0009263, (2) dNTP supply for mtDNA replication via GO:0006264 — both located to
+  cytosol (GO:0005829). MF is in the MF branch, both process ids in BP, location in CC: no
+  wrong-branch author-supplied ids.
+- All PMIDs cited in supporting_text are cached but abstract-only (`full_text_available: false`);
+  validation confirms every supporting_text is a verbatim substring of the cached abstract.
+- GOA/review completeness: GOA has 46 annotation rows, review has 45. The single delta is a
+  legitimate WITH/FROM duplicate — GO:0005515 IPI PMID:19015526 has two rows differing only in
+  partner (MDM2 UniProtKB:Q00987, ATM UniProtKB:Q13315), correctly collapsed to one review
+  annotation whose summary already names both partners. No annotation is missing.
+- Description is clean project-independent biology (no `this review`/`curation`/PN framing).
+
+Considered but deliberately left alone (not confident improvements):
+- Several non-core observed locations (nucleus, nucleoplasm, cytoplasm) use `ACCEPT` with reasons
+  that describe them as "non-core observed location". `KEEP_AS_NON_CORE` would be marginally more
+  literal, but ACCEPT-with-note is a consistent, acceptable convention here; not changed.
+- Cell-cycle IDA terms (GO:0010971 positive reg G2/M; GO:0070318 positive reg G0->G1) are
+  `MARK_AS_OVER_ANNOTATED` with sound arguments (cited papers show G2/M arrest / in-vitro resting
+  cell dNTP supply, not the annotated positive regulation). A stronger `REMOVE` is disallowed for
+  experimental annotations whose full text we have not read; over-annotated is the correct
+  conservative call. Left as-is.
 </content>
