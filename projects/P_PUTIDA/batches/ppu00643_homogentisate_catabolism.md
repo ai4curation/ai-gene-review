@@ -20,7 +20,7 @@ fumarylacetoacetate hydrolysis.
 - [x] Curate all selected gene reviews, including every GOA row.
 - [x] Create and validate the species-neutral `homogentisate_catabolism` module.
 - [x] Run full OpenScientist module research.
-- [ ] Run full OpenScientist module + `ppu00643` + PSEPK research.
+- [x] Run full OpenScientist module + `ppu00643` + PSEPK research.
 - [x] Render the module and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
