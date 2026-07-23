@@ -34,7 +34,7 @@ existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 | [x] | `accA` | PP_1607 | Q88MG4 | Acetyl-CoA carboxylase carboxyltransferase alpha |
 | [x] | `accD` | PP_1996 | Q88LD9 | Acetyl-CoA carboxylase carboxyltransferase beta |
 | [x] | `fabD` | PP_1913 | Q88LL7 | Malonyl-CoA:ACP transacylase |
-| [ ] | `acpP` | PP_1915 | Q88LL5 | Acyl carrier protein |
+| [x] | `acpP` | PP_1915 | Q88LL5 | Acyl carrier protein |
 | [x] | `PP_4379` | PP_4379 | Q88ES4 | FabH1 short-chain-acyl-CoA initiation |
 | [x] | `PP_4545` | PP_4545 | Q88EC1 | FabH2 medium-chain-acyl-CoA initiation |
 | [x] | `PP_0262` | PP_0262 | Q88R72 | MadB malonyl-ACP decarboxylase initiation |
