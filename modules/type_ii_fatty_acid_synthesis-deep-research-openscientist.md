@@ -2,9 +2,9 @@
 provider: openscientist
 model: openscientist-autonomous
 cached: false
-start_time: '2026-07-23T07:02:31.632767'
-end_time: '2026-07-23T07:40:29.660935'
-duration_seconds: 2278.03
+start_time: '2026-07-23T10:11:22.814435'
+end_time: '2026-07-23T10:37:43.242046'
+duration_seconds: 1580.43
 template_file: templates/module_research.md.j2
 template_variables:
   module_title: Type-II fatty-acid synthesis
@@ -18,70 +18,77 @@ template_variables:
     \  - Acetyl-CoA carboxylase\n    - Heteromeric acetyl-CoA carboxylase (molecular\
     \ player: bacterial AccABCD acetyl-CoA carboxylase; activity or role: acetyl-CoA\
     \ carboxylase activity)\n  - 2. acyl-group carriage\n  - Acyl carrier protein\n\
-    \    - Holo-acyl carrier protein (molecular player: PSEPK canonical AcpP; activity\
-    \ or role: acyl carrier activity)\n  - 3. malonyl-ACP formation\n  - FabD malonyl-ACP\
-    \ loading\n    - Malonyl-CoA:ACP transacylase (molecular player: PSEPK canonical\
-    \ FabD; activity or role: acyl-carrier-protein S-malonyltransferase activity)\n\
-    \  - 4. fatty-acid chain initiation\n  - KAS-III-type chain initiation\n    -\
-    \ Beta-ketoacyl-ACP synthase III initiator (molecular player: PSEPK PP_4379 chain-initiation\
-    \ candidate; activity or role: beta-ketoacyl-acyl-carrier-protein synthase III\
+    \    - Holo-acyl carrier protein (molecular player: canonical bacterial FAS-II\
+    \ acyl carrier proteins; activity or role: acyl carrier activity)\n  - 3. malonyl-ACP\
+    \ formation\n  - FabD malonyl-ACP loading\n    - Malonyl-CoA:ACP transacylase\
+    \ (molecular player: FabD malonyl-CoA:ACP transacylases; activity or role: acyl-carrier-protein\
+    \ S-malonyltransferase activity)\n  - 4. fatty-acid chain initiation\n  - Alternative\
+    \ FAS-II chain-initiation routes\n    - Alternative versions by primer source\
+    \ and initiating enzyme chemistry: Fatty-acid chain-initiation route\n      -\
+    \ KAS-III acyl-CoA-dependent initiation\n        - Alternative versions by acyl-CoA\
+    \ primer range: KAS-III acyl-CoA substrate variants\n          - FabH1 short-chain-acyl-CoA\
+    \ initiation\n            - FabH1 beta-ketoacyl-ACP synthase III (molecular player:\
+    \ FabH-like beta-ketoacyl-ACP synthase III enzymes; activity or role: beta-ketoacyl-acyl-carrier-protein\
+    \ synthase III activity)\n          - FabH2 medium-chain-acyl-CoA initiation\n\
+    \            - FabH2 beta-ketodecanoyl-ACP synthase (molecular player: medium-chain-acyl-CoA-selective\
+    \ FabH enzymes; activity or role: beta-ketodecanoyl-acyl-carrier-protein synthase\
+    \ activity)\n      - Mad/YiiD malonyl-ACP decarboxylase route\n        - 1. acetyl-ACP\
+    \ primer formation\n        - Malonyl-ACP decarboxylation\n          - Mad/YiiD\
+    \ malonyl-ACP decarboxylase (molecular player: Mad/YiiD-family malonyl-ACP decarboxylases;\
+    \ activity or role: malonyl-ACP decarboxylase activity)\n        - 2. acetyl-ACP\
+    \ condensation\n        - Acetyl-ACP and malonyl-ACP condensation\n          -\
+    \ FabB/FabF-family first condensation (molecular player: FabB/FabF elongation\
+    \ condensing enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein synthase\
     \ activity)\n  - 5. iterative acyl-chain elongation\n  - Four-reaction FAS-II\
     \ elongation cycle\n    - 1. decarboxylative condensation\n    - KAS-I/KAS-II\
-    \ condensation\n      - Iterative decarboxylative condensation (molecular player:\
-    \ 3-oxoacyl-acyl-carrier-protein synthase activity; activity or role: 3-oxoacyl-acyl-carrier-protein\
-    \ synthase activity)\n      - Alternative versions by condensing enzyme: Elongation\
+    \ condensation\n      - Alternative versions by condensing enzyme: Elongation\
     \ condensing-enzyme variants\n        - FabB KAS-I\n          - FabB 3-oxoacyl-ACP\
-    \ synthase (molecular player: PSEPK FabB; activity or role: 3-oxoacyl-acyl-carrier-protein\
-    \ synthase activity)\n        - FabF KAS-II\n          - FabF 3-oxoacyl-ACP synthase\
-    \ (molecular player: PSEPK FabF; activity or role: 3-oxoacyl-acyl-carrier-protein\
-    \ synthase activity)\n        - PP_3303 KAS-II candidate\n          - PP_3303\
-    \ 3-oxoacyl-ACP synthase candidate (molecular player: PSEPK PP_3303; activity\
-    \ or role: 3-oxoacyl-acyl-carrier-protein synthase activity)\n    - 2. beta-keto\
-    \ reduction\n    - 3-oxoacyl-ACP reduction\n      - NADPH-dependent beta-keto\
-    \ reduction (molecular player: 3-oxoacyl-acyl-carrier-protein reductase (NADPH)\
-    \ activity; activity or role: 3-oxoacyl-acyl-carrier-protein reductase (NADPH)\
-    \ activity)\n      - Alternative versions by reductase paralog: 3-oxoacyl-ACP\
-    \ reductase variants\n        - Canonical FabG\n          - FabG 3-oxoacyl-ACP\
-    \ reductase (molecular player: PSEPK FabG; activity or role: 3-oxoacyl-acyl-carrier-protein\
-    \ reductase (NADPH) activity)\n        - PP_0581 reductase candidate\n       \
-    \   - PP_0581 3-oxoacyl-ACP reductase candidate (molecular player: PSEPK PP_0581)\n\
+    \ synthase (molecular player: FabB/KAS-I condensing enzymes; activity or role:\
+    \ 3-oxoacyl-acyl-carrier-protein synthase activity)\n        - FabF KAS-II\n \
+    \         - FabF 3-oxoacyl-ACP synthase (molecular player: FabF/KAS-II condensing\
+    \ enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)\n\
+    \    - 2. beta-keto reduction\n    - 3-oxoacyl-ACP reduction\n      - FabG-family\
+    \ 3-oxoacyl-ACP reductase (molecular player: FabG-family 3-oxoacyl-ACP reductases;\
+    \ activity or role: 3-oxoacyl-acyl-carrier-protein reductase (NADPH) activity)\n\
     \    - 3. 3-hydroxyacyl dehydration\n    - 3-hydroxyacyl-ACP dehydration\n   \
-    \   - Elongation-cycle dehydration (molecular player: (3R)-hydroxyacyl-acyl-carrier-protein\
-    \ dehydratase activity; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein\
-    \ dehydratase activity)\n      - Alternative versions by dehydratase family: FAS-II\
-    \ dehydratase variants\n        - FabZ dehydratase\n          - FabZ 3-hydroxyacyl-ACP\
-    \ dehydratase (molecular player: PSEPK FabZ; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein\
+    \   - Alternative versions by dehydratase family: FAS-II dehydratase variants\n\
+    \        - FabZ dehydratase\n          - FabZ 3-hydroxyacyl-ACP dehydratase (molecular\
+    \ player: FabZ-family FAS-II dehydratases; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein\
     \ dehydratase activity)\n        - FabA dehydratase\n          - FabA 3-hydroxyacyl-ACP\
-    \ dehydratase (molecular player: PSEPK FabA; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein\
-    \ dehydratase activity)\n    - 4. enoyl reduction\n    - Enoyl-ACP reduction\n\
-    \      - Elongation-cycle enoyl reduction (molecular player: enoyl-acyl-carrier-protein\
-    \ reductase activity)\n      - Alternative versions by electron donor and enzyme\
-    \ family: Enoyl-ACP reductase variants\n        - FabV NADH-dependent reductase\n\
-    \          - FabV enoyl-ACP reductase (molecular player: PSEPK FabV; activity\
-    \ or role: enoyl-acyl-carrier-protein reductase (NADH) activity)\n        - PP_1852\
-    \ NADPH-dependent reductase\n          - PP_1852 enoyl-ACP reductase candidate\
-    \ (molecular player: PSEPK PP_1852; activity or role: enoyl-acyl-carrier-protein\
-    \ reductase (NADPH) activity)\n  - 6. cis-unsaturated fatty-acid branch\n  - FabA/FabB\
-    \ cis-unsaturated branch\n    - 1. trans-2 to cis-3 isomerization\n    - FabA\
-    \ trans-2-decenoyl-ACP isomerization\n      - FabA trans-2-decenoyl-ACP isomerase\
-    \ (molecular player: PSEPK FabA; activity or role: trans-2-decenoyl-acyl-carrier-protein\
+    \ dehydratase (molecular player: FabA-family dehydratase/isomerases; activity\
+    \ or role: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity)\n    -\
+    \ 4. enoyl reduction\n    - Enoyl-ACP reduction\n      - Alternative versions\
+    \ by electron donor and enzyme family: Enoyl-ACP reductase variants\n        -\
+    \ FabV NADH-dependent reductase\n          - FabV enoyl-ACP reductase (molecular\
+    \ player: NADH-dependent bacterial enoyl-ACP reductases; activity or role: enoyl-acyl-carrier-protein\
+    \ reductase (NADH) activity)\n        - FabL-like NADPH-dependent reductase\n\
+    \          - FabL-like enoyl-ACP reductase (molecular player: FabL-like NADPH-dependent\
+    \ enoyl-ACP reductases; activity or role: enoyl-acyl-carrier-protein reductase\
+    \ (NADPH) activity)\n  - 6. cis-unsaturated fatty-acid branch\n  - FabA/FabB cis-unsaturated\
+    \ branch\n    - 1. trans-2 to cis-3 isomerization\n    - FabA trans-2-decenoyl-ACP\
+    \ isomerization\n      - FabA trans-2-decenoyl-ACP isomerase (molecular player:\
+    \ FabA-family dehydratase/isomerases; activity or role: trans-2-decenoyl-acyl-carrier-protein\
     \ isomerase activity)\n    - 2. cis-unsaturated chain extension\n    - FabB unsaturated-chain\
     \ condensation\n      - FabB cis-unsaturated chain elongation (molecular player:\
-    \ PSEPK FabB; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)"
+    \ FabB/KAS-I condensing enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein\
+    \ synthase activity)"
   module_connections: '- Acetyl-CoA carboxylase feeds into FabD malonyl-ACP loading:
     AccABCD supplies malonyl-CoA to FabD.
 
     - Acyl carrier protein feeds into FabD malonyl-ACP loading: Holo-ACP accepts malonate
     from FabD.
 
-    - FabD malonyl-ACP loading feeds into KAS-III-type chain initiation: Malonyl-ACP
-    is the two-carbon donor for chain initiation.
+    - FabD malonyl-ACP loading feeds into Alternative FAS-II chain-initiation routes:
+    Malonyl-ACP is the two-carbon donor for chain initiation.
 
-    - KAS-III-type chain initiation feeds into Four-reaction FAS-II elongation cycle:
-    The initiated beta-ketoacyl-ACP enters reductive elongation.
+    - Alternative FAS-II chain-initiation routes feeds into Four-reaction FAS-II elongation
+    cycle: The initiated beta-ketoacyl-ACP enters reductive elongation.
 
     - Four-reaction FAS-II elongation cycle feeds into FabA/FabB cis-unsaturated branch:
     A C10 trans-2-enoyl-ACP intermediate can enter the FabA/FabB branch.
+
+    - Malonyl-ACP decarboxylation feeds into Acetyl-ACP and malonyl-ACP condensation:
+    Mad-generated acetyl-ACP is the primer for condensation.
 
     - KAS-I/KAS-II condensation feeds into 3-oxoacyl-ACP reduction: Condensation produces
     3-oxoacyl-ACP for reduction.
@@ -102,14 +109,14 @@ provider_config:
   max_retries: 3
   parameters:
     allowed_domains: []
-    max_iterations: 3
+    max_iterations: 1
     use_hypotheses: false
     investigation_mode: autonomous
     poll_interval: 30
     timeout: 7200
     save_artifacts: true
     artifact_max_bytes: 5242880
-citation_count: 26
+citation_count: 21
 artifact_count: 2
 artifact_sources:
   openscientist_artifacts_zip: 2
@@ -148,65 +155,69 @@ A reusable dissociated bacterial fatty-acid synthase pathway that forms malonyl-
     - Heteromeric acetyl-CoA carboxylase (molecular player: bacterial AccABCD acetyl-CoA carboxylase; activity or role: acetyl-CoA carboxylase activity)
   - 2. acyl-group carriage
   - Acyl carrier protein
-    - Holo-acyl carrier protein (molecular player: PSEPK canonical AcpP; activity or role: acyl carrier activity)
+    - Holo-acyl carrier protein (molecular player: canonical bacterial FAS-II acyl carrier proteins; activity or role: acyl carrier activity)
   - 3. malonyl-ACP formation
   - FabD malonyl-ACP loading
-    - Malonyl-CoA:ACP transacylase (molecular player: PSEPK canonical FabD; activity or role: acyl-carrier-protein S-malonyltransferase activity)
+    - Malonyl-CoA:ACP transacylase (molecular player: FabD malonyl-CoA:ACP transacylases; activity or role: acyl-carrier-protein S-malonyltransferase activity)
   - 4. fatty-acid chain initiation
-  - KAS-III-type chain initiation
-    - Beta-ketoacyl-ACP synthase III initiator (molecular player: PSEPK PP_4379 chain-initiation candidate; activity or role: beta-ketoacyl-acyl-carrier-protein synthase III activity)
+  - Alternative FAS-II chain-initiation routes
+    - Alternative versions by primer source and initiating enzyme chemistry: Fatty-acid chain-initiation route
+      - KAS-III acyl-CoA-dependent initiation
+        - Alternative versions by acyl-CoA primer range: KAS-III acyl-CoA substrate variants
+          - FabH1 short-chain-acyl-CoA initiation
+            - FabH1 beta-ketoacyl-ACP synthase III (molecular player: FabH-like beta-ketoacyl-ACP synthase III enzymes; activity or role: beta-ketoacyl-acyl-carrier-protein synthase III activity)
+          - FabH2 medium-chain-acyl-CoA initiation
+            - FabH2 beta-ketodecanoyl-ACP synthase (molecular player: medium-chain-acyl-CoA-selective FabH enzymes; activity or role: beta-ketodecanoyl-acyl-carrier-protein synthase activity)
+      - Mad/YiiD malonyl-ACP decarboxylase route
+        - 1. acetyl-ACP primer formation
+        - Malonyl-ACP decarboxylation
+          - Mad/YiiD malonyl-ACP decarboxylase (molecular player: Mad/YiiD-family malonyl-ACP decarboxylases; activity or role: malonyl-ACP decarboxylase activity)
+        - 2. acetyl-ACP condensation
+        - Acetyl-ACP and malonyl-ACP condensation
+          - FabB/FabF-family first condensation (molecular player: FabB/FabF elongation condensing enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
   - 5. iterative acyl-chain elongation
   - Four-reaction FAS-II elongation cycle
     - 1. decarboxylative condensation
     - KAS-I/KAS-II condensation
-      - Iterative decarboxylative condensation (molecular player: 3-oxoacyl-acyl-carrier-protein synthase activity; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
       - Alternative versions by condensing enzyme: Elongation condensing-enzyme variants
         - FabB KAS-I
-          - FabB 3-oxoacyl-ACP synthase (molecular player: PSEPK FabB; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
+          - FabB 3-oxoacyl-ACP synthase (molecular player: FabB/KAS-I condensing enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
         - FabF KAS-II
-          - FabF 3-oxoacyl-ACP synthase (molecular player: PSEPK FabF; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
-        - PP_3303 KAS-II candidate
-          - PP_3303 3-oxoacyl-ACP synthase candidate (molecular player: PSEPK PP_3303; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
+          - FabF 3-oxoacyl-ACP synthase (molecular player: FabF/KAS-II condensing enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
     - 2. beta-keto reduction
     - 3-oxoacyl-ACP reduction
-      - NADPH-dependent beta-keto reduction (molecular player: 3-oxoacyl-acyl-carrier-protein reductase (NADPH) activity; activity or role: 3-oxoacyl-acyl-carrier-protein reductase (NADPH) activity)
-      - Alternative versions by reductase paralog: 3-oxoacyl-ACP reductase variants
-        - Canonical FabG
-          - FabG 3-oxoacyl-ACP reductase (molecular player: PSEPK FabG; activity or role: 3-oxoacyl-acyl-carrier-protein reductase (NADPH) activity)
-        - PP_0581 reductase candidate
-          - PP_0581 3-oxoacyl-ACP reductase candidate (molecular player: PSEPK PP_0581)
+      - FabG-family 3-oxoacyl-ACP reductase (molecular player: FabG-family 3-oxoacyl-ACP reductases; activity or role: 3-oxoacyl-acyl-carrier-protein reductase (NADPH) activity)
     - 3. 3-hydroxyacyl dehydration
     - 3-hydroxyacyl-ACP dehydration
-      - Elongation-cycle dehydration (molecular player: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity)
       - Alternative versions by dehydratase family: FAS-II dehydratase variants
         - FabZ dehydratase
-          - FabZ 3-hydroxyacyl-ACP dehydratase (molecular player: PSEPK FabZ; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity)
+          - FabZ 3-hydroxyacyl-ACP dehydratase (molecular player: FabZ-family FAS-II dehydratases; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity)
         - FabA dehydratase
-          - FabA 3-hydroxyacyl-ACP dehydratase (molecular player: PSEPK FabA; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity)
+          - FabA 3-hydroxyacyl-ACP dehydratase (molecular player: FabA-family dehydratase/isomerases; activity or role: (3R)-hydroxyacyl-acyl-carrier-protein dehydratase activity)
     - 4. enoyl reduction
     - Enoyl-ACP reduction
-      - Elongation-cycle enoyl reduction (molecular player: enoyl-acyl-carrier-protein reductase activity)
       - Alternative versions by electron donor and enzyme family: Enoyl-ACP reductase variants
         - FabV NADH-dependent reductase
-          - FabV enoyl-ACP reductase (molecular player: PSEPK FabV; activity or role: enoyl-acyl-carrier-protein reductase (NADH) activity)
-        - PP_1852 NADPH-dependent reductase
-          - PP_1852 enoyl-ACP reductase candidate (molecular player: PSEPK PP_1852; activity or role: enoyl-acyl-carrier-protein reductase (NADPH) activity)
+          - FabV enoyl-ACP reductase (molecular player: NADH-dependent bacterial enoyl-ACP reductases; activity or role: enoyl-acyl-carrier-protein reductase (NADH) activity)
+        - FabL-like NADPH-dependent reductase
+          - FabL-like enoyl-ACP reductase (molecular player: FabL-like NADPH-dependent enoyl-ACP reductases; activity or role: enoyl-acyl-carrier-protein reductase (NADPH) activity)
   - 6. cis-unsaturated fatty-acid branch
   - FabA/FabB cis-unsaturated branch
     - 1. trans-2 to cis-3 isomerization
     - FabA trans-2-decenoyl-ACP isomerization
-      - FabA trans-2-decenoyl-ACP isomerase (molecular player: PSEPK FabA; activity or role: trans-2-decenoyl-acyl-carrier-protein isomerase activity)
+      - FabA trans-2-decenoyl-ACP isomerase (molecular player: FabA-family dehydratase/isomerases; activity or role: trans-2-decenoyl-acyl-carrier-protein isomerase activity)
     - 2. cis-unsaturated chain extension
     - FabB unsaturated-chain condensation
-      - FabB cis-unsaturated chain elongation (molecular player: PSEPK FabB; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
+      - FabB cis-unsaturated chain elongation (molecular player: FabB/KAS-I condensing enzymes; activity or role: 3-oxoacyl-acyl-carrier-protein synthase activity)
 
 ## Known Relationships Among Steps
 
 - Acetyl-CoA carboxylase feeds into FabD malonyl-ACP loading: AccABCD supplies malonyl-CoA to FabD.
 - Acyl carrier protein feeds into FabD malonyl-ACP loading: Holo-ACP accepts malonate from FabD.
-- FabD malonyl-ACP loading feeds into KAS-III-type chain initiation: Malonyl-ACP is the two-carbon donor for chain initiation.
-- KAS-III-type chain initiation feeds into Four-reaction FAS-II elongation cycle: The initiated beta-ketoacyl-ACP enters reductive elongation.
+- FabD malonyl-ACP loading feeds into Alternative FAS-II chain-initiation routes: Malonyl-ACP is the two-carbon donor for chain initiation.
+- Alternative FAS-II chain-initiation routes feeds into Four-reaction FAS-II elongation cycle: The initiated beta-ketoacyl-ACP enters reductive elongation.
 - Four-reaction FAS-II elongation cycle feeds into FabA/FabB cis-unsaturated branch: A C10 trans-2-enoyl-ACP intermediate can enter the FabA/FabB branch.
+- Malonyl-ACP decarboxylation feeds into Acetyl-ACP and malonyl-ACP condensation: Mad-generated acetyl-ACP is the primer for condensation.
 - KAS-I/KAS-II condensation feeds into 3-oxoacyl-ACP reduction: Condensation produces 3-oxoacyl-ACP for reduction.
 - 3-oxoacyl-ACP reduction feeds into 3-hydroxyacyl-ACP dehydration: Reduction produces 3-hydroxyacyl-ACP for dehydration.
 - 3-hydroxyacyl-ACP dehydration feeds into Enoyl-ACP reduction: Dehydration produces trans-2-enoyl-ACP for reduction.
@@ -283,233 +294,231 @@ system to all biology.
 
 ## Output
 
-# Type-II Fatty-Acid Synthesis (FAS-II): A Dissociated Bacterial Pathway — A Review
+# Type-II Fatty-Acid Synthesis (FAS-II): A Dissociated, ACP-Dependent Enzyme Toolkit With Lineage-Swappable Parts
+
+*A commissioned review-style synthesis for a molecular-biology audience*
+
+---
 
 ## 1. Executive Summary
 
-Type-II fatty-acid synthesis (FAS-II) is the bacterial route to *de novo* fatty acids. Its defining feature is architectural: unlike the single multifunctional megasynthase of animals and fungi (type-I FAS), FAS-II is **dissociated** — every catalytic step is carried out by a separate, freely diffusing, mono-functional protein, and the growing acyl chain is passed between them while covalently tethered to a small, acidic acyl carrier protein (ACP) through a 4′-phosphopantetheine (4′-PP) arm ([PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/); [PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/)). This modularity is not a mere biochemical curiosity: it makes individual steps genetically and pharmacologically addressable and underlies the appeal of FAS-II as an antibacterial target.
+Type-II fatty-acid synthesis (FAS-II) is the bacterial (and plastid) route to *de novo* membrane acyl chains. Its defining architectural feature — the property that separates it cleanly from the animal/fungal type-I megasynthase (FAS-I) — is that every catalytic activity is carried out by a **discrete, individually encoded, freestanding enzyme** acting on substrates tethered to a small, soluble **acyl carrier protein (ACP)**. This "dissociated" organization is not a biochemical curiosity: it is the reason FAS-II is simultaneously (i) a validated, chemically rich antibacterial drug-target space, and (ii) a pathway whose individual steps can be, and repeatedly have been, replaced by non-homologous or divergent enzymes across bacterial lineages. The system therefore must be described as a *toolkit of interchangeable parts* rather than a single fixed machine.
 
-The chemistry of the pathway is rigidly conserved and can be stated compactly. Acetyl-CoA carboxylase (ACC, the AccABCD complex) produces malonyl-CoA; FabD transfers the malonyl group to holo-ACP; a KAS-III enzyme (FabH) initiates the first chain by condensing acetyl-CoA with malonyl-ACP; and a fixed four-reaction elongation cycle — decarboxylative condensation (FabB/FabF), NADPH-dependent β-keto reduction (FabG), (3R)-hydroxyacyl dehydration (FabZ/FabA), and enoyl reduction (FabI/FabK/FabL/FabV) — extends the chain two carbons at a time. A conditional FabA/FabB branch introduces *cis* double bonds anaerobically without an oxygen-dependent desaturase. The **order** of these reactions is dictated by substrate chemistry and is essentially invariant across bacteria.
+The core logic is conserved and unambiguous. Acetyl-CoA carboxylase (the heteromeric AccABCD complex) commits acetyl-CoA to malonyl-CoA in the first regulated step; FabD transfers the malonyl group to holo-ACP; a chain is initiated; and a four-reaction elongation cycle — decarboxylative Claisen condensation (FabB/FabF), NADPH-dependent β-keto reduction (FabG), dehydration (FabZ/FabA), and enoyl reduction (FabI/FabK/FabL/FabV) — extends the chain two carbons per turn. A dedicated FabA/FabB branch introduces *cis* unsaturation anaerobically by isomerizing a *trans*-2 to a *cis*-3 decenoyl-ACP intermediate that FabB then elongates. This much is the shared skeleton.
 
-What varies, and varies extensively, is **which protein family and cofactor fill each slot**. The clearest illustration is the enoyl-ACP reductase step, performed by at least four non-homologous families (FabI, FabK, FabL, FabV) with divergent cofactor use and inhibitor sensitivity ([PMID: 19933806](https://pubmed.ncbi.nlm.nih.gov/19933806/); [PMID: 18193820](https://pubmed.ncbi.nlm.nih.gov/18193820/)). The unsaturated-fatty-acid branch is similarly implemented by non-orthologous but functionally matched pairs — FabA/FabB in *E. coli*, FabN/FabO in *Enterococcus faecalis* ([PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/)). Finally, the biological importance of the whole system is **conditional**: many Gram-positive pathogens scavenge host fatty acids and can bypass FAS-II inhibition entirely, so essentiality — and therefore drug-target value — is context-dependent ([PMID: 34309397](https://pubmed.ncbi.nlm.nih.gov/34309397/); [PMID: 38014966](https://pubmed.ncbi.nlm.nih.gov/38014966/)). This review synthesizes five confirmed findings into a coherent picture of a pathway that is chemically stereotyped but molecularly plastic.
+Where the system varies, it varies **predictably and informatively**: at chain initiation (canonical FabH condensation vs. a genuinely FabH-independent Mad/YiiD malonyl-ACP decarboxylase route), at the dehydration/isomerization step (FabZ-only vs. dual-function FabA/FabN/FabQ, and the mycobacterial HadABC replacement), and — most dramatically — at enoyl reduction, where four largely non-homologous isoforms with different cofactor preferences and inhibitor sensitivities occupy the same mechanistic slot. The overarching, cautionary conclusion of this review is that mechanistic claims validated in *Escherichia coli* should **not** be extrapolated uncritically to all bacteria: the pathway's modular design is precisely what permits deep lineage-specific substitution.
 
 ---
 
 ## 2. Definition and Biological Boundaries
 
-### What is included
+### What is inside the system
 
-FAS-II is the set of discrete enzymes and carrier proteins that, starting from acetyl-CoA and bicarbonate/ATP, build saturated and *cis*-unsaturated acyl-ACP products of physiologically appropriate chain length (typically C14–C18) that are then handed to membrane-phospholipid biosynthesis. The system comprises:
+FAS-II, as scoped here, comprises the reactions that convert acetyl-CoA and malonyl-ACP into saturated and *cis*-monounsaturated acyl-ACP products destined for membrane phospholipid (and, in Gram-negatives, lipopolysaccharide) synthesis. The boundary set includes:
 
-- **Priming:** acetyl-CoA carboxylase (AccABCD) → malonyl-CoA.
-- **Carrier activation and loading:** ACP (holo-AcpP) and FabD (malonyl-CoA:ACP transacylase) → malonyl-ACP.
-- **Initiation:** a KAS-III enzyme (FabH) → the first β-ketoacyl-ACP.
-- **Iterative elongation:** the four-reaction cycle (condensation → keto-reduction → dehydration → enoyl-reduction).
-- **Unsaturation branch:** the FabA/FabB (or equivalent) route to *cis*-unsaturated chains.
+- **Malonyl-CoA formation** by acetyl-CoA carboxylase (AccABCD).
+- **ACP activation and acyl carriage** — holo-ACP generated by phosphopantetheinyl transferase.
+- **Malonyl-ACP loading** by FabD (malonyl-CoA:ACP transacylase).
+- **Chain initiation** — FabH-dependent condensation and the FabH-independent Mad/YiiD decarboxylase route.
+- **The four-reaction elongation cycle** — condensation (FabB/FabF), keto-reduction (FabG), dehydration (FabZ/FabA), enoyl reduction (FabI/FabK/FabL/FabV).
+- **The FabA/FabB anaerobic *cis*-unsaturation branch.**
 
-### What is adjacent but should be treated separately
+A hallmark of the entire system is that all intermediates remain **covalently tethered to ACP** via a phosphopantetheine thioester throughout elongation; the acyl chain is never released as a free acid between cycles.
 
-Several processes are mechanistically related or historically conflated with FAS-II but fall outside its boundary:
+### What is often confused with FAS-II but should be treated separately
 
-- **Type-I FAS (FAS-I).** The animal/fungal megasynthase performs the same chemistry within one (or a few) large multifunctional polypeptides. It is the architectural counterpoint to FAS-II, not a variant of it ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/); [PMID: 30248156](https://pubmed.ncbi.nlm.nih.gov/30248156/)). Some lineages carry both: *Mycobacterium* uses FAS-I to make medium-chain acyl-CoA primers that FAS-II then **elongates** to very long meromycolate chains ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/); [PMID: 11278743](https://pubmed.ncbi.nlm.nih.gov/11278743/)).
-- **Mitochondrial FAS-II (mtFAS).** Eukaryotic mitochondria retain a bacterial-type, ACP-dependent FAS-II that is essential for respiration and supplies octanoyl-ACP for lipoic-acid synthesis; it is a distinct cellular system that happens to be homologous to bacterial FAS-II ([PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/); [PMID: 19686777](https://pubmed.ncbi.nlm.nih.gov/19686777/)).
-- **Polyketide synthases (PKS) and non-ribosomal peptide synthetases (NRPS).** These use the same ACP/4′-PP chemistry and share the four-helix-bundle carrier fold, but produce secondary metabolites, not membrane fatty acids ([PMID: 37345808](https://pubmed.ncbi.nlm.nih.gov/37345808/); [PMID: 28187530](https://pubmed.ncbi.nlm.nih.gov/28187530/)).
-- **β-Oxidation and exogenous-fatty-acid incorporation.** These are catabolic/salvage routes that intersect FAS-II regulation (via FadR) and can substitute for it physiologically, but they are not part of the synthetic pathway ([PMID: 33283913](https://pubmed.ncbi.nlm.nih.gov/33283913/); [PMID: 38014966](https://pubmed.ncbi.nlm.nih.gov/38014966/)).
+- **Type-I FAS (FAS-I).** The animal/fungal single-polypeptide (or fungal α6β6) megasynthase performs the same chemistry but as covalently fused domains. FAS-II must not be "collapsed" into FAS-I; the essential distinction of this review is that FAS-II activities are physically separate proteins. This is what makes explicit enzyme-family and cofactor variants meaningful ([PMID: 35650664](https://pubmed.ncbi.nlm.nih.gov/35650664/); [PMID: 23894064](https://pubmed.ncbi.nlm.nih.gov/23894064/)).
+- **Exogenous/environmental fatty-acid incorporation.** Bacteria can activate and incorporate host- or medium-derived fatty acids (via acyl-CoA, acyl-ACP, or acyl-phosphate intermediates depending on lineage). This *bypass* biology intersects FAS-II — and can defeat FAS-II-targeted drugs in some organisms — but is mechanistically distinct from *de novo* synthesis ([PMID: 25648887](https://pubmed.ncbi.nlm.nih.gov/25648887/); [PMID: 28668270](https://pubmed.ncbi.nlm.nih.gov/28668270/)).
+- **Phospholipid assembly downstream of FAS-II.** Enzymes such as PlsB/PlsC/PlsX/PlsY that transfer acyl chains onto the glycerophosphate backbone consume FAS-II products but are a separate pathway ([PMID: 42324731](https://pubmed.ncbi.nlm.nih.gov/42324731/)).
+- **β-oxidation / fatty-acid degradation.** The catabolic FadR-regulated route runs in the opposite direction on CoA-linked substrates and should not be merged with anabolic FAS-II ([PMID: 17919287](https://pubmed.ncbi.nlm.nih.gov/17919287/)).
+- **Mycolic-acid and specialized long-chain biosynthesis.** Mycobacterial FAS-II elongates very-long-chain products for mycolic acids and uses distinct dehydratases (HadAB/HadBC) and long-chain acyl-CoA carboxylases; these are lineage-specific elaborations of the core system, not the core itself ([PMID: 17804795](https://pubmed.ncbi.nlm.nih.gov/17804795/); [PMID: 41843674](https://pubmed.ncbi.nlm.nih.gov/41843674/)).
 
 ### Competing definitions
 
-The main definitional tension in the literature is whether FAS-II denotes (a) the strict *de novo* pathway from acetyl-CoA or (b) any dissociated ACP-dependent acyl-chain-elongation system. Mycobacterial FAS-II fits (b) but not (a) — it cannot initiate *de novo* synthesis and only elongates FAS-I products ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/)). We treat the dissociated, ACP-dependent architecture as the defining criterion, noting that initiation capacity is lineage-variable.
+The main definitional tension in the literature is whether to treat FAS-II as a fixed enzyme list or as a functional logic realized by variable parts. This review takes the latter, more defensible position: the *slots* (initiate, condense, reduce β-keto, dehydrate, reduce enoyl) are conserved; the *occupants* are lineage-swappable. A secondary tension concerns the plastid FAS: plant and algal plastids run a bacterial-type dissociated FAS-II, so "FAS-II" is not strictly synonymous with "bacterial," and organelle context matters.
 
 ---
 
 ## 3. Mechanistic Overview
 
-The best current model is a strictly ordered, iterative cycle. The order is enforced by substrate chemistry: each enzyme acts only on the product of the previous step.
+### The committed entry and priming steps (obligatory)
+
+1. **Malonyl-CoA formation (committed, regulated).** Acetyl-CoA carboxylase carboxylates acetyl-CoA in a biotin-dependent, two-half-reaction mechanism: biotin carboxylase (BC) carboxylates the biotin cofactor on the biotin-carboxyl-carrier protein (BCCP), and carboxyltransferase (CT) then transfers CO₂ to acetyl-CoA. In most bacteria this is a **heteromeric AccABCD** assembly ([PMID: 39572150](https://pubmed.ncbi.nlm.nih.gov/39572150/)).
+2. **Malonyl-ACP loading (obligatory).** FabD (malonyl-CoA:ACP transacylase) transfers malonate from CoA to holo-ACP, producing malonyl-ACP, the universal two-carbon donor for both initiation and elongation.
+
+### Chain initiation (obligatory step; alternative molecular routes)
+
+- **Canonical route:** FabH (β-ketoacyl-ACP synthase III, KAS-III) condenses acetyl-CoA with malonyl-ACP to yield acetoacetyl-ACP (C4 β-ketoacyl-ACP).
+- **Alternative route:** In organisms/strains lacking or bypassing FabH, the Mad/YiiD malonyl-ACP decarboxylase generates acetyl-ACP directly from malonyl-ACP; a FabB/FabF-type condensing enzyme then extends it. *E. coli* ΔfabH is viable specifically because of this route ([PMID: 34801557](https://pubmed.ncbi.nlm.nih.gov/34801557/)).
+
+### The four-reaction elongation cycle (obligatory, iterative)
+
+Each turn adds two carbons:
 
 ```
- Acetyl-CoA + HCO3- + ATP
-        │  ACC (AccABCD)  ── biotin carboxylase + carboxyltransferase
-        ▼
-   Malonyl-CoA
-        │  FabD (malonyl-CoA:ACP transacylase)     Holo-AcpP (4'-PP arm)
-        ▼                                              ▲ AcpS adds 4'-PP from CoA
-   Malonyl-ACP ◄───────────────────────────────────────┘
-        │  FabH (KAS-III): acetyl-CoA + malonyl-ACP → C4 β-ketoacyl-ACP + CO2
-        ▼
- ┌───────────────── FOUR-REACTION ELONGATION CYCLE ─────────────────┐
- │  (1) Condensation      FabB / FabF (KAS-I/II)                     │
- │        acyl-ACP + malonyl-ACP → β-ketoacyl-ACP(+2C) + CO2         │
- │  (2) Keto-reduction    FabG  (NADPH)                              │
- │        β-ketoacyl-ACP → (3R)-hydroxyacyl-ACP                      │
- │  (3) Dehydration       FabZ (all rounds) / FabA (specific)        │
- │        (3R)-hydroxyacyl-ACP → trans-2-enoyl-ACP                   │
- │  (4) Enoyl-reduction   FabI / FabK / FabL / FabV  (NADH or NADPH) │
- │        trans-2-enoyl-ACP → saturated acyl-ACP(+2C)               │
- └──────────────────────────┬───────────────────────────────────────┘
-                            │ re-enters cycle (elongate)
-                            │
-        At C10, trans-2-decenoyl-ACP may branch:
-                            ▼
-   FabA (isomerase): trans-2-decenoyl-ACP → cis-3-decenoyl-ACP
-                            │
-                            ▼
-   FabB (KAS-I): elongates cis intermediate → cis-unsaturated fatty acids
-                            ▼
-        Acyl-ACP products (C16:0, C16:1, C18:1 ...) → phospholipid synthesis
+   acyl-ACP (Cn)  +  malonyl-ACP
+        │
+        ▼  (1) decarboxylative Claisen condensation   FabB (KAS-I) / FabF (KAS-II)
+   β-ketoacyl-ACP (Cn+2)
+        │
+        ▼  (2) β-keto reduction (NADPH)               FabG
+   (3R)-hydroxyacyl-ACP
+        │
+        ▼  (3) dehydration                            FabZ (all) / FabA (α,γ-proteobacteria)
+   trans-2-enoyl-ACP
+        │
+        ▼  (4) enoyl reduction (NADH or NADPH)        FabI / FabK / FabL / FabV
+   saturated acyl-ACP (Cn+2)  ──► re-enters step (1)
 ```
 
-**Obligatory steps:** priming (ACC), loading (FabD), initiation (a KAS-III or equivalent primer-generating activity), and the four elongation reactions. Without any of these, chain assembly cannot proceed. The condensation → keto-reduction → dehydration → enoyl-reduction order is chemically obligatory: keto-reduction requires the β-keto group that condensation produces; dehydration requires the 3-hydroxy group that keto-reduction produces; enoyl-reduction requires the trans-2 double bond that dehydration produces ([PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/); [PMID: 23322253](https://pubmed.ncbi.nlm.nih.gov/23322253/)).
+### The FabA/FabB *cis*-unsaturation branch (conditional/accessory)
 
-**Conditional steps:** the FabA/FabB unsaturation branch is engaged only when *cis*-unsaturated chains are needed and only in lineages that use the anaerobic mechanism. It is a diversion from, not a replacement of, the core cycle ([PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/); [PMID: 36515967](https://pubmed.ncbi.nlm.nih.gov/36515967/)).
+At the C10 stage, FabA can perform not only dehydration but also **isomerization** of *trans*-2-decenoyl-ACP to *cis*-3-decenoyl-ACP. FabZ cannot do this. FabB then elongates the *cis*-3 intermediate, committing the chain to the unsaturated arm and protecting the double bond from reduction. This is the classical anaerobic route to unsaturated fatty acids (UFAs) and is conditional on the FabA/FabB pairing (or functional equivalents such as FabM, FabN, or FabQ in other lineages) ([PMID: 15371447](https://pubmed.ncbi.nlm.nih.gov/15371447/); [PMID: 23972938](https://pubmed.ncbi.nlm.nih.gov/23972938/)).
 
-**Accessory activities:** ACP maturation (AcpS adds 4′-PP; AcpH removes it), branched-chain and hydroxy-fatty-acid tailoring, and regulatory inputs (FadR, FabR) tune output but are not part of the core catalytic cycle ([PMID: 37345808](https://pubmed.ncbi.nlm.nih.gov/37345808/); [PMID: 33283913](https://pubmed.ncbi.nlm.nih.gov/33283913/); [PMID: 32535524](https://pubmed.ncbi.nlm.nih.gov/32535524/)).
+### Which steps are obligatory vs. conditional vs. accessory
+
+| Step | Status | Notes |
+|------|--------|-------|
+| Malonyl-CoA formation (ACC) | Obligatory | First committed, regulated step |
+| ACP activation | Obligatory | No carriage → no synthesis |
+| FabD malonyl-ACP loading | Obligatory | Supplies the C2 donor |
+| Chain initiation | Obligatory (route is conditional) | FabH **or** Mad/YiiD route |
+| Condensation / keto-reduction / dehydration / enoyl-reduction | Obligatory (each cycle) | Enzyme identity is conditional |
+| FabA/FabB isomerization branch | Conditional/accessory | Only when anaerobic UFA synthesis is used |
 
 ---
 
 ## 4. Major Molecular Players and Active Assemblies
 
-### Finding F001 — FAS-II is a dissociated multi-enzyme system distinct from type-I FAS
+### Finding F001 — FAS-II is a dissociated, ACP-dependent pathway distinct from FAS-I
 
-The foundational fact about FAS-II is architectural. Multiple authoritative reviews establish that in most bacteria fatty acids are made by a group of highly conserved, discrete, mono-functional, freely diffusible proteins — "*Fatty acid biosynthesis is catalyzed in most bacteria by a group of highly conserved proteins known as the type II fatty acid synthase (FAS II) system*" ([PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/)). This is explicitly contrasted with the eukaryotic-type multifunctional FAS-I: the two systems are "*the eukaryotic-like multifunctional enzyme FAS I and the acyl carrier protein (ACP)-dependent FAS II systems, which consists of a series of discrete mono-functional proteins, each catalyzing one reaction in the pathway*" ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/)). The dissociated design means each reaction is a separate gene product, and the growing chain is shuttled among them on ACP. Crucially, this same source documents a lineage-specific departure: "*the mycobacterial FAS II is incapable of de novo fatty acid synthesis from acetyl-coenzyme A, but instead elongates medium-chain-length fatty acids previously synthesized by FAS I*" ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/)). Thus even the "initiation" boundary of the system is variable.
+Across authoritative reviews, bacterial FAS-II is defined by discrete, individually encoded enzymes acting on a small soluble ACP, in explicit contrast to the single multidomain megasynthase of animals and fungi. Because each of the four elongation activities is a separate protein, the pathway can host explicit enzyme-family and cofactor variants (FabB/FabF, FabZ/FabA, FabI/FabK/FabL/FabV). This dissociation is also why individual FAS-II enzymes are individually essential and individually druggable. As one review states, *"Bacterial type II fatty acid synthesis (FASII) is a vital aspect of bacterial physiology, not only for the formation of membranes but also to produce intermediates used in vitamin production"* ([PMID: 35650664](https://pubmed.ncbi.nlm.nih.gov/35650664/)), and another emphasizes that *"Fatty acid synthesis type II (FASII) system enzymes are essential for bacterial membrane lipid biosynthesis and represent increasingly promising targets for the discovery of antibacterial agents"* ([PMID: 23894064](https://pubmed.ncbi.nlm.nih.gov/23894064/)). The dissociated organization is thus both the defining structural fact and the source of the pathway's therapeutic relevance.
 
-### Finding F002 — Holo-ACP with a 4′-phosphopantetheine arm is the central shuttle
+### Finding F005 — Malonyl-CoA supply and ACP activation are the committed entry point and a shared cofactor hub
 
-The pathway's logic depends on a single small carrier protein. Apo-ACP is converted to holo-ACP by AcpS-catalyzed transfer of the 4′-PP prosthetic group from coenzyme A; acyl intermediates are then thioesterified to the terminal thiol of that arm. The chain length carried on the arm governs the protein's behaviour and partner recognition: "*The addition of the 4′PP prosthetic group converts apo-AcpP to holo-AcpP (commonly referred to as AcpP). Acylation of the 4′PP prosthetic group gives acyl-AcpP species. The length of the acyl chain determines the properties of the acyl-AcpP*" ([PMID: 37345808](https://pubmed.ncbi.nlm.nih.gov/37345808/)). ACP is a small acidic four-helix bundle used across FAS, PKS and NRPS systems, and structural studies of freestanding and doublet ACPs confirm the conserved fold and the phosphopantetheinylation-dependent dynamics ([PMID: 28187530](https://pubmed.ncbi.nlm.nih.gov/28187530/); [PMID: 33416314](https://pubmed.ncbi.nlm.nih.gov/33416314/); [PMID: 32128972](https://pubmed.ncbi.nlm.nih.gov/32128972/)). Because every catalytic step reads the chain off the same carrier, ACP is simultaneously a substrate presenter and a specificity determinant — the physical hub that makes a "dissociated" pathway function as an integrated system.
+Bacterial acetyl-CoA carboxylase is heteromeric — biotin carboxylase, BCCP, and two carboxyltransferase subunits (AccABCD) — and operates through a biotin-dependent, two-half-reaction mechanism to make malonyl-CoA, the first committed and regulated step: *"In most Gram-positive and Gram-negative bacteria, the enzyme is composed of three proteins: biotin carboxylase, biotin carboxyl carrier protein and carboxyltransferase. The reaction consists of two half-reactions"* ([PMID: 39572150](https://pubmed.ncbi.nlm.nih.gov/39572150/)). The isolated subunits are catalytically active, but the reconstituted complex shows allosteric behavior and is famously prone to dissociation: *"Historically the purification of active E. coli ACC complexes has been problematic due to the reported facile dissociation into subunits… Nevertheless, in reconstituted systems, the subunits appear to have allosteric interactions"* ([PMID: 39572149](https://pubmed.ncbi.nlm.nih.gov/39572149/)). Downstream, FabD transfers malonate to holo-ACP. ACP itself is *"the universal factor required for fatty acid (FA) synthesis"* and is physically and functionally linked to other ancient essential processes such as iron–sulfur cluster biogenesis ([PMID: 42294685](https://pubmed.ncbi.nlm.nih.gov/42294685/)), marking it as a deeply conserved cellular hub rather than a mere tether.
 
-### Table: Core FAS-II enzymes and their reactions
+### Finding F002 — Chain initiation has genuinely alternative molecular routes
 
-| Step | Reaction | Prototype enzyme(s) | Cofactor | Notes |
-|------|----------|---------------------|----------|-------|
-| Priming | acetyl-CoA → malonyl-CoA | ACC (AccABCD) | ATP, biotin, HCO₃⁻ | Heteromeric in most bacteria; AccC is a drug-target node |
-| Carrier | apo-ACP → holo-ACP | AcpS (adds 4′-PP) | CoA | AcpH reverses |
-| Loading | malonyl-CoA → malonyl-ACP | FabD | — | Malonyl-CoA:ACP transacylase |
-| Initiation | acetyl-CoA + malonyl-ACP → C4 β-ketoacyl-ACP | FabH (KAS-III) | — | Substrate specificity sets branching/chain start |
-| Condensation | acyl-ACP + malonyl-ACP → β-ketoacyl-ACP(+2C) | FabB (KAS-I), FabF (KAS-II) | — | FabB also serves the UFA branch |
-| Keto-reduction | β-ketoacyl-ACP → (3R)-hydroxyacyl-ACP | FabG | NADPH | Highly conserved |
-| Dehydration | (3R)-hydroxyacyl-ACP → trans-2-enoyl-ACP | FabZ (general), FabA (bifunctional) | — | FabA also isomerizes |
-| Enoyl-reduction | trans-2-enoyl-ACP → acyl-ACP(+2C) | FabI, FabK, FabL, FabV | NADH or NADPH | Non-homologous families (F003) |
-| UFA branch | trans-2- → cis-3-decenoyl-ACP; elongation | FabA + FabB (or FabN + FabO) | — | Conditional; anaerobic (F004) |
+Canonical initiation uses FabH (KAS-III) to condense acetyl-CoA with malonyl-ACP. However, *E. coli* ΔfabH strains remain viable because of a second route: the *yiiD* gene product (MadA) is a malonyl-ACP decarboxylase that generates acetyl-ACP for FabB/FabF condensation. The primary study is explicit: *"E. coli ΔfabH knockout strains are viable because of the yiiD gene that allows FabH-independent fatty acid synthesis initiation… we show the yiiD gene product is a malonyl-ACP decarboxylase (MadA)"* ([PMID: 34801557](https://pubmed.ncbi.nlm.nih.gov/34801557/)). Moreover, FabH's own substrate range is tuned by a single active-site gatekeeper: in *E. coli* FabH a phenylalanine restricts the primer to acetyl-CoA, whereas in *M. tuberculosis* FabH the corresponding threonine admits longer acyl-CoA primers — *"In the ecFabH structure, this channel is blocked by a phenylalanine residue, which constrains specificity to acetyl-CoA, whereas in mtFabH, this residue is a threonine, which permits binding of longer acyl chains"* ([PMID: 11278743](https://pubmed.ncbi.nlm.nih.gov/11278743/)). Initiation is therefore both mechanistically redundant (two routes) and tunable (gatekeeper residue), consistent with the outline's KAS-III substrate variants (FabH1 short-chain vs. FabH2 medium-chain).
 
-### The initiation enzyme (KAS-III/FabH)
+### Finding F003 — Unsaturation is introduced by the FabA/FabB branch; dehydratase family sets isomerase capability
 
-FabH condenses an acyl-CoA primer with malonyl-ACP and thereby sets the starting chain and, in some organisms, the branch pattern. The structure of *M. tuberculosis* FabH illustrates how substrate specificity is tuned: mtFabH accepts long-chain acyl-CoA (e.g. C14 myristoyl-CoA) rather than acetyl-CoA because a hydrophobic channel that is blocked by phenylalanine in *E. coli* FabH is opened by a threonine substitution, while a capping helix limits the product to ~C16 ([PMID: 11278743](https://pubmed.ncbi.nlm.nih.gov/11278743/)). FabH is an actively pursued antibacterial target, with diverse synthetic inhibitor scaffolds reported over 2006–2025 ([PMID: 42446656](https://pubmed.ncbi.nlm.nih.gov/42446656/)).
+In *E. coli*, FabA dehydrates (3R)-hydroxydecanoyl-ACP and isomerizes *trans*-2- to *cis*-3-decenoyl-ACP; FabB then elongates the *cis*-3 intermediate, committing it to the unsaturated arm. FabZ performs dehydration only. Structurally, FabA and FabZ share a near-identical His/Glu catalytic dyad, so **isomerase potential is dictated by the shape of the substrate-binding tunnel, not the catalytic residues.** This was demonstrated directly by domain swapping in *Enterococcus faecalis*: *"Substitution of the beta3 and beta4 strands of EfFabZ with the corresponding strands from EfFabN was necessary and sufficient to convert EfFabZ into an isomerase"* ([PMID: 15980063](https://pubmed.ncbi.nlm.nih.gov/15980063/)). Other lineages reach the same outcome by different enzymes — for example, the dual-function FabQ: *"FabQ can not only replace the function of E. coli FabZ in vivo, but it also catalyzes the isomerization required for unsaturated fatty acid biosynthesis"* ([PMID: 23972938](https://pubmed.ncbi.nlm.nih.gov/23972938/)). FabA's dual role and its more limited distribution relative to the universal FabZ are also well documented: *"FabA… has more limited distribution in nature and, in addition to dehydration, also carries out the isomerization of trans-2- to cis-3-decenoyl-ACP as an essential step in unsaturated fatty acid biosynthesis"* ([PMID: 15371447](https://pubmed.ncbi.nlm.nih.gov/15371447/)).
+
+### Finding F004 — Enoyl reduction is the most variable step, with four non-homologous/divergent isoforms
+
+The final reductive step is the single most variable slot in the pathway. It is carried out by at least four distinct enzyme families differing in fold, cofactor preference, and inhibitor sensitivity: **FabI** (short-chain dehydrogenase/reductase, SDR; triclosan-sensitive; includes *M. tuberculosis* InhA), **FabK** (a flavoenzyme, triclosan-resistant, streptococci), **FabL** (SDR, NADPH, *Bacillus*), and **FabV** (SDR-superfamily but only ~15% identity to FabI, ~402 aa, strong NADH preference, *Vibrio*). FabV was defined by complementing a conditionally lethal *E. coli* fabI mutant: *"FabV defines a new class of enoyl-ACP reductase… In contrast to FabI and FabL, FabV shows a very strong preference for NADH over NADP"* ([PMID: 18032386](https://pubmed.ncbi.nlm.nih.gov/18032386/)). The four families are enumerated together in the literature: *"Enoyl-acyl carrier protein reductases (ENR), such as FabI, FabL, FabK, and FabV, catalyze the last reduction step in bacterial type II fatty acid biosynthesis"* ([PMID: 29891603](https://pubmed.ncbi.nlm.nih.gov/29891603/)). Crucially, isoform identity has direct pharmacological consequences: *"some Gram-positive bacteria are naturally resistant to triclosan due to the presence of the triclosan-resistant enoyl-ACP reductase isoforms, FabK and FabL"* ([PMID: 18032386](https://pubmed.ncbi.nlm.nih.gov/18032386/)). This step is also the most-exploited FAS-II drug target (triclosan → FabI; isoniazid → InhA).
+
+### Summary table of the major players
+
+| Slot | Canonical enzyme (E. coli) | Family / fold | Cofactor | Notable variants / lineage swaps |
+|------|---------------------------|---------------|----------|----------------------------------|
+| Malonyl-CoA formation | AccABCD | Biotin-dependent carboxylase (heteromeric) | ATP, biotin, HCO₃⁻ | Long-chain acyl-CoA carboxylase (Mycobacteria) |
+| Malonyl-ACP loading | FabD | Acyltransferase | — | Broadly conserved |
+| Initiation | FabH (KAS-III) | Thiolase-fold condensing enzyme | — | Mad/YiiD malonyl-ACP decarboxylase route; FabH gatekeeper tuning |
+| Condensation | FabB (KAS-I) / FabF (KAS-II) | Thiolase-fold condensing enzyme | — | Clostridial FabF replaces both |
+| β-keto reduction | FabG | SDR | NADPH | Broadly conserved (e.g., MabA in Mtb) |
+| Dehydration | FabZ / FabA | Hot-dog fold hydratase | — | FabN, FabM, FabQ; HadAB/HadBC (Mtb) |
+| Enoyl reduction | FabI | SDR | NADH/NADPH | FabK (flavoenzyme), FabL (NADPH), FabV (NADH); InhA |
 
 ---
 
 ## 5. Evolutionary and Cell-Biological Variation
 
-### Finding F003 — Enoyl-ACP reductase is functionally convergent but family-variable
+**Deep conservation vs. lineage-specific elaboration.** The most ancient and conserved parts of the system are the ACP shuttle, the biotin-dependent carboxylation logic, the thiolase-fold condensing enzymes, and the SDR-fold β-keto reductase (FabG). ACP's physical linkage to iron–sulfur cluster biogenesis positions it as an especially ancient hub ([PMID: 42294685](https://pubmed.ncbi.nlm.nih.gov/42294685/)). The *slots* — carboxylate, load, initiate, condense, reduce, dehydrate, reduce — are essentially universal across bacteria and plastids.
 
-The most striking example of molecular plasticity is the final elongation step. The same chemical transformation — reduction of the trans-2 double bond — is carried out by **non-homologous** isozyme families with different cofactor preferences and inhibitor sensitivities:
+**Where variation concentrates.** Variation is not random; it accumulates at three points:
+1. **Initiation** — FabH condensation vs. the Mad/YiiD decarboxylase route, plus FabH primer-length tuning (F002).
+2. **Dehydration/isomerization** — FabZ-only vs. dual dehydratase/isomerases (FabA, FabN, FabQ), and the mycobacterial replacement of FabA/FabZ chemistry by HadAB/HadBC heterodimers of the hydratase-2 family ([PMID: 17804795](https://pubmed.ncbi.nlm.nih.gov/17804795/)) (F003).
+3. **Enoyl reduction** — four non-homologous/divergent families (FabI/FabK/FabL/FabV) with different cofactors and drug sensitivities (F004).
 
-- **FabI** — NADH-dependent, triclosan-sensitive, the *E. coli* prototype and the target of isoniazid, diazaborines and triclosan ([PMID: 18193820](https://pubmed.ncbi.nlm.nih.gov/18193820/)).
-- **FabV** — NADH-dependent but triclosan-**resistant**; present in *Vibrio cholerae* and *Pseudomonas aeruginosa*.
-- **FabK** — flavin-dependent and structurally unrelated.
-- **FabL** — an additional SDR-family variant.
+**Unsaturation strategies differ by lineage.** *E. coli* and other α/γ-proteobacteria use the FabA/FabB anaerobic branch. Streptococci use FabM (a *trans*-2 → *cis*-3 isomerase). *Aerococcus* uses the dual-function FabQ. *Clostridium acetobutylicum* makes the same UFA species yet lacks all known dedicated UFA genes, using a FabF homolog for both saturated and unsaturated synthesis while its lone FabZ cannot isomerize — evidence that at least one lineage introduces the double bond by a still-unidentified enzyme ([PMID: 19493359](https://pubmed.ncbi.nlm.nih.gov/19493359/)). Aerobic organisms may instead install double bonds post-synthetically via O₂-dependent desaturases (a separate pathway, outside FAS-II proper).
 
-The physiological consequence of this substitution is dramatic. In *P. aeruginosa* PAO1, "*P. aeruginosa contains two enoyl-ACP reductase isozymes, the previously characterized FabI homologue plus a homologue of FabV, a triclosan-resistant enoyl-ACP reductase recently demonstrated in Vibrio cholerae*" ([PMID: 19933806](https://pubmed.ncbi.nlm.nih.gov/19933806/)), and deletion of *fabV* rendered the strain "*extremely sensitive to triclosan (>2,000-fold more sensitive than the wild-type strain)*" ([PMID: 19933806](https://pubmed.ncbi.nlm.nih.gov/19933806/)). This shows that intrinsic triclosan resistance in this organism is due to the identity of the enoyl reductase, not efflux. FabI's status as "*a validated but currently underexploited target for drug discovery*" ([PMID: 18193820](https://pubmed.ncbi.nlm.nih.gov/18193820/)) is therefore contingent on which reductase a given pathogen actually uses. The reductase steps generally — both FabG and the enoyl reductase — are recognized antimicrobial nodes ([PMID: 15726819](https://pubmed.ncbi.nlm.nih.gov/15726819/)). In *Sinorhizobium meliloti*, the balance among multiple FabI paralogs (FabI1 vs FabI2) even sets the unsaturated-fatty-acid content of the membrane, with FabI2 being indispensable and only complementable by the *E. faecalis fabI* gene ([PMID: 39627703](https://pubmed.ncbi.nlm.nih.gov/39627703/)).
+**Cell-biological/compartmental variation.** In Gram-negatives, acyl-ACP products feed both phospholipid and LPS synthesis, whereas acyl-CoA (from exogenous fatty acids) cannot be used for LPS — creating a compartmentalized substrate-pool distinction ([PMID: 28668270](https://pubmed.ncbi.nlm.nih.gov/28668270/)). In plant/algal plastids, the same dissociated FAS-II runs inside an organelle. Mycobacteria overlay a specialized long-chain FAS-II onto FAS-I output to build mycolic acids.
 
-### Finding F004 — The FabA/FabB anaerobic UFA branch is real but not universal
+**Regulatory variation.** Transcriptional control is itself lineage-specific: *E. coli* uses FadR/FabR, *B. subtilis* uses FadR(YsiA)/FapR (with malonyl-CoA as the FapR effector), and *S. pneumoniae* uses FabT — different regulators governing the same metabolic logic ([PMID: 17919287](https://pubmed.ncbi.nlm.nih.gov/17919287/)).
 
-In *E. coli* and many γ-proteobacteria, *cis*-unsaturation is introduced **without oxygen or a desaturase**: the bifunctional dehydratase/isomerase FabA converts trans-2-decenoyl-ACP to cis-3-decenoyl-ACP, and the KAS-I condensing enzyme FabB preferentially elongates the *cis* intermediate, locking the double bond into the mature chain. This branch, however, is implemented differently across lineages and is not always essential. In *Xanthomonas*, "*the conserved FabA-FabB pathway is considered to be crucial for unsaturated fatty acid (UFA) synthesis in gram-negative bacteria*" yet was shown to be dispensable for UFA synthesis while instead modulating diffusible-signal-factor synthesis ([PMID: 36515967](https://pubmed.ncbi.nlm.nih.gov/36515967/)). In *Enterococcus faecalis*, the equivalent chemistry is supplied by a non-orthologous but functionally matched pair: "*FabO has been ascribed the same activity as E. coli FabB and we report in vitro evidence that this is the case, whereas FabN is a dehydratase/isomerase, having the activity of E. coli FabA*" ([PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/)). Critically, the reductase must be co-adapted: "*the enoyl-ACP reductase must be matched to the unsaturated fatty acid synthetic genes*" ([PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/)). More broadly, reviews note "*multiple mechanisms to generate unsaturated fatty acids and the accessory components required for branched-chain fatty acid synthesis in Gram-positive bacteria*" ([PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/)). The UFA branch is thus a **conserved outcome achieved by variable, matched enzyme sets** — a textbook case of non-orthologous gene displacement.
-
-### Cell-biological and physiological variation
-
-- **Both-systems lineages:** *Mycobacterium* runs FAS-I and FAS-II in series to build mycolic acids; *Streptomyces* has only FAS-II; *Corynebacterium* only FAS-I ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/); [PMID: 21204864](https://pubmed.ncbi.nlm.nih.gov/21204864/)).
-- **Mitochondrial retention:** eukaryotic mitochondria keep a bacterial-type FAS-II essential for respiration and lipoic-acid synthesis ([PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/); [PMID: 19686777](https://pubmed.ncbi.nlm.nih.gov/19686777/)).
-- **Temperature/physiological state:** UFA content is tuned for membrane fluidity via regulators such as FabR and FadR; in *Shewanella baltica*, cold adaptation is achieved by down-regulating FabR and up-regulating FadR ([PMID: 32535524](https://pubmed.ncbi.nlm.nih.gov/32535524/); [PMID: 33283913](https://pubmed.ncbi.nlm.nih.gov/33283913/)).
+**Best representatives of ancestral roles.** When a family has expanded, the broadest-distribution, minimal-function member is the better proxy for the ancestral role: **FabZ** (pure dehydratase, universal) over FabA (dehydratase+isomerase, restricted) for dehydration; **FabG** for keto-reduction; and, among condensing enzymes, the KAS-I/KAS-II thiolase fold for the ancestral condensation chemistry, with FabH (KAS-III) representing a specialized initiation offshoot.
 
 ---
 
 ## 6. Constraints, Dependencies, and Failure Modes
 
-### Ordering constraints
+**Obligatory ordering.** The chemistry enforces a strict order within each cycle: condensation must precede keto-reduction (no β-keto group exists until condensation), keto-reduction must precede dehydration (no 3-hydroxyl to eliminate otherwise), and dehydration must precede enoyl reduction (no *trans*-2 double bond to reduce otherwise). The saturated product must be regenerated before the next condensation. These dependencies are captured directly in the pathway's known relationships (condensation → keto-reduction → dehydration → enoyl-reduction → re-entry).
 
-The four elongation reactions are locked in sequence by the functional groups they create and consume (see §3). This is why the pathway diagram is effectively a directed cycle with no shortcuts through the core: keto-reduction cannot precede condensation, dehydration cannot precede keto-reduction, and enoyl-reduction cannot precede dehydration. The UFA branch is constrained to a specific chain length — the isomerization operates on the C10 trans-2-decenoyl-ACP intermediate — because that is the intermediate FabA/FabN recognize and FabB/FabO can elongate ([PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/); [PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/)).
+**Timing constraint on unsaturation.** The FabA-catalyzed *trans*-2 → *cis*-3 isomerization is a **kinetically gated, chain-length-specific branch point** at ~C10. If FabI (enoyl reductase) reduces the *trans*-2-decenoyl-ACP before FabA isomerizes it, the double bond is lost and the chain proceeds saturated. Commitment to unsaturation thus requires that FabB capture the *cis*-3 intermediate — a mutually exclusive fork between the saturated and unsaturated arms at that single stage.
 
-### Matching/compatibility constraints
+**Substrate tethering.** All intermediates are ACP-bound; loss of ACP activation (phosphopantetheinylation) is catastrophic and upstream of everything. This dependency, plus ACP's link to Fe–S biogenesis, makes ACP a single point of failure ([PMID: 42294685](https://pubmed.ncbi.nlm.nih.gov/42294685/)).
 
-The enoyl reductase and the UFA-synthesis enzymes must be co-adapted; a mismatch breaks UFA production ([PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/); [PMID: 39627703](https://pubmed.ncbi.nlm.nih.gov/39627703/)). ACP–partner recognition is chain-length dependent, so acyl intermediates are handed off in an ordered, length-gated fashion rather than promiscuously ([PMID: 37345808](https://pubmed.ncbi.nlm.nih.gov/37345808/)).
+**Cofactor and inhibitor constraints.** The enoyl-reduction step's cofactor identity (NADH vs. NADPH) is enzyme-family-specific (F004), so redox-cofactor availability constrains which isoform can operate. Inhibitor sensitivity is likewise family-specific: triclosan inhibits FabI/InhA but not FabK/FabL, so an organism's isoform complement determines intrinsic resistance ([PMID: 18032386](https://pubmed.ncbi.nlm.nih.gov/18032386/); [PMID: 29891603](https://pubmed.ncbi.nlm.nih.gov/29891603/)).
 
-### Finding F005 — Essentiality and drug-target value are conditional on host fatty-acid scavenging
+**Bypass as a systemic failure mode for therapeutics.** In *Lactobacillales*, exogenous fatty acids fully suppress FAS-II, allowing membrane synthesis entirely from environmental lipids and defeating FAS-II inhibitors. In most other bacteria, FAS-II inhibition **cannot** be bypassed because essential intermediates (e.g., β-hydroxyacyl-ACP for LPS) cannot be obtained from the host ([PMID: 25648887](https://pubmed.ncbi.nlm.nih.gov/25648887/); [PMID: 28668270](https://pubmed.ncbi.nlm.nih.gov/28668270/)). This rules out the otherwise plausible assumption that all bacteria can escape FAS-II inhibition by scavenging.
 
-FAS-II is the validated target of isoniazid, triclosan, thiolactomycin and diazaborines, and both the ACC/AccC priming node and the FabH/FabI steps are actively pursued ([PMID: 26169404](https://pubmed.ncbi.nlm.nih.gov/26169404/); [PMID: 18193820](https://pubmed.ncbi.nlm.nih.gov/18193820/)). Bioluminescent cellular reporter assays have been built specifically to "*target the enzyme (AccC) catalyzing the biotin carboxylase half-reaction of the acetyl coenzyme A (acetyl-CoA) carboxylase step in the initiation phase of FASII*" ([PMID: 26169404](https://pubmed.ncbi.nlm.nih.gov/26169404/)). **However, the pathway's essentiality is not absolute.** Many Gram-positive pathogens incorporate exogenous host fatty acids via lipases, fatty-acid kinase systems and auxiliary ACPs, and can thereby bypass FAS-II inhibition. In *Enterococcus faecalis*, the FAS-II pathway and cyclopropane-ring formation were shown to be "*Dispensable during Enterococcus faecalis Systemic Infection*" ([PMID: 34309397](https://pubmed.ncbi.nlm.nih.gov/34309397/)) because the organism scavenges host fatty acids. The utilization of exogenous unsaturated fatty acids, mediated by bacterial lipases and buffered by human serum albumin, further modulates the impact of FAS-II inhibition ([PMID: 38014966](https://pubmed.ncbi.nlm.nih.gov/38014966/)). *E. faecalis* even maintains a dedicated auxiliary ACP (EfAcpB) for incorporating exogenous fatty acids alongside the FAS-essential EfAcpA ([PMID: 36410271](https://pubmed.ncbi.nlm.nih.gov/36410271/)). The practical corollary: **the value of FAS-II as a drug target depends on whether the pathogen, in its infection niche, can obtain fatty acids from the host.**
-
-### Failure modes
-
-- **Genetic loss/insufficiency:** loss of an obligatory enzyme is lethal unless salvage is available.
-- **Regulatory imbalance:** overproduction of the master regulator FadR increases all acyl-chain yields but at a cost — larger cells, slower growth, intracellular membrane accumulation and abnormal morphology ("*too much FadR is bad*") ([PMID: 33283913](https://pubmed.ncbi.nlm.nih.gov/33283913/)).
-- **Membrane consequences:** perturbing phospholipid composition/fluidity disrupts downstream processes such as MreB rotation ([PMID: 33330621](https://pubmed.ncbi.nlm.nih.gov/33330621/)); engineering elongation-gene expression (fabH/fabG/fabZ/fabI) reshapes chain-length and UFA output ([PMID: 23322253](https://pubmed.ncbi.nlm.nih.gov/23322253/)).
+**Evidence that rules out otherwise-plausible paths.** The *E. coli* ΔfabH viability result rules out the assumption that FabH is strictly indispensable for initiation ([PMID: 34801557](https://pubmed.ncbi.nlm.nih.gov/34801557/)). The FabZ→FabN β-strand swap rules out the assumption that isomerase activity requires special catalytic residues ([PMID: 15980063](https://pubmed.ncbi.nlm.nih.gov/15980063/)). The *Clostridium* result rules out the assumption that all bacteria use one of the known UFA enzymes ([PMID: 19493359](https://pubmed.ncbi.nlm.nih.gov/19493359/)).
 
 ---
 
 ## 7. Controversies and Open Questions
 
-1. **Where is the true boundary of "FAS-II"?** Mycobacterial FAS-II elongates rather than initiates, forcing a choice between an architecture-based definition (dissociated + ACP-dependent) and a function-based one (*de novo* from acetyl-CoA). We favour the architectural definition but flag that reviews mixing *E. coli* and *Mycobacterium* data can overgeneralize ([PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/)).
+1. **Is FAS-II a validated broad-spectrum drug target, or is bypass a fatal flaw?** The field disagreed sharply after reports that exogenous fatty acids rescue FAS-II inhibition. The current reconciliation is nuanced: bypass is real and clinically relevant in *Lactobacillales*, but most Gram-negative and many Gram-positive pathogens cannot bypass, so FAS-II remains targetable in a broad but not universal set ([PMID: 25648887](https://pubmed.ncbi.nlm.nih.gov/25648887/); [PMID: 28668270](https://pubmed.ncbi.nlm.nih.gov/28668270/)). Claims should specify the organism.
 
-2. **How universal is the FabA/FabB anaerobic UFA route?** It is canonical in *E. coli*, dispensable in *Xanthomonas*, and replaced by FabN/FabO in *Enterococcus*. The literature has historically treated it as "the" Gram-negative UFA pathway; recent work shows this is an overstatement ([PMID: 36515967](https://pubmed.ncbi.nlm.nih.gov/36515967/); [PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/)).
+2. **How is unsaturation introduced in lineages lacking known UFA enzymes?** *Clostridium acetobutylicum* synthesizes *E. coli*-type UFAs without any recognized UFA gene and with a FabZ that lacks isomerase activity, implying a *"novel and unknown enzyme"* ([PMID: 19493359](https://pubmed.ncbi.nlm.nih.gov/19493359/)). This mechanism remains unidentified and is a significant open question.
 
-3. **Is FAS-II a good antibacterial target?** The tension between validated inhibitors (isoniazid, triclosan) and host-fatty-acid bypass is unresolved and organism-specific. Target value must be assessed per pathogen and per infection niche, not asserted for bacteria in general ([PMID: 34309397](https://pubmed.ncbi.nlm.nih.gov/34309397/); [PMID: 38014966](https://pubmed.ncbi.nlm.nih.gov/38014966/)).
+3. **Extrapolation risk across organisms.** Much mechanistic detail is anchored in *E. coli* (FabA/FabB, FabI). Extending these models to Gram-positives, Mycobacteria, or plastids risks conflating non-comparable systems, given the documented substitutions at initiation, dehydration, and enoyl reduction. This is an evidence-quality caution rather than a resolved controversy.
 
-4. **Which enoyl reductase, and how redundant?** Organisms carrying multiple non-homologous reductases (e.g. FabI + FabV; multiple FabI paralogs in *Sinorhizobium*) complicate both mechanistic interpretation and inhibitor design ([PMID: 19933806](https://pubmed.ncbi.nlm.nih.gov/19933806/); [PMID: 39627703](https://pubmed.ncbi.nlm.nih.gov/39627703/)).
+4. **ACC assembly and regulation.** The bacterial ACC's facile dissociation and allosteric behavior complicate structural and kinetic interpretation; recent cryo-EM work is only now clarifying the reconstituted complex ([PMID: 39572149](https://pubmed.ncbi.nlm.nih.gov/39572149/); [PMID: 39572150](https://pubmed.ncbi.nlm.nih.gov/39572150/)). Whether the *in vivo* complex is a stable holoenzyme or a dynamic assembly is not fully settled.
 
-5. **The dynamics of chain-length gating on ACP.** How ACP's acyl-chain-dependent conformation dictates ordered partner hand-off — and how much of that is programmed versus emergent — remains only partly resolved structurally ([PMID: 37345808](https://pubmed.ncbi.nlm.nih.gov/37345808/); [PMID: 32128972](https://pubmed.ncbi.nlm.nih.gov/32128972/)).
+5. **The physiological weight of the Mad/YiiD route.** MadA rescues ΔfabH, but its native flux contribution when FabH is present, and its distribution across Proteobacteria, are incompletely mapped ([PMID: 34801557](https://pubmed.ncbi.nlm.nih.gov/34801557/)).
 
-6. **Evolutionary origin.** The dissociated, ACP-dependent design is ancient and conserved (retained even inside mitochondria), whereas the enoyl-reductase family and the UFA-branch enzyme pairs look like later, lineage-specific replacements. FabG (keto-reductase) and the core condensation/carrier machinery are the best candidates for the ancestral, conserved core; the enoyl-reductase slot is the most evolutionarily labile.
-
----
-
-## 8. Limitations and Knowledge Gaps
-
-- **Organism sampling bias.** Much mechanistic detail derives from *E. coli*; extrapolation to Gram-positives, actinomycetes and environmental bacteria should be cautious given documented non-orthologous displacements.
-- **In vitro vs in vivo.** Enzyme kinetics and inhibitor potencies are often measured in isolated systems; in vivo relevance is modulated by redundancy, regulation and host-fatty-acid salvage.
-- **Candidate assignments unverified.** The *Pseudomonas putida* (PSEPK) candidate genes named in the working scope (PP_4379, PP_3303, PP_0581, PP_1852) were not experimentally validated in this review; their slot assignments are provisional and rest on homology/annotation rather than functional data.
-- **No new primary data.** This review synthesizes existing literature (29 papers); it does not generate new experimental evidence.
+6. **Reliance on computational inhibitor studies.** A substantial fraction of recent FAS-II literature is docking/MD-based (InhA, FabI phytochemical screens). These provide hypotheses, not mechanistic proof, and should be weighted as indirect evidence pending biochemical validation ([PMID: 41921200](https://pubmed.ncbi.nlm.nih.gov/41921200/); [PMID: 41780347](https://pubmed.ncbi.nlm.nih.gov/41780347/)).
 
 ---
 
-## 9. Proposed Follow-up Experiments / Actions
+## 8. Key References
 
-1. **Functionally validate the PSEPK candidates.** Test PP_4379 (KAS-III), PP_3303 (KAS-II), PP_0581 (FabG-like reductase) and PP_1852 (NADPH enoyl reductase) by heterologous complementation of *E. coli* conditional mutants (e.g. temperature-sensitive *fabI/fabB/fabH*) and in vitro assays with defined acyl-ACP substrates.
-2. **Map enoyl-reductase redundancy per pathogen.** Systematically knock out each reductase family member and measure triclosan/AFN-1252 sensitivity, mirroring the *P. aeruginosa fabV* result, to define target vulnerability organism by organism.
-3. **Quantify host-FA bypass.** Under infection-relevant fatty-acid supplementation (with serum albumin), test whether FAS-II inhibitors lose efficacy across a panel of Gram-positive pathogens, extending the *E. faecalis* dispensability finding.
-4. **Structural hand-off studies.** Use crosslinked acyl-ACP:enzyme complexes to define chain-length-gated recognition at each step and test whether the UFA branch's C10 specificity can be re-engineered.
-5. **Regulatory titration.** Recreate graded FadR/FabR induction to map the quantitative relationship between UFA content, membrane fluidity, cell size and fitness across temperatures.
-
----
-
-## 10. Key References
-
-- Product diversity and regulation of type II fatty acid synthases. [PMID: 15052334](https://pubmed.ncbi.nlm.nih.gov/15052334/)
-- The Molecular Genetics of Mycolic Acid Biosynthesis. [PMID: 26104214](https://pubmed.ncbi.nlm.nih.gov/26104214/)
-- Fatty acid biosynthesis in actinomycetes. [PMID: 21204864](https://pubmed.ncbi.nlm.nih.gov/21204864/)
-- The acyl carrier proteins of lipid synthesis are busy having other affairs. [PMID: 37345808](https://pubmed.ncbi.nlm.nih.gov/37345808/)
-- Inhibitors of FabI, an enzyme drug target in the bacterial fatty acid biosynthesis pathway. [PMID: 18193820](https://pubmed.ncbi.nlm.nih.gov/18193820/)
-- The reductase steps of the type II fatty acid synthase as antimicrobial targets. [PMID: 15726819](https://pubmed.ncbi.nlm.nih.gov/15726819/)
-- Triclosan resistance of *Pseudomonas aeruginosa* PAO1 is due to FabV. [PMID: 19933806](https://pubmed.ncbi.nlm.nih.gov/19933806/)
-- Unsaturated fatty acid synthesis in *Enterococcus faecalis* requires a specific enoyl-ACP reductase. [PMID: 36100979](https://pubmed.ncbi.nlm.nih.gov/36100979/)
-- The FabA-FabB Pathway Is Not Essential for UFA Synthesis but Modulates DSF Synthesis (*Xanthomonas*). [PMID: 36515967](https://pubmed.ncbi.nlm.nih.gov/36515967/)
-- Type II Fatty Acid Synthesis Pathway and Cyclopropane Ring Formation Are Dispensable during *Enterococcus faecalis* Systemic Infection. [PMID: 34309397](https://pubmed.ncbi.nlm.nih.gov/34309397/)
-- Elucidating the impact of bacterial lipases, human serum albumin, and FASII inhibition on exogenous fatty-acid utilization. [PMID: 38014966](https://pubmed.ncbi.nlm.nih.gov/38014966/)
-- Discovery of bacterial FAS-II inhibitors using a cellular bioluminescent reporter assay (AccC). [PMID: 26169404](https://pubmed.ncbi.nlm.nih.gov/26169404/)
-- Crystal structure of the *M. tuberculosis* β-ketoacyl-ACP synthase III (FabH). [PMID: 11278743](https://pubmed.ncbi.nlm.nih.gov/11278743/)
-- FabH — Promising Novel Antibacterial Target and Its Inhibitors. [PMID: 42446656](https://pubmed.ncbi.nlm.nih.gov/42446656/)
-- The low ENR activity of FabI2 drives high UFA composition in *Sinorhizobium meliloti*. [PMID: 39627703](https://pubmed.ncbi.nlm.nih.gov/39627703/)
-- The *E. coli* FadR transcription factor: Too much of a good thing? [PMID: 33283913](https://pubmed.ncbi.nlm.nih.gov/33283913/)
-- Transcription factors FabR and FadR regulate cold adaptability of *Shewanella baltica*. [PMID: 32535524](https://pubmed.ncbi.nlm.nih.gov/32535524/)
-- Mitochondrial fatty acid synthesis and respiration. [PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/)
-- Mitochondrial fatty acid synthesis — an adopted set of enzymes. [PMID: 19686777](https://pubmed.ncbi.nlm.nih.gov/19686777/)
-- Correlations between FAS elongation-cycle gene expression and fatty-acid production in *E. coli*. [PMID: 23322253](https://pubmed.ncbi.nlm.nih.gov/23322253/)
-- Structural study of *E. faecalis* ACP and its interaction with FAS enzymes. [PMID: 36410271](https://pubmed.ncbi.nlm.nih.gov/36410271/)
-- Expression of a recombinant, 4′-phosphopantetheinylated, active *M. tuberculosis* FAS I in *E. coli*. [PMID: 30248156](https://pubmed.ncbi.nlm.nih.gov/30248156/)
-- Alteration of membrane fluidity/phospholipid composition perturbs MreB rotation. [PMID: 33330621](https://pubmed.ncbi.nlm.nih.gov/33330621/)
-- Structural/dynamic characterization of a freestanding ACP (friulimicin biosynthesis). [PMID: 28187530](https://pubmed.ncbi.nlm.nih.gov/28187530/)
-- Solution structure of a doublet ACP from prodigiosin biosynthesis. [PMID: 33416314](https://pubmed.ncbi.nlm.nih.gov/33416314/)
-- Conformational flexibility of CoA and its impact on 4′-PP transfer to ACP. [PMID: 32128972](https://pubmed.ncbi.nlm.nih.gov/32128972/)
+| PMID | Relevance to this review |
+|------|--------------------------|
+| [35650664](https://pubmed.ncbi.nlm.nih.gov/35650664/) | Defines FAS-II as the essential bacterial membrane-lipid (and vitamin-intermediate) pathway; supports F001 |
+| [23894064](https://pubmed.ncbi.nlm.nih.gov/23894064/) | FAS-II enzymes individually essential/targetable; supports dissociated organization (F001) |
+| [34801557](https://pubmed.ncbi.nlm.nih.gov/34801557/) | Identifies YiiD/MadA as malonyl-ACP decarboxylase enabling FabH-independent initiation (F002) |
+| [11278743](https://pubmed.ncbi.nlm.nih.gov/11278743/) | Structural basis (Phe vs. Thr gatekeeper) for FabH primer specificity (F002) |
+| [15980063](https://pubmed.ncbi.nlm.nih.gov/15980063/) | FabZ→FabN β-strand swap localizes isomerase determinant to substrate tunnel (F003) |
+| [23972938](https://pubmed.ncbi.nlm.nih.gov/23972938/) | FabQ as a dual dehydratase/isomerase alternative route (F003) |
+| [15371447](https://pubmed.ncbi.nlm.nih.gov/15371447/) | FabZ structure; FabA's dual role and limited distribution (F003) |
+| [18032386](https://pubmed.ncbi.nlm.nih.gov/18032386/) | FabV as a fourth NADH-preferring enoyl reductase class; triclosan resistance (F004) |
+| [29891603](https://pubmed.ncbi.nlm.nih.gov/29891603/) | Enumerates FabI/FabL/FabK/FabV families (F004) |
+| [39572150](https://pubmed.ncbi.nlm.nih.gov/39572150/) | Heteromeric AccABCD architecture and two-half-reaction mechanism (F005) |
+| [39572149](https://pubmed.ncbi.nlm.nih.gov/39572149/) | Dissociable, allosteric bacterial ACC subunits (F005) |
+| [42294685](https://pubmed.ncbi.nlm.nih.gov/42294685/) | ACP as universal carrier linked to Fe–S biogenesis (F005) |
+| [17804795](https://pubmed.ncbi.nlm.nih.gov/17804795/) | Mycobacterial HadAB/HadBC dehydratases replace FabA/FabZ chemistry |
+| [19493359](https://pubmed.ncbi.nlm.nih.gov/19493359/) | *Clostridium* makes UFAs via an unidentified enzyme; FabF replaces FabB/FabF |
+| [25648887](https://pubmed.ncbi.nlm.nih.gov/25648887/) | Host-lipid uptake and FAS-II bypass; therapeutic boundary |
+| [28668270](https://pubmed.ncbi.nlm.nih.gov/28668270/) | Lineage-specific exogenous fatty-acid activation; substrate-pool compartmentalization |
+| [17919287](https://pubmed.ncbi.nlm.nih.gov/17919287/) | Lineage-specific transcriptional regulation (FadR/FabR/FapR/FabT) |
+| [41843674](https://pubmed.ncbi.nlm.nih.gov/41843674/) | Mycobacterial long-chain acyl-CoA carboxylase structure |
+| [42324731](https://pubmed.ncbi.nlm.nih.gov/42324731/) | PlsB downstream phospholipid assembly (boundary case) |
 
 ---
 
-*Prepared as a commissioned review synthesis on Type-II fatty-acid synthesis. Evidence base: 29 papers; 5 confirmed findings. The chemistry and step-order of FAS-II are strongly conserved; the enzyme families and cofactors filling each catalytic slot, and the pathway's physiological essentiality, are lineage- and niche-dependent.*
+## Limitations and Knowledge Gaps
+
+This review is a literature synthesis and did not generate new experimental data. Several limitations should be made explicit:
+
+- **Organism bias.** The mechanistic backbone is heavily *E. coli*-derived. Findings F002 and F003 rest substantially on *E. coli*/enterococcal work; their generality is inferred, not exhaustively verified across all bacterial phyla.
+- **Incomplete variant coverage.** The outline's KAS-III sub-variants (FabH1 short-chain vs. FabH2 medium-chain) and the FabL "NADPH SDR" class are supported here largely by structural/gatekeeper reasoning and family enumeration rather than by side-by-side kinetic comparisons within a single organism.
+- **Unresolved *Clostridium* mechanism.** A confirmed lineage introduces *cis* unsaturation by an enzyme that has not been identified — a genuine gap in the model.
+- **ACC assembly uncertainty.** The physiological quaternary state of bacterial ACC remains partially unresolved.
+- **Heavy reliance on computational inhibitor studies** in the most recent literature, which are hypothesis-generating rather than mechanistically definitive.
+
+## Proposed Follow-up Experiments / Actions
+
+1. **Identify the *Clostridium acetobutylicum* UFA enzyme.** Combine comparative genomics of UFA-producing anaerobes lacking FabA/FabM/FabN/FabQ with heterologous complementation of an *E. coli* fabA(Ts) strain to isolate the missing isomerase activity.
+2. **Quantify Mad/YiiD flux in wild-type backgrounds.** Use ¹³C-malonate isotope tracing in *E. coli* wild-type vs. ΔyiiD vs. ΔfabH to measure the native contribution of the decarboxylase initiation route.
+3. **Systematic cross-lineage cofactor mapping of enoyl reductases.** Purify FabI, FabK, FabL, and FabV in parallel and measure NADH/NADPH kinetics and triclosan IC₅₀ under identical conditions to convert family-level generalizations into quantitative comparisons.
+4. **Structural characterization of the reconstituted AccABCD holoenzyme** by cryo-EM under near-physiological conditions to resolve the assembly/allostery controversy.
+5. **Test bypass susceptibility across a pathogen panel.** Empirically classify clinically important species as bypass-capable vs. bypass-incapable under FAS-II inhibition plus exogenous fatty acids, to define the true therapeutic window.
+6. **Domain-swap generalization.** Extend the FabZ↔FabN β-strand swap logic across dehydratase families (FabA, FabQ, HadAB) to test whether substrate-tunnel geometry universally predicts isomerase capability.
 
 
 ## Artifacts
@@ -519,29 +528,24 @@ FAS-II is the validated target of isoniazid, triclosan, thiolactomycin and diaza
 
 ## Citations
 
-1. PMID:15052334
-2. PMID:26104214
-3. PMID:19933806
-4. PMID:18193820
-5. PMID:36100979
-6. PMID:34309397
-7. PMID:38014966
-8. PMID:30248156
-9. PMID:11278743
-10. PMID:20226757
-11. PMID:19686777
-12. PMID:37345808
-13. PMID:28187530
-14. PMID:33283913
-15. PMID:23322253
-16. PMID:36515967
-17. PMID:32535524
-18. PMID:33416314
-19. PMID:32128972
-20. PMID:42446656
-21. PMID:15726819
-22. PMID:39627703
-23. PMID:21204864
-24. PMID:26169404
-25. PMID:36410271
-26. PMID:33330621
+1. PMID:35650664
+2. PMID:23894064
+3. PMID:25648887
+4. PMID:28668270
+5. PMID:42324731
+6. PMID:17919287
+7. PMID:17804795
+8. PMID:41843674
+9. PMID:39572150
+10. PMID:34801557
+11. PMID:15371447
+12. PMID:23972938
+13. PMID:39572149
+14. PMID:42294685
+15. PMID:11278743
+16. PMID:15980063
+17. PMID:18032386
+18. PMID:29891603
+19. PMID:19493359
+20. PMID:41921200
+21. PMID:41780347
