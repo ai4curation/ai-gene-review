@@ -43,7 +43,7 @@ type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 | [x] | `PP_3303` | PP_3303 | Q88HQ0 | Second KAS II candidate |
 | [x] | `fabG` | PP_1914 | Q88LL6 | 3-oxoacyl-ACP reduction |
 | [x] | `PP_0581` | PP_0581 | Q88QB3 | Additional 3-oxoacyl-ACP reductase candidate |
-| [ ] | `fabA` | PP_4174 | Q88FC4 | Dehydration/isomerization for cis-unsaturated synthesis |
+| [x] | `fabA` | PP_4174 | Q88FC4 | Dehydration/isomerization for cis-unsaturated synthesis |
 | [ ] | `fabZ` | PP_1602 | Q88MG9 | 3-hydroxyacyl-ACP dehydratase candidate |
 | [ ] | `fabV` | PP_4635 | Q88E33 | NADH-dependent enoyl-ACP reductase |
 | [ ] | `PP_1852` | PP_1852 | Q88LS6 | NADPH-dependent enoyl-ACP reductase candidate |
