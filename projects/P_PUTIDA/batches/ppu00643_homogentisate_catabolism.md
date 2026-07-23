@@ -16,7 +16,7 @@ fumarylacetoacetate hydrolysis.
 ## Workflow
 
 - [x] Fetch the two gene records not already present.
-- [ ] Run full OpenScientist research for all three selected genes.
+- [x] Run full OpenScientist research for all three selected genes.
 - [x] Curate all selected gene reviews, including every GOA row.
 - [x] Create and validate the species-neutral `homogentisate_catabolism` module.
 - [x] Run full OpenScientist module research.
@@ -29,7 +29,7 @@ fumarylacetoacetate hydrolysis.
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
 | [x] | `hmgA` | PP_4621 | Q88E47 | Homogentisate 1,2-dioxygenase |
-| [ ] | `hmgC` | PP_4619 | Q88E49 | Maleylacetoacetate isomerase |
+| [x] | `hmgC` | PP_4619 | Q88E49 | Maleylacetoacetate isomerase |
 | [x] | `hmgB` | PP_4620 | Q88E48 | Fumarylacetoacetase |
 
 ## Excluded Candidates
