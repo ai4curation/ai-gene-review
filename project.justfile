@@ -180,6 +180,15 @@ descriptions-status organism *args="":
     uv run ai-gene-review descriptions-status {{organism}} --output-dir . {{args}}
 
 
+# LitScan: scan recent literature for candidate new members of curated modules.
+# Writes a markdown + JSON packet to reports/litscan/module-member/ for downstream
+# triage (e.g. a haiku filter). Defaults to the last 90 days; pass extra flags through.
+#   just litscan-module-member
+#   just litscan-module-member --days 365
+#   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
+litscan-module-member *args="":
+    uv run ai-gene-review litscan module-member {{args}}
+
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
 # Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS
