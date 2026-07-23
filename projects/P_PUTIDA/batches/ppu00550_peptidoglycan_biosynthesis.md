@@ -34,7 +34,7 @@ peptide cross-linking, which form a distinct multi-complex module.
 | [x] | `murC` | PP_1338 | Q88N75 | L-alanine addition |
 | [x] | `murD` | PP_1335 | Q88N78 | D-glutamate addition |
 | [ ] | `murE` | PP_1332 | Q88N81 | meso-diaminopimelate addition |
-| [ ] | `ddlB` | PP_1339 | Q88N74 | D-Ala-D-Ala dipeptide synthesis |
+| [x] | `ddlB` | PP_1339 | Q88N74 | D-Ala-D-Ala dipeptide synthesis |
 | [x] | `murF` | PP_1333 | Q88N80 | D-Ala-D-Ala addition to UDP-MurNAc-tripeptide |
 | [ ] | `mraY` | PP_1334 | Q88N79 | Lipid I synthesis |
 | [x] | `murG` | PP_1337 | Q88N76 | Lipid II synthesis |
