@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dapE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dapE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MP5" target="_blank" class="term-link">
+                        Q88MP5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dapE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MP5" data-a="DESCRIPTION: dapE encodes the metallodependent succinyl-diamino..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>dapE encodes the metallodependent succinyl-diaminopimelate desuccinylase (EC 3.5.1.18) that hydrolyzes N-succinyl-LL-diaminopimelate to LL-diaminopimelate and succinate in the succinylated route of L-lysine biosynthesis. Its proteobacterial DapE-specific family distinguishes it from related ArgE acetylornithine deacetylases.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0006526" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter process call reflects related ArgE enzymes, not PSEPK DapE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88MP5 has the DapE-specific reaction, pathway assignment, and NCBIfam:TIGR01246 signature.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0008270" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc binding is valid catalytic-metal context for DapE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The metallohydrolase annotation supports metal binding, which is secondary to substrate-specific catalysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008777" target="_blank" class="term-link">
+                                    GO:0008777
+                                </a>
+                            </span>
+                            <span class="term-label">acetylornithine deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0008777" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This activity belongs to related ArgE-family proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88MP5 is assigned to the proteobacterial DapE subfamily and EC 3.5.1.18; no evidence supports acetylornithine as its physiological substrate.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009014" target="_blank" class="term-link">
+                                    GO:0009014
+                                </a>
+                            </span>
+                            <span class="term-label">succinyl-diaminopimelate desuccinylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0009014" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining DapE molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 3.5.1.18, HAMAP MF_01690, and NCBIfam:TIGR01246 support the same reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dapE/dapE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Succinyl-diaminopimelate desuccinylase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dapE/dapE-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **dapE** (ordered locus **PP_1525**; UniProt **Q88MP5**) of *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125) encodes **succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC 3.5.1.18)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009085" target="_blank" class="term-link">
+                                    GO:0009085
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0009085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DapE deprotects LL-diaminopimelate in L-lysine biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns Q88MP5 to L-lysine biosynthesis via the DAP pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic hydrolase term is redundant with the specific DapE activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0009014 captures the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050897" target="_blank" class="term-link">
+                                    GO:0050897
+                                </a>
+                            </span>
+                            <span class="term-label">cobalt ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP5" data-a="GO:0050897" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cobalt binding is plausible catalytic-metal context for DapE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records cobalt for this metallohydrolase, but metal binding is secondary to catalysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes N-succinyl-LL-diaminopimelate to LL-diaminopimelate and succinate in L-lysine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88MP5" data-a="FUNCTION: Hydrolyzes N-succinyl-LL-diaminopimelate to LL-dia..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009014" target="_blank" class="term-link">
+                            succinyl-diaminopimelate desuccinylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009085" target="_blank" class="term-link">
+                                L-lysine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dapE/dapE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Succinyl-diaminopimelate desuccinylase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dapE/dapE-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The gene **dapE** (ordered locus **PP_1525**; UniProt **Q88MP5**) of *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125) encodes **succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC 3.5.1.18)**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapE/dapE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK DapE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88MP5 to the DapE desuccinylase reaction and lysine biosynthesis.</div>
+
+                        <div class="finding-text">"Full=Succinyl-diaminopimelate desuccinylase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapE/dapE-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK DapE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the seven existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapE/dapE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist literature and database synthesis for PSEPK DapE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Corroborates Q88MP5/PP_1525 as the DapE-family EC 3.5.1.18 enzyme of the succinylated-DAP route.</div>
+
+                        <div class="finding-text">"The gene **dapE** (ordered locus **PP_1525**; UniProt **Q88MP5**) of *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125) encodes **succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC 3.5.1.18)**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct Q88MP5 enzymatic or genetic experiment was found, so target-specific kinetics, structure, localization, and physiology remain inferred.</div>
+
+                        <div class="finding-text">"no direct enzymatic or genetic study of the *P. putida* KT2440 DapE protein itself exists"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The proposed PP_3786 DapL bypass and ArgD substitution are not adopted: they conflict with the exact Q88MI3 DapC-specific assignment and lack target-strain experimental support.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dapE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MP5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *dapE* (Q88MP5, PP_1525) — Succinyl-diaminopimelate Desuccinylase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T14:32:23.994588</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dapE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dapE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-dape-q88mp5-pp_1525-succinyl-diaminopimelate-desuccinylase-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>dapE</em> (Q88MP5, PP_1525) — Succinyl-diaminopimelate Desuccinylase in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>dapE</strong> (ordered locus <strong>PP_1525</strong>; UniProt <strong>Q88MP5</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125) encodes <strong>succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC 3.5.1.18)</strong>, a soluble cytoplasmic metalloenzyme of the <strong>peptidase M20A family, DapE subfamily</strong>. Its primary and specific function is to catalyze the <strong>hydrolytic cleavage of the amide (succinyl) bond of N-succinyl-L,L-2,6-diaminopimelate (SDAP)</strong>, releasing <strong>L,L-2,6-diaminopimelate (L,L-DAP) and succinate</strong> (Rhea:22608). This is the third and final step of the <strong>succinylase branch</strong> of the diaminopimelate (DAP)/lysine biosynthetic pathway, and its product feeds directly into two essential downstream fates: epimerization/decarboxylation to L-lysine for protein synthesis, and conversion to meso-DAP for cross-linking of the peptidoglycan cell wall.</p>
+<p>Identity verification was rigorous and positive. The gene symbol, EC number, family, and domain architecture assigned by UniProt/HAMAP (rule MF_01690) match the biochemically and structurally characterized DapE orthologs described throughout the literature. The <em>P. putida</em> protein is 383 residues (~41.2 kDa), shares <strong>62% sequence identity with the biochemically characterized <em>Escherichia coli</em> DapE</strong>, and has <strong>100% conservation of all seven catalytic and metal-binding residues</strong> (His73, Asp75, Asp107, Glu141, Glu142, Glu170, His356). A very-high-confidence AlphaFold model (mean pLDDT 96.4) recapitulates the canonical two-domain M20A DapE fold. No literature for a different, unrelated gene sharing the "dapE" symbol was encountered — the annotation is unambiguous.</p>
+<p>Two nuances are important. First, <strong>no direct enzymatic or genetic study of the <em>P. putida</em> KT2440 DapE protein itself exists</strong> — the functional assignment is a strong bioinformatic/evolutionary inference anchored on high sequence identity, complete active-site conservation, full pathway context, and structural modeling, rather than on a dedicated in vitro assay of Q88MP5. Second, unlike bypass-lacking pathogens (e.g., <em>Helicobacter pylori</em>, <em>Mycobacterium smegmatis</em>) where dapE deletion is lethal, <em>P. putida</em> KT2440 <strong>also encodes a DapL-type L,L-DAP aminotransferase (PP_3786)</strong> that converts tetrahydrodipicolinate directly to L,L-DAP in a single step, bypassing the entire succinylase branch. DapE is therefore expected to be <strong>genetically redundant</strong> in this organism, even though the enzyme itself is fully functional.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-dape-catalyzes-hydrolytic-desuccinylation-of-n-succinyl-ll-dap-to-ll-dap-succinate-ec-35118">Finding 1 — DapE catalyzes hydrolytic desuccinylation of N-succinyl-L,L-DAP to L,L-DAP + succinate (EC 3.5.1.18)</h3>
+<p>The defining catalytic activity of DapE is the hydrolysis of the amide bond linking a succinyl group to the α-amino group of L,L-2,6-diaminopimelate. The reaction is:</p>
+<blockquote>
+<p><strong>N-succinyl-(2S,6S)-2,6-diaminopimelate + H₂O → (2S,6S)-2,6-diaminopimelate + succinate</strong> (Rhea:22608)</p>
+</blockquote>
+<p>This is annotated for Q88MP5 through HAMAP-Rule MF_01690 as EC 3.5.1.18 (N-succinyl-LL-2,6-diaminoheptanedioate amidohydrolase). The reaction identity is not merely a database assertion: it is grounded in direct enzymatic and structural work on orthologs. Crystallographic product-bound structures of DapE unambiguously establish that the enzyme "converts N-succinyl-L,L-diaminopimelic acid to L,L-diaminopimelic acid and succinate" (<a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">PMID: 20138056</a>). A validated ninhydrin/spectrophotometric assay quantifies the desuccinylase activity of <em>Haemophilus influenzae</em> DapE and confirms enzyme identity — "succinyl-diaminopimelate desuccinylase (DapE, E.C. 3.5.1.18)" — reporting inhibitor potencies (e.g., captopril IC₅₀ ≈ 3.4 µM) that match the EC number applied to Q88MP5 (<a href="https://pubmed.ncbi.nlm.nih.gov/29698518/">PMID: 29698518</a>). Because P. putida DapE shares this exact catalytic machinery (see Findings 5–6), the same reaction and substrate specificity are assigned to it.</p>
+<h3 id="finding-2-dape-is-a-dinuclear-metallohydrolase-acting-as-a-homodimer-with-catalytic-and-dimerization-domains">Finding 2 — DapE is a dinuclear metallohydrolase acting as a homodimer with catalytic and dimerization domains</h3>
+<p>DapE enzymes are <strong>dinuclear (two-metal) metallohydrolases</strong>. High-resolution X-ray structures of <em>H. influenzae</em> DapE resolved "one and two zinc ions bound in the active site" and demonstrated distinct catalytic behavior for the mono- versus di-metalated forms (<a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">PMID: 20138056</a>). Each subunit "consisted of a catalytic domain and a dimerization domain" (<a href="https://pubmed.ncbi.nlm.nih.gov/25204745/">PMID: 25204745</a>). A striking, mechanistically central feature is a <strong>large substrate-induced conformational change</strong>: upon substrate/product binding, "the catalytic domain rotates ∼50° and shifts ∼10.1 Å (as measured at the position of the Zn atoms) relative to the dimerization domain," closing over the dinuclear Zn(II) cluster (Zn–Zn distance ~3.8 Å) and completing the oxyanion hole — notably with His194 contributed <em>in trans</em> by the opposing subunit (<a href="https://pubmed.ncbi.nlm.nih.gov/29272107/">PMID: 29272107</a>). This inter-subunit contribution explains why the <strong>homodimer</strong> is the functional unit. Spectroscopic studies of Co(II)-substituted enzyme show the two metals are antiferromagnetically coupled and can be bridged by a thiolate when the inhibitor captopril binds (<a href="https://pubmed.ncbi.nlm.nih.gov/26186504/">PMID: 26186504</a>).</p>
+<h3 id="finding-3-dape-operates-in-the-succinylase-branch-of-the-daplysine-pathway-supplying-peptidoglycan-and-lysine-precursors">Finding 3 — DapE operates in the succinylase branch of the DAP/lysine pathway, supplying peptidoglycan and lysine precursors</h3>
+<p>DapE acts at a <strong>late stage of the anabolic pathway</strong> leading to both L-lysine and meso-DAP, catalyzing "the desuccinylation of N-succinyl-L,L-diaminopimelic acid (SDAP) in a late stage of the anabolic pathway towards both lysine and a crucial building block of the peptidoglycan cell wall" (<a href="https://pubmed.ncbi.nlm.nih.gov/24057071/">PMID: 24057071</a>). Genetic ordering studies in <em>E. coli</em> (using ΔdapD ΔdapE mutants) place dapE between the succinyl-transfer/aminotransferase steps and the DapF epimerase (<a href="https://pubmed.ncbi.nlm.nih.gov/17093042/">PMID: 17093042</a>). The biological importance of this reaction is that its downstream products are "essential for protein synthesis and the cross-linking of the bacterial peptidoglycan cell wall" (<a href="https://pubmed.ncbi.nlm.nih.gov/40973684/">PMID: 40973684</a>). Thus DapE sits at a metabolic branch point that provisions two indispensable macromolecular processes.</p>
+<h3 id="finding-4-dape-is-essential-in-many-bacteria-has-no-human-homolog-and-is-a-validated-antibacterial-target">Finding 4 — DapE is essential in many bacteria, has no human homolog, and is a validated antibacterial target</h3>
+<p>Across bypass-lacking bacteria, dapE is <strong>essential</strong>: its deletion is lethal to <em>H. pylori</em> and <em>M. smegmatis</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">PMID: 20138056</a>), and lethal to <em>H. pylori</em> specifically because "deletion of DapE gene is lethal to H. pylori, since the organism has no alternative pathway for lysine biosynthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/25204745/">PMID: 25204745</a>). Because "there are no similar pathways in humans, inhibitors that target DapE may have selective toxicity against only bacteria" (<a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">PMID: 20138056</a>). DapE is highly conserved across diverse bacterial species (<a href="https://pubmed.ncbi.nlm.nih.gov/40973684/">PMID: 40973684</a>). One important pharmacological caveat is <strong>metal heterogeneity</strong>: the physiologically relevant "Mn(2+)-enzyme, which is also a physiologically relevant isoform in bacteria, is not inhibited" by L-captopril, which targets only the Zn(2+) isoform (<a href="https://pubmed.ncbi.nlm.nih.gov/24057071/">PMID: 24057071</a>). This finding contextualizes DapE as a drug target in general; the redundancy in <em>P. putida</em> (Finding 7) means DapE is unlikely to be an effective target in this non-pathogenic organism specifically.</p>
+<h3 id="finding-5-p-putida-dape-has-a-fully-conserved-dinuclear-metal-active-site-with-residue-level-mapping">Finding 5 — P. putida DapE has a fully conserved dinuclear metal active site with residue-level mapping</h3>
+<p>The 383-residue Q88MP5 sequence (41.2 kDa) carries residue-level HAMAP annotations that reproduce the canonical M20A dinuclear coordination sphere. The <strong>active sites are Asp75 and Glu141</strong> (the latter acting as the proton acceptor / catalytic general base), and the <strong>metal ligands are His73, Asp107 (bridging both metals), Glu142, Glu170, and His356</strong>, binding <strong>two Zn(2+) or Co(2+) ions per subunit</strong>. Direct mapping onto the primary sequence confirms these residues and their local motifs (…FAGH-TDV… at positions 73–75; …TSD-EE… at 141–142), matching the classic "2 His + bridging Asp + Glu general base" arrangement of the peptidase M20A dinuclear metallopeptidases. Supporting cross-references include Rhea:22608 for the catalytic activity, pathway UPA00034/UER00021 (L-lysine biosynthesis via DAP, succinylase route, step 3 of 3), homodimer quaternary structure, family peptidase M20A/DapE subfamily, eggNOG COG0624, CDD cd03891 (M20_DapE_proteobac), and TIGRFAM TIGR01246 (dapE_proteo). These conserved residues are interpreted against the canonical DapE mechanism, for which the ortholog structural work proposed "a revised catalytic mechanism of peptide bond cleavage by DapE enzymes" (<a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">PMID: 20138056</a>).</p>
+<h3 id="finding-6-62-identity-to-characterized-e-coli-dape-with-100-catalytic-residue-conservation-gene-is-monocistronic">Finding 6 — 62% identity to characterized E. coli DapE with 100% catalytic-residue conservation; gene is monocistronic</h3>
+<p>A global Needleman–Wunsch alignment of Q88MP5 (383 aa) against biochemically characterized <em>E. coli</em> DapE (P0AED7, 375 aa) yields <strong>232/374 identical residues = 62.0% identity over the full length</strong>. Critically, <strong>all seven functional residues are strictly conserved</strong>: His73, Asp75, Asp107, Glu141, Glu142, Glu170, and His356 each align to the identical residue in <em>E. coli</em>. KEGG independently annotates PP_1525 as <strong>K01439</strong> (succinyl-diaminopimelate desuccinylase, EC 3.5.1.18) in pathway ppu00300 (Lysine biosynthesis). Genomic context analysis shows PP_1525 occupies complement(1729936..1731087), flanked by PP_1524 (23S rRNA methyltransferase), PP_1526 (glucosyltransferase), PP_1523/PP_1528 (unknown), and PP_1522 (cold-shock protein) — <strong>none are other DAP/lysine pathway genes</strong> (dapA/B/C/D/F, lysA, asd map elsewhere on the chromosome). The gene is therefore <strong>effectively monocistronic and independently regulated</strong>, not co-transcribed in a dap operon. The shared function of the DapE orthologs to which the 62%-identical P. putida protein is compared is captured by the observation that "the dapE operon enzymes synthesize both meso-diaminopimelic acid and lysine" (<a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">PMID: 20138056</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>P. putida</em> DapE (Q88MP5)</th>
+<th><em>E. coli</em> DapE (P0AED7)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>383 aa (~41.2 kDa)</td>
+<td>375 aa</td>
+</tr>
+<tr>
+<td>Sequence identity</td>
+<td>—</td>
+<td>62.0% (232/374)</td>
+</tr>
+<tr>
+<td>His73 / Asp75 / Asp107</td>
+<td>conserved</td>
+<td>identical</td>
+</tr>
+<tr>
+<td>Glu141 / Glu142 / Glu170</td>
+<td>conserved</td>
+<td>identical</td>
+</tr>
+<tr>
+<td>His356</td>
+<td>conserved</td>
+<td>identical</td>
+</tr>
+<tr>
+<td>Metal ions per subunit</td>
+<td>2 (Zn²⁺ or Co²⁺)</td>
+<td>2 (Zn²⁺)</td>
+</tr>
+<tr>
+<td>KEGG ortholog</td>
+<td>K01439</td>
+<td>K01439</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td>monocistronic (PP_1525)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-7-p-putida-encodes-both-the-succinylase-branch-and-a-dapl-bypass-so-dape-is-likely-genetically-redundant">Finding 7 — P. putida encodes both the succinylase branch and a DapL bypass, so dapE is likely genetically redundant</h3>
+<p>The KEGG ortholog inventory for <em>P. putida</em> KT2440 (ppu) confirms the <strong>succinylase branch is present</strong>: dapD = PP_1530 (K00674); the N-succinyl-DAP aminotransferase (dapC) step is supplied by the promiscuous bifunctional <strong>ArgD = PP_0372</strong> (K00821; a dedicated dapC/K05822 gene is absent); and dapE = PP_1525 (K01439). Downstream steps are present: dapF = PP_3790 (K01778) and lysA = PP_2077/PP_5227 (K01586). Critically, <em>P. putida</em> <strong>also encodes a DapL-type L,L-diaminopimelate aminotransferase, PP_3786</strong> (K10206, EC 2.6.1.83) — "an aminotransferase that may directly convert tetrahydrodipicolinate to L,L-diaminopimelic acid" (<a href="https://pubmed.ncbi.nlm.nih.gov/17093042/">PMID: 17093042</a>) — bypassing the entire dapD→dapC→dapE succinylase branch in a single transamination. The meso-DAP dehydrogenase (ddh, K03340) and acetylase-branch genes (dapH/dapX) are absent. This contrasts sharply with organisms lacking any bypass, where "deletion of DapE gene is lethal to H. pylori, since the organism has no alternative pathway for lysine biosynthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/25204745/">PMID: 25204745</a>). Hydropathy analysis of Q88MP5 shows <strong>no transmembrane segment</strong> (max Kyte–Doolittle 19-residue window = 0.85; 0 windows above the ~1.6 threshold) and <strong>no cleavable N-terminal signal peptide</strong>, consistent with a <strong>soluble cytoplasmic</strong> localization.</p>
+<h3 id="finding-8-alphafold-model-is-very-high-confidence-supporting-the-two-domain-m20a-dape-fold">Finding 8 — AlphaFold model is very high confidence, supporting the two-domain M20A DapE fold</h3>
+<p>The AlphaFold DB model for Q88MP5 (383 residues, version 6) has a <strong>mean pLDDT of 96.4</strong>, with <strong>94.5% of residues at very-high confidence (pLDDT &gt; 90)</strong>, 98.7% confident (pLDDT &gt; 70), and only 0.8% at low confidence (pLDDT &lt; 50). The uniformly high confidence across the full length is consistent with a well-defined <strong>two-domain fold</strong> — a catalytic Peptidase_M20 domain plus an M20_dimer dimerization domain — matching the architecture observed in experimentally solved DapE structures, in which "the catalytic domain rotates ∼50° and shifts ∼10.1 Å … relative to the dimerization domain" (<a href="https://pubmed.ncbi.nlm.nih.gov/29272107/">PMID: 29272107</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-the-diaminopimelatelysine-biosynthetic-pathway">Position in the diaminopimelate/lysine biosynthetic pathway</h3>
+<p>DapE catalyzes step 3 of 3 in the <strong>succinylase branch</strong> that converts tetrahydrodipicolinate (THDP) into L,L-DAP:</p>
+<div class="codehilite"><pre><span></span><code>          L-aspartate
+              │  (asd, dapA, dapB)
+              ▼
+ (S)-tetrahydrodipicolinate (THDP)
+        │                       │
+     succinylase branch │                       │  DapL bypass
+ (dapD)         │                       │  (PP_3786, K10206)
+        ▼                       │  single transamination
+N-succinyl-2-amino-6-ketopimelate       │
+        │  (dapC / ArgD, PP_0372)│
+        ▼                       │
+N-succinyl-L,L-DAP (SDAP)               │
+        │                       │
+       ┌────────────────┘                       │
+       │  ►► dapE (PP_1525, Q88MP5) ◄◄          │
+       │     SDAP + H2O → L,L-DAP + succinate    │
+       ▼                                        │
+     L,L-2,6-diaminopimelate  ◄─────────────────┘
+        │
+  ┌─────────────┴─────────────┐
+  ▼ (dapF, PP_3790)            │
+      meso-DAP                         │
+  │                            ▼ (lysA, PP_2077/PP_5227)
+   peptidoglycan cross-linking      L-lysine → protein synthesis
+</code></pre></div>
+
+<p>DapE removes the succinyl "handle" that was installed by DapD to make the downstream transamination stereospecific. The product L,L-DAP is then epimerized by DapF to meso-DAP (a direct peptidoglycan cross-linking residue) and decarboxylated by LysA to L-lysine. In <em>P. putida</em>, the DapL aminotransferase provides a parallel route to L,L-DAP that does not require the succinyl handle, which is why DapE is likely dispensable here.</p>
+<h3 id="catalytic-mechanism-at-the-dinuclear-metal-center">Catalytic mechanism at the dinuclear metal center</h3>
+<p>The active-site chemistry is that of a classic M20A dinuclear metallohydrolase. Two divalent metals (Zn²⁺ or, physiologically, possibly Mn²⁺ or Co²⁺) are held ~3.8 Å apart by a bridging aspartate (Asp107) plus terminal His/Glu ligands (His73, Glu142, Glu170, His356). A bridging water/hydroxide, polarized by the metals and by the general base <strong>Glu141</strong>, performs nucleophilic attack on the scissile amide carbonyl. The developing oxyanion is stabilized in an oxyanion hole that is only assembled after the substrate-triggered ~50° domain closure, and which is completed <em>in trans</em> by a histidine from the partner subunit — explaining the strict requirement for the homodimer. This mechanism, worked out from mono- and di-metalated <em>H. influenzae</em> structures and from substrate-bound conformational-change structures, applies directly to the P. putida enzyme because every ligand and catalytic residue is conserved.</p>
+<h3 id="localization">Localization</h3>
+<p>All evidence points to a <strong>cytoplasmic</strong> enzyme: no transmembrane helices, no signal peptide, a soluble globular two-domain fold, and a substrate (SDAP) that is a cytoplasmic metabolic intermediate. There is no evidence for periplasmic, membrane, or secreted localization.</p>
+<h3 id="reconciling-function-with-redundancy">Reconciling function with redundancy</h3>
+<p>The key interpretive point for <em>P. putida</em> is that <strong>an enzyme can be fully functional yet genetically redundant</strong>. Q88MP5's active site is 100% conserved and its fold is textbook-perfect, so the protein almost certainly retains full desuccinylase activity. However, the co-existence of the DapL bypass (PP_3786) means that loss of dapE need not be lethal — in contrast to bypass-lacking pathogens. This distinction matters for any consideration of DapE as an antibacterial target: it is validated in pathogens with an obligate succinylase branch, but not in organisms like <em>P. putida</em> that carry the DapL shortcut.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports / challenges the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20138056/">20138056</a></td>
+<td>Structural basis for catalysis by mono-/dimetalated DapE</td>
+<td>Defines substrate→products (L,L-DAP + succinate), dinuclear Zn active site, essentiality in H. pylori/M. smegmatis, no human homolog, revised mechanism. Core anchor for Findings 1, 2, 4, 5.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29272107/">29272107</a></td>
+<td>Major conformational change on substrate binding in DapE</td>
+<td>Documents ~50° / 10.1 Å catalytic-domain closure and two-domain architecture; underpins mechanism and AlphaFold fold interpretation (Findings 2, 8).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25204745/">25204745</a></td>
+<td>In silico inhibitors of H. pylori DapE</td>
+<td>Confirms catalytic + dimerization domain organization; establishes essentiality where no bypass exists — the key contrast for P. putida redundancy (Findings 2, 4, 7).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24057071/">24057071</a></td>
+<td>Zinc-selective inhibition / metal heterogeneity</td>
+<td>Places DapE in late DAP/lysine pathway toward lysine + peptidoglycan; documents Mn²⁺ vs Zn²⁺ isoform inhibitor differences (Findings 3, 4).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29698518/">29698518</a></td>
+<td>Spectrophotometric DapE assay</td>
+<td>Validated activity assay confirming enzyme identity/EC 3.5.1.18 and inhibitor IC₅₀ values (Finding 1).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26186504/">26186504</a></td>
+<td>L-captopril inhibition of N. meningitidis DapE</td>
+<td>EPR/MCD/crystallography showing antiferromagnetically coupled dinuclear metals and thiolate bridge on inhibitor binding (Finding 2).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17093042/">17093042</a></td>
+<td>L,L-DAP aminotransferase (DapL) trans-kingdom</td>
+<td>Establishes the DapL bypass that directly converts THDP to L,L-DAP, the basis for P. putida redundancy; helps order the succinylase branch (Findings 3, 7).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40973684/">40973684</a></td>
+<td>Zinc-binding DapE inhibitors in K. pneumoniae</td>
+<td>States biological role (protein synthesis + peptidoglycan cross-linking) and broad conservation of DapE (Findings 3, 4).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32860896/">32860896</a></td>
+<td>DapE–flavonoid interactions</td>
+<td>Reinforces DapE as an antimicrobial metal-center target across genera including <em>Pseudomonas</em>; supports the general drug-target framing.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Database evidence:</strong> UniProt/HAMAP MF_01690 (EC 3.5.1.18; residue-level active-site and metal annotations), Rhea:22608, MetaCyc/UniPathway UPA00034/UER00021, KEGG K01439 / ppu00300 / PP_1525, eggNOG COG0624, CDD cd03891, TIGRFAM TIGR01246, and AlphaFold DB (mean pLDDT 96.4). These are consistent with, and mutually reinforced by, the primary literature above.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct study of the P. putida KT2440 protein.</strong> Every functional claim about Q88MP5 is a bioinformatic/evolutionary inference. No purified-protein kinetics, metal-content determination, crystal structure, or gene-knockout phenotype exists for this specific ortholog. The inference is strong (62% identity to a characterized enzyme, 100% active-site conservation, complete pathway context, pLDDT 96.4) but remains inference.</p>
+</li>
+<li>
+<p><strong>Redundancy is predicted, not demonstrated.</strong> The expectation that dapE is dispensable in <em>P. putida</em> rests on the presence of the DapL gene (PP_3786) and comparison to bypass-lacking organisms. No knockout has been reported to confirm that ΔdapE is viable in <em>P. putida</em>, nor whether DapL flux is sufficient under all growth conditions. It is possible the two routes are differentially regulated or condition-dependent.</p>
+</li>
+<li>
+<p><strong>Physiological metal identity is unresolved.</strong> DapE orthologs show metal heterogeneity (Zn²⁺ vs. Mn²⁺ vs. Co²⁺) with functional and pharmacological consequences. The in vivo metal used by <em>P. putida</em> DapE is unknown.</p>
+</li>
+<li>
+<p><strong>Substrate stereospecificity assumed by homology.</strong> The L,L-DAP (not meso- or D,D-) stereospecificity is inferred from orthologs and the conserved active site, not measured for Q88MP5.</p>
+</li>
+<li>
+<p><strong>Regulation is uncharacterized.</strong> The monocistronic genomic context implies independent regulation, but no promoter, transcription-factor, or expression data were established for PP_1525 in this investigation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and kinetic assay.</strong> Clone PP_1525, purify Q88MP5, and measure desuccinylase activity on synthetic SDAP using the validated spectrophotometric/ninhydrin assay (<a href="https://pubmed.ncbi.nlm.nih.gov/29698518/">PMID: 29698518</a>). Determine kcat, Km, and metal dependence (apo-reconstitution with Zn²⁺, Mn²⁺, Co²⁺).</p>
+</li>
+<li>
+<p><strong>Gene knockout / bypass test.</strong> Construct a ΔdapE (ΔPP_1525) mutant and test viability and lysine/DAP auxotrophy with and without a co-deletion of the DapL gene (ΔPP_3786). A synthetic-lethal ΔdapE ΔdapL phenotype rescued by exogenous lysine/DAP would directly confirm both DapE function and the redundancy model.</p>
+</li>
+<li>
+<p><strong>Structural confirmation.</strong> Solve the X-ray or cryo-EM structure of Q88MP5, ideally with substrate/product or captopril bound, to confirm the dinuclear metal geometry and the substrate-induced domain closure predicted by the AlphaFold model and ortholog structures.</p>
+</li>
+<li>
+<p><strong>Metal-content analysis.</strong> Use ICP-MS/EPR on natively purified enzyme to determine the physiologically bound metal(s), informing both mechanism and any inhibitor-design considerations.</p>
+</li>
+<li>
+<p><strong>Expression profiling.</strong> Quantify PP_1525 transcript/protein levels across growth phases and nitrogen/carbon conditions to test the independent-regulation hypothesis implied by its monocistronic context, and compare against DapL (PP_3786) expression to assess which route dominates flux.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>dapE</em> (Q88MP5 / PP_1525) in <em>Pseudomonas putida</em> KT2440 is confidently annotated as <strong>succinyl-diaminopimelate desuccinylase (EC 3.5.1.18)</strong>, a soluble cytoplasmic homodimeric dinuclear-metal hydrolase of the peptidase M20A / DapE subfamily. It hydrolyzes N-succinyl-L,L-2,6-diaminopimelate to L,L-2,6-diaminopimelate plus succinate, performing the final L,L-DAP–forming step of the succinylase branch of DAP/lysine biosynthesis and thereby supplying meso-DAP for peptidoglycan cross-linking and lysine for protein synthesis. The assignment is inferential for this specific organism but strongly supported by 62% identity to characterized <em>E. coli</em> DapE with fully conserved catalytic residues, complete pathway context, and a very-high-confidence structural model. Because <em>P. putida</em> additionally encodes a DapL aminotransferase bypass, DapE is likely genetically redundant in this organism — a notable contrast to bypass-lacking pathogens in which dapE is essential and a validated drug target.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dapE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dapE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:20138056</li>
+<li>PMID:29698518</li>
+<li>PMID:25204745</li>
+<li>PMID:29272107</li>
+<li>PMID:26186504</li>
+<li>PMID:24057071</li>
+<li>PMID:17093042</li>
+<li>PMID:40973684</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MP5
+gene_symbol: dapE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  dapE encodes the metallodependent succinyl-diaminopimelate desuccinylase
+  (EC 3.5.1.18) that hydrolyzes N-succinyl-LL-diaminopimelate to
+  LL-diaminopimelate and succinate in the succinylated route of L-lysine
+  biosynthesis. Its proteobacterial DapE-specific family distinguishes it from
+  related ArgE acetylornithine deacetylases.
+existing_annotations:
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: This TreeGrafter process call reflects related ArgE enzymes, not PSEPK DapE.
+    action: REMOVE
+    reason: Q88MP5 has the DapE-specific reaction, pathway assignment, and NCBIfam:TIGR01246 signature.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Zinc binding is valid catalytic-metal context for DapE.
+    action: KEEP_AS_NON_CORE
+    reason: The metallohydrolase annotation supports metal binding, which is secondary to substrate-specific catalysis.
+- term:
+    id: GO:0008777
+    label: acetylornithine deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: This activity belongs to related ArgE-family proteins.
+    action: REMOVE
+    reason: &gt;-
+      Q88MP5 is assigned to the proteobacterial DapE subfamily and EC 3.5.1.18;
+      no evidence supports acetylornithine as its physiological substrate.
+- term:
+    id: GO:0009014
+    label: succinyl-diaminopimelate desuccinylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining DapE molecular function.
+    action: ACCEPT
+    reason: EC 3.5.1.18, HAMAP MF_01690, and NCBIfam:TIGR01246 support the same reaction.
+    supported_by:
+    - reference_id: file:PSEPK/dapE/dapE-uniprot.txt
+      supporting_text: Full=Succinyl-diaminopimelate desuccinylase
+    - reference_id: file:PSEPK/dapE/dapE-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **dapE** (ordered locus **PP_1525**; UniProt **Q88MP5**) of
+        *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125) encodes
+        **succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC
+        3.5.1.18)**
+- term:
+    id: GO:0009085
+    label: L-lysine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: DapE deprotects LL-diaminopimelate in L-lysine biosynthesis.
+    action: ACCEPT
+    reason: UniProt assigns Q88MP5 to L-lysine biosynthesis via the DAP pathway.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This generic hydrolase term is redundant with the specific DapE activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0009014 captures the substrate-specific reaction.
+- term:
+    id: GO:0050897
+    label: cobalt ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Cobalt binding is plausible catalytic-metal context for DapE.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt records cobalt for this metallohydrolase, but metal binding is secondary to catalysis.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/dapE/dapE-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK DapE
+  findings:
+  - statement: Assigns Q88MP5 to the DapE desuccinylase reaction and lysine biosynthesis.
+    supporting_text: Full=Succinyl-diaminopimelate desuccinylase
+- id: file:PSEPK/dapE/dapE-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK DapE
+  findings:
+  - statement: Contains the seven existing annotations reviewed above.
+- id: file:PSEPK/dapE/dapE-deep-research-openscientist.md
+  title: OpenScientist literature and database synthesis for PSEPK DapE
+  findings:
+  - statement: &gt;-
+      Corroborates Q88MP5/PP_1525 as the DapE-family EC 3.5.1.18 enzyme of the
+      succinylated-DAP route.
+    supporting_text: &gt;-
+      The gene **dapE** (ordered locus **PP_1525**; UniProt **Q88MP5**) of
+      *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125) encodes
+      **succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC
+      3.5.1.18)**
+  - statement: &gt;-
+      No direct Q88MP5 enzymatic or genetic experiment was found, so
+      target-specific kinetics, structure, localization, and physiology remain
+      inferred.
+    supporting_text: &gt;-
+      no direct enzymatic or genetic study of the *P. putida* KT2440 DapE
+      protein itself exists
+  - statement: &gt;-
+      The proposed PP_3786 DapL bypass and ArgD substitution are not adopted:
+      they conflict with the exact Q88MI3 DapC-specific assignment and lack
+      target-strain experimental support.
+core_functions:
+- description: &gt;-
+    Hydrolyzes N-succinyl-LL-diaminopimelate to LL-diaminopimelate and
+    succinate in L-lysine biosynthesis.
+  molecular_function:
+    id: GO:0009014
+    label: succinyl-diaminopimelate desuccinylase activity
+  directly_involved_in:
+  - id: GO:0009085
+    label: L-lysine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/dapE/dapE-uniprot.txt
+    supporting_text: Full=Succinyl-diaminopimelate desuccinylase
+  - reference_id: file:PSEPK/dapE/dapE-deep-research-openscientist.md
+    supporting_text: &gt;-
+      The gene **dapE** (ordered locus **PP_1525**; UniProt **Q88MP5**) of
+      *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125) encodes
+      **succinyl-diaminopimelate desuccinylase (SDAP desuccinylase; EC
+      3.5.1.18)**
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
