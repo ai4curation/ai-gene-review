@@ -143,3 +143,33 @@ polyQ-aggregate hallmark.
   papers are the disease-gene cloning / expression papers; these processes are
   not demonstrated molecular roles of ataxin-3 — over-annotation candidates.
 - **synapse (GO:0045202, IEA GO_REF:0000108)**: inter-ontology inferred; weak.
+
+## Update: Affinage deep-research integration (full-text verified)
+
+Ran the endorsed Affinage integration (`projects/AFFINAGE_EVALUATION/affinage_deep_research.py`)
+producing `ATXN3-deep-research-affinage.md` (gates passed; human; UniProt P54252
+matches; self-eval pairwise=win; 24 citation-anchored findings). Fetched and
+read the full text of the strongest normal-function findings and added two NEW
+annotations (both non-core, distinct from the central DUB activity):
+
+- **double-strand break repair via nonhomologous end joining (GO:0006303)** —
+  WT ATXN3 associates with RNAP II, PNKP and LIG4 and is required for error-free,
+  PNKP-mediated transcription-coupled classical NHEJ of transcribed genes; ATXN3
+  deubiquitinates stalled RNAP II [PMID:32205441 "ATXN3 depletion significantly
+  decreased global transcription, repair of transcribed genes, and error-free
+  double-strand break repair"; PMID:30994454 TCR complex]. This is the real
+  DNA-repair mechanism — distinct from the legacy NER TAS term (GO:0006289,
+  RAD23-interaction-derived) that I flagged as over-annotated.
+- **chromatin organization (GO:0006325)** — catalytic (DUB)-independent control
+  of chromatin organization, DNA replication timing and HDAC3 chromatin
+  recruitment [PMID:36971114 "the role of ATXN3 in chromatin organization during
+  unperturbed conditions, in a catalytic-independent manner"].
+
+Other Affinage substrate-specific DUB findings (HDAC3/PMID:29802126, KLF4, YAP,
+JunB/IRF1/STAT3/HIF-2α→PD-L1, EIF5A2; D2 retrotranslocation/PMID:24196352) are
+instances of the already-annotated general deubiquitinase activity or are
+cancer/disease-context roles; not added as separate process terms to avoid
+substrate-level over-annotation. PMID:17764659 (Atxn3-KO mice accumulate
+ubiquitinated proteins) corroborates the in-vivo DUB/PQC role. New full-text
+references cached: PMID:32205441, PMID:30994454, PMID:36971114, PMID:24196352
+(full text) and PMID:29802126, PMID:17764659 (abstract only).
