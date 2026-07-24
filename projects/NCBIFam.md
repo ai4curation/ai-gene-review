@@ -349,12 +349,13 @@ The curation deliverable mirrors RHEA's [`rhea2go.sssom.yaml`](RHEA/rhea2go.ssso
 GO mapping **we propose for ingestion** — *not* a transcription of NCBI's
 `hmm_PGAP.tsv go_terms`. Each is backed by the model's `family_type`,
 `product_name`, EC, and PMIDs, plus the live UniProtKB propagation gain. A
-**148-row seed** (146 families; the dGTPase family is 3 rows after the clade split
-below, +118 EC-bridge rows — batch 2 (10) + gain-ranked batches 3 (60, gain≥500) and 4
-(48, gain 200–499) — promoted from the candidate set) spanning all three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family
+**250-row seed** (248 families; the dGTPase family is 3 rows after the clade split
+below, +220 EC-bridge rows promoted from the candidate set — batch 2 (10 hand-picked) plus
+gain-ranked batches 3–5 covering the **complete gain ≥ 100 set** (60 at ≥500, 48 at 200–499,
+102 at 100–199)) spanning all three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family
 resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
 
-- **`skos:exactMatch`** (145 rows) — the GO term *is* the family's function; a
+- **`skos:exactMatch`** (247 rows) — the GO term *is* the family's function; a
   ready-to-add `ncbifam2go` row. The enzyme majority are **EC-bridge supported**
   (verified live: `ec2go(EC)` = this GO term, e.g. formamidase EC
   3.5.1.49→`GO:0004328`, β-lactamase EC 3.5.2.6→`GO:0008800`, uridine kinase EC
@@ -427,7 +428,7 @@ CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 
-The 148-row seed is hand-reviewed; the **EC bridge** lets us scale the *same evidence
+The 250-row seed is hand-reviewed; the **EC bridge** lets us scale the *same evidence
 standard* to the whole collection with no per-row human judgement, because the
 agreement of two independent curated resources (NCBI's `go_terms` and GO's `ec2go`)
 *is* the verification. [`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)
@@ -525,7 +526,7 @@ over-annotation.
 - **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
-  148-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
+  250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
   generated at collection scale, the **member-DB attribution re-join done** on the
   repo's annotations, and **four seed rows structurally verified via OpenScientist**
   (DUF1156, dGTPase, IS630, encapsulin).
@@ -539,7 +540,7 @@ over-annotation.
   5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
   repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 148 verified SSSOM rows (145 exactMatch ready-to-add, incl. 5 proposing our own
+  — 250 verified SSSOM rows (247 exactMatch ready-to-add, incl. 5 proposing our own
   specific term over NCBI's broad one and 1 — FtsX — declining a too-specific term;
   2 narrowMatch, the dGTPase NF002326 clade split after structural verification;
   1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with
