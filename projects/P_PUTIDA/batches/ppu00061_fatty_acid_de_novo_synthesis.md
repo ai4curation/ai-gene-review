@@ -23,7 +23,7 @@ existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 - [x] Run full OpenScientist module research.
 - [x] Run full OpenScientist module + `ppu00061` + PSEPK research.
 - [x] Render the module and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
 
