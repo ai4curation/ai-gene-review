@@ -64,6 +64,16 @@ review sets:
    scores it **PLI (paralog over-annotation)** for the atypical, ATPase-dispensable SSZ1
    while it is correct for canonical SSA1/SSQ1 — the exact failure mode foundation-model
    predictors commit.
+4. **Full novel-set adjudication — zero COR.** All 37 novel InterPro2GO predictions
+   hand-graded: 30 CNN, 2 PLI, 3 LSP, 2 UNC, **0 correct-and-novel**. On well-characterized
+   genes a domain predictor makes no discoveries — its residual novel output is paralog
+   errors, generic `protein binding`, or unverifiable terms.
+5. **Genuinely-novel-output predictor (BioReason-Pro) vs InterPro2GO.** The reasoning-LLM
+   predictor produces original free-form calls but at **mean correctness 2.78/5** (48% ≤2/5),
+   with a **systematic localization-to-cytoplasm bias (35% of reviews)** and pseudo-enzyme
+   overstatement — the opposite failure mode to InterPro2GO's safe redundancy. A virtual cell
+   ingesting raw LLM predictions would inherit a cytosol bias that is toxic to a
+   compartment-resolved model.
 
 (See RESULTS.md for caveats: §1–2 measure annotation retention, not novel-prediction
 accuracy; the gene sets are non-random.)
@@ -92,8 +102,8 @@ Last updated: 2026-07-11
 - [x] Extend to predictions **absent** from GOA using `PredictionReview` — InterPro2GO novelty benchmark + hand-curated SSZ1 worked example (PLI paralog over-annotation)
 - [x] Stratify over-annotation by GO aspect (MF/BP/CC) — over-annotation localizes to experimental MF
 - [x] Compare against `genes/SCHPO/` (pombe) as an independent curated set — pattern replicates
-- [ ] Hand-adjudicate the remaining novel InterPro2GO predictions (16 yeast + 21 pombe) into `PredictionReview` files
-- [ ] Extend to a predictor with genuinely novel output (PANTHER/IBA propagation, ProtNLM) beyond domain-redundant InterPro2GO
+- [x] Hand-adjudicate all 37 novel InterPro2GO predictions → [adjudication](VIRTUAL_YEAST/novel_predictions_adjudication.md) (30 CNN, 2 PLI, 3 LSP, 2 UNC, **0 COR**); validated exemplars for SSZ1, aah1 (PLI) and slp1 (CNN)
+- [x] Extend to a genuinely-novel-output predictor — BioReason-Pro (reasoning-LLM) vs InterPro2GO comparison over 23 pombe reviews (mean correctness 2.78/5; 35% localization-to-cytoplasm bias)
 
 ### 4. Align curation to the paper's 8 functional modules *(prioritization)*
 - [ ] Ground each module to a GO-slim term set via the OLS MCP (do **not** hand-guess GO IDs)

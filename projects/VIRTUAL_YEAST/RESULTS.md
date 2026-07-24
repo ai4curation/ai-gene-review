@@ -101,6 +101,69 @@ term from SSZ1 (it carries `GO:0044183` protein folding chaperone + `GO:0051083`
 folding instead). `GO:0005524` (ATP binding) for the same gene is scored **CNN** (correct,
 already in GOA) — SSZ1 does bind ATP; it just doesn't hydrolyze it productively.
 
+## 5. Full adjudication of the novel set — zero COR
+
+All 37 novel InterPro2GO predictions (16 yeast + 21 pombe) are hand-adjudicated in
+[`novel_predictions_adjudication.md`](novel_predictions_adjudication.md), grounded in each
+gene's curated function:
+
+| assessment | n |
+|---|---|
+| CNN (correct, already curated) | 30 |
+| PLI (paralog/subfamily error) | 2 — SSZ1, aah1 |
+| LSP (correct but too generic) | 3 — ACL4, cdc12, ral2 |
+| UNC (unverifiable) | 2 — YGR117C, pol5 |
+| **COR (correct + novel)** | **0** |
+
+**Zero COR.** On well-characterized genes, InterPro2GO yields no correct-and-novel calls:
+correct predictions are redundant with curation (CNN), and the residual novel output is
+paralog error (`aah1`: GH13 α-amylase predicted for a curated 4-α-glucanotransferase),
+uninformative generic terms (bare `protein binding`), or unverifiable. A second validated
+paralog case joins SSZ1:
+[`genes/SCHPO/aah1/…`](../../genes/SCHPO/aah1/aah1-interpro2go-predictions-review.yaml) (PLI),
+alongside a clean correct call
+[`genes/SCHPO/slp1/…`](../../genes/SCHPO/slp1/slp1-interpro2go-predictions-review.yaml) (CNN).
+
+## 6. A predictor with genuinely novel output: BioReason-Pro vs InterPro2GO
+
+InterPro2GO can only emit terms in the domain→GO table, so its novelty is structurally
+capped. **BioReason-Pro (RL)** is a reasoning-LLM predictor that emits free GO calls from a
+chain-of-thought over sequence + domains — genuinely un-constrained output. The repo has 23
+curated pombe BioReason reviews (`genes/SCHPO/*/*-bioreason-rl-review.md`); aggregated by
+[`bioreason_summary.py`](bioreason_summary.py):
+
+| metric | value |
+|---|---|
+| reviews | 23 |
+| mean correctness | **2.78 / 5** |
+| mean completeness | 2.30 / 5 |
+| reviews scoring ≤2/5 correctness | **11 / 23 (48%)** |
+
+Dominant curator-flagged error signatures:
+
+| n | signature | schema error type |
+|---|---|---|
+| 8 (35%) | localization defaulted to cytoplasm | `LOCALIZATION_DEFAULT` |
+| 2 | catalytic activity overstated on a pseudo-enzyme | `PSEUDOENZYME_OVERANNOTATION` |
+| 2 | function specificity overstated | — |
+| 1 | repeats/reinforces an InterPro2GO error (cts2) | — |
+
+**The contrast is the point for AIVC evaluation.** The two predictor classes fail in
+opposite ways:
+
+- **InterPro2GO (domain-based):** high precision but ~90–94% redundant; residual errors are
+  paralog over-annotations (SSZ1, aah1). Safe, unoriginal.
+- **BioReason (reasoning-LLM):** genuinely novel free-form output, but mean correctness only
+  2.78/5 with 48% of calls ≤2/5, a **systematic localization-to-cytoplasm bias (35%)**, and
+  catalytic overstatement on pseudo-enzymes — and in ≥1 case it *inherited* an InterPro2GO
+  error instead of correcting it. Original, but unreliable.
+
+This is precisely the prediction-quality characterization the virtual-yeast Perspective
+never provides for its foundation-model building blocks (Evo/ESM/PANTHER). A virtual cell
+that ingests raw foundation-model predictions as priors would import a strong
+localization-to-cytosol bias — directly harmful for a model whose whole premise is
+compartment-resolved spatial architecture.
+
 ## Caveats
 
 1. §1–2 measure **retention of existing annotations**, not novel-prediction accuracy; §3–4
