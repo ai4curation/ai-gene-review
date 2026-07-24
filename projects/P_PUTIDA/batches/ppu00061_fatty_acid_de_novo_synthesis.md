@@ -16,7 +16,7 @@ existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 ## Workflow
 
 - [x] Fetch the 17 gene records not already present.
-- [ ] Run full OpenScientist research for all 18 selected genes.
+- [x] Run full OpenScientist research for all 18 selected genes.
 - [x] Curate all selected gene reviews, including every GOA row.
 - [x] Create and validate the species-neutral
   `type_ii_fatty_acid_synthesis` module.
@@ -39,7 +39,7 @@ existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 | [x] | `PP_4545` | PP_4545 | Q88EC1 | FabH2 medium-chain-acyl-CoA initiation |
 | [x] | `PP_0262` | PP_0262 | Q88R72 | MadB malonyl-ACP decarboxylase initiation |
 | [x] | `fabB` | PP_4175 | Q88FC3 | KAS I condensation and unsaturated branch |
-| [ ] | `fabF` | PP_1916 | Q88LL4 | KAS II elongation |
+| [x] | `fabF` | PP_1916 | Q88LL4 | KAS II elongation |
 | [x] | `PP_3303` | PP_3303 | Q88HQ0 | Second KAS II candidate |
 | [x] | `fabG` | PP_1914 | Q88LL6 | 3-oxoacyl-ACP reduction |
 | [x] | `PP_0581` | PP_0581 | Q88QB3 | Additional 3-oxoacyl-ACP reductase candidate |
