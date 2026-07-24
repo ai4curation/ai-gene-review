@@ -23,7 +23,7 @@ peptide cross-linking, which form a distinct multi-complex module.
 - [x] Run full OpenScientist module research.
 - [x] Run full OpenScientist module + `ppu00550` + PSEPK research.
 - [x] Render the module and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
 
