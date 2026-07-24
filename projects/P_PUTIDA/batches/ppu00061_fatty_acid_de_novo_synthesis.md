@@ -46,7 +46,7 @@ existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
 | [x] | `fabA` | PP_4174 | Q88FC4 | Dehydration/isomerization for cis-unsaturated synthesis |
 | [x] | `fabZ` | PP_1602 | Q88MG9 | 3-hydroxyacyl-ACP dehydratase candidate |
 | [x] | `fabV` | PP_4635 | Q88E33 | NADH-dependent enoyl-ACP reductase |
-| [ ] | `PP_1852` | PP_1852 | Q88LS6 | NADPH-dependent enoyl-ACP reductase candidate |
+| [x] | `PP_1852` | PP_1852 | Q88LS6 | unresolved SDR reductase candidate |
 
 ## Boundary Decisions
 
