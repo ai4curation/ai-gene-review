@@ -39,7 +39,7 @@ the relevant leaf annoton.
 | [x] | `paaZ` | PP_3270 | Q88HT3 | Oxepin-CoA hydrolase and semialdehyde dehydrogenase |
 | [ ] | `paaF` | PP_3284 | Q88HR9 | Lower-pathway enoyl-CoA hydratase/isomerase |
 | [x] | `paaH` | PP_3282 | Q88HS1 | 3-hydroxyadipyl-CoA dehydrogenase |
-| [ ] | `paaJ` | PP_3280 | Q88HS3 | Lower-pathway thiolase |
+| [x] | `paaJ` | PP_3280 | Q88HS3 | Lower-pathway thiolase |
 
 ## Boundary Decisions
 
