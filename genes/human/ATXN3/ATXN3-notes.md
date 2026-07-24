@@ -150,7 +150,9 @@ Ran the endorsed Affinage integration (`projects/AFFINAGE_EVALUATION/affinage_de
 producing `ATXN3-deep-research-affinage.md` (gates passed; human; UniProt P54252
 matches; self-eval pairwise=win; 24 citation-anchored findings). Fetched and
 read the full text of the strongest normal-function findings and added two NEW
-annotations (both non-core, distinct from the central DUB activity):
+annotations. The DSB-repair role has since been promoted to a core
+function (nuclear DUB activity on stalled RNAP II); the chromatin role is
+kept non-core (catalytic-independent):
 
 - **double-strand break repair via nonhomologous end joining (GO:0006303)** —
   WT ATXN3 associates with RNAP II, PNKP and LIG4 and is required for error-free,
