@@ -17,7 +17,7 @@ the relevant leaf annoton.
 ## Workflow
 
 - [x] Fetch all 11 selected gene records.
-- [ ] Run full OpenScientist research for each selected gene.
+- [x] Run full OpenScientist research for each selected gene.
 - [x] Curate all selected gene reviews, including every GOA row.
 - [x] Create and validate the species-neutral `phenylacetate_catabolism` module.
 - [x] Run full OpenScientist module research.
@@ -37,7 +37,7 @@ the relevant leaf annoton.
 | [x] | `paaE` | PP_3274 | Q88HS9 | Epoxidase reductase subunit |
 | [x] | `paaG` | PP_3283 | Q88HS0 | 1,2-epoxyphenylacetyl-CoA isomerase |
 | [x] | `paaZ` | PP_3270 | Q88HT3 | Oxepin-CoA hydrolase and semialdehyde dehydrogenase |
-| [ ] | `paaF` | PP_3284 | Q88HR9 | Lower-pathway enoyl-CoA hydratase/isomerase |
+| [x] | `paaF` | PP_3284 | Q88HR9 | Lower-pathway enoyl-CoA hydratase/isomerase |
 | [x] | `paaH` | PP_3282 | Q88HS1 | 3-hydroxyadipyl-CoA dehydrogenase |
 | [x] | `paaJ` | PP_3280 | Q88HS3 | Lower-pathway thiolase |
 
