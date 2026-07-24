@@ -16,7 +16,7 @@ peptide cross-linking, which form a distinct multi-complex module.
 ## Workflow
 
 - [x] Fetch the nine gene records not already present.
-- [ ] Run full OpenScientist research for all ten selected genes.
+- [x] Run full OpenScientist research for all ten selected genes.
 - [x] Curate all selected gene reviews, including every GOA row.
 - [x] Create and validate the species-neutral
   `peptidoglycan_precursor_biosynthesis` module.
@@ -36,7 +36,7 @@ peptide cross-linking, which form a distinct multi-complex module.
 | [x] | `murE` | PP_1332 | Q88N81 | meso-diaminopimelate addition |
 | [x] | `ddlB` | PP_1339 | Q88N74 | D-Ala-D-Ala dipeptide synthesis |
 | [x] | `murF` | PP_1333 | Q88N80 | D-Ala-D-Ala addition to UDP-MurNAc-tripeptide |
-| [ ] | `mraY` | PP_1334 | Q88N79 | Lipid I synthesis |
+| [x] | `mraY` | PP_1334 | Q88N79 | Lipid I synthesis |
 | [x] | `murG` | PP_1337 | Q88N76 | Lipid II synthesis |
 | [x] | `murJ` | PP_0601 | Q88Q94 | Lipid II translocation |
 
