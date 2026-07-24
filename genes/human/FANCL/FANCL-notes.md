@@ -73,3 +73,24 @@ but it is actually a RING-type zinc finger; PHD fingers have no ubiquitin ligase
   "Binding to a ubiquitin conjugating enzyme, any of the E2 proteins").
 - BP `DNA repair` (GO:0006281), `DNA damage response` (GO:0006974), `protein ubiquitination`
   (GO:0016567): correct general terms, ACCEPT.
+- MF `ubiquitin binding` (GO:0043130): NEW (not in GOA). ELF (E2-like fold) domain binds
+  free ubiquitin non-covalently via the Ile44 patch; dispensable in vitro but required for
+  efficient DNA-damage-induced FANCD2 monoubiquitination in vivo. Regulatory/non-core.
+  [PMID:26149689 "the ELF domain of FANCL is required to mediate a non-covalent interaction
+  between FANCL and ubiquitin"]; [PMID:26149689 "the ELF domain is required to promote
+  efficient DNA damage-induced FANCD2 monoubiquitination in vertebrate cells, suggesting an
+  important function of ubiquitin binding by FANCL in vivo"]. Verified GO:0043130 is a
+  molecular_function via QuickGO (not obsolete). Added during Affinage reconciliation.
+
+## Affinage reconciliation (2026-07)
+
+Affinage record (run 2026-06-09, 22 discoveries, self-eval win) is a PMID-dense narrative
+fully consistent with AIGR on the core biology. Its `mechanism_profile` GO layer is coarse
+(GO:0016874 ligase activity, GO:0140096 catalytic activity acting on protein, GO:0031386
+protein tag activity; nucleus/nuclear chromosome/mitochondrion) — do not import directly;
+AIGR's GO:0061630 + GO:0031624 + specific locations are more precise. Incorporated
+PMID:26149689 (ELF ubiquitin binding, above) as the one genuine MF the review lacked.
+Affinage's moonlighting claims — K11-linked β-catenin/Wnt (PMID:22653977), ligase-independent
+Parkin mitophagy (PMID:35644338), germ-cell/reproduction phenotypes (PMID:12417526,
+PMID:20661450) — are single-study and/or non-human organism/tissue phenotypes; AIGR correctly
+scopes them out of the human GO core-function set. Not added as annotations.
