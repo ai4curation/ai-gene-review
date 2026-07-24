@@ -55,3 +55,29 @@ the review was found to be biologically and curatorially sound.
   existing dedicated adaptor-activity annotation.
 
 **Conclusion:** review passes QA; no edits required.
+
+## 2026-07-24 — Affinage reconciliation (conservative additions)
+
+Reconciled the Affinage deep-research record (run 2026-06-10, 47 PMIDs, self-eval win)
+against the QA'd review. Most Affinage PMIDs were already cited/adjudicated. Two genuine
+gaps were filled conservatively; no existing decision was weakened.
+
+- **PMID:27500492** (Bluteau et al. 2016, J Clin Invest; abstract-only) — canonical FANCV /
+  Fanconi anemia paper. The `description` asserted the FANCV identity but had **no citation**
+  anywhere in the review. Added to `references` (reference_review HIGH / VERIFIED) and attached
+  as a verbatim `supported_by` on the existing GO:0006281 DNA repair (IBA) annotation.
+- **PMID:36075897** (Paniagua et al. 2022, Nat Commun; full text) — MAD2L2 protects/restarts
+  stalled replication forks by limiting MRE11-dependent resection, **shieldin-independently** and
+  **REV3L/REV1-dependently**. A well-evidenced function absent from GOA and the review. Added to
+  `references` (HIGH / VERIFIED) and captured as **one NEW annotation**: GO:0110027 "negative
+  regulation of DNA strand resection involved in replication fork processing" (evidence IMP),
+  verified via OLS as a real, non-obsolete biological_process term, correctly branched. Two verbatim
+  `supported_by` quotes attached.
+
+Validation after edits: `uv run ai-gene-review validate genes/human/MAD2L2/MAD2L2-ai-review.yaml`
+→ ✓ Valid. Evaluation write-up: `projects/AFFINAGE_EVALUATION/results/fa-cohort/MAD2L2.md`.
+
+Deliberately NOT imported (conservative): Affinage's coarse `mechanism_profile` GO layer
+(including an unsupported GO:0003677 DNA binding), and mouse-PGC / regulation-of-MAD2L2 /
+single-group recent human findings (e.g. TRIP13-p31comet disassembly, CHAMP1 competition,
+p53 signaling) — real but peripheral to the human core functions.
