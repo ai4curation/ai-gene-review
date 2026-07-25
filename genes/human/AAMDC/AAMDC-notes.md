@@ -45,14 +45,18 @@ AAMDC is `ECO:0000250` (by similarity) for the same reason
 
 The five-partner block from PMID:32814053 is the giveaway. That paper is *"Interactome
 Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread
-Protein Aggregation in Affected Brains"* — its bait panel is aggregation-prone
-neurodegeneration proteins, and by its own title aggregation is pervasive in the dataset.
+Protein Aggregation in Affected Brains"* — but note that title phrase refers to
+aggregation seen in postmortem patient brain tissue, not to the interaction dataset. The
+argument against these five rests on the screen design instead: one systematic Y2H pass over
+~500 neurodegeneration-related baits, with a single small uncharacterised protein scoring
+against five of them and no independent replication or follow-up for any pair.
 A single small uncharacterised protein scoring against APP, huntingtin, ataxin-3, dynamin-2
 and GDAP1 in one screen is the signature of a sticky/promiscuous hit, not five distinct
 biological interactions. None has any follow-up, and AAMDC has no described role in
 neurodegeneration.
 
-The remaining three are unreplicated single Y2H hits.
+The remaining three are single-publication Y2H hits (UniProt's `NbExp=3` counts assay
+replicates within one study, not independent studies).
 
 **The most telling observation: not one of the eight recovered RABGAP1L or RAB7A** — the only
 AAMDC interaction with functional follow-up in the literature. The GOA binding record for this
