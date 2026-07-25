@@ -80,6 +80,15 @@ and promoted `PP_0860`/`PP_1703` from KEGG context. That inference was not
 imported: PMID:23794620 remains the direct Pseudomonas evidence for an
 FprA/ferredoxin-fed system, and `PP_0860` remains unresolved.
 
+The separate `PP_0860` report reached the opposite and better-supported
+architecture-level conclusion. It identified an N-terminal polytopic
+PepSY-associated membrane region fused to a CysJ-like diflavin reductase
+module, consistent with the target record's iron-regulated
+inner-membrane-protein PANTHER placement rather than a canonical soluble CysJ
+subunit. Its proposed ferric-siderophore or membrane-partner acceptor remains
+an untested hypothesis, so the report supports exclusion from this module but
+does not justify a new substrate-specific molecular function.
+
 Exact local family grounding uses PTHR43196:SF1 for CysD,
 PTHR47878:SF1 for Fpr-I, and specific InterPro families for CysN, CysH, and
 CysI where the PSEPK PANTHER labels are misleadingly broad. The reusable module
