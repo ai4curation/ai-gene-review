@@ -23,7 +23,7 @@ This is the largest gap between literature and annotation I have hit in this cam
 
 ## What AAGAB actually does
 
-AAGAB is the dedicated **assembly chaperone for heterotetrameric AP-type clathrin adaptor
+AAGAB is the dedicated **assembly chaperone for heterotetrameric AP-type membrane coat adaptor
 complexes**. It is not a folding chaperone — the subunits are already folded — it enforces an
 *ordered assembly pathway* and protects unassembled intermediates from degradation.
 
