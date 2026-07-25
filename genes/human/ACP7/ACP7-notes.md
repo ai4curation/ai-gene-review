@@ -3,9 +3,11 @@
 PAINT no-IBA project review, using the `affinage` deep-research provider plus UniProt Q6ZNF0
 and the GOA TSV.
 
-## A completely predicted gene
+## Uncharacterised, not unstudied
 
-Four annotations, **all IEA**, and no experimental data of any kind exists for this protein.
+Four annotations, **all IEA**, and **no functional or biochemical data** exists for this protein.
+The protein itself is real — UniProt records `PE 1: Evidence at protein level` with proteomics
+identification — and there *is* a primary paper.
 
 The provenance is worth stating precisely, because it applies to every annotation:
 
@@ -21,14 +23,28 @@ The provenance is worth stating precisely, because it applies to every annotatio
 *Phaseolus vulgaris*.** A plant enzyme is a distant source for a human function assignment, and
 it is the sole source for this gene's catalytic activity, EC number and both cofactors.
 
-Two independent corroborations that this is genuine darkness rather than a gap in my searching:
+## Correction: the kidney bean template is a *deliberate published choice*
 
-- UniProt's own line: `PAN-GO; Q6ZNF0; 0 GO annotations based on evolutionary models`
-- The affinage record returns **"No mechanistic discoveries found in literature"** with an empty
-  citation list — the only gene in this campaign so far for which the provider found *nothing*.
+An earlier draft of this review asserted three times that no primary literature exists, reasoning
+from an empty affinage record. **That was wrong**, and the refutation was in the UniProt file the
+review was itself citing: reference [4] is **PMID:16793224**, *"Identification and molecular
+modeling of a novel, plant-like, human purple acid phosphatase"* — the `ECO:0000303` source for
+UniProt's own "Purple acid phosphatase long form" AltName.
 
-That empty record is informative rather than useless. Affinage covers every human protein-coding
-gene, so an empty result is positive evidence that the primary literature is absent.
+**An empty affinage record is evidence about affinage's coverage, not proof that no literature
+exists.** The correct reading is narrower: affinage found no *mechanistic* discoveries, which fits
+a gene whose only paper is a bioinformatic identification plus a structural model rather than a
+functional study.
+
+And the paper strengthens the review rather than merely correcting it. It argues ACP7 is the
+founding member of a **novel plant-like PAP subfamily** in animals, and builds a structural model
+of the human enzyme **on the red kidney bean structure specifically**, showing the catalytic
+centre is present. So P80366 is not an arbitrary cross-kingdom hop — it is the considered template
+for a protein argued to be plant-like. That makes the `ECO:0000250` chain far better justified
+than the first draft implied.
+
+UniProt's `PAN-GO; Q6ZNF0; 0 GO annotations based on evolutionary models` still stands, and is
+the accurate statement of what is missing: evolutionary-model annotation, and functional data.
 
 ## Actions
 
