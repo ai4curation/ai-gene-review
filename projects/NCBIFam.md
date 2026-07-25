@@ -355,7 +355,7 @@ gain-ranked batches 3–5 covering the **complete gain ≥ 100 set** (60 at ≥5
 102 at 100–199)) spanning all three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family
 resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
 
-- **`skos:exactMatch`** (247 rows) — the GO term *is* the family's function; a
+- **`skos:exactMatch`** (246 rows) — the GO term *is* the family's function; a
   ready-to-add `ncbifam2go` row. The enzyme majority are **EC-bridge supported**
   (verified live: `ec2go(EC)` = this GO term, e.g. formamidase EC
   3.5.1.49→`GO:0004328`, β-lactamase EC 3.5.2.6→`GO:0008800`, uridine kinase EC
@@ -372,9 +372,12 @@ resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
   and broad `GO:0106375` deoxynucleoside-triphosphate hydrolase — are recorded as
   `narrowMatch` (resolve per-member, don't blanket-propagate). See the split rationale under
   "Structural verification" (‡‡ neighbourhood) above.
-- **`skos:broadMatch`** (1 row) — reserved for the case where **no more-specific GO
-  term exists to adopt**: VirB5 → `type IV secretion system complex` (a subunit
-  `part_of` the whole complex, no VirB5-specific CC term).
+- **`skos:broadMatch`** (2 rows) — a **subunit/part → whole** relation, where the object
+  is broader than the subject's own role (so *not* a blanket-propagatable exactMatch):
+  VirB5 → `type IV secretion system complex` (a subunit `part_of` the whole complex), and
+  TIGR02694, the arsenate reductase **Rieske electron-transfer small subunit** → the
+  whole-enzyme `arsenate reductase (azurin) activity` (downgraded from exactMatch per the
+  PR #2214 review — the catalytic Mo subunit is the large one).
 
 **We suggest our own term where NCBI's was too broad — and that unmasks the real
 gain.** For five families NCBI's `go_terms` gave only a broad parent — twice the
@@ -551,10 +554,12 @@ over-annotation.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
   — 250 SSSOM rows in **two tiers**: ~40 fully hand-curated (bespoke rationale, altitude
   judgement) + 210 EC-bridge rows bulk-promoted from the candidate set (batches 3–5,
-  uniform generated comments, auto-verified to a fixed bar). Predicates: 247 exactMatch
+  uniform generated comments, auto-verified to a fixed bar). Predicates: 246 exactMatch
   (incl. 5 proposing our own specific term over NCBI's broad one and 1 — FtsX — declining
-  a too-specific term; 2 narrowMatch, the dGTPase NF002326 clade split after structural
-  verification; 1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with
+  a too-specific term), plus 2 narrowMatch (the dGTPase NF002326 clade split after structural
+  verification) and 2 broadMatch (VirB5 → T4SS complex, and the arsenate reductase Rieske
+  small subunit → whole-enzyme activity — a subunit→whole relation, not blanket-propagatable).
+  Spanning MF/BP/CC, each with
   live propagation gain; **passes** `just validate-ncbifam-mappings`.
 - **Scaled candidates**: [`NCBIFam/ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv)
   — 2,503 generated EC-bridge-confirmed rows (2,455 models; `ncbifam2go_candidates.py`),
