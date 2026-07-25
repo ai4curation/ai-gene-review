@@ -23,7 +23,8 @@ autolink_gene_symbols: false
 - [x] Add exact UniProt exemplars and checked PANTHER family identifiers.
 - [x] Record exact TreeGrafter PTNs without promoting them to PAINT ancestral nodes.
 - [ ] Run gene-level OpenScientist research.
-- [ ] Run generic module-level OpenScientist research.
+- [x] Attempt generic module-level OpenScientist research; the corrected
+  request exhausted its 7,200-second provider timeout without a report.
 - [x] Run module + pathway + PSEPK OpenScientist research.
 - [x] Reconcile generated reports with the manual curation.
 - [x] Validate gene and module YAML.
@@ -63,3 +64,9 @@ Cra/FruR regulation, PP_3443-dependent PEP support, and PTS(Ntr) cross-talk are
 documented context but are outside the catalytic module. Other `ppu00051`
 members belong to alginate, mannose, fucose, or downstream central-carbon
 modules and were not pulled into this focused batch.
+
+The generic OpenScientist request was allowed to run for the full configured
+7,200 seconds with three iterations but timed out in the provider queue. No
+generic report is cited or represented as evidence. The completed
+module-plus-`ppu00051`-plus-PSEPK report was checked against the primary
+KT2440 evidence above.
