@@ -49,11 +49,8 @@ Protein Aggregation in Affected Brains"* — but note that title phrase refers t
 aggregation seen in postmortem patient brain tissue, not to the interaction dataset. The
 argument against these five rests on the screen design instead: one systematic Y2H pass over
 ~500 neurodegeneration-related baits, with a single small uncharacterised protein scoring
-against five of them and no independent replication or follow-up for any pair.
-A single small uncharacterised protein scoring against APP, huntingtin, ataxin-3, dynamin-2
-and GDAP1 in one screen is the signature of a sticky/promiscuous hit, not five distinct
-biological interactions. None has any follow-up, and AAMDC has no described role in
-neurodegeneration.
+against five of them and no independent replication or follow-up for any pair. AAMDC has no
+described role in neurodegeneration.
 
 The remaining three are single-publication Y2H hits (UniProt's `NbExp=3` counts assay
 replicates within one study, not independent studies).
@@ -95,8 +92,8 @@ consequence, not a biochemical activity. I have deliberately **not** invented an
 ### Tested, not just asserted
 
 A negative claim deserves evidence, so I ran a family-wide analysis
-(`AAMDC-bioinformatics/analyze_mth938.py` → `RESULTS.md`; fetched live from
-UniProt/InterPro/QuickGO, nothing hardcoded, re-runnable). Enumerating every reviewed
+(`AAMDC-bioinformatics/analyze_mth938.py` → `RESULTS.md`; every figure fetched at run time
+from the InterPro, UniProt and QuickGO REST APIs, re-runnable). Enumerating every reviewed
 Swiss-Prot member of AAMDC's Pfam family **PF04430 — aptly named DUF498, "domain of unknown
 function"**:
 
