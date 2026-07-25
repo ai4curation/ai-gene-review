@@ -35,8 +35,8 @@ the broad TSV for later pathway batches.
 - [ ] Complete OpenScientist gene-level research.
 - [ ] Complete generic module OpenScientist research.
 - [x] Complete module + `ppu00310` + PSEPK OpenScientist research.
-- [ ] Integrate useful research findings without treating provider output as authority.
-- [ ] Validate and render the module, gene reviews, and batch page.
+- [x] Integrate useful research findings without treating provider output as authority.
+- [x] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
 
 ## Focused Genes
