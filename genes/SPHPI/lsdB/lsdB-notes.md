@@ -18,7 +18,8 @@ catabolic process (GO:0046274). Yet it *also* carries the **wrong TreeGrafter ca
 with the gene's own experimental annotations.
 
 GO:0050054 (lignostilbene α,β-dioxygenase activity) is the **existing leaf term** that the proposed
-grouping *stilbene α,β-dioxygenase activity* would parent, alongside the resveratrol leaf GO:7770086.
+grouping *stilbene α,β-dioxygenase activity* would parent, alongside the resveratrol leaf GO:7770086
+([go-ontology #32332](https://github.com/geneontology/go-ontology/pull/32332), merged 2026-07-17).
 
 ## Decisions
 - REMOVE the two TreeGrafter carotenoid terms (contradicted by own IDA).

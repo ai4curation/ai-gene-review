@@ -36,11 +36,12 @@ is a stilbene cleavage oxygenase, not a carotenoid enzyme.
 
 | GO term | Evidence | Decision | Rationale |
 |---|---|---|---|
-| GO:0010436 carotenoid dioxygenase activity | IEA (TreeGrafter) | **REMOVE** | NOV1 cleaves stilbenes (resveratrol, isoeugenol), not carotenoids; TreeGrafter over-propagation. Correct specific term is GO:7770086 resveratrol dioxygenase activity. |
+| GO:0010436 carotenoid dioxygenase activity | IEA (TreeGrafter) | **REMOVE** | NOV1 cleaves stilbenes (resveratrol, isoeugenol), not carotenoids; TreeGrafter over-propagation. Correct specific term is GO:7770086 resveratrol dioxygenase activity ([go-ontology #32332](https://github.com/geneontology/go-ontology/pull/32332), merged 2026-07-17). |
 | GO:0016121 carotene catabolic process | IEA (TreeGrafter) | **MODIFY → GO:0046272 stilbene catabolic process** | Wrong substrate class; NOV1 acts in stilbene/lignin-derived compound catabolism. |
 | GO:0016702 oxidoreductase (2 O atoms) | IEA (InterPro2GO) | **ACCEPT** | Correct general dioxygenase MF. |
 
-Core function: resveratrol/stilbene cleavage dioxygenase (best specific term GO:7770086; parent
+Core function: resveratrol/stilbene cleavage dioxygenase (best specific term GO:7770086, added by
+[go-ontology #32332](https://github.com/geneontology/go-ontology/pull/32332) merged 2026-07-17; parent
 GO:0016702), non-heme four-His Fe(II), in stilbene catabolic process. Flag the TreeGrafter rule
 (GO_REF:0000118) that assigns carotenoid activity to the SCO clade for correction (cf. the TreeGrafter
 and IBA_REVIEW projects).

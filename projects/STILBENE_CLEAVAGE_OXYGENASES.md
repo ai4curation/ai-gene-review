@@ -72,8 +72,16 @@ this work:
 - **GO:1905594 "resveratrol binding" is being obsoleted** (go-ontology #32321/#32333) as ill-defined —
   its only two experimental annotations were CAO-1 (Q7S860, where resveratrol is a **substrate**) and
   NQO2 (P16083, where resveratrol is an **inhibitor**), which the single term conflated.
-- **GO:7770086 "resveratrol dioxygenase activity"** was added (go-ontology #32332; RHEA:73735; parent
-  GO:0016702), explicitly avoiding the carotenoid-dioxygenase branch.
+- **GO:7770086 "resveratrol dioxygenase activity"** was added (go-ontology
+  [#32332](https://github.com/geneontology/go-ontology/pull/32332), merged 2026-07-17; RHEA:73735;
+  parent GO:0016702), explicitly avoiding the carotenoid-dioxygenase branch. The term is live and
+  resolvable —
+  [QuickGO](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO%3A7770086) returns it as
+  non-obsolete with definition *"trans-resveratrol + O2 = 3,5-dihydroxybenzaldehyde +
+  4-hydroxybenzaldehyde"* and xrefs RHEA:73735 / PMID:28493664. It is **not** yet in the oaklib
+  ontology snapshot this repo validates against, so structured `molecular_function` slots in the
+  gene reviews still carry the validated parent GO:0016702 and name GO:7770086 in prose; they
+  should be switched once the snapshot catches up.
 - This project proposes a **grouping term** — provisionally *"stilbene α,β-dioxygenase activity"* (the
   literature-conventional name; "hydroxystilbene α,β-dioxygenase" is the scope-accurate descriptive
   variant) — as the **parent** of GO:7770086 and GO:0050054 (lignostilbene α,β-dioxygenase), to
