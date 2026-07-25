@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lipA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lipA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DM5" target="_blank" class="term-link">
+                        Q88DM5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lipA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DM5" data-a="DESCRIPTION: lipA encodes a radical-SAM lipoyl synthase that in..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>lipA encodes a radical-SAM lipoyl synthase that inserts sulfur atoms at the C6 and C8 positions of octanoyl groups already attached to lipoyl-domain lysine residues. This second step of endogenous protein lipoylation converts octanoylated domains into the mature protein-bound lipoyl cofactor used by lipoate-dependent enzyme complexes.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic catalytic activity is true but uninformative for LipA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific lipoate synthase term captures the evolved activity, making this broad catalytic parent redundant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003824	catalytic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is plausible context for bacterial LipA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places the protein in the cytoplasm, but localization is secondary to its radical-SAM lipoate synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000255|HAMAP-Rule:MF_00206}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009107" target="_blank" class="term-link">
+                                    GO:0009107
+                                </a>
+                            </span>
+                            <span class="term-label">lipoate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0009107" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LipA participates directly in endogenous lipoate biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LipA is the sulfur-insertion reaction in the endogenous two-step route that produces protein-bound lipoyl groups.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- PATHWAY: Protein modification; protein lipoylation via endogenous</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                    GO:0009249
+                                </a>
+                            </span>
+                            <span class="term-label">protein lipoylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0009249" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein lipoylation is the immediate biological process for LipA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme directly converts octanoylated lipoyl-domain lysines into lipoylated derivatives.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       lipoyl domains of lipoate-dependent enzymes, thereby converting the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016783" target="_blank" class="term-link">
+                                    GO:0016783
+                                </a>
+                            </span>
+                            <span class="term-label">sulfurtransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0016783" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sulfurtransferase activity is a correct but redundant parent term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016783 is an ancestor of the already annotated lipoate synthase activity, which captures the same sulfur-insertion chemistry with the physiological substrate context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">catalyzes the insertion of two sulfur atoms at the unactivated C6 and C8 positions of a protein-bound octanoyl chain to produce the lipoyl cofactor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016992" target="_blank" class="term-link">
+                                    GO:0016992
+                                </a>
+                            </span>
+                            <span class="term-label">lipoate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0016992" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lipoate synthase activity is the specific LipA catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the EC 2.8.1.8/Rhea reaction that converts octanoyl-lysyl protein to dihydrolipoyl-lysyl protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Iron-sulfur cluster binding is correct but less precise than the 4Fe-4S term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The entry specifically records two 4Fe-4S clusters, so this generic iron-sulfur-cluster parent is redundant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       Note=Binds 2 [4Fe-4S] clusters per subunit. One cluster is coordinated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM5" data-a="GO:0051539" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binding two 4Fe-4S clusters is required mechanistic context for LipA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One cluster supports radical-SAM chemistry and the second supplies sulfur, but cluster binding is subordinate to the specific catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lipA/lipA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       Note=Binds 2 [4Fe-4S] clusters per subunit. One cluster is coordinated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Radical-SAM lipoate synthase that sulfurates octanoylated lipoyl-domain lysines to form mature protein-bound lipoyl groups.</h3>
+                <span class="vote-buttons" data-g="Q88DM5" data-a="FUNCTION: Radical-SAM lipoate synthase that sulfurates octan..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016992" target="_blank" class="term-link">
+                            lipoate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009249" target="_blank" class="term-link">
+                                protein lipoylation
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009107" target="_blank" class="term-link">
+                                lipoate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lipA/lipA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lipA/lipA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88DM5 for lipA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88DM5 as the radical-SAM sulfur-insertion enzyme in endogenous protein lipoylation.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lipA/lipA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for lipA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the lipoate synthase, lipoate biosynthesis, and protein-lipoylation annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lipA/lipA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research report for lipA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports the radical-SAM lipoate synthase assignment, two 4Fe-4S-cluster architecture, and direct placement after LipB.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct biochemical characterization of Q88DM5 was identified, so detailed mechanistic and client-specific claims remain ortholog-derived.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute Q88DM5 with defined Pseudomonas putida octanoylated GcvH and E2 lipoyl domains to confirm sulfur insertion and client range directly.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DM5" data-a="EXPERIMENT: Reconstitute Q88DM5 with defined Pseudomonas putid..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Delete lipA and quantify lipoylation and activity of the major lipoate-dependent complexes, with native-gene complementation.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DM5" data-a="EXPERIMENT: Delete lipA and quantify lipoylation and activity ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lipA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DM5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *lipA* (PP_4800, UniProt Q88DM5) — Lipoyl Synthase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T16:22:28.223500</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lipA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lipA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-lipa-pp_4800-uniprot-q88dm5-lipoyl-synthase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>lipA</em> (PP_4800, UniProt Q88DM5) — Lipoyl Synthase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>lipA</strong> (ordered locus <strong>PP_4800</strong>; UniProt <strong>Q88DM5</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>lipoyl synthase (LipA; EC 2.8.1.8)</strong>, the enzyme that catalyzes the final, committed step of <em>de novo</em> lipoic-acid (lipoyl-cofactor) biosynthesis. LipA is a <strong>radical S-adenosyl-L-methionine (radical-SAM) enzyme</strong> that inserts two sulfur atoms at the chemically unactivated <strong>C6 and C8 carbons of a protein-bound octanoyl chain</strong> — an octanoyl group amide-linked to a specific lysine residue of a lipoyl carrier protein — converting it into the mature dithiolane lipoyl cofactor. This is the only known biological route to forming the C–S bonds of lipoic acid, and it is the sulfur-insertion reaction that gives the protein its alternate name "sulfur insertion protein LipA."</p>
+<p>Mechanistically, LipA carries <strong>two distinct [4Fe-4S] clusters</strong> per polypeptide. The N-terminal <strong>radical-SAM cluster</strong>, ligated by the canonical CX₃CX₂C motif, reductively cleaves two molecules of SAM to generate two 5′-deoxyadenosyl radicals that sequentially abstract hydrogen atoms from C6 and C8 of the octanoyl substrate. The second, <strong>auxiliary [4Fe-4S] cluster</strong>, ligated by a CX₄CX₅C motif unique to lipoyl synthases plus a conserved serine, is <strong>sacrificed as the sulfur donor</strong> during each catalytic turnover — one of its sulfides becomes covalently attached to the substrate — and must be regenerated in vivo by iron-sulfur cluster carrier proteins (NfuA/IscU). The enzyme acts in the <strong>cytoplasm</strong>, downstream of type II fatty-acid synthesis and the octanoyltransferase LipB, and its physiological products are the lipoylated E2 subunits of the pyruvate, 2-oxoglutarate, and branched-chain 2-oxoacid dehydrogenase complexes and the glycine cleavage system H-protein.</p>
+<p>No <em>P. putida</em>-specific biochemical study of Q88DM5 exists; the functional assignment rests on <strong>strong orthology and conservation</strong>. Q88DM5 shares <strong>65% amino-acid identity with the biochemically characterized <em>Escherichia coli</em> LipA</strong>, conserves <strong>both Fe-S cluster cysteine motifs</strong> and the <strong>catalytically essential C-terminal RSSY motif</strong> (including the auxiliary-cluster serine ligand), and is genomically <strong>co-located with its cognate octanoyltransferase gene <em>lipB</em> (PP_4801)</strong> in a <em>lipBA</em> tandem arrangement typical of γ-proteobacteria. Together these lines of evidence make the annotation of Q88DM5 as a bona fide lipoyl synthase secure to a high degree of confidence.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-q88dm5-is-a-bona-fide-lipoyl-synthase-catalyzing-sulfur-insertion-at-c6c8-of-protein-bound-octanoyl-ec-2818">Finding 1 — Q88DM5 is a bona fide lipoyl synthase catalyzing sulfur insertion at C6/C8 of protein-bound octanoyl (EC 2.8.1.8)</h3>
+<p>The primary function of the <em>lipA</em> gene product is to catalyze the <strong>insertion of two sulfur atoms at the unactivated C6 and C8 positions of a protein-bound octanoyl chain</strong>, producing the lipoyl cofactor. This reaction is the terminal, sulfur-inserting step of <em>de novo</em> lipoic-acid biosynthesis and is chemically remarkable because it functionalizes saturated, unactivated carbon centers.</p>
+<p>The assignment is anchored in the UniProt annotation (HAMAP-Rule MF_00206), which classifies Q88DM5 as lipoyl synthase, EC 2.8.1.8, in the radical-SAM superfamily. This was independently corroborated by bioinformatic analysis of the retrieved 338-residue sequence, which confirmed both diagnostic iron-sulfur cluster motifs: the <strong>radical-SAM CX₃CX₂C motif</strong> (sequence CTRRCPFC beginning at residue 110) and the <strong>lipoyl-synthase auxiliary-cluster CX₄CX₅C motif</strong> (CEEASCPNLGEC beginning at residue 84). The chemistry of the LipA-catalyzed reaction was defined by mechanistic studies on characterized orthologs, which established that lipoyl synthase "catalyzes the insertion of two sulfur atoms at the unactivated C6 and C8 positions of a protein-bound octanoyl chain to produce the lipoyl cofactor" (<a href="https://pubmed.ncbi.nlm.nih.gov/27506792/">PMID: 27506792</a>) and that this constitutes "the LipA-catalyzed insertion of sulfur atoms at C6 and C8 of the octanoyl chain" (<a href="https://pubmed.ncbi.nlm.nih.gov/26841001/">PMID: 26841001</a>).</p>
+<p>The reaction can be summarized:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="p">(</span><span class="n">N6</span><span class="o">-</span><span class="n">octanoyl</span><span class="p">)</span><span class="o">-</span><span class="n">lysyl</span><span class="o">-</span><span class="p">[</span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span><span class="p">]</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">SAM</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">e</span><span class="o">-</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="p">[</span><span class="n">S</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">auxiliary</span><span class="w"> </span><span class="n">cluster</span><span class="p">]</span>
+<span class="w">              </span><span class="err">│</span>
+<span class="w">    </span><span class="n">LipA</span><span class="w"> </span><span class="p">(</span><span class="n">radical</span><span class="w"> </span><span class="n">SAM</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="err">×</span><span class="w"> </span><span class="p">[</span><span class="mf">4F</span><span class="n">e</span><span class="mi">-4</span><span class="n">S</span><span class="p">])</span>
+<span class="w">              </span><span class="err">▼</span>
+<span class="w">  </span><span class="p">(</span><span class="n">N6</span><span class="o">-</span><span class="n">lipoyl</span><span class="p">)</span><span class="o">-</span><span class="n">lysyl</span><span class="o">-</span><span class="p">[</span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span><span class="p">]</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="mi">5</span><span class="err">&#39;</span><span class="o">-</span><span class="n">deoxyadenosine</span>
+</code></pre></div>
+
+<h3 id="finding-2-lipa-is-a-radical-sam-enzyme-with-two-4fe-4s-clusters-the-auxiliary-cluster-is-sacrificed-as-the-sulfur-source-each-turnover">Finding 2 — LipA is a radical-SAM enzyme with two [4Fe-4S] clusters; the auxiliary cluster is sacrificed as the sulfur source each turnover</h3>
+<p>LipA is a two-cluster radical-SAM enzyme. Characterization of the <em>E. coli</em> ortholog established that the enzyme "can accommodate two [4Fe-4S] clusters per polypeptide and that this form of the enzyme is relevant to turnover" (<a href="https://pubmed.ncbi.nlm.nih.gov/15362861/">PMID: 15362861</a>), with roughly 6.9 Fe and 6.4 S per polypeptide. One cluster is ligated by the CX₃CX₂C radical-SAM motif and initiates radical chemistry; the second, auxiliary cluster is ligated by the CX₄CX₅C motif conserved only in lipoyl synthases.</p>
+<p>The catalytic cycle consumes <strong>two equivalents of SAM</strong>, each reductively cleaved to a 5′-deoxyadenosyl radical that abstracts a hydrogen atom from C6 and then C8 of the octanoyl chain in sequence. The inserted sulfur atoms are supplied not by a freely diffusing donor but by <strong>destruction of the auxiliary cluster itself</strong>. Crystallographic snapshots of <em>Mycobacterium tuberculosis</em> LipA captured this directly: during turnover "the serine ligand dissociates from the cluster, the iron ion is lost, and a sulfur atom that is still part of the cluster becomes covalently attached to C6 of the octanoyl substrate" (<a href="https://pubmed.ncbi.nlm.nih.gov/27506792/">PMID: 27506792</a>). Because the sulfur donor is consumed, the auxiliary cluster is a single-turnover reagent that must be rebuilt: "the second cluster is the sulfur source, necessitating its destruction during turnover. In Escherichia coli, this auxiliary cluster can be restored after each turnover by NfuA or IscU" (<a href="https://pubmed.ncbi.nlm.nih.gov/34292556/">PMID: 34292556</a>). A catalytically and kinetically competent enzyme–substrate cross-linked intermediate, linked through the auxiliary cluster, was demonstrated biochemically, providing strong support for this sacrificial mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/24901788/">PMID: 24901788</a>).</p>
+<h3 id="finding-3-lipa-works-in-the-cytoplasmic-de-novo-lipoic-acid-pathway-lipblipa-acting-on-lipoyl-carrier-proteins">Finding 3 — LipA works in the cytoplasmic de novo lipoic-acid pathway (LipB→LipA), acting on lipoyl carrier proteins</h3>
+<p>LipA operates as the <strong>second of two committed steps</strong> in the <em>de novo</em> lipoyl-cofactor biosynthesis pathway. The lipoyl cofactor "is synthesized de novo in two committed steps, involving the LipB-catalyzed transfer of an octanoyl chain derived from fatty acid biosynthesis to a lipoyl carrier protein and the LipA-catalyzed insertion of sulfur atoms at C6 and C8 of the octanoyl chain" (<a href="https://pubmed.ncbi.nlm.nih.gov/26841001/">PMID: 26841001</a>). The octanoyl precursor is drawn from <strong>type II fatty-acid biosynthesis (octanoyl-ACP)</strong>, transferred by the octanoyltransferase LipB onto a lysine of a lipoyl carrier protein, and then sulfur-inserted by LipA.</p>
+<p>Critically, LipA does not act on free octanoic acid but on the <strong>protein-bound octanoyl substrate</strong>. Studies of the <em>M. tuberculosis</em> ortholog showed that LipA "forms a complex with the H protein of the glycine cleavage system and that the strength of association is dependent on the presence of S-adenosyl-L-methionine" (<a href="https://pubmed.ncbi.nlm.nih.gov/26841001/">PMID: 26841001</a>), demonstrating a direct, SAM-dependent physical engagement of the lipoyl carrier protein substrate. The pathway is cytoplasmic and ultimately lipoylates the E2 subunits of pyruvate dehydrogenase, 2-oxoglutarate dehydrogenase, and branched-chain 2-oxoacid dehydrogenase, as well as the glycine cleavage H-protein — all soluble cytoplasmic multienzyme components. In γ-proteobacteria such as <em>Shewanella</em>, the <em>lipB</em> and <em>lipA</em> genes are "organized into an operon lipBA" and are regulated by cAMP-CRP (<a href="https://pubmed.ncbi.nlm.nih.gov/25611823/">PMID: 25611823</a>), providing the genomic and regulatory context for the pathway.</p>
+<h3 id="finding-4-q88dm5-shares-65-identity-with-the-biochemically-characterized-e-coli-lipa">Finding 4 — Q88DM5 shares 65% identity with the biochemically characterized E. coli LipA</h3>
+<p>Because no direct biochemistry has been performed on the <em>P. putida</em> enzyme, the strength of the functional transfer rests on sequence orthology. A global (Needleman-Wunsch) alignment of the 338-residue Q88DM5 against characterized orthologs gave <strong>65.3% identity to <em>E. coli</em> LipA</strong> (P60716; 321 aa; 207/317 aligned positions) and 29.9% identity to <em>M. tuberculosis</em> LipA. The high identity to <em>E. coli</em> LipA spans the catalytic core, and both catalytic Fe-S motifs (radical-SAM CX₃CX₂C and auxiliary CX₄CX₅C) are present in Q88DM5. This level of identity to a rigorously characterized ortholog places the functional assignment on firm footing — well above the ~30–40% identity threshold generally considered sufficient for confident transfer of enzymatic function within a conserved family.</p>
+<table>
+<thead>
+<tr>
+<th>Ortholog</th>
+<th>Organism</th>
+<th>Length (aa)</th>
+<th>% identity to Q88DM5</th>
+<th>Characterization status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P60716 (LipA)</td>
+<td><em>E. coli</em></td>
+<td>321</td>
+<td>65.3%</td>
+<td>Extensively biochemically characterized</td>
+</tr>
+<tr>
+<td>LipA</td>
+<td><em>M. tuberculosis</em></td>
+<td>429</td>
+<td>29.9%</td>
+<td>Crystallographically characterized</td>
+</tr>
+<tr>
+<td><strong>Q88DM5 (LipA)</strong></td>
+<td><strong><em>P. putida</em> KT2440</strong></td>
+<td><strong>338</strong></td>
+<td><strong>—</strong></td>
+<td><strong>Annotated by orthology (this report)</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-5-in-p-putida-kt2440-lipa-pp_4800-is-contiguous-with-lipb-octanoyltransferase-pp_4801-forming-a-lipba-arrangement">Finding 5 — In P. putida KT2440, lipA (PP_4800) is contiguous with lipB octanoyltransferase (PP_4801), forming a lipBA arrangement</h3>
+<p>Organism-specific genomic context reinforces the functional assignment. KEGG genome annotation places <strong>PP_4801 = octanoyltransferase LipB</strong> (K03801, EC 2.3.1.181) at complement(5464467..5465117) and <strong>PP_4800 = lipoyl synthase LipA</strong> (K03644, EC 2.8.1.8) at complement(5463448..5464464) — on the <strong>same strand</strong> and adjacent, overlapping by 3 bp (lipB ends at 5464467, lipA starts at 5464464). Thus <em>lipB</em> directly precedes <em>lipA</em> in the direction of transcription. Both genes are assigned to KEGG pathway ppu00785 "Lipoic acid metabolism." The other flanking gene, PP_4799, is an unrelated muramoyltetrapeptide carboxypeptidase.</p>
+<p>This tandem <em>lipBA</em> organization exactly parallels the conserved <em>lipBA</em> operon documented in other γ-proteobacteria, where "the two genes (lipB and lipA) encoding lipoic acid synthesis pathway were proved to be organized into an operon lipBA in Shewanella" (<a href="https://pubmed.ncbi.nlm.nih.gov/25611823/">PMID: 25611823</a>). The physical pairing of the enzyme catalyzing octanoyl transfer with the enzyme catalyzing subsequent sulfur insertion is strong contextual evidence that PP_4800 functions in <em>de novo</em> lipoylation together with its neighbor.</p>
+<h3 id="finding-6-q88dm5-conserves-the-catalytically-essential-rssy-motif-including-the-auxiliary-cluster-serine-ligand">Finding 6 — Q88DM5 conserves the catalytically essential RSSY motif, including the auxiliary-cluster serine ligand</h3>
+<p>Beyond the two cysteine-rich cluster motifs, LipA requires a <strong>conserved C-terminal RSSY motif</strong> for catalysis. Pairwise alignment of Q88DM5 to <em>E. coli</em> LipA shows this region is essentially identical: <em>P. putida</em> "...GPLV<strong>RSSY</strong>HADQQAH..." versus <em>E. coli</em> "...GPFV<strong>RSSY</strong>HADLQAK...". The motif aligns exactly, mapping <em>E. coli</em> R306-S307-S308-Y309 to <em>P. putida</em> <strong>R322-S323-S324-Y325</strong>.</p>
+<p>The functional importance of this motif is well established. In <em>E. coli</em> and <em>M. tuberculosis</em> LipA, the arginine and the second serine of the motif are absolutely required for lipoyl-cofactor formation, with the serine serving as the <strong>fourth (serine) ligand of the sacrificial auxiliary [4Fe-4S] cluster</strong> — the same serine seen to dissociate during sulfur transfer in the crystallographic studies. As shown for the motif: "one serine residue (Ser308 in Escherichia coli) in a highly conserved R306,S,S308,Y motif in the C-terminal region of the protein... Arg306 and Ser308 are absolutely required for LipCo formation" (<a href="https://pubmed.ncbi.nlm.nih.gov/42244760/">PMID: 42244760</a>). The complete conservation of this motif in Q88DM5 — including S324, the auxiliary-cluster serine ligand equivalent to <em>E. coli</em> Ser308 — confirms that the <em>P. putida</em> enzyme possesses the full catalytic machinery for the sacrificial-cluster sulfur-insertion mechanism.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the six findings yields a coherent, high-confidence mechanistic model for Q88DM5 in <em>P. putida</em> KT2440:</p>
+<p><strong>Pathway position.</strong> LipA is the terminal enzyme of the two-step <em>de novo</em> lipoic-acid biosynthesis pathway, which draws its precursor from fatty-acid synthesis:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Type</span><span class="w"> </span><span class="n">II</span><span class="w"> </span><span class="n">fatty</span><span class="o">-</span><span class="n">acid</span><span class="w"> </span><span class="n">synthesis</span>
+<span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">octanoyl</span><span class="o">-</span><span class="n">ACP</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="n">LipB</span><span class="w"> </span><span class="p">(</span><span class="n">PP_4801</span><span class="p">,</span><span class="w"> </span><span class="n">octanoyltransferase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">2.3.1.181</span><span class="p">)</span>
+<span class="err">│</span><span class="w">  </span><span class="n">transfers</span><span class="w"> </span><span class="n">octanoyl</span><span class="w"> </span><span class="n">onto</span><span class="w"> </span><span class="n">Lys</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">lipoyl</span><span class="w"> </span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="p">(</span><span class="n">N6</span><span class="o">-</span><span class="n">octanoyl</span><span class="p">)</span><span class="o">-</span><span class="n">lysyl</span><span class="o">-</span><span class="p">[</span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span><span class="p">]</span><span class="w">        </span><span class="err">←</span><span class="w"> </span><span class="n">LipA</span><span class="w"> </span><span class="n">substrate</span>
+<span class="err">│</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="n">LipA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_4800</span><span class="p">,</span><span class="w"> </span><span class="n">lipoyl</span><span class="w"> </span><span class="n">synthase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">2.8.1.8</span><span class="p">)</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">THIS</span><span class="w"> </span><span class="n">GENE</span>
+<span class="err">│</span><span class="w">  </span><span class="n">inserts</span><span class="w"> </span><span class="n">S</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">C6</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">C8</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="err">×</span><span class="w"> </span><span class="n">SAM</span><span class="p">,</span><span class="w"> </span><span class="n">aux</span><span class="o">-</span><span class="n">cluster</span><span class="w"> </span><span class="n">S</span><span class="w"> </span><span class="n">donor</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="p">(</span><span class="n">N6</span><span class="o">-</span><span class="n">lipoyl</span><span class="p">)</span><span class="o">-</span><span class="n">lysyl</span><span class="o">-</span><span class="p">[</span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span><span class="p">]</span><span class="w">          </span><span class="err">←</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">lipoyl</span><span class="w"> </span><span class="n">cofactor</span>
+<span class="err">│</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="n">Functional</span><span class="w"> </span><span class="n">E2</span><span class="w"> </span><span class="p">(</span><span class="n">PDH</span><span class="p">,</span><span class="w"> </span><span class="n">OGDH</span><span class="p">,</span><span class="w"> </span><span class="n">BCKDH</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">GcvH</span><span class="w"> </span><span class="n">H</span><span class="o">-</span><span class="n">protein</span>
+</code></pre></div>
+
+<p><strong>Catalytic mechanism (per turnover of one sulfur).</strong> The radical-SAM [4Fe-4S] cluster (ligated by C110/C114/C117 of the CTRRCPFC motif) binds SAM and, upon reduction, cleaves it to L-methionine plus a 5′-deoxyadenosyl radical. This radical abstracts a hydrogen from C6 (then, in a second SAM-consuming cycle, from C8) of the octanoyl chain. The resulting substrate carbon radical attacks a bridging sulfide of the auxiliary [4Fe-4S] cluster (ligated by C84/C89/C95 and the serine S324). Sulfur–carbon bond formation proceeds with loss of the serine-ligated iron and partial disassembly of the auxiliary cluster to a [3Fe-4S] species — consistent with the cross-linked intermediate detected by Mössbauer spectroscopy. After both C6 and C8 sulfurs are installed and the dithiolane ring closes, the spent auxiliary cluster is regenerated by iron-sulfur carrier proteins (NfuA/IscU homologs), returning LipA to a catalytically competent two-cluster state.</p>
+<p><strong>Substrate specificity.</strong> LipA does not act on free fatty acids. Its substrate is the octanoyl group amide-linked to a specific lysine of a lipoyl carrier protein (in <em>P. putida</em>, the E2 domains of 2-oxoacid dehydrogenases and the glycine cleavage H-protein). Substrate engagement is SAM-dependent, and the enzyme forms a transient covalent cross-link to the carrier protein through the auxiliary cluster during turnover.</p>
+<p><strong>Localization.</strong> The entire pathway — fatty-acid synthesis, LipB octanoyl transfer, LipA sulfur insertion, and the lipoylated target complexes — is <strong>cytoplasmic</strong>. There is no signal peptide, transmembrane domain, or evidence for secretion; LipA carries out its function as a soluble cytoplasmic enzyme.</p>
+<p><strong>Biological role.</strong> By producing the lipoyl cofactor, LipA is essential for the function of the central-metabolism 2-oxoacid dehydrogenase complexes (pyruvate → acetyl-CoA; 2-oxoglutarate → succinyl-CoA; branched-chain amino-acid catabolism) and the glycine cleavage system. In <em>P. putida</em>, an organism with a strongly oxidative, TCA-cycle-centered metabolism well suited to its role as a soil bacterium and biotechnological chassis, lipoylation is expected to be important for aerobic respiratory metabolism — consistent with the broad correlation between OADHC lipoylation capacity and aerobiosis observed across microbial genomes (<a href="https://pubmed.ncbi.nlm.nih.gov/24489835/">PMID: 24489835</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution to this annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27506792/">27506792</a></td>
+<td><em>Crystallographic snapshots of sulfur insertion by lipoyl synthase</em></td>
+<td>Defines the reaction (C6/C8 sulfur insertion on protein-bound octanoyl); direct structural proof that the auxiliary cluster serine dissociates and a cluster sulfur becomes covalently bonded to substrate C6</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26841001/">26841001</a></td>
+<td><em>Characterization of Lipoyl Synthase from M. tuberculosis</em></td>
+<td>Establishes the two-step LipB→LipA de novo pathway; shows SAM-dependent LipA–GcvH (H-protein) complex formation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15362861/">15362861</a></td>
+<td><em>E. coli lipoyl synthase binds two distinct [4Fe-4S] clusters</em></td>
+<td>Establishes the turnover-relevant two-cluster architecture shared by the family</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34292556/">34292556</a></td>
+<td><em>Biochemical Approaches to Probe the Auxiliary Fe-S Cluster (M. tuberculosis)</em></td>
+<td>Explains auxiliary cluster as sacrificial sulfur source and in vivo regeneration by NfuA/IscU</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24901788/">24901788</a></td>
+<td><em>Catalytically and kinetically competent enzyme-substrate cross-linked intermediate</em></td>
+<td>Provides biochemical evidence for the covalent cross-linked intermediate through the auxiliary cluster</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42244760/">42244760</a></td>
+<td><em>Amino Acids in the RSSY Motif Control Substrate Binding and Reactivity</em></td>
+<td>Establishes essentiality of the RSSY motif (Arg306, Ser308) and the auxiliary-cluster serine ligand, conserved as R322/S324 in Q88DM5</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25611823/">25611823</a></td>
+<td><em>A new regulatory mechanism for bacterial lipoic acid synthesis</em></td>
+<td>Documents the conserved lipBA operon organization and cAMP-CRP regulation in γ-proteobacteria, paralleling PP_4801-PP_4800</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24489835/">24489835</a></td>
+<td><em>Comparative genomic analysis of OADHC lipoylation and aerobiosis</em></td>
+<td>Contextualizes lipoylation as central to aerobic 2-oxoacid dehydrogenase metabolism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21338420/">21338420</a></td>
+<td><em>Novel two-gene requirement for octanoyltransfer in B. subtilis</em></td>
+<td>Illustrates pathway variation (LipM/LipL) in Gram-positives; underscores that the E. coli/γ-proteobacterial LipB→LipA model applies to P. putida</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence base.</strong> All primary mechanistic studies (from <em>E. coli</em>, <em>M. tuberculosis</em>, and human systems) converge on the same reaction, cofactor requirements, and mechanism. No study contradicts the assignment. The primary limitation is that all direct experimental data derive from <strong>orthologs</strong>, not from the <em>P. putida</em> enzyme itself; the transfer of function is justified by the high sequence identity (Finding 4), full conservation of catalytic motifs (Findings 1 and 6), and organism-specific genomic context (Finding 5).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct P. putida biochemistry.</strong> There is no purified-enzyme kinetic, spectroscopic, or structural characterization of Q88DM5 specifically. The functional annotation is inferred — albeit with high confidence — from orthology and conserved motifs rather than measured in the native protein.</p>
+</li>
+<li>
+<p><strong>Lipoyl carrier protein partners not experimentally mapped in P. putida.</strong> While the substrate is certainly a lipoyl carrier protein, the specific <em>P. putida</em> E2 subunits and the GcvH H-protein that LipA lipoylates have not been individually confirmed by experiment in this organism.</p>
+</li>
+<li>
+<p><strong>Auxiliary-cluster regeneration machinery not confirmed in P. putida.</strong> The identity of the Fe-S carrier protein(s) (NfuA/IscU homologs) that restore the sacrificed auxiliary cluster in <em>P. putida</em> has not been established experimentally.</p>
+</li>
+<li>
+<p><strong>Operon structure and regulation inferred, not measured.</strong> The <em>lipBA</em> tandem arrangement is documented from genome coordinates; transcriptional co-expression and any cAMP-CRP-type regulation in <em>P. putida</em> remain to be verified experimentally. It also remains formally untested whether <em>P. putida</em> additionally uses an alternative LipM/LipL-type octanoyl-transfer route (as in <em>B. subtilis</em>).</p>
+</li>
+<li>
+<p><strong>Essentiality and salvage not assessed.</strong> Whether <em>P. putida</em> can bypass <em>de novo</em> synthesis via a lipoate salvage pathway (LplA-type ligase) under lipoate-supplemented conditions, and thus whether <em>lipA</em> is conditionally essential, has not been examined here.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Genetic essentiality test.</strong> Construct a <em>P. putida</em> KT2440 Δ<em>lipA</em> (ΔPP_4800) mutant and test for growth on unsupplemented minimal medium versus medium supplemented with free lipoic acid, to confirm the <em>de novo</em> biosynthetic role and probe for salvage capacity.</p>
+</li>
+<li>
+<p><strong>Complementation assay.</strong> Test whether <em>P. putida lipA</em> complements an <em>E. coli</em> Δ<em>lipA</em> mutant (restoring growth without lipoate supplementation), providing a direct functional demonstration of the orthologous activity.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution.</strong> Heterologously express and purify Q88DM5, reconstitute its two [4Fe-4S] clusters anaerobically, and assay sulfur insertion on an (N6-octanoyl)-lysyl carrier-protein or peptide substrate with SAM, measuring lipoyl-cofactor formation and 5′-deoxyadenosine production.</p>
+</li>
+<li>
+<p><strong>Cluster and motif verification.</strong> Use Mössbauer/EPR spectroscopy and site-directed mutagenesis of the predicted cluster ligands (C84/C89/C95 auxiliary; C110/C114/C117 radical-SAM) and the RSSY serine (S324) to confirm cluster assignments and catalytic essentiality in the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Operon and regulation analysis.</strong> Perform RT-PCR/RNA-seq to confirm co-transcription of PP_4801-PP_4800 and map the promoter and any CRP-binding regulatory elements.</p>
+</li>
+<li>
+<p><strong>Substrate-partner identification.</strong> Use co-purification or cross-linking (exploiting the SAM-dependent covalent intermediate) to identify the specific <em>P. putida</em> lipoyl carrier proteins (E2 subunits, GcvH) that serve as LipA substrates in vivo.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <em>lipA</em> (PP_4800; UniProt Q88DM5) of <em>Pseudomonas putida</em> KT2440 encodes <strong>lipoyl synthase (EC 2.8.1.8)</strong>, a cytoplasmic radical-SAM enzyme that performs the final, committed step of <em>de novo</em> lipoic-acid biosynthesis: inserting two sulfur atoms at C6 and C8 of a protein-bound octanoyl chain to form the mature lipoyl cofactor. It uses two [4Fe-4S] clusters — a radical-SAM cluster that generates deoxyadenosyl radicals from SAM, and an auxiliary cluster that is sacrificed as the sulfur donor and regenerated in vivo. Although the assignment rests on orthology rather than direct <em>P. putida</em> biochemistry, it is strongly supported by 65% identity to the characterized <em>E. coli</em> enzyme, complete conservation of all catalytic elements (both Fe-S cluster motifs and the essential RSSY motif with auxiliary-cluster serine S324), and organism-specific genomic co-localization with its cognate octanoyltransferase gene <em>lipB</em> (PP_4801).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lipA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lipA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27506792</li>
+<li>PMID:26841001</li>
+<li>PMID:15362861</li>
+<li>PMID:34292556</li>
+<li>PMID:24901788</li>
+<li>PMID:25611823</li>
+<li>PMID:42244760</li>
+<li>PMID:24489835</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lipA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DM5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lipa-curation-notes">lipA curation notes</h1>
+<p>LipA/Q88DM5 is the 338-amino-acid radical-SAM lipoate synthase. UniProt records<br />
+the direct reaction as insertion of sulfur atoms into an octanoyl group already<br />
+attached to a lipoyl domain<br />
+[file:PSEPK/lipA/lipA-uniprot.txt, "CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms"].<br />
+The record contains the LipA-specific and radical-SAM domains<br />
+[file:PSEPK/lipA/lipA-uniprot.txt, "DR   InterPro; IPR003698; Lipoyl_synth."]<br />
+[file:PSEPK/lipA/lipA-uniprot.txt, "DR   InterPro; IPR007197; rSAM."].</p>
+<p>For module boundaries, LipA is the second endogenous protein-lipoylation step:<br />
+LipB first transfers octanoyl from octanoyl-ACP to the target lipoyl-domain<br />
+lysine, and LipA then converts the protein-bound octanoyl group to the mature<br />
+lipoyl group.</p>
+<h2 id="initial-annotation-decisions">Initial annotation decisions</h2>
+<p>The specific lipoate synthase activity and both immediate process annotations<br />
+are accepted. Cytoplasmic localization and 4Fe-4S cluster binding are retained<br />
+as non-core context. Generic catalytic activity, sulfurtransferase activity,<br />
+and generic iron-sulfur cluster binding are marked over-annotated because the<br />
+record already contains their more informative descendants.</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The completed report supports the LipA identity, protein-bound octanoyl<br />
+substrate, two-cluster radical-SAM mechanism, and placement after LipB<br />
+[<code>file:PSEPK/lipA/lipA-deep-research-openscientist.md</code>]. It found no direct<br />
+biochemical study of Q88DM5 itself; the assignment is strongly grounded by<br />
+orthology, conserved catalytic motifs, HAMAP, and the adjacent <code>lipB</code> gene.<br />
+Detailed claims about client proteins and Fe-S-cluster regeneration in KT2440<br />
+remain experimentally untested and are not promoted into additional GO terms.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DM5
+gene_symbol: lipA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  lipA encodes a radical-SAM lipoyl synthase that inserts sulfur atoms at the
+  C6 and C8 positions of octanoyl groups already attached to lipoyl-domain
+  lysine residues. This second step of endogenous protein lipoylation converts
+  octanoylated domains into the mature protein-bound lipoyl cofactor used by
+  lipoate-dependent enzyme complexes.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic catalytic activity is true but uninformative for LipA.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The specific lipoate synthase term captures the evolved activity, making
+      this broad catalytic parent redundant.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-goa.tsv
+      supporting_text: &#34;GO:0003824\tcatalytic activity&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is plausible context for bacterial LipA.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt places the protein in the cytoplasm, but localization is
+      secondary to its radical-SAM lipoate synthase activity.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000255|HAMAP-Rule:MF_00206}.&#39;
+- term:
+    id: GO:0009107
+    label: lipoate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: LipA participates directly in endogenous lipoate biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      LipA is the sulfur-insertion reaction in the endogenous two-step route
+      that produces protein-bound lipoyl groups.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC   -!- PATHWAY: Protein modification; protein lipoylation via endogenous&#39;
+- term:
+    id: GO:0009249
+    label: protein lipoylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Protein lipoylation is the immediate biological process for LipA.
+    action: ACCEPT
+    reason: &gt;-
+      The enzyme directly converts octanoylated lipoyl-domain lysines into
+      lipoylated derivatives.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC       lipoyl domains of lipoate-dependent enzymes, thereby converting the&#39;
+- term:
+    id: GO:0016783
+    label: sulfurtransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Sulfurtransferase activity is a correct but redundant parent term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0016783 is an ancestor of the already annotated lipoate synthase
+      activity, which captures the same sulfur-insertion chemistry with the
+      physiological substrate context.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms&#39;
+    - reference_id: file:PSEPK/lipA/lipA-deep-research-openscientist.md
+      supporting_text: &gt;-
+        catalyzes the insertion of two sulfur atoms at the unactivated C6 and
+        C8 positions of a protein-bound octanoyl chain to produce the lipoyl
+        cofactor
+- term:
+    id: GO:0016992
+    label: lipoate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Lipoate synthase activity is the specific LipA catalytic function.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records the EC 2.8.1.8/Rhea reaction that converts
+      octanoyl-lysyl protein to dihydrolipoyl-lysyl protein.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms&#39;
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Iron-sulfur cluster binding is correct but less precise than the 4Fe-4S term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The entry specifically records two 4Fe-4S clusters, so this generic
+      iron-sulfur-cluster parent is redundant.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC       Note=Binds 2 [4Fe-4S] clusters per subunit. One cluster is coordinated&#39;
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Binding two 4Fe-4S clusters is required mechanistic context for LipA.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      One cluster supports radical-SAM chemistry and the second supplies
+      sulfur, but cluster binding is subordinate to the specific catalytic
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+      supporting_text: &#39;CC       Note=Binds 2 [4Fe-4S] clusters per subunit. One cluster is coordinated&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/lipA/lipA-uniprot.txt
+  title: UniProt entry Q88DM5 for lipA
+  findings:
+  - statement: &gt;-
+      UniProt identifies Q88DM5 as the radical-SAM sulfur-insertion enzyme in
+      endogenous protein lipoylation.
+    supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms&#39;
+- id: file:PSEPK/lipA/lipA-goa.tsv
+  title: QuickGO GOA annotations for lipA
+  findings:
+  - statement: &gt;-
+      The fetched GOA table contains the lipoate synthase, lipoate
+      biosynthesis, and protein-lipoylation annotations reviewed here.
+- id: file:PSEPK/lipA/lipA-deep-research-openscientist.md
+  title: OpenScientist gene research report for lipA
+  findings:
+  - statement: &gt;-
+      The report supports the radical-SAM lipoate synthase assignment, two
+      4Fe-4S-cluster architecture, and direct placement after LipB.
+  - statement: &gt;-
+      No direct biochemical characterization of Q88DM5 was identified, so
+      detailed mechanistic and client-specific claims remain ortholog-derived.
+core_functions:
+- description: &gt;-
+    Radical-SAM lipoate synthase that sulfurates octanoylated lipoyl-domain
+    lysines to form mature protein-bound lipoyl groups.
+  molecular_function:
+    id: GO:0016992
+    label: lipoate synthase activity
+  directly_involved_in:
+  - id: GO:0009249
+    label: protein lipoylation
+  - id: GO:0009107
+    label: lipoate biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/lipA/lipA-uniprot.txt
+    supporting_text: &#39;CC   -!- FUNCTION: Catalyzes the radical-mediated insertion of two sulfur atoms&#39;
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments:
+- description: &gt;-
+    Reconstitute Q88DM5 with defined Pseudomonas putida octanoylated GcvH and
+    E2 lipoyl domains to confirm sulfur insertion and client range directly.
+- description: &gt;-
+    Delete lipA and quantify lipoylation and activity of the major
+    lipoate-dependent complexes, with native-gene complementation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
