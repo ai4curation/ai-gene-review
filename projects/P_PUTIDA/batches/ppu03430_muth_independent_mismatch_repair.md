@@ -75,3 +75,10 @@ The generic and species-aware OpenScientist requests were each allowed the full
 configured 7,200 seconds with three iterations. Neither returned a report, so
 the module cites the direct Pseudomonas studies, exact gene reviews, UniProt
 exemplars, and TreeGrafter provenance that can be inspected locally.
+
+The completed UvrD report recovered the conserved 3'-to-5' SF1A helicase
+mechanism and UvrD's participation in several DNA-maintenance pathways. Its
+mismatch-repair discussion relies mainly on orthologs and does not supersede
+the direct KT2440 result in PMID:30292721: UvrD makes a strong but nonexclusive
+contribution, so it remains a pathway participant without being modeled as the
+only possible repair helicase.
