@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_5147 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_5147</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CN3" target="_blank" class="term-link">
+                        Q88CN3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_5147";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CN3" data-a="DESCRIPTION: PP_5147 is a predicted monofunctional HAD-family h..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_5147 is a predicted monofunctional HAD-family histidinol-phosphate phosphatase (EC 3.1.3.15) in Pseudomonas putida KT2440. It is a close full-length ortholog of Pseudomonas aeruginosa PA0335, whose phosphatase activity and histidine-biosynthesis phenotype have been demonstrated. This strongly supports hydrolysis of L-histidinol phosphate to L-histidinol in the penultimate pathway reaction, although PP_5147 itself has not been assayed. KT2440 also encodes the unrelated IMPase-like HisN candidate PP_3157, and the division of physiological flux between them is unknown.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004401" target="_blank" class="term-link">
+                                    GO:0004401
+                                </a>
+                            </span>
+                            <span class="term-label">histidinol-phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CN3" data-a="GO:0004401" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Strong orthology supports the exact histidinol-phosphatase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88CN3 is a full-length close ortholog of the experimentally validated P. aeruginosa enzyme PA0335 and shares its HAD-SF-IB family signatures. This is strong transfer evidence despite the absence of a direct KT2440 assay; the coexistence of PP_3157 indicates possible redundancy rather than evidence against the activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">67.7% amino-acid identity to the experimentally validated ortholog PA0335</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31862725" target="_blank" class="term-link">
+                                        PMID:31862725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PA0335 was shown to encode Hol-Pase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                    GO:0000105
+                                </a>
+                            </span>
+                            <span class="term-label">L-histidine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31862725" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31862725
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PA0335, a Gene Encoding Histidinol Phosphate Phosphatase, Me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CN3" data-a="GO:0000105" data-r="PMID:31862725" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_5147 should be annotated to histidine biosynthesis by close orthology to experimentally validated Pseudomonas PA0335.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PA0335 disruption causes histidine-biosynthesis deficiency, and the full-length PP_5147 protein is highly similar with matching HAD-family signatures. This is an orthology-based proposal, not direct KT2440 experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31862725" target="_blank" class="term-link">
+                                        PMID:31862725
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PA0335 was shown to encode Hol-Pase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">67.7% amino-acid identity to the experimentally validated ortholog PA0335</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted to hydrolyze L-histidinol phosphate to L-histidinol in the penultimate reaction of L-histidine biosynthesis, based on close orthology to experimentally validated Pseudomonas PA0335.</h3>
+                <span class="vote-buttons" data-g="Q88CN3" data-a="FUNCTION: Predicted to hydrolyze L-histidinol phosphate to L..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004401" target="_blank" class="term-link">
+                            histidinol-phosphatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                L-histidine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31862725" target="_blank" class="term-link">
+                                PMID:31862725
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">PA0335 was shown to encode Hol-Pase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">67.7% amino-acid identity to the experimentally validated ortholog PA0335</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_5147/PP_5147-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB unreviewed entry for PSEPK PP_5147</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Records an ARBA-predicted histidinol-phosphatase function and a SerB-family/HAD-like family assignment.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_5147/PP_5147-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK PP_5147</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the EC-derived activity annotation reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3157/PP_3157-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for the alternative PSEPK histidinol-phosphatase candidate</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns PP_3157 to the same reaction through the unrelated IMPase-like HisN family.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31862725" target="_blank" class="term-link">
+                            PMID:31862725
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PA0335, a Gene Encoding Histidinol Phosphate Phosphatase, Mediates Histidine Auxotrophy in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes the molecular activity and histidine-biosynthesis phenotype of the close Pseudomonas ortholog PA0335.</div>
+
+                        <div class="finding-text">"PA0335 was shown to encode Hol-Pase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PSEPK PP_5147</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies the exact-accession protein as a close full-length ortholog of experimentally validated PA0335.</div>
+
+                        <div class="finding-text">"67.7% amino-acid identity to the experimentally validated ortholog PA0335"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How much histidinol-phosphatase flux does PP_5147 carry in vivo, and is its role redundant with or conditionally distinct from PP_3157?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN3" data-a="Q: How much histidinol-phosphatase flux does PP_5147 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare single and double PP_5147/PP_3157 deletion strains for histidine auxotrophy and assay purified proteins against histidinol phosphate and phosphoserine.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic complementation and substrate-specific enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN3" data-a="EXPERIMENT: Compare single and double PP_5147/PP_3157 deletion..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_5147-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CN3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_5147 (Q88CN3): The Cytoplasmic HAD-Type Histidinol-Phosphate Phosphatase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T04:39:41.473264</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_5147-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_5147-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_5147-q88cn3-the-cytoplasmic-had-type-histidinol-phosphate-phosphatase-of-pseudomonas-putida-kt2440">Functional Annotation of PP_5147 (Q88CN3): The Cytoplasmic HAD-Type Histidinol-Phosphate Phosphatase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> PP_5147 (OrderedLocusNames) · <strong>UniProt:</strong> Q88CN3 (Q88CN3_PSEPK) · <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) · <strong>Length:</strong> 218 aa (~24.9 kDa) · <strong>EC:</strong> 3.1.3.15</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>PP_5147</strong> (UniProt <strong>Q88CN3</strong>; OrderedLocusName PP_5147) of <em>Pseudomonas putida</em> KT2440 encodes a soluble, cytoplasmic <strong>histidinol-phosphate phosphatase</strong> (HolPase; <strong>EC 3.1.3.15</strong>). Its primary and essentially sole physiological function is to catalyze the <strong>Mg²⁺-dependent hydrolysis of L-histidinol-phosphate to L-histidinol plus inorganic phosphate</strong> (Rhea:14465), the <strong>penultimate (8th) step of the de novo L-histidine biosynthesis pathway</strong>. This is a classic housekeeping anabolic enzyme: it operates in the cytoplasm, where the entire histidine biosynthetic pathway resides, and its product histidinol is subsequently oxidized to L-histidine by histidinol dehydrogenase (HisD).</p>
+<p>The enzyme belongs to the <strong>HAD-like (haloacid dehalogenase) hydrolase superfamily</strong>, specifically <strong>subfamily IB</strong>, historically referred to as the "SerB1-like" or "HisB-N" group. Three unrelated protein families independently solved the HolPase reaction across the tree of life — the <strong>HAD-type</strong> used by Gammaproteobacteria (including <em>Pseudomonas</em>), the <strong>PHP-type</strong> used by Firmicutes and yeast, and the <strong>IMPase-like (HisN)</strong> type used by Actinobacteria and plants. PP_5147 is the <strong>HAD-type</strong>. Its assignment rests on convergent evidence: database orthology (KEGG K28842, InterPro IPR006385, COG0560); a complete, canonical four-motif HAD catalytic apparatus resolved in a high-confidence AlphaFold model (mean pLDDT 96.2); and <strong>67.7% amino-acid identity to the experimentally validated ortholog PA0335 of <em>P. aeruginosa</em></strong>, whose deletion produces (incomplete) histidine auxotrophy.</p>
+<p>The "SerB family" label attached to this protein reflects <strong>HAD fold homology only</strong> and does not indicate a role in serine biosynthesis: <em>P. putida</em> KT2440 carries a genuinely distinct phosphoserine phosphatase (<em>serB</em> = PP_4909) together with a complete serine pathway (<em>serA</em>, <em>serC</em>). PP_5147 is therefore a <strong>dedicated histidine-biosynthesis enzyme</strong>. It is the physiologically <strong>dominant</strong> HolPase but is buffered by promiscuous HAD phosphatases carrying weak "side" HolPase activity (in the <em>P. aeruginosa</em> ortholog these are PA3255 and PA1143), which explains why loss of the primary gene causes only incomplete rather than absolute histidine auxotrophy. Evolutionarily, the HAD-type HolPase lineage arose from a promiscuous <strong>GmhB-like sugar-bisphosphate phosphatase</strong> ancestor, accounting for its residual substrate ambiguity.</p>
+<hr />
+<h2 id="identity-verification">Identity Verification</h2>
+<p>Before proceeding, the target identity was confirmed against all provided criteria:</p>
+<ul>
+<li><strong>Gene symbol match:</strong> PP_5147 is annotated in UniProt (Q88CN3), KEGG (<em>ppu:PP_5147</em>), and EMBL (AAN70712.1) as a histidinol-phosphatase — consistent with the protein description.</li>
+<li><strong>Organism match:</strong> All literature and database evidence pertains to <em>Pseudomonas putida</em> KT2440 or its close relative <em>P. aeruginosa</em> (used for the orthologous experimental validation).</li>
+<li><strong>Family/domain match:</strong> The HAD-like hydrolase superfamily / SerB family and domains (IPR050582, IPR036412, IPR006385, IPR023214, PF12710) are all consistent with the HAD-type HolPase identified here.</li>
+</ul>
+<p>No conflicting literature for a differently-named gene was encountered. The assignment is coherent and well supported.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pp_5147-is-a-had-superfamily-histidinol-phosphate-phosphatase-ec-31315-catalyzing-the-penultimate-step-of-l-histidine-biosynthesis">F001 — PP_5147 is a HAD-superfamily histidinol-phosphate phosphatase (EC 3.1.3.15) catalyzing the penultimate step of L-histidine biosynthesis</h3>
+<p>The core functional assignment is unambiguous across all major protein databases. UniProt Q88CN3 (218 amino acids) annotates the protein as "Histidinol-phosphatase" with the catalytic activity <strong>L-histidinol phosphate + H₂O = L-histidinol + phosphate</strong> (Rhea:14465, EC 3.1.3.15), and places it in <strong>L-histidine biosynthesis, step 8 of 9</strong>. KEGG assigns <em>ppu:PP_5147</em> the orthology <strong>K28842</strong> (histidinol-phosphatase, EC 3.1.3.15), maps it to pathway <strong>ppu00340 (Histidine metabolism)</strong>, and to module <strong>M00026 (Histidine biosynthesis, PRPP ⇒ histidine)</strong>. eggNOG places it in <strong>COG0560</strong>. The protein retains an intact HAD catalytic motif I — <strong>D7-x-D9-x-T11 ("DLDNT")</strong> — with <strong>Asp7</strong> serving as the aspartyl nucleophile, and carries the magnesium/metal-binding keyword.</p>
+<p>Critically, the HolPase reaction is served by <strong>three unrelated protein families</strong> — the HAD-type known from Gammaproteobacteria such as <em>E. coli</em> and <em>Salmonella</em>, the PHP-type known from yeast and Firmicutes such as <em>Bacillus subtilis</em>, and the IMPase-like (HisN) type in Actinobacteria — and PP_5147 belongs firmly to the <strong>HAD-type</strong>, consistent with its <em>Pseudomonas</em> (Gammaproteobacterial) origin. As stated by Kinateder and colleagues, "<em>Three unrelated HolPase families are known so far... HAD-type HolPases known from Gammaproteobacteria like Escherichia coli or Salmonella enterica and PHP-type HolPases known from yeast and Firmicutes like Bacillus subtilis</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/28720084/">PMID: 28720084</a>). The enzyme's position in the pathway is likewise confirmed: HolPase "<em>is responsible for the penultimate step of histidine biosynthesis</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/31862725/">PMID: 31862725</a>).</p>
+<h3 id="f002-pp_5147-is-a-close-ortholog-677-identity-of-the-experimentally-validated-holpase-pa0335-of-p-aeruginosa">F002 — PP_5147 is a close ortholog (67.7% identity) of the experimentally validated HolPase PA0335 of <em>P. aeruginosa</em></h3>
+<p>The strongest line of experimental support comes from the orthologous relationship with a functionally characterized enzyme. A Needleman–Wunsch global alignment of Q88CN3 (PP_5147, 218 aa) against <strong>PA0335</strong> (217 aa, <em>P. aeruginosa</em>) yields <strong>147/217 identical positions = 67.7% identity</strong> over the full length with no large gaps, including a nearly identical N-terminal HAD motif I ("MRLALFDLDNTL..."). Both proteins share KEGG orthology <strong>K28842</strong>, <strong>COG0560</strong>, and the HAD subfamily IB / SerB1-like fold (<strong>InterPro IPR006385</strong>, which explicitly lists the <em>Pseudomonas aeruginosa</em> histidinol-phosphatase).</p>
+<p>The ortholog PA0335 has been characterized both genetically and biochemically. Gene knockout of PA0335 causes L-histidine auxotrophy in <em>P. aeruginosa</em>, and it encodes a HAD-family HolPase: "<em>We previously reported that PA0335 encode a HolPase belonging to the HAD family and inactivation resulted [in] complete L-histidine auxotrophy in Pseudomonas aeruginosa</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/40596842/">PMID: 40596842</a>). The primary identification paper describes "<em>PA0335, a Gene Encoding Histidinol Phosphate Phosphatase, Mediates Histidine Auxotrophy</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/31862725/">PMID: 31862725</a>). At 67.7% identity, PP_5147 is a confident functional ortholog of this validated enzyme.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>PP_5147 (<em>P. putida</em>)</th>
+<th>PA0335 (<em>P. aeruginosa</em>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>218 aa</td>
+<td>217 aa</td>
+</tr>
+<tr>
+<td>KEGG orthology</td>
+<td>K28842</td>
+<td>K28842</td>
+</tr>
+<tr>
+<td>COG</td>
+<td>COG0560</td>
+<td>COG0560</td>
+</tr>
+<tr>
+<td>HAD motif I</td>
+<td>FDLDNT</td>
+<td>FDLDNT</td>
+</tr>
+<tr>
+<td>Global identity</td>
+<td>—</td>
+<td>67.7% vs PP_5147</td>
+</tr>
+<tr>
+<td>Experimental phenotype</td>
+<td>inferred</td>
+<td>deletion → histidine auxotrophy</td>
+</tr>
+</tbody>
+</table>
+<h3 id="f003-p-putida-uses-a-monofunctional-hisb-and-supplies-holpase-activity-from-the-standalone-gene-pp_5147">F003 — <em>P. putida</em> uses a monofunctional hisB and supplies HolPase activity from the standalone gene PP_5147</h3>
+<p>Unlike <em>E. coli</em>, which fuses imidazoleglycerol-phosphate dehydratase and histidinol-phosphatase into a single bifunctional <strong>HisB</strong> protein, <em>P. putida</em> KT2440 uses a <strong>monofunctional imidazoleglycerol-phosphate dehydratase</strong> (<em>hisB</em>, EC 4.2.1.19, KO <strong>K01693</strong> = <strong>PP_0289</strong>), located in the <em>his</em> gene cluster (PP_0289–PP_0293, with <em>hisH</em> PP_0290, <em>hisF</em> PP_0292). A search for the bifunctional IGPD/HolPase fusion (E. coli HisB, KO K01089) returns <strong>no gene</strong> in <em>P. putida</em>. The HolPase activity is instead supplied by the physically separate, <strong>non-operonic</strong> gene <strong>PP_5147</strong>, whose genomic neighbors (PtsP/PP_5145, an RNA pyrophosphohydrolase/PP_5146, threonine deaminase/PP_5149) are unrelated to histidine biosynthesis. The same split architecture is found in <em>P. aeruginosa</em> (<em>hisB</em> = PA5143 separate from HolPase PA0335).</p>
+<p>This distributed genomic organization is consistent with the exceptional evolutionary origin of the HolPase step: HolPase "<em>is generally the last enzyme to be characterized in many bacteria because its origin and evolution are more complex compared to other enzymes in histidine biosynthesis</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/31862725/">PMID: 31862725</a>), and the HAD-type is the Gammaproteobacterial solution (<a href="https://pubmed.ncbi.nlm.nih.gov/28720084/">PMID: 28720084</a>).</p>
+<h3 id="f004-pp_5147pa0335-is-the-physiologically-dominant-holpase-buffered-by-promiscuous-had-phosphatases-with-side-activity">F004 — PP_5147/PA0335 is the physiologically dominant HolPase, buffered by promiscuous HAD phosphatases with side activity</h3>
+<p>The HolPase step is functionally redundant. In <em>P. aeruginosa</em>, deletion of the PP_5147 ortholog PA0335 causes only <strong>incomplete</strong> histidine auxotrophy — residual growth persists. Guo and colleagues identified <strong>PA3255</strong> and <strong>PA1143</strong> as alternative homologs encoding phosphatases with weak "side" HolPase activity, with PA3255 being mainly responsible for the residual growth when PA0335 is absent: "<em>PA3255 and PA1143 code phosphatase with side HolPase activity. PA0335 play a key role in histidine biosynthesis, PA3255 respond mainly for the residual growth when PA0335 HolPase is absence</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/40596842/">PMID: 40596842</a>).</p>
+<p>This redundancy is a hallmark of substrate-ambiguous HAD-superfamily phosphatases. As shown for the <em>E. coli</em> proteome, "<em>Gph and HisB are members of the HAD superfamily of hydrolases</em>" that are evolutionarily interconvertible and can acquire overlapping phosphatase activities (<a href="https://pubmed.ncbi.nlm.nih.gov/23728795/">PMID: 23728795</a>). <em>P. putida</em> is expected to possess an analogous set of backup phosphatases, meaning PP_5147 is best described as the <strong>principal, but not absolutely essential,</strong> HolPase.</p>
+<h3 id="f005-pp_5147-is-a-soluble-cytoplasmic-enzyme">F005 — PP_5147 is a soluble cytoplasmic enzyme</h3>
+<p>Subcellular localization analysis places the enzyme firmly in the cytoplasm. A Kyte–Doolittle hydrophobicity scan of Q88CN3 (218 aa) found a maximum 19-residue window mean of only <strong>0.98</strong> (at residue 52), well below the ~1.6 threshold for a transmembrane helix, and the N-terminal 30 residues averaged <strong>−0.13</strong> with no hydrophobic core — ruling out both a transmembrane segment and a Sec/Tat signal peptide. UniProt lists only Hydrolase/Magnesium/Metal-binding keywords, with <strong>no membrane or secretion annotations</strong>. This is entirely consistent with the biology of the pathway: de novo histidine biosynthesis, and HAD-superfamily amino-acid-biosynthesis phosphatases generally, operate in the <strong>cytosol</strong>.</p>
+<h3 id="f006-alphafold-structure-reveals-a-complete-canonical-had-active-site-with-a-c1-cap-domain">F006 — AlphaFold structure reveals a complete, canonical HAD active site with a C1 cap domain</h3>
+<p>The predicted structure strongly corroborates the enzymatic assignment. The AlphaFold model <strong>AF-Q88CN3-F1</strong> (v6) is high-confidence (<strong>mean pLDDT 96.2</strong> across all 218 residues). Spatial analysis around the Asp7 nucleophile carboxylate reveals the four conserved HAD catalytic motifs converging in a single active-site pocket:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Residue(s)</th>
+<th>Distance to Asp7</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I</td>
+<td>Asp7 + Asp9 + Thr11 (DxDxT)</td>
+<td>—</td>
+<td>Asp7 nucleophile; Asp9 general acid/base</td>
+</tr>
+<tr>
+<td>II</td>
+<td>Thr111</td>
+<td>4.5 Å</td>
+<td>Phosphate binding</td>
+</tr>
+<tr>
+<td>III</td>
+<td>Lys156</td>
+<td>2.7 Å</td>
+<td>Transition-state charge neutralization</td>
+</tr>
+<tr>
+<td>IV</td>
+<td>Asp179 / Asp183 (with Ser178/Ser180/Asn182)</td>
+<td>4.8–5.5 Å</td>
+<td>Mg²⁺ coordination</td>
+</tr>
+</tbody>
+</table>
+<p>The ~90-residue insertion between motif I (~res 11) and motif II (~res 111) forms an α-helical <strong>C1 "cap" domain</strong> characteristic of <strong>HAD subfamily IB (SerB-like)</strong>, which encloses the substrate and dictates specificity for small phosphomonoesters. This architecture places the enzyme squarely within the "<em>member of the histidinol-phosphate phosphatase (HisB) subfamily of the haloalkanoic acid dehalogenase (HAD) enzyme superfamily</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/20050615/">PMID: 20050615</a>) and supports a <strong>Mg²⁺-dependent aspartyl-phosphotransfer mechanism</strong>: Asp7 attacks the substrate phosphorus to form a phospho-aspartyl intermediate, which is then hydrolyzed, with Mg²⁺ and the conserved Lys/Thr residues stabilizing the transition state.</p>
+<h3 id="f007-the-had-type-holpase-lineage-evolved-from-a-promiscuous-gmhb-like-ancestor">F007 — The HAD-type HolPase lineage evolved from a promiscuous GmhB-like ancestor</h3>
+<p>HolPase is evolutionarily exceptional: it is the <strong>only</strong> histidine-biosynthesis enzyme with multiple independent origins — three unrelated folds (HAD, PHP, IMPase) perform this single reaction. As stated directly, "<em>The only exception is the histidinol phosphate phosphatase (HolPase)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/36502290/">PMID: 36502290</a>). Phylogenetic and ancestral-sequence-reconstruction analyses show that the Gammaproteobacterial HAD-type HolPase (<strong>HisB-N</strong>) arose from within the <strong>βGmhB clade</strong> — the same HAD subfamily as <strong>D-glycero-D-manno-heptose-1,7-bisphosphate 7-phosphatase (GmhB)</strong> — via a promiscuous ancestral phosphatase that already possessed weak HolPase activity: "<em>It has been argued that HisB-N and its closest homologue d-glycero-d-manno-heptose-1,7-bisphosphate 7-phosphatase (GmhB) have emerged from the same promiscuous ancestral phosphatase</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/36502290/">PMID: 36502290</a>). GmhB itself "<em>supports two divergent biochemical pathways in bacteria</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/20050615/">PMID: 20050615</a>) and binds histidinol-phosphate without efficiently hydrolyzing it — illustrating the shared active-site chemistry that underlies PP_5147's residual substrate ambiguity.</p>
+<h3 id="f008-pp_5147-is-the-primary-holpase-p-putida-keeps-a-distinct-serb-pp_4909-and-a-divergent-holpase-paralog-pp_1721">F008 — PP_5147 is the primary HolPase; <em>P. putida</em> keeps a distinct serB (PP_4909) and a divergent HolPase paralog (PP_1721)</h3>
+<p>The "SerB family" name in the protein annotation is a <strong>fold designation, not a functional one</strong>. <em>P. putida</em> KT2440 possesses a genuine, dedicated phosphoserine phosphatase <strong>serB = PP_4909</strong> (KEGG KO K01079, EC 3.1.3.3), together with the complete serine pathway (<em>serA</em> = PP_2533/PP_5155, <em>serC</em> = PP_1768). PP_5147 is therefore <strong>not</strong> the serine-biosynthesis phosphatase.</p>
+<p>The histidinol-phosphatase orthology KO K28842 maps to <strong>two paralogs</strong> in <em>P. putida</em>: PP_5147 and <strong>PP_1721</strong>. Global-alignment identities discriminate their roles clearly:</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Identity</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_5147 vs PA0335</td>
+<td>67.7%</td>
+<td>Clear ortholog of validated primary HolPase</td>
+</tr>
+<tr>
+<td>PP_1721 vs PA0335</td>
+<td>46.0%</td>
+<td>More divergent paralog</td>
+</tr>
+<tr>
+<td>PP_5147 vs PP_1721</td>
+<td>38.7%</td>
+<td>Distinct paralogs</td>
+</tr>
+</tbody>
+</table>
+<p>Both retain HAD motif I (PP_5147 "FDLDNT"; PP_1721 "FDLDET"), but PP_5147's substantially higher identity to the validated PA0335 ortholog marks it as the <strong>dedicated, primary HolPase</strong> for histidine biosynthesis, with PP_1721 a more divergent paralog of secondary or specialized function.</p>
+<h3 id="f009-consolidated-conclusion">F009 — Consolidated conclusion</h3>
+<p>Six independent lines of evidence converge on the same assignment: (1) UniProt/KEGG/BioCyc annotation as histidinol-phosphatase EC 3.1.3.15 with reaction L-histidinol-P + H₂O → L-histidinol + Pᵢ (Rhea:14465); (2) KEGG orthology K28842 in the histidine module M00026; (3) InterPro IPR006385 (HAD subfamily IB / SerB1-like), which explicitly includes the <em>Pseudomonas</em> HolPase; (4) 67.7% identity to the genetically and biochemically validated ortholog PA0335; (5) a high-confidence AlphaFold model (pLDDT 96.2) with a complete four-motif HAD active site plus a C1 cap; and (6) no signal peptide or transmembrane segment, establishing cytoplasmic localization.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-and-its-place-in-the-pathway">The reaction and its place in the pathway</h3>
+<p>PP_5147 catalyzes step 8 of the de novo histidine biosynthesis pathway:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="p">...</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">imidazole</span><span class="o">-</span><span class="n">glycerol</span><span class="o">-</span><span class="n">P</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">(</span><span class="n">hisB</span><span class="o">/</span><span class="n">IGPD</span><span class="p">,</span><span class="w"> </span><span class="n">PP_0289</span><span class="p">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">imidazole</span><span class="o">-</span><span class="n">acetol</span><span class="o">-</span><span class="n">P</span>
+<span class="w">                                            </span><span class="err">│</span><span class="w"> </span><span class="p">(</span><span class="n">hisC</span><span class="p">,</span><span class="w"> </span><span class="n">aminotransferase</span><span class="p">)</span>
+<span class="w">                                            </span><span class="err">▼</span>
+<span class="w">                                 </span><span class="n">L</span><span class="o">-</span><span class="n">histidinol</span><span class="o">-</span><span class="n">phosphate</span>
+<span class="w">                                            </span><span class="err">│</span>
+<span class="w">              </span><span class="err">┌─────────────────────────────┘</span>
+<span class="w">              </span><span class="err">│</span><span class="w">  </span><span class="n">PP_5147</span><span class="w"> </span><span class="p">(</span><span class="n">HolPase</span><span class="p">,</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">3.1.3.15</span><span class="p">)</span>
+<span class="w">              </span><span class="err">│</span><span class="w">  </span><span class="n">L</span><span class="o">-</span><span class="n">histidinol</span><span class="o">-</span><span class="n">P</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span><span class="w"> </span><span class="o">--</span><span class="n">Mg2</span><span class="o">+--&gt;</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">histidinol</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Pi</span>
+<span class="w">              </span><span class="err">▼</span>
+<span class="w">        </span><span class="n">L</span><span class="o">-</span><span class="n">histidinol</span>
+<span class="w">              </span><span class="err">│</span><span class="w"> </span><span class="p">(</span><span class="n">hisD</span><span class="p">,</span><span class="w"> </span><span class="n">histidinol</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">;</span><span class="w"> </span><span class="mi">2</span><span class="n">x</span><span class="w"> </span><span class="n">NAD</span><span class="o">+</span><span class="p">)</span>
+<span class="w">              </span><span class="err">▼</span>
+<span class="w">        </span><span class="n">L</span><span class="o">-</span><span class="n">histidine</span>
+</code></pre></div>
+
+<p>The substrate, L-histidinol-phosphate, is a small phosphomonoester; the product histidinol is then oxidized in two NAD⁺-dependent steps by histidinol dehydrogenase (HisD) to yield L-histidine. This is a <strong>linear anabolic (biosynthetic) pathway</strong> operating entirely in the cytoplasm.</p>
+<h3 id="catalytic-mechanism">Catalytic mechanism</h3>
+<p>As a HAD subfamily IB enzyme, PP_5147 uses the canonical <strong>aspartyl-phosphotransferase mechanism</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Step</span><span class="w"> </span><span class="nt">1</span><span class="o">:</span><span class="w">  </span><span class="nt">Asp7-COO</span><span class="err">⁻</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">R-O-PO3²</span><span class="err">⁻</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="nt">Asp7-CO-O-PO3²</span><span class="err">⁻</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">R-OH</span>
+<span class="w"> </span><span class="o">(</span><span class="nt">nucleophilic</span><span class="w"> </span><span class="nt">attack</span><span class="o">;</span><span class="w"> </span><span class="nt">phospho-aspartyl</span><span class="w"> </span><span class="nt">intermediate</span><span class="o">)</span>
+
+<span class="nt">Step</span><span class="w"> </span><span class="nt">2</span><span class="o">:</span><span class="w">  </span><span class="nt">Asp7-CO-O-PO3²</span><span class="err">⁻</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">H2O</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="nt">Asp7-COO</span><span class="err">⁻</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">Pi</span>
+<span class="w"> </span><span class="o">(</span><span class="nt">hydrolysis</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">intermediate</span><span class="o">;</span><span class="w"> </span><span class="nt">Asp9</span><span class="w"> </span><span class="nt">as</span><span class="w"> </span><span class="nt">general</span><span class="w"> </span><span class="nt">acid</span><span class="o">/</span><span class="nt">base</span><span class="o">)</span>
+
+<span class="nt">Cofactor</span><span class="o">:</span><span class="w"> </span><span class="nt">Mg2</span><span class="o">+,</span><span class="w"> </span><span class="nt">coordinated</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">motif-IV</span><span class="w"> </span><span class="nt">carboxylates</span><span class="w"> </span><span class="nt">Asp179</span><span class="o">/</span><span class="nt">Asp183</span><span class="o">,</span>
+<span class="w">  </span><span class="nt">stabilizes</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">pentacovalent</span><span class="w"> </span><span class="nt">transition</span><span class="w"> </span><span class="nt">state</span><span class="o">;</span><span class="w"> </span><span class="nt">Lys156</span>
+<span class="w">  </span><span class="o">(</span><span class="nt">motif</span><span class="w"> </span><span class="nt">III</span><span class="o">)</span><span class="w"> </span><span class="nt">neutralizes</span><span class="w"> </span><span class="nt">developing</span><span class="w"> </span><span class="nt">negative</span><span class="w"> </span><span class="nt">charge</span><span class="o">.</span>
+</code></pre></div>
+
+<p>The <strong>C1 cap domain</strong> (the ~90-residue helical insertion) folds over the active site to sequester the substrate from bulk solvent and impose specificity for L-histidinol-phosphate over other small phosphometabolites.</p>
+<h3 id="redundancy-and-evolution">Redundancy and evolution</h3>
+<p>The system exhibits <strong>functional degeneracy</strong>: PP_5147 is the dominant catalyst, but promiscuous HAD phosphatases (the <em>P. aeruginosa</em> analogs being PA3255/PA1143) provide backup activity, so its loss yields only incomplete auxotrophy. This is a direct consequence of the lineage's origin — the enzyme descends from a <strong>promiscuous GmhB-like ancestor</strong> that could weakly hydrolyze histidinol-phosphate, and specialization was overlaid on a broad-specificity scaffold. The retained "leakiness" of the HAD active site is precisely what allows other family members to serve as partial backups.</p>
+<h3 id="localization">Localization</h3>
+<p>All evidence points to a <strong>soluble cytoplasmic</strong> localization: no signal peptide, no transmembrane helix, and consistency with the cytosolic setting of the entire histidine biosynthesis pathway. The enzyme carries out its function free in the cytoplasm, drawing on the cellular Mg²⁺ pool.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28720084/">28720084</a></td>
+<td><em>Sequence-based identification of IMPase-like HisN...</em></td>
+<td>Establishes the three unrelated HolPase families and that Gammaproteobacteria (incl. <em>Pseudomonas</em>) use the HAD-type — the family of PP_5147.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31862725/">31862725</a></td>
+<td><em>PA0335... Mediates Histidine Auxotrophy</em></td>
+<td>Primary identification of PA0335 (67.7% ortholog of PP_5147) as HolPase catalyzing the penultimate step; deletion causes auxotrophy.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40596842/">40596842</a></td>
+<td><em>Alternative homologs of HolPase in P. aeruginosa</em></td>
+<td>Confirms PA0335 is a HAD-family HolPase and the key enzyme; PA3255/PA1143 provide side activity explaining incomplete auxotrophy.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23728795/">23728795</a></td>
+<td><em>Substrate ambiguous enzymes in E. coli proteome</em></td>
+<td>Documents HAD-superfamily phosphatases (Gph, HisB) as substrate-ambiguous and interconvertible — basis for backup activity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20050615/">20050615</a></td>
+<td><em>Divergence in the HAD superfamily: GmhB</em></td>
+<td>Places HolPase in a defined HAD subfamily with a conserved four-motif Asp-nucleophile active site; documents the GmhB relative.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36502290/">36502290</a></td>
+<td><em>Ancestry of an evolutionary young enzyme from histidine biosynthesis</em></td>
+<td>Documents shared promiscuous-ancestor origin of HisB-N (HAD HolPase) and GmhB; establishes HolPase as evolutionarily exceptional.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26913973/">26913973</a></td>
+<td><em>Revisited genome of P. putida KT2440</em></td>
+<td>Genome reference underpinning gene/locus assignments used for the <em>P. putida</em> pathway architecture.</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting background literature reviewed on the PHP-type and IMPase-type HolPase families (e.g., <a href="https://pubmed.ncbi.nlm.nih.gov/23327428/">PMID: 23327428</a> on PHP-family HPP, which "<em>catalyzes the hydrolysis of L-histidinol phosphate to L-histidinol and inorganic phosphate, the penultimate step in the biosynthesis of L-histidine</em>"; <a href="https://pubmed.ncbi.nlm.nih.gov/20023146/">PMID: 20023146</a> on plant IMPase-like HISN7) confirms that these are the <em>alternative</em>, non-HAD solutions — reinforcing that PP_5147 is specifically the HAD-type enzyme.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on PP_5147 itself.</strong> All experimental phenotype and mechanistic data derive from the <em>P. aeruginosa</em> ortholog PA0335 (and from other model HAD HolPases), not from the <em>P. putida</em> protein directly. The functional assignment for PP_5147 is a confident inference from 67.7% orthology, structure prediction, and database annotation — not a measured kinetic parameter.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters unknown.</strong> There are no measured k_cat, K_m, substrate-specificity profile, or metal-preference data for PP_5147. Whether it displays the same residual promiscuity as its GmhB-derived ancestors is inferred, not demonstrated.</p>
+</li>
+<li>
+<p><strong>Backup phosphatases not mapped in <em>P. putida</em>.</strong> The specific <em>P. putida</em> homologs corresponding to <em>P. aeruginosa</em> PA3255/PA1143 (the promiscuous backups) have not been individually identified in this investigation; the divergent paralog PP_1721 is a candidate but its function is unverified.</p>
+</li>
+<li>
+<p><strong>Structure is predicted, not experimental.</strong> The active-site geometry rests on an AlphaFold model (albeit high-confidence, pLDDT 96.2). No crystal structure of PP_5147 with bound substrate/product/metal exists to confirm the catalytic distances.</p>
+</li>
+<li>
+<p><strong>Regulation not addressed.</strong> How PP_5147 expression is controlled (e.g., feedback by histidine, links to nitrogen/carbon status) was not investigated.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Gene deletion + complementation.</strong> Construct a clean ΔPP_5147 mutant in <em>P. putida</em> KT2440 and test for histidine auxotrophy on minimal medium ± histidine. Predict <strong>incomplete</strong> auxotrophy (residual growth), mirroring the PA0335 phenotype, and confirm rescue by plasmid-borne PP_5147.</p>
+</li>
+<li>
+<p><strong>Recombinant enzymology.</strong> Express and purify PP_5147, then measure phosphatase activity on L-histidinol-phosphate (determine k_cat, K_m), Mg²⁺-dependence, and pH optimum. Test candidate off-target substrates (e.g., sugar bisphosphates, phosphoserine) to quantify residual promiscuity predicted by the GmhB ancestry.</p>
+</li>
+<li>
+<p><strong>Identify the <em>P. putida</em> backups.</strong> Delete PP_1721 alone and in combination with PP_5147; assay whether the double mutant becomes an <strong>absolute</strong> histidine auxotroph. Screen other HAD phosphatases for side HolPase activity.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Mutate the predicted catalytic residues (Asp7→Ala nucleophile; Asp9, Lys156, Asp179/Asp183) and confirm loss of activity, validating the AlphaFold-derived mechanistic model.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve a crystal or cryo-EM structure of PP_5147, ideally with a substrate analog (e.g., histidinol + vanadate/tungstate as transition-state mimic) and Mg²⁺ bound, to confirm the C1 cap architecture and catalytic geometry.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>PP_5147 (Q88CN3)</strong> is the principal <strong>cytoplasmic HAD-superfamily histidinol-phosphate phosphatase</strong> (subfamily IB / "SerB1-like"; EC 3.1.3.15) of <em>Pseudomonas putida</em> KT2440. It catalyzes the Mg²⁺-dependent hydrolysis of L-histidinol-phosphate to L-histidinol plus inorganic phosphate — the penultimate step of de novo L-histidine biosynthesis — in the cytoplasm. The assignment is supported by consistent database orthology, a complete four-motif HAD catalytic site in a high-confidence structural model, and 67.7% identity to the experimentally validated ortholog PA0335 whose deletion causes histidine auxotrophy. The "SerB family" name reflects fold homology only; <em>P. putida</em> maintains a separate phosphoserine phosphatase (PP_4909), and PP_5147 is a dedicated histidine-biosynthesis enzyme backed up by promiscuous HAD paralogs.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_5147-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_5147-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:28720084</li>
+<li>PMID:31862725</li>
+<li>PMID:40596842</li>
+<li>PMID:23728795</li>
+<li>PMID:20050615</li>
+<li>PMID:36502290</li>
+<li>PMID:23327428</li>
+<li>PMID:20023146</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CN3
+gene_symbol: PP_5147
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_5147 is a predicted monofunctional HAD-family histidinol-phosphate
+  phosphatase (EC 3.1.3.15) in Pseudomonas putida KT2440. It is a close
+  full-length ortholog of Pseudomonas aeruginosa PA0335, whose phosphatase
+  activity and histidine-biosynthesis phenotype have been demonstrated. This
+  strongly supports hydrolysis of L-histidinol phosphate to L-histidinol in the
+  penultimate pathway reaction, although PP_5147 itself has not been assayed.
+  KT2440 also encodes the unrelated IMPase-like HisN candidate PP_3157, and the
+  division of physiological flux between them is unknown.
+existing_annotations:
+- term:
+    id: GO:0004401
+    label: histidinol-phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: Strong orthology supports the exact histidinol-phosphatase activity.
+    action: ACCEPT
+    reason: &gt;-
+      Q88CN3 is a full-length close ortholog of the experimentally validated
+      P. aeruginosa enzyme PA0335 and shares its HAD-SF-IB family signatures.
+      This is strong transfer evidence despite the absence of a direct KT2440
+      assay; the coexistence of PP_3157 indicates possible redundancy rather
+      than evidence against the activity.
+    supported_by:
+    - reference_id: file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+      supporting_text: &#34;67.7% amino-acid identity to the experimentally validated ortholog PA0335&#34;
+    - reference_id: PMID:31862725
+      supporting_text: &#34;PA0335 was shown to encode Hol-Pase&#34;
+- term:
+    id: GO:0000105
+    label: L-histidine biosynthetic process
+  evidence_type: ISS
+  original_reference_id: PMID:31862725
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      PP_5147 should be annotated to histidine biosynthesis by close orthology
+      to experimentally validated Pseudomonas PA0335.
+    action: NEW
+    reason: &gt;-
+      PA0335 disruption causes histidine-biosynthesis deficiency, and the
+      full-length PP_5147 protein is highly similar with matching HAD-family
+      signatures. This is an orthology-based proposal, not direct KT2440
+      experimental evidence.
+    supported_by:
+    - reference_id: PMID:31862725
+      supporting_text: &#34;PA0335 was shown to encode Hol-Pase&#34;
+    - reference_id: file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+      supporting_text: &#34;67.7% amino-acid identity to the experimentally validated ortholog PA0335&#34;
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: file:PSEPK/PP_5147/PP_5147-uniprot.txt
+  title: UniProtKB unreviewed entry for PSEPK PP_5147
+  findings:
+  - statement: &gt;-
+      Records an ARBA-predicted histidinol-phosphatase function and a
+      SerB-family/HAD-like family assignment.
+- id: file:PSEPK/PP_5147/PP_5147-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK PP_5147
+  findings:
+  - statement: Contains the EC-derived activity annotation reviewed above.
+- id: file:PSEPK/PP_3157/PP_3157-uniprot.txt
+  title: UniProtKB entry for the alternative PSEPK histidinol-phosphatase candidate
+  findings:
+  - statement: &gt;-
+      Assigns PP_3157 to the same reaction through the unrelated
+      IMPase-like HisN family.
+- id: PMID:31862725
+  title: &gt;-
+    PA0335, a Gene Encoding Histidinol Phosphate Phosphatase, Mediates
+    Histidine Auxotrophy in Pseudomonas aeruginosa.
+  findings:
+  - statement: &gt;-
+      Establishes the molecular activity and histidine-biosynthesis phenotype
+      of the close Pseudomonas ortholog PA0335.
+    supporting_text: &#34;PA0335 was shown to encode Hol-Pase&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-cached abstract verified; this directly supports PA0335 and is
+      transferred to PP_5147 by close full-length orthology.
+- id: file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+  title: OpenScientist gene research for PSEPK PP_5147
+  findings:
+  - statement: &gt;-
+      Identifies the exact-accession protein as a close full-length ortholog of
+      experimentally validated PA0335.
+    supporting_text: &gt;-
+      67.7% amino-acid identity to the experimentally validated ortholog PA0335
+core_functions:
+- description: &gt;-
+    Predicted to hydrolyze L-histidinol phosphate to L-histidinol in the
+    penultimate reaction of L-histidine biosynthesis, based on close orthology
+    to experimentally validated Pseudomonas PA0335.
+  molecular_function:
+    id: GO:0004401
+    label: histidinol-phosphatase activity
+  directly_involved_in:
+  - id: GO:0000105
+    label: L-histidine biosynthetic process
+  supported_by:
+  - reference_id: PMID:31862725
+    supporting_text: &#34;PA0335 was shown to encode Hol-Pase&#34;
+  - reference_id: file:PSEPK/PP_5147/PP_5147-deep-research-openscientist.md
+    supporting_text: &#34;67.7% amino-acid identity to the experimentally validated ortholog PA0335&#34;
+suggested_questions:
+- question: &gt;-
+    How much histidinol-phosphatase flux does PP_5147 carry in vivo, and is its
+    role redundant with or conditionally distinct from PP_3157?
+suggested_experiments:
+- description: &gt;-
+    Compare single and double PP_5147/PP_3157 deletion strains for histidine
+    auxotrophy and assay purified proteins against histidinol phosphate and
+    phosphoserine.
+  experiment_type: genetic complementation and substrate-specific enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

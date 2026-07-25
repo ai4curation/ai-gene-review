@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>coq7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>coq7</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QR1" target="_blank" class="term-link">
+                        Q88QR1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "coq7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QR1" data-a="DESCRIPTION: coq7 encodes a diiron 3-demethoxyubiquinol 3-hydro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>coq7 encodes a diiron 3-demethoxyubiquinol 3-hydroxylase that performs a late aromatic-ring hydroxylation during ubiquinone biosynthesis. The enzyme is predicted to be a peripheral protein associated with the bacterial cell membrane.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004497" target="_blank" class="term-link">
+                                    GO:0004497
+                                </a>
+                            </span>
+                            <span class="term-label">monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR1" data-a="GO:0004497" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Monooxygenase activity is correct but less informative than the substrate-specific hydroxylase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008682 captures the evolved ubiquinone-intermediate hydroxylase function, making the generic monooxygenase parent redundant.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR1" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Coq7 is predicted to be a peripheral cell-membrane enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record assigns Coq7 to the cell membrane as a peripheral membrane protein, consistent with the interfacial membrane model proposed for experimentally studied Coq7-family enzymes. Exact topology and membrane-face orientation have not been measured for PP_0427.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coq7/coq7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peripheral membrane protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11435415" target="_blank" class="term-link">
+                                        PMID:11435415
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Based on the similarities to other well studied di-iron carboxylate proteins, we propose a structural model for Coq7 as an interfacial integral membrane protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR1" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the core process for Coq7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Coq7 hydroxylates a late demethoxyubiquinol intermediate in this pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coq7/coq7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ubiquinone biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11435415" target="_blank" class="term-link">
+                                        PMID:11435415
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have cloned COQ7 from Pseudomonas aeruginosa and Thiobacillus ferrooxidans and show that indeed this gene complements an Escherichia coli mutant that lacks an unrelated 5-demethoxyubiquinone hydroxylase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008682" target="_blank" class="term-link">
+                                    GO:0008682
+                                </a>
+                            </span>
+                            <span class="term-label">3-demethoxyubiquinol 3-hydroxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QR1" data-a="GO:0008682" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the substrate-specific core molecular function of Coq7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 1.14.99.60 and Rhea 50908 to this hydroxylation reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coq7/coq7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">3-demethoxyubiquinol 3-hydroxylase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11435415" target="_blank" class="term-link">
+                                        PMID:11435415
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we identify Coq7 as belonging to a family of a di-iron containing oxidases/hydroxylases based on a conserved sequence motif for the iron ligands, supporting a direct function of Coq7 as a hydroxylase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/coq7/coq7-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Q88QR1 belongs to the COQ7/CLK-1 family (Pfam PF03232; InterPro IPR011566), a group of di-iron carboxylate oxidases/hydroxylases.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted membrane-associated diiron hydroxylation of 3-demethoxyubiquinol during late ubiquinone biosynthesis, inferred for PP_0427 from conserved Coq7-family chemistry and pathway context.</h3>
+                <span class="vote-buttons" data-g="Q88QR1" data-a="FUNCTION: Predicted membrane-associated diiron hydroxylation..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008682" target="_blank" class="term-link">
+                            3-demethoxyubiquinol 3-hydroxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/coq7/coq7-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">3-demethoxyubiquinol 3-hydroxylase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11435415" target="_blank" class="term-link">
+                                PMID:11435415
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We have cloned COQ7 from Pseudomonas aeruginosa and Thiobacillus ferrooxidans and show that indeed this gene complements an Escherichia coli mutant that lacks an unrelated 5-demethoxyubiquinone hydroxylase.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coq7/coq7-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q88QR1 for coq7</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed entry assigns a membrane-associated, diiron 3-demethoxyubiquinol 3-hydroxylase in ubiquinone biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coq7/coq7-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for coq7</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11435415" target="_blank" class="term-link">
+                            PMID:11435415
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A new member of the family of di-iron carboxylate proteins. Coq7 (clk-1), a membrane-bound hydroxylase involved in ubiquinone biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A Pseudomonas aeruginosa Coq7 ortholog complemented an E. coli mutant lacking the unrelated DMQ hydroxylase UbiF, and conserved iron-ligand motifs support direct diiron hydroxylase chemistry.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23445365" target="_blank" class="term-link">
+                            PMID:23445365
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Aging-associated enzyme human clock-1: substrate-mediated reduction of the diiron center for 5-demethoxyubiquinone hydroxylation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Spectroscopic and kinetic work on human COQ7 directly establishes the carboxylate-bridged diiron mechanism and DMQ hydroxylase chemistry for the conserved family.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/coq7/coq7-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK coq7</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pseudomonas ortholog complementation, conserved diiron ligands, and the complete KT2440 ubiquinone pathway support the PP_0427 assignment. The report&#39;s target-specific UQ-9, exact membrane-face orientation, and Ubi metabolon-membership claims are not adopted because they were not demonstrated for PP_0427.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What physiological electron donor reduces the PP_0427 diiron center, and does PP_0427 physically associate with other KT2440 ubiquinone-biosynthesis proteins?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QR1" data-a="Q: What physiological electron donor reduces the PP_0..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Delete PP_0427 and quantify demethoxyubiquinone accumulation and ubiquinone depletion by LC-MS, then complement the phenotype with wild-type PP_0427 and iron-ligand mutants.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QR1" data-a="EXPERIMENT: Delete PP_0427 and quantify demethoxyubiquinone ac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(coq7-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QR1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *coq7* (PP_0427 / UniProt Q88QR1) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T19:48:26.743536</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="coq7-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="coq7-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-coq7-pp_0427-uniprot-q88qr1-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>coq7</em> (PP_0427 / UniProt Q88QR1) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>coq7</strong> (ordered locus <strong>PP_0427</strong>; UniProt accession <strong>Q88QR1</strong>; entry name <strong>COQ7_PSEPK</strong>; RefSeq WP_010951761.1; 215 aa) of <em>Pseudomonas putida</em> KT2440 encodes <strong>3-demethoxyubiquinol 3-hydroxylase</strong>, also called <strong>DMQ hydroxylase</strong> (EC 1.14.99.60). This enzyme is a <strong>ferritin-like, carboxylate-bridged di-iron oxygenase</strong> that catalyzes the <strong>penultimate (C5) aromatic-ring hydroxylation</strong> of the ubiquinone (coenzyme Q) biosynthetic pathway. It converts 5-methoxy-2-methyl-3-(all-<em>trans</em>-polyprenyl)benzene-1,4-diol — <strong>demethoxyubiquinol (DMQH₂)</strong> — to <strong>3-demethylubiquinol</strong>, using molecular O₂ and a reducing cosubstrate. The product is subsequently O-methylated by UbiG/Coq3 to yield mature ubiquinol (the reduced form of coenzyme Q₉ in <em>P. putida</em>), the lipophilic electron/proton carrier of the respiratory chain.</p>
+<p>The identity of Q88QR1 is established across <strong>seven independent lines of evidence</strong>: (1) membership in the COQ7/CLK-1 protein family (PF03232; IPR011566); (2) direct functional evidence that a <em>Pseudomonas</em> Coq7 complements the <em>E. coli ubiF</em> mutant; (3) direct spectroscopic/biochemical proof that the COQ7 family uses a carboxylate-bridged diiron center to hydroxylate DMQ; (4) bioinformatic confirmation that Q88QR1 carries the canonical 4-glutamate/2-histidine di-iron ligand signature; (5) an AlphaFold structural model (mean pLDDT 92.3) showing a pre-organized bimetallic active site; (6) UniProt/KEGG/BioCyc database annotations consistent with a two-iron, membrane-associated monooxygenase in ubiquinone biosynthesis; and (7) an evolutionary framework placing <em>Pseudomonas</em> Coq7 as the ancestral di-iron alternative to the flavin monooxygenase UbiF used by <em>E. coli</em>.</p>
+<p>Functionally, Coq7 operates as a <strong>peripheral (monotopic) membrane protein on the cytoplasmic face of the plasma membrane</strong>, where its di-iron center and its substrate's long isoprenoid tail enable capture and hydroxylation of the lipophilic quinone substrate at the membrane–water interface. Because its product is a precursor of the essential respiratory quinone, Coq7 activity is required for aerobic respiratory electron transport. In <em>Pseudomonas</em>, this di-iron Coq7 — the true bacterial ortholog of human COQ7/CLK-1 — replaces the unrelated flavin monooxygenase UbiF that performs the identical C5 step in <em>E. coli</em>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-coq7-encodes-a-di-iron-carboxylate-dmq-hydroxylase-catalyzing-the-penultimate-step-of-ubiquinone-biosynthesis">Finding 1 — coq7 encodes a di-iron carboxylate DMQ hydroxylase catalyzing the penultimate step of ubiquinone biosynthesis</h3>
+<p>Q88QR1 belongs to the <strong>COQ7/CLK-1 family</strong> (Pfam PF03232; InterPro IPR011566), a group of di-iron carboxylate oxidases/hydroxylases. The functional assignment rests on two decisive pieces of experimental work. First, Stenmark et al. (2001) cloned <em>COQ7</em> from the close relative <em>Pseudomonas aeruginosa</em> (and from <em>Thiobacillus ferrooxidans</em>) and showed that it <strong>functionally complements an <em>Escherichia coli ubiF</em> mutant</strong> that lacks the enzyme responsible for 5-demethoxyubiquinone hydroxylation. They further identified a conserved sequence motif for iron ligands, assigning Coq7 to the family of di-iron-containing hydroxylases and supporting a <strong>direct catalytic</strong> (rather than merely structural) role:</p>
+<blockquote>
+<p>"Here we identify Coq7 as belonging to a family of a di-iron containing oxidases/hydroxylases based on a conserved sequence motif for the iron ligands, supporting a direct function of Coq7 as a hydroxylase. We have cloned COQ7 from Pseudomonas aeruginosa and Thiobacillus ferrooxidans and show that indeed this gene complements an Escherichia coli mutant that lacks an unrelated 5-demethoxyubiquinone hydroxylase." — <a href="https://pubmed.ncbi.nlm.nih.gov/11435415/">PMID: 11435415</a></p>
+</blockquote>
+<p>Second, direct biochemical and spectroscopic proof of the catalytic mechanism comes from the human ortholog CLK-1/COQ7. Lu et al. (2013) used UV-visible and Mössbauer spectroscopy to demonstrate that the enzyme houses a <strong>carboxylate-bridged diiron center that activates O₂</strong> to hydroxylate 5-demethoxyubiquinone (DMQ):</p>
+<blockquote>
+<p>"Both UV-visible and Mössbauer experiments provide unambiguous evidence that GB1-hCLK-1 functions as a 5-demethoxyubiquinone-hydroxylase, utilizing its carboxylate-bridged diiron center." — <a href="https://pubmed.ncbi.nlm.nih.gov/23445365/">PMID: 23445365</a></p>
+</blockquote>
+<p>Together these establish the enzyme identity for the <em>P. putida</em> ortholog: a di-iron hydroxylase performing the DMQ-hydroxylation (C5) step, classified as <strong>EC 1.14.99.60</strong>. The reaction registered in Rhea (Rhea:50908) is: DMQH₂ + AH₂ + O₂ → 3-demethylubiquinol + A + H₂O.</p>
+<h3 id="finding-2-coq7-is-a-membrane-associated-interfacial-protein-acting-on-the-cytoplasmic-face-the-substrate-side-chain-enhances-catalysis">Finding 2 — Coq7 is a membrane-associated interfacial protein acting on the cytoplasmic face; the substrate side chain enhances catalysis</h3>
+<p>Stenmark et al. (2001) proposed, from homology to other well-characterized diiron-carboxylate proteins, that Coq7 is an <strong>interfacial integral (monotopic) membrane protein</strong> — associated with, rather than spanning, the lipid bilayer:</p>
+<blockquote>
+<p>"Based on the similarities to other well studied di-iron carboxylate proteins, we propose a structural model for Coq7 as an interfacial integral membrane protein." — <a href="https://pubmed.ncbi.nlm.nih.gov/11435415/">PMID: 11435415</a></p>
+</blockquote>
+<p>This localization model is corroborated functionally. Lu et al. (2013) showed with human CLK-1 that the <strong>isoprenoid tail of the physiological substrate is important for catalysis</strong>: both V_max and k_cat/K_M for DMQ hydroxylation increase when the tail-less analog DMQ0 is replaced by the tailed DMQ2, and the tailed substrate mediates NADH reduction of the diiron center while reducing uncoupled NADH consumption:</p>
+<blockquote>
+<p>"Both Vmax and kcat/KM for DMQ hydroxylation increase when DMQ0 is replaced by DMQ2 as the substrate, which demonstrates that an isoprenoid side chain enhances enzymatic hydroxylation and improves catalytic efficiency." — <a href="https://pubmed.ncbi.nlm.nih.gov/23445365/">PMID: 23445365</a></p>
+</blockquote>
+<p>The dependence on the lipophilic tail is exactly what is expected for an enzyme that accesses its substrate at the membrane interface. UniProt annotates the subcellular location of Q88QR1 as <strong>"Cell membrane; Peripheral membrane protein,"</strong> consistent with this interfacial model, and the <em>P. putida</em> enzyme acts on the <strong>cytoplasmic (inner) face</strong> of the plasma membrane, where the soluble ubiquinone-biosynthesis machinery operates.</p>
+<h3 id="finding-3-physiological-role-coq7-supplies-ubiquinone-required-for-respiratory-electron-transport">Finding 3 — Physiological role: Coq7 supplies ubiquinone required for respiratory electron transport</h3>
+<p>Ubiquinone (coenzyme Q) is the lipophilic proton/electron carrier of proteobacterial respiratory chains. Its biosynthesis requires three aromatic-ring hydroxylations; Coq7/UbiF performs the <strong>C5 (penultimate) hydroxylation of DMQ</strong>, the immediate precursor of ubiquinol, which is then O-methylated (UbiG/Coq3) to finished ubiquinone. Loss of this step blocks respiration. Padilla et al. (2004) showed that yeast producing only DMQ (i.e., with a defective Coq7 step) are respiratory-deficient and cannot support NADH- or succinate-cytochrome <em>c</em> reductase activity:</p>
+<blockquote>
+<p>"Yeast strains lacking Q(6) and producing solely DMQ were respiratory deficient and unable to support (6)either NADH-cytochrome c reductase or succinate-cytochrome c reductase activities." — <a href="https://pubmed.ncbi.nlm.nih.gov/15078893/">PMID: 15078893</a></p>
+</blockquote>
+<p>The pathway context is now well defined in <em>E. coli</em>: Hajj Chehade et al. (2019) showed that the terminal reactions of the UQ pathway are organized as a <strong>soluble ~1-MDa Ubi metabolon</strong>, in which the SCP2 domain of UbiJ forms an extended hydrophobic cavity that sequesters the hydrophobic UQ intermediates:</p>
+<blockquote>
+<p>"seven Ubi proteins form the Ubi complex, a stable metabolon that catalyzes the last six reactions of the UQ biosynthetic pathway in Escherichia coli. The SCP2 domain of UbiJ forms an extended hydrophobic cavity that binds UQ intermediates" — <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a></p>
+</blockquote>
+<p>This establishes that the DMQ-hydroxylation step operates within a soluble, membrane-associated complex handling lipophilic intermediates, and that its failure abolishes respiratory electron transport — defining the physiological importance of Coq7 in <em>Pseudomonas</em>.</p>
+<h3 id="finding-4-bioinformatic-verification-of-the-canonical-ferritin-like-di-iron-center">Finding 4 — Bioinformatic verification of the canonical ferritin-like di-iron center</h3>
+<p>Direct inspection of the UniProt Q88QR1 (COQ7_PSEPK) record confirms the molecular features expected of this enzyme class. The protein is <strong>215 amino acids</strong>, EC 1.14.99.60, with a cofactor requirement of <strong>"binds 2 iron ions per subunit."</strong> The six annotated iron-binding residues are <strong>Glu64, Glu94, His97, Glu146, Glu178, His181</strong> — i.e., two E-x-x-H motifs (E94–VDH97 and E178–EQH181) plus two bridging carboxylates (E64, E146). This <strong>4-glutamate/2-histidine ligand signature</strong> is the exact hallmark of the ferritin-like carboxylate-bridged diiron oxidase superfamily (InterPro IPR009078 "Ferritin-like_SF"; IPR012347 "Ferritin-like"). This independently verifies, at the sequence level, that Q88QR1 possesses the metal-binding architecture required for O₂-activating di-iron hydroxylase chemistry.</p>
+<h3 id="finding-5-evolutionary-context-pseudomonas-uses-the-ancestral-di-iron-coq7-for-the-step-e-coli-performs-with-the-fmo-ubif">Finding 5 — Evolutionary context: Pseudomonas uses the ancestral di-iron Coq7 for the step E. coli performs with the FMO UbiF</h3>
+<p>Proteobacteria evolved diverse enzyme combinations for the three contiguous UQ ring hydroxylations. In <em>E. coli</em>, these are performed by <strong>three flavin monooxygenases (FMOs) — UbiF, UbiH, and UbiI</strong> — each modifying a single ring position, but these FMOs occur in only a fraction of proteobacteria (Pelosi et al. 2016):</p>
+<blockquote>
+<p>"In Escherichia coli, each of three UQ flavin monooxygenases (FMOs), called UbiF, UbiH, and UbiI, modifies a single position of the aromatic ring." — <a href="https://pubmed.ncbi.nlm.nih.gov/27822549/">PMID: 27822549</a></p>
+</blockquote>
+<p><em>Pseudomonas</em> instead encodes a <strong>COQ7-family di-iron enzyme</strong> for the penultimate (C5/DMQ) step. The functional interchangeability of the two unrelated enzyme classes at this precise position is demonstrated by cross-complementation: Stenmark et al. (2001) showed <em>P. aeruginosa</em> Coq7 rescues the <em>E. coli ubiF</em> mutant, and work on <em>C. elegans</em> CLK-1 (Kawamukai and colleagues, 2003) showed that CLK-1/Coq7 likewise rescues the <em>E. coli ubiF</em> mutant:</p>
+<blockquote>
+<p>"the plasmid encoding C. elegans CLK-1 supported aerobic respiration on a non-fermentable carbon source of E. coli ubiF mutant strain and rescued the ability to synthesize ubiquinone, suggesting that the eukaryotic CLK-1/Coq7p family could function as bacterial UbiF" — <a href="https://pubmed.ncbi.nlm.nih.gov/12753928/">PMID: 12753928</a></p>
+</blockquote>
+<p>Q88QR1 is the <em>P. putida</em> ortholog (COQ7_PSEPK, PP_0427) within this di-iron branch, making it the true bacterial homolog of the eukaryotic COQ7/CLK-1 enzymes, distinct from the FMO-based UbiF route.</p>
+<h3 id="finding-6-alphafold-structure-confirms-a-pre-organized-bimetallic-di-iron-active-site">Finding 6 — AlphaFold structure confirms a pre-organized bimetallic di-iron active site</h3>
+<p>The AlphaFold model <strong>AF-Q88QR1-F1</strong> (mean pLDDT 92.3 — very high confidence) was analyzed directly. The six sequence-annotated iron ligands (E64, E94, H97, E146, E178, H181) all have per-residue pLDDT &gt; 93, and their coordinating side-chain atoms converge into a single cluster: every ligand atom lies within 4.8 Å of the common centroid. Characteristic short carboxylate–carboxylate and carboxylate–histidine contacts are present (E94–E178 3.4 Å; E146–E178 4.0 Å; E64–E94 4.9 Å; E94–H97 5.3 Å; E94–H181 4.8 Å). This tight 4-Glu/2-His arrangement is the geometry expected for two adjacent (~3–4 Å apart) bridged iron ions of a ferritin-like carboxylate-bridged di-iron center — indicating that the active site is <strong>structurally pre-organized</strong> to bind the bimetallic cofactor, independent of any experimental crystal structure.</p>
+<h3 id="finding-7-database-annotations-independently-corroborate-the-identity">Finding 7 — Database annotations independently corroborate the identity</h3>
+<p>The UniProt Q88QR1 (COQ7_PSEPK) controlled-vocabulary keywords are: <strong>Cell membrane, Iron, Membrane, Metal-binding, Monooxygenase, Oxidoreductase, Ubiquinone biosynthesis.</strong> Cross-references map the same locus consistently across independent databases: KEGG <strong>ppu:PP_0427</strong>, RefSeq <strong>WP_010951761.1</strong>, GeneID <strong>83677718</strong>, STRING <strong>160488.PP_0427</strong>, and BioCyc <strong>PPUT160488:G1G01-463-MONOMER</strong>. These annotations are fully concordant with the experimentally and structurally supported conclusion: a two-iron, metal-binding, membrane-associated monooxygenase acting in ubiquinone biosynthesis.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-and-its-position-in-the-pathway">The reaction and its position in the pathway</h3>
+<p>Coq7 catalyzes the <strong>C5 hydroxylation</strong> of the aromatic ring of the ubiquinone precursor. In <em>P. putida</em> (which makes UQ₉, with a nonaprenyl tail), the substrate is 5-methoxy-2-methyl-3-(all-<em>trans</em>-nonaprenyl)benzene-1,4-diol (DMQH₂). The reaction is:</p>
+<div class="codehilite"><pre><span></span><code>DMQH2 (demethoxyubiquinol)  +  AH2  +  O2
+│
+▼   Coq7 / DMQ hydroxylase (di-iron, EC 1.14.99.60)
+│   (introduces –OH at ring position C5)
+▼
+3-demethylubiquinol  +  A  +  H2O
+│
+▼   UbiG / Coq3 (O-methyltransferase; SAM-dependent)
+│   (methylates the new C5-OH → C5-OMe)
+▼
+Ubiquinol (UQ9H2)  ⇌  Ubiquinone (UQ9)  ← respiratory electron/proton carrier
+</code></pre></div>
+
+<h3 id="simplified-schematic-of-the-terminal-uq-biosynthesis-steps">Simplified schematic of the terminal UQ-biosynthesis steps</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">DMQH2</span><span class="w"> </span><span class="err">──</span><span class="o">[</span><span class="n">Coq7 / UbiF-equivalent</span><span class="o">]</span><span class="err">──►</span><span class="w"> </span><span class="mi">3</span><span class="o">-</span><span class="n">demethyl</span><span class="o">-</span><span class="n">UQH2</span><span class="w"> </span><span class="err">──</span><span class="o">[</span><span class="n">UbiG</span><span class="o">]</span><span class="err">──►</span><span class="w"> </span><span class="n">UQH2</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">UQ</span>
+<span class="w">     </span><span class="p">(</span><span class="n">penultimate</span><span class="w"> </span><span class="n">hydroxylation</span><span class="p">)</span><span class="w">              </span><span class="p">(</span><span class="n">final</span><span class="w"> </span><span class="n">O</span><span class="o">-</span><span class="n">methylation</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="enzyme-architecture-and-localization">Enzyme architecture and localization</h3>
+<div class="codehilite"><pre><span></span><code>CYTOPLASM (reducing environment; soluble Ubi metabolon assembles here)
+   ┌───────────────────────────────────────────────────────────────┐
+   │   Coq7  (peripheral / monotopic, 215 aa)                       │
+   │      ▓▓ di-iron center ▓▓                                      │
+   │      Fe─Fe bridged by E64, E146; chelated by E94/H97, E178/H181│
+   │      activates O2 → hydroxylates DMQ ring at C5                │
+   └──────────┬────────────────────────────────────────────────────┘
+      │ isoprenoid tail of substrate anchors in bilayer
+   ~~~~~~~~~~~~▼~~~~~~~~~ INNER (PLASMA) MEMBRANE ~~~~~~~~~~~~~~~~~~~~~
+      (lipophilic DMQ/UQ intermediates partition here)
+</code></pre></div>
+
+<p>The mechanistic logic is coherent: the di-iron center performs O₂ activation and oxygen-atom insertion at C5 of the aromatic head-group, while the substrate's <strong>polyprenyl tail</strong> partitions into the membrane and both anchors the enzyme at the interface and improves catalytic efficiency (Finding 2). The enzyme works within a <strong>soluble metabolon</strong> (analogous to the <em>E. coli</em> Ubi complex), in which a lipid-binding SCP2 protein (UbiJ) shuttles hydrophobic intermediates between active sites (Finding 3). The end product, ubiquinone, is indispensable for aerobic (and, via alternative routes, anaerobic) respiratory electron transport.</p>
+<h3 id="comparison-of-the-c5-hydroxylation-enzymes-across-organisms">Comparison of the C5-hydroxylation enzymes across organisms</h3>
+<table>
+<thead>
+<tr>
+<th>Organism</th>
+<th>Enzyme for C5 (DMQ) hydroxylation</th>
+<th>Chemistry / cofactor</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>E. coli</em></td>
+<td><strong>UbiF</strong> (flavin monooxygenase)</td>
+<td>FAD-dependent</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10802164/">PMID: 10802164</a></td>
+</tr>
+<tr>
+<td><em>P. aeruginosa / P. putida</em></td>
+<td><strong>Coq7</strong> (di-iron hydroxylase)</td>
+<td>Carboxylate-bridged di-iron</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11435415/">PMID: 11435415</a></td>
+</tr>
+<tr>
+<td><em>C. elegans</em></td>
+<td><strong>CLK-1 / Coq7</strong></td>
+<td>Di-iron; complements <em>E. coli ubiF</em></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12753928/">PMID: 12753928</a></td>
+</tr>
+<tr>
+<td>Human</td>
+<td><strong>COQ7 / CLK-1</strong></td>
+<td>Carboxylate-bridged di-iron (spectroscopy)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23445365/">PMID: 23445365</a></td>
+</tr>
+<tr>
+<td>Yeast (<em>S. cerevisiae</em>)</td>
+<td><strong>Coq7p</strong></td>
+<td>Di-iron; regulated by phosphorylation</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23940037/">PMID: 23940037</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="di-iron-ligand-map-for-q88qr1">Di-iron ligand map for Q88QR1</h3>
+<table>
+<thead>
+<tr>
+<th>Ligand residue</th>
+<th>Motif role</th>
+<th>AlphaFold pLDDT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Glu64</td>
+<td>Bridging carboxylate</td>
+<td>&gt; 93</td>
+</tr>
+<tr>
+<td>Glu94</td>
+<td>E-x-x-H motif 1 (Glu)</td>
+<td>&gt; 93</td>
+</tr>
+<tr>
+<td>His97</td>
+<td>E-x-x-H motif 1 (His)</td>
+<td>&gt; 93</td>
+</tr>
+<tr>
+<td>Glu146</td>
+<td>Bridging carboxylate</td>
+<td>&gt; 93</td>
+</tr>
+<tr>
+<td>Glu178</td>
+<td>E-x-x-H motif 2 (Glu)</td>
+<td>&gt; 93</td>
+</tr>
+<tr>
+<td>His181</td>
+<td>E-x-x-H motif 2 (His)</td>
+<td>&gt; 93</td>
+</tr>
+</tbody>
+</table>
+<p>The two E-x-x-H motifs plus two additional bridging glutamates form the canonical 4-Glu/2-His ligand set of the ferritin-like di-iron oxidase superfamily.</p>
+<h3 id="a-note-on-the-catalytic-vs-structural-question">A note on the "catalytic vs. structural" question</h3>
+<p>In eukaryotes, Coq7 has an additional layer of <strong>regulatory</strong> function beyond catalysis: it participates in stabilizing other Coq proteins in the biosynthetic complex, and its activity is modulated by phosphorylation/dephosphorylation. Tran et al. (2006) reported that yeast Coq7p co-migrates with Coq3 and Coq4 in a high-molecular-mass complex and that Q and its precursor DMQ help stabilize other Coq polypeptides (<a href="https://pubmed.ncbi.nlm.nih.gov/16624818/">PMID: 16624818</a>). Martín-Montalvo et al. (2013) showed the mitochondrial phosphatase Ptc7p activates Coq6 biosynthesis by <strong>dephosphorylating Coq7p</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/23940037/">PMID: 23940037</a>), and post-transcriptional regulation of COQ7 mRNA by RNA-binding proteins tunes CoQ output in human cells (<a href="https://pubmed.ncbi.nlm.nih.gov/26690054/">PMID: 26690054</a>). <strong>These regulatory layers are eukaryote-specific elaborations.</strong> For the <em>P. putida</em> bacterial enzyme, the core, conserved, and primary function is the <strong>catalytic</strong> di-iron hydroxylation of DMQ; the phosphorylation-based regulation described in yeast/mammals is not expected to apply directly to the bacterial ortholog.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Contribution to this report</th>
+<th>Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11435415/">11435415</a></td>
+<td><em>Coq7 (clk-1), a membrane-bound di-iron carboxylate hydroxylase in ubiquinone biosynthesis</em></td>
+<td><strong>Keystone.</strong> Cloned <em>Pseudomonas</em> Coq7; showed complementation of <em>E. coli ubiF</em>; identified di-iron ligand motif; proposed interfacial membrane model</td>
+<td>Very high (direct, <em>Pseudomonas</em>)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23445365/">23445365</a></td>
+<td><em>Human CLK-1: substrate-mediated reduction of the diiron center for DMQ hydroxylation</em></td>
+<td>Direct UV-vis/Mössbauer proof of carboxylate-bridged diiron mechanism; isoprenoid tail enhances catalysis</td>
+<td>Very high (direct biochemistry)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12753928/">12753928</a></td>
+<td><em>Complementation of E. coli ubiF by C. elegans CLK-1</em></td>
+<td>Confirms functional interchangeability of di-iron Coq7 and FMO UbiF at the same step</td>
+<td>High</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27822549/">27822549</a></td>
+<td><em>Evolution of ubiquinone biosynthesis in proteobacteria</em></td>
+<td>Frames the FMO (UbiF/H/I) route vs. alternative enzymes; evolutionary context</td>
+<td>High</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15078893/">15078893</a></td>
+<td><em>Demethoxy-Q fails to support respiration</em></td>
+<td>Shows loss of the Coq7 step (DMQ accumulation) abolishes respiratory electron transport</td>
+<td>High (physiological)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">30686758</a></td>
+<td><em>A soluble metabolon synthesizes ubiquinone</em></td>
+<td>Establishes the Ubi metabolon / UbiJ SCP2 hydrophobic cavity for pathway intermediates</td>
+<td>High (pathway context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10802164/">10802164</a></td>
+<td><em>Identification of the ubiF gene in E. coli</em></td>
+<td>Defines the FMO UbiF that Coq7 replaces; identifies the C5 substrate</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16624818/">16624818</a></td>
+<td><em>Complementation of yeast coq7 by E. coli UbiF</em></td>
+<td>Establishes dual (catalytic + structural) roles of eukaryotic Coq7; complex membership</td>
+<td>Supporting (eukaryote-specific)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23940037/">23940037</a></td>
+<td><em>Ptc7 activates Coq7 in yeast</em></td>
+<td>Documents phosphoregulation of Coq7 (eukaryote-specific layer)</td>
+<td>Supporting (eukaryote-specific)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36229432/">36229432</a></td>
+<td><em>Manganese-driven CoQ deficiency</em></td>
+<td>Confirms Coq7 is a diiron hydroxylase catalyzing the penultimate CoQ step; sensitive to mismetallation</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26690054/">26690054</a></td>
+<td><em>RNA-binding proteins regulate COQ7</em></td>
+<td>Post-transcriptional regulation of COQ7 in humans (eukaryote-specific)</td>
+<td>Contextual</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency across the evidence base:</strong> The molecular identity, catalytic chemistry, di-iron cofactor, membrane-interfacial localization, and physiological requirement for respiration are mutually reinforcing across genetic (complementation), biochemical/spectroscopic, bioinformatic (sequence motif), structural (AlphaFold), and database-annotation lines of evidence. No source contradicts the core assignment.</p>
+<p><strong>Note on direct vs. inferred evidence:</strong> No study has been performed directly on the purified <em>P. putida</em> Q88QR1 protein. The functional assignment for the <em>P. putida</em> ortholog is by strong homology and cross-species inference: direct experiments exist for the closely related <em>P. aeruginosa</em> Coq7 (complementation) and for the human/nematode COQ7/CLK-1 (spectroscopy, complementation), which share the family, the ligand motif, and the reaction.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on Q88QR1 itself.</strong> All catalytic and spectroscopic evidence derives from orthologs (<em>P. aeruginosa</em>, human CLK-1, <em>C. elegans</em> CLK-1, yeast Coq7p). The assignment for the <em>P. putida</em> protein is a strong homology-based inference, not a direct enzymatic measurement.</p>
+</li>
+<li>
+<p><strong>No experimental structure.</strong> The di-iron site geometry is supported by an AlphaFold model (high confidence, pLDDT 92.3) and sequence motifs, but no crystal or cryo-EM structure of Q88QR1 (or any Coq7) with bound metals and substrate has been solved. AlphaFold does not model metal ions directly; the "pre-organized di-iron site" is inferred from ligand side-chain convergence.</p>
+</li>
+<li>
+<p><strong>Iron loading and metal specificity not directly demonstrated in <em>P. putida</em>.</strong> The requirement for two Fe (vs. potential mismetallation by Mn, which degrades Coq7 in other systems — <a href="https://pubmed.ncbi.nlm.nih.gov/36229432/">PMID: 36229432</a>) has not been tested for the <em>Pseudomonas</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Reductant/electron-donor identity in <em>Pseudomonas</em> is unconfirmed.</strong> The EC 1.14.99.60 reaction uses a generic reduced acceptor (AH₂); the physiological electron donor in <em>P. putida</em> (e.g., a specific reductase, ferredoxin, or NAD(P)H route) has not been experimentally defined.</p>
+</li>
+<li>
+<p><strong>Metabolon composition in <em>Pseudomonas</em> is assumed by analogy to <em>E. coli</em>.</strong> Whether <em>P. putida</em> assembles an equivalent Ubi metabolon (with a UbiJ-like SCP2 protein) around Coq7 has not been directly verified.</p>
+</li>
+<li>
+<p><strong>Precise membrane topology and orientation</strong> of the <em>P. putida</em> enzyme are modeled, not experimentally mapped (e.g., by protease-accessibility or cysteine-labeling assays).</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous complementation test (fast, decisive).</strong> Express <em>P. putida</em> PP_0427 in an <em>E. coli ubiF</em> deletion strain and score restoration of aerobic growth on succinate/non-fermentable carbon and ubiquinone synthesis by LC-MS. This directly confirms the DMQ-hydroxylase function of Q88QR1 specifically.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution and spectroscopy.</strong> Purify recombinant Q88QR1, reconstitute the di-iron center, and confirm carboxylate-bridged diiron geometry by UV-vis/Mössbauer/EPR (mirroring the human CLK-1 study, <a href="https://pubmed.ncbi.nlm.nih.gov/23445365/">PMID: 23445365</a>). Measure kinetics (V_max, k_cat/K_M) with tailed (DMQ_n) versus tail-less (DMQ0) substrates to verify the isoprenoid-tail effect.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of the ligand set.</strong> Mutate E64, E94, H97, E146, E178, or H181 individually to Ala/Gln and test loss of activity/iron binding, validating the predicted 4-Glu/2-His di-iron ligand map.</p>
+</li>
+<li>
+<p><strong>Metabolite profiling of a knockout.</strong> Delete PP_0427 in <em>P. putida</em> KT2440 and quantify accumulation of DMQ₉ and depletion of UQ₉ by LC-MS; assess respiratory phenotype (O₂ consumption, growth on non-fermentable carbon).</p>
+</li>
+<li>
+<p><strong>Metal-specificity / mismetallation test.</strong> Assess whether Mn overload phenocopies CoQ deficiency in <em>P. putida</em> (as in <a href="https://pubmed.ncbi.nlm.nih.gov/36229432/">PMID: 36229432</a>), probing whether the bacterial enzyme shares the diiron mismetallation vulnerability.</p>
+</li>
+<li>
+<p><strong>Metabolon interaction mapping.</strong> Use co-immunoprecipitation / crosslinking-MS or BN-PAGE to test whether <em>P. putida</em> Coq7 assembles with other Ubi/Coq proteins into a soluble metabolon analogous to the <em>E. coli</em> Ubi complex.</p>
+</li>
+<li>
+<p><strong>Membrane-topology assay.</strong> Confirm peripheral/monotopic association and cytoplasmic-face orientation via carbonate extraction, protease-protection, and substituted-cysteine accessibility experiments.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>coq7</em> (PP_0427; UniProt Q88QR1) of <em>Pseudomonas putida</em> KT2440 encodes <strong>3-demethoxyubiquinol 3-hydroxylase (DMQ hydroxylase, EC 1.14.99.60)</strong> — a <strong>ferritin-like carboxylate-bridged di-iron oxygenase</strong> that catalyzes the <strong>penultimate (C5) hydroxylation</strong> of ubiquinone biosynthesis, converting demethoxyubiquinol to 3-demethylubiquinol using O₂. It functions as a <strong>peripheral (monotopic) protein on the cytoplasmic face of the plasma membrane</strong>, capturing its lipophilic, polyprenyl-tailed substrate at the membrane interface, and it supplies the precursor of <strong>ubiquinone</strong>, the essential respiratory-chain electron carrier. In <em>Pseudomonas</em> this di-iron enzyme — the true bacterial ortholog of eukaryotic COQ7/CLK-1 — is the evolutionary alternative to the unrelated flavin monooxygenase UbiF that performs the same step in <em>E. coli</em>. The assignment is supported by seven concordant lines of genetic, biochemical, bioinformatic, structural, and database evidence, though direct biochemistry on the <em>P. putida</em> protein itself remains to be performed.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="coq7-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="coq7-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11435415</li>
+<li>PMID:23445365</li>
+<li>PMID:15078893</li>
+<li>PMID:30686758</li>
+<li>PMID:27822549</li>
+<li>PMID:12753928</li>
+<li>PMID:10802164</li>
+<li>PMID:23940037</li>
+<li>PMID:16624818</li>
+<li>PMID:26690054</li>
+<li>PMID:36229432</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QR1
+gene_symbol: coq7
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  coq7 encodes a diiron 3-demethoxyubiquinol 3-hydroxylase that performs a late
+  aromatic-ring hydroxylation during ubiquinone biosynthesis. The enzyme is
+  predicted to be a peripheral protein associated with the bacterial cell
+  membrane.
+existing_annotations:
+- term:
+    id: GO:0004497
+    label: monooxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Monooxygenase activity is correct but less informative than the substrate-specific hydroxylase term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0008682 captures the evolved ubiquinone-intermediate hydroxylase
+      function, making the generic monooxygenase parent redundant.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Coq7 is predicted to be a peripheral cell-membrane enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed UniProt record assigns Coq7 to the cell membrane as a
+      peripheral membrane protein, consistent with the interfacial membrane
+      model proposed for experimentally studied Coq7-family enzymes. Exact
+      topology and membrane-face orientation have not been measured for
+      PP_0427.
+    supported_by:
+    - reference_id: file:PSEPK/coq7/coq7-uniprot.txt
+      supporting_text: Peripheral membrane protein
+    - reference_id: PMID:11435415
+      supporting_text: &gt;-
+        Based on the similarities to other well studied di-iron carboxylate
+        proteins, we propose a structural model for Coq7 as an interfacial
+        integral membrane protein.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Ubiquinone biosynthesis is the core process for Coq7.
+    action: ACCEPT
+    reason: Coq7 hydroxylates a late demethoxyubiquinol intermediate in this pathway.
+    supported_by:
+    - reference_id: file:PSEPK/coq7/coq7-uniprot.txt
+      supporting_text: ubiquinone biosynthesis
+    - reference_id: PMID:11435415
+      supporting_text: &gt;-
+        We have cloned COQ7 from Pseudomonas aeruginosa and Thiobacillus
+        ferrooxidans and show that indeed this gene complements an Escherichia
+        coli mutant that lacks an unrelated 5-demethoxyubiquinone hydroxylase.
+- term:
+    id: GO:0008682
+    label: 3-demethoxyubiquinol 3-hydroxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the substrate-specific core molecular function of Coq7.
+    action: ACCEPT
+    reason: UniProt assigns EC 1.14.99.60 and Rhea 50908 to this hydroxylation reaction.
+    supported_by:
+    - reference_id: file:PSEPK/coq7/coq7-uniprot.txt
+      supporting_text: 3-demethoxyubiquinol 3-hydroxylase
+    - reference_id: PMID:11435415
+      supporting_text: &gt;-
+        Here we identify Coq7 as belonging to a family of a di-iron containing
+        oxidases/hydroxylases based on a conserved sequence motif for the iron
+        ligands, supporting a direct function of Coq7 as a hydroxylase.
+    - reference_id: file:PSEPK/coq7/coq7-deep-research-openscientist.md
+      supporting_text: &gt;-
+        Q88QR1 belongs to the COQ7/CLK-1 family (Pfam PF03232; InterPro
+        IPR011566), a group of di-iron carboxylate oxidases/hydroxylases.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/coq7/coq7-uniprot.txt
+  title: UniProt entry Q88QR1 for coq7
+  findings:
+  - statement: &gt;-
+      The reviewed entry assigns a membrane-associated, diiron
+      3-demethoxyubiquinol 3-hydroxylase in ubiquinone biosynthesis.
+- id: file:PSEPK/coq7/coq7-goa.tsv
+  title: QuickGO GOA annotations for coq7
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed here.
+- id: PMID:11435415
+  title: &gt;-
+    A new member of the family of di-iron carboxylate proteins. Coq7 (clk-1), a
+    membrane-bound hydroxylase involved in ubiquinone biosynthesis.
+  findings:
+  - statement: &gt;-
+      A Pseudomonas aeruginosa Coq7 ortholog complemented an E. coli mutant
+      lacking the unrelated DMQ hydroxylase UbiF, and conserved iron-ligand
+      motifs support direct diiron hydroxylase chemistry.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-cached abstract verified. The experiment directly tests a
+      Pseudomonas ortholog, not P. putida PP_0427, so transfer to Q88QR1 remains
+      family and pathway inference.
+- id: PMID:23445365
+  title: &gt;-
+    Aging-associated enzyme human clock-1: substrate-mediated reduction of the
+    diiron center for 5-demethoxyubiquinone hydroxylation.
+  findings:
+  - statement: &gt;-
+      Spectroscopic and kinetic work on human COQ7 directly establishes the
+      carboxylate-bridged diiron mechanism and DMQ hydroxylase chemistry for the
+      conserved family.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text cached primary study verified; it supports family mechanism but
+      is not a target-protein assay.
+- id: file:PSEPK/coq7/coq7-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK coq7
+  findings:
+  - statement: &gt;-
+      Pseudomonas ortholog complementation, conserved diiron ligands, and the
+      complete KT2440 ubiquinone pathway support the PP_0427 assignment. The
+      report&#39;s target-specific UQ-9, exact membrane-face orientation, and Ubi
+      metabolon-membership claims are not adopted because they were not
+      demonstrated for PP_0427.
+core_functions:
+- description: &gt;-
+    Predicted membrane-associated diiron hydroxylation of
+    3-demethoxyubiquinol during late ubiquinone biosynthesis, inferred for
+    PP_0427 from conserved Coq7-family chemistry and pathway context.
+  molecular_function:
+    id: GO:0008682
+    label: 3-demethoxyubiquinol 3-hydroxylase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/coq7/coq7-uniprot.txt
+    supporting_text: 3-demethoxyubiquinol 3-hydroxylase
+  - reference_id: PMID:11435415
+    supporting_text: &gt;-
+      We have cloned COQ7 from Pseudomonas aeruginosa and Thiobacillus
+      ferrooxidans and show that indeed this gene complements an Escherichia
+      coli mutant that lacks an unrelated 5-demethoxyubiquinone hydroxylase.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What physiological electron donor reduces the PP_0427 diiron center, and
+    does PP_0427 physically associate with other KT2440 ubiquinone-biosynthesis
+    proteins?
+suggested_experiments:
+- description: &gt;-
+    Delete PP_0427 and quantify demethoxyubiquinone accumulation and
+    ubiquinone depletion by LC-MS, then complement the phenotype with wild-type
+    PP_0427 and iron-ligand mutants.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
