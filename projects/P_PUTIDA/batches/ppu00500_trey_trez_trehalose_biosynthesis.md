@@ -33,8 +33,8 @@ cellulose synthesis, and central hexose metabolism are also separate.
 - [ ] Complete OpenScientist gene-level research.
 - [ ] Complete generic module OpenScientist research.
 - [x] Complete module + `ppu00500` + PSEPK OpenScientist research.
-- [ ] Integrate useful research findings without treating provider output as authority.
-- [ ] Validate and render the module, gene reviews, and batch page.
+- [x] Integrate useful research findings without treating provider output as authority.
+- [x] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
 
 ## Focused Genes
