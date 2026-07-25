@@ -31,9 +31,9 @@ broad KEGG map do not make them TauABC-TauD core members.
 - [x] Fetch the four focused genes from UniProt and GOA.
 - [x] Create the species-neutral two-part module.
 - [ ] Complete OpenScientist research for the four genes.
-- [ ] Complete generic module OpenScientist research.
-- [ ] Complete module + `ppu00430` + PSEPK OpenScientist research.
-- [ ] Curate all four gene reviews.
+- [x] Complete generic module OpenScientist research.
+- [x] Complete module + `ppu00430` + PSEPK OpenScientist research.
+- [x] Curate all four gene reviews.
 - [ ] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
 
