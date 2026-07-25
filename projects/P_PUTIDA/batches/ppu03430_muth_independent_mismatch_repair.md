@@ -56,8 +56,11 @@ gene-review batch.
 - [x] Curate the reusable species-neutral module.
 - [x] Validate the gene reviews.
 - [x] Validate and render the final module.
-- [ ] Run module-level OpenScientist deep research.
-- [ ] Run module + pathway + PSEPK OpenScientist deep research.
+- [x] Attempt module-level OpenScientist deep research; the corrected request
+  exhausted the 7,200-second provider timeout without a report.
+- [x] Attempt module + pathway + PSEPK OpenScientist deep research; the
+  corrected request exhausted the 7,200-second provider timeout without a
+  report.
 - [ ] Run OpenScientist deep research for selected genes.
 - [ ] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
@@ -67,3 +70,8 @@ gene-review batch.
 The batch TSV is the unmodified KEGG-derived candidate inventory. It is useful
 for audit and later curation of shared machinery, but is intentionally broader
 than this focused review.
+
+The generic and species-aware OpenScientist requests were each allowed the full
+configured 7,200 seconds with three iterations. Neither returned a report, so
+the module cites the direct Pseudomonas studies, exact gene reviews, UniProt
+exemplars, and TreeGrafter provenance that can be inspected locally.
