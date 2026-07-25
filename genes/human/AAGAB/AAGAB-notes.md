@@ -84,11 +84,21 @@ the protein's core clients, one is screen noise — so the distinction is kept.
 
 ## Term choices, and two gaps in GO
 
-- `GO:0035612 AP-2 adaptor complex binding` exists and is used for the AP2S1/AP2A2 entries.
-- **There is no `AP-1 adaptor complex binding` term.** Confirmed by OLS search. The AP-1
-  entries are therefore modified to `GO:0044877 protein-containing complex binding` (still an
-  improvement on bare protein binding) and the specific term is filed under
-  `proposed_new_terms`.
+- **Correction made during review — `GO:0035650` does exist.** I first recorded that GO has no
+  `AP-1 adaptor complex binding` term, on the strength of an OLS keyword search that returned
+  nothing. That was wrong: a direct id lookup confirms `GO:0035650 AP-1 adaptor complex
+  binding` is a real, non-obsolete term. GO in fact has AP-1 (`GO:0035650`), AP-2
+  (`GO:0035612`) **and** AP-3 (`GO:0035651`) complex-binding terms — and no AP-4 term, which
+  is the one adaptor with a genuine gap. The AP-1 entries now use `GO:0035650` rather than the
+  vague `GO:0044877`. **Lesson: an empty OLS keyword search is not evidence a term is absent —
+  confirm by direct id lookup before proposing a new term.**
+- **The real gap is subunit-level binding.** All three existing terms denote binding the
+  assembled heterotetramer, whereas AAGAB binds *free* subunits and is displaced before the
+  tetramer exists — PMID:39145939 shows the AAGAB:α:σ2 intermediate "cannot recruit additional
+  AP2 subunits" and is handed to CCDC32. A complex-binding term therefore asserts exactly the
+  interaction AAGAB's mechanism excludes. `GO:0035612`/`GO:0035650` are used as an explicitly
+  flagged interim, with the caveat written into every `reason` field, and a subunit-binding
+  term is filed under `proposed_new_terms`.
 - **There is no MF term for assembly-chaperone activity.** `GO:0044183 protein folding
   chaperone` is explicitly about folding — its definition says "a protein folding chaperone
   binds an unfolded protein to fold it" — and AAGAB's clients are folded subunits awaiting
