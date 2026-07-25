@@ -459,7 +459,7 @@ Main first-pass boundary decisions:
   `ribF`; lower-priority checks include `ribD`, `ribE`, and any non-core
   candidates whose current pathway annotations appear misleading.
 
-## Current batch: ppu00361 / catechol_ortho_cleavage
+## Previous batch: ppu00361 / catechol_ortho_cleavage
 
 Batch files:
 
