@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2325 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2325</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KG5" target="_blank" class="term-link">
+                        Q88KG5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2325";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KG5" data-a="DESCRIPTION: PP_2325 encodes a soluble ApbA-fold NAD(P)-depende..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2325 encodes a soluble ApbA-fold NAD(P)-dependent oxidoreductase related to ketopantoate reductases. Q88KG5 belongs to a KPR-related PANTHER subfamily distinct from the canonical PanE family. Its reciprocal-best Pseudomonas aeruginosa ortholog, PaKPR2, has evolved broad alpha-keto-acid reductase activity and is inactive toward ketopantoate, so the native substrate of the KT2440 protein remains unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KG5" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with this soluble oxidoreductase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88KG5 has a soluble Rossmann-like/ApbA architecture and no signal peptide or transmembrane segment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   SUPFAM; SSF51735; NAD(P)-binding Rossmann-fold domains; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008677" target="_blank" class="term-link">
+                                    GO:0008677
+                                </a>
+                            </span>
+                            <span class="term-label">2-dehydropantoate 2-reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KG5" data-a="GO:0008677" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The substrate-specific KPR assignment is not supported for this paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is an electronic EC/rule transfer within a functionally heterogeneous KPR-related family. PP_2325 is the reciprocal-best-BLAST KT2440 ortholog of P. aeruginosa PaKPR2, which was structurally and biochemically shown to be inactive toward ketopantoate and active on other alpha-keto acids. This supports a broad oxidoreductase role but argues against retaining the specific ketopantoate reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008677	2-dehydropantoate 2-reductase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR051402; KPR-Related.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-notes.md
+
+                                </span>
+
+                                <div class="support-text">OrtholugeDB identifies PP_2325 as the reciprocal-best-BLAST ortholog of PA1752</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38962820" target="_blank" class="term-link">
+                                        PMID:38962820
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">resulting in its inactivity toward the natural substrate ketopantoate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38962820" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38962820
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Implication of Molecular Constraints Facilitating the Functi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KG5" data-a="GO:0016491" data-r="PMID:38962820" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad oxidoreductase annotation captures the supported family-level function without asserting a substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88KG5 has an NAD(P)-binding ApbA oxidoreductase architecture and is the close Pseudomonas ortholog of an experimentally characterized broad alpha-keto-acid reductase. The available evidence does not justify a more specific native substrate term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   SUPFAM; SSF51735; NAD(P)-binding Rossmann-fold domains; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-notes.md
+
+                                </span>
+
+                                <div class="support-text">KPR-related alpha-keto-acid oxidoreductase of unresolved native substrate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38962820" target="_blank" class="term-link">
+                                        PMID:38962820
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">active against several important α-keto-acid substrates</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015940" target="_blank" class="term-link">
+                                    GO:0015940
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KG5" data-a="GO:0015940" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pantothenate-pathway placement is an electronic consequence of the unsupported KPR reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniPathway placement depends on the EC 1.1.1.169 assignment. The close experimentally characterized ortholog does not reduce ketopantoate, and canonical panE/PP_1351 already supplies the pathway reaction in KT2440.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015940	pantothenate biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2325/PP_2325-notes.md
+
+                                </span>
+
+                                <div class="support-text">remove the specific ketopantoate/pantothenate assertions</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The key curation question is which paralog is the physiologic flux carrier</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>KPR-related NAD(P)-dependent alpha-keto-acid oxidoreductase whose native substrate is unresolved; the close PaKPR2 ortholog does not reduce ketopantoate.</h3>
+                <span class="vote-buttons" data-g="Q88KG5" data-a="FUNCTION: KPR-related NAD(P)-dependent alpha-keto-acid oxido..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                            oxidoreductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2325/PP_2325-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR051402; KPR-Related.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38962820" target="_blank" class="term-link">
+                                PMID:38962820
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">active against several important α-keto-acid substrates</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2325/PP_2325-notes.md
+
+                        </span>
+
+                        <div class="finding-text">PP_2325 as the reciprocal-best-BLAST ortholog of PA1752</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38962820" target="_blank" class="term-link">
+                            PMID:38962820
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Implication of Molecular Constraints Facilitating the Functional Evolution of Pseudomonas aeruginosa KPR2 into a Versatile α-Keto-Acid Reductase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PaKPR2 is inactive on ketopantoate and instead reduces multiple alpha-keto-acid substrates.</div>
+
+                        <div class="finding-text">"resulting in its inactivity toward the natural substrate ketopantoate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2325/PP_2325-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_2325</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The unreviewed record carries an electronically transferred EC 1.1.1.169 assignment and places Q88KG5 in a broad KPR-related ApbA family.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2325/PP_2325-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_2325</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the three electronic annotations reviewed for PP_2325.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2325/PP_2325-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual curation notes for PP_2325</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The notes record the family distinction and OrtholugeDB reciprocal-best orthology between PP_2325 and P. aeruginosa PA1752/PaKPR2, and explain why that evidence supersedes the generic PanE inference in the gene-level retrieval report.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2325/PP_2325-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_2325</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report usefully retrieves generic KPR structure and mechanism but repeats the electronic PanE assignment from distant E. coli similarity without evaluating the closer PaKPR2 ortholog. It also confirms that no direct experiment has tested Q88KG5.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of PP_2325."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway report identifies paralog ambiguity at the ketopantoate reductase step; manual orthology review resolves PP_2325 away from the canonical PanE role.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the native alpha-keto-acid substrate and physiological pathway of PP_2325?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KG5" data-a="Q: What are the native alpha-keto-acid substrate and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88KG5 and compare reduction of ketopantoate with the alpha-keto-acid panel used for PaKPR2, then test the strongest substrates in targeted KT2440 deletion and metabolomics experiments.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical and genetic analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KG5" data-a="EXPERIMENT: Purify Q88KG5 and compare reduction of ketopantoat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2325-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KG5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_2325 (Q88KG5) — Ketopantoate Reductase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T14:54:36.620233</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2325-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2325-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_2325-q88kg5-ketopantoate-reductase-of-pseudomonas-putida-kt2440">Functional Annotation Report: PP_2325 (Q88KG5) — Ketopantoate Reductase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_2325 (UniProt Q88KG5) of <em>Pseudomonas putida</em> KT2440 encodes ketopantoate reductase (KPR), also known as 2-dehydropantoate 2-reductase (PanE/ApbA; EC 1.1.1.169; KEGG orthology K00077).</strong> This soluble, cytoplasmic oxidoreductase catalyzes the NADPH-dependent, stereospecific reduction of 2-dehydropantoate (ketopantoate) to (R)-pantoate. This reaction is the committed reductive step in the pantoate branch of pantothenate (vitamin B5) biosynthesis, which in turn feeds the biosynthesis of coenzyme A (CoA) and acyl carrier protein (ACP) — cofactors central to all fatty-acid, polyketide, and central-carbon metabolism. The substrate is specifically ketopantoate and the obligate hydride donor is NADPH.</p>
+<p>The identity of PP_2325 as a ketopantoate reductase is strongly supported by convergent lines of evidence. UniProt and KEGG independently annotate the 315-residue protein as 2-dehydropantoate 2-reductase (EC 1.1.1.169, K00077), placing it in pathway ppu00770 (Pantothenate and CoA biosynthesis). The protein carries the diagnostic InterPro/Pfam signatures of the family — ApbA (PF02558; the N-terminal NAD(P)-binding Rossmann domain) and ApbA_C (PF08546; the C-terminal catalytic domain) — and directly retains the N-terminal Rossmann glycine-rich dinucleotide-binding motif (GSGAIG at residues 12–17). Function is transferred with high confidence from biochemically and structurally characterized bacterial orthologs (chiefly <em>Escherichia coli</em> PanE), for which the reaction, cofactor specificity, kinetic mechanism, stereochemistry, and catalytic residues have all been experimentally established.</p>
+<p>Because the ketopantoate reductase family is intrinsically divergent at the sequence level (~20–29% pairwise identity between validated homologs), residue-level catalytic conservation in PP_2325 is best inferred through profile-HMM/InterPro methods rather than naive pairwise alignment. PP_2325 shows ~27% identity to <em>E. coli</em> PanE, which is entirely within the normal range for this family. The pantothenate pathway is otherwise complete in <em>P. putida</em> (panBC at PP_4699/PP_4700), and an IlvC ortholog (PP_4678) plus two additional KPR-family paralogs (PP_1351, PP_2998) may provide partial functional redundancy. Among these, PP_2325 is the canonically curated PanE/ApbA ketopantoate reductase.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_2325-is-ketopantoate-reductase-ec-111169-catalyzing-the-nadph-dependent-reduction-of-2-dehydropantoate-to-r-pantoate">Finding 1 — PP_2325 is ketopantoate reductase (EC 1.1.1.169), catalyzing the NADPH-dependent reduction of 2-dehydropantoate to (R)-pantoate</h3>
+<p>UniProt Q88KG5 annotates PP_2325 as 2-dehydropantoate 2-reductase (EC 1.1.1.169) with the catalytic activity:</p>
+<blockquote>
+<p><strong>(R)-pantoate + NADP⁺ ⇌ 2-dehydropantoate + NADPH + H⁺</strong></p>
+</blockquote>
+<p>The 315-amino-acid protein belongs to the ketopantoate reductase (ApbA/PanE) family, carrying InterPro signatures IPR003710 (ApbA) and IPR013752 (KPA_reductase). Direct sequence inspection confirms an N-terminal Rossmann-fold dinucleotide-binding glycine-rich motif (GSGAIG at residues 12–17), which matches the canonical G-x-G-x-x-[GA] fingerprint for NADP(H) binding.</p>
+<p>This assignment is anchored in primary biochemical literature on the enzyme family. As stated in the structural characterization of <em>E. coli</em> KPR, <em>"The NADPH-dependent reduction of ketopantoate to pantoate, catalyzed by ketopantoate reductase (KPR; EC 1.1.1.169), is essential for the biosynthesis of pantothenate (vitamin B5)"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/15966718/">PMID: 15966718</a>. This is independently reaffirmed in the ternary-complex study: <em>"Ketopantoate reductase (KPR, EC 1.1.1.169) catalyzes the NADPH-dependent reduction of ketopantoate to pantoate, an essential step for the biosynthesis of pantothenate (vitamin B5)"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/17229734/">PMID: 17229734</a>. Both establish the reaction, the cofactor (NADPH), the EC number, and the pathway role that match the UniProt annotation of PP_2325.</p>
+<h3 id="finding-2-kpr-is-a-two-domain-rossmann-fold-enzyme-using-conserved-lys-asn-and-glu-residues-with-a-substrate-induced-conformational-change">Finding 2 — KPR is a two-domain Rossmann-fold enzyme using conserved Lys, Asn, and Glu residues with a substrate-induced conformational change</h3>
+<p>Crystallographic and kinetic work on <em>E. coli</em> KPR — a monomeric homolog — reveals a two-domain architecture: NADP(H) is bound in a cleft between an N-terminal Rossmann-fold domain and a C-terminal α-helical domain. As reported, <em>"The cofactor is bound in the active site cleft between the N-terminal Rossmann-fold domain and the C-terminal alpha-helical domain"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/15966718/">PMID: 15966718</a>.</p>
+<p>Site-directed mutagenesis coupled with steady-state kinetics has dissected the catalytic machinery: <em>"The steady-state kinetics of active site mutants R31A, K72A, N98A, K176A, S244A, and E256A implicate Asn98 as well as Lys176 and Glu256 in the catalytic mechanism"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/17229734/">PMID: 17229734</a>. In this scheme, Asn98, Lys176, and Glu256 form the catalytic core; Arg31 and Lys72 bind the cofactor; and Ser244 contacts the substrate. Catalysis involves a hinge-bending domain closure that repositions the essential Lys176 to hydrogen-bond the C2 hydroxyl of the pantoate product. PP_2325 conserves the corresponding N-terminal Rossmann motif (GSGAIG) and is assigned to the same family, so it is expected to employ the same two-domain catalytic strategy.</p>
+<h3 id="finding-3-kpr-is-a-monomeric-34-kda-enzyme-with-an-ordered-sequential-mechanism-and-stereospecific-pro-s-hydride-transfer-to-c2">Finding 3 — KPR is a monomeric ~34 kDa enzyme with an ordered sequential mechanism and stereospecific pro-S hydride transfer to C2</h3>
+<p>Detailed kinetic and NMR analysis of the <em>E. coli</em> panE-encoded enzyme established the reaction mechanism. The enzyme is a monomeric ~34 kDa protein with KM(NADPH) ≈ 20 µM, KM(ketopantoate) ≈ 60 µM, and kcat ≈ 40 s⁻¹. Steady-state and product-inhibition patterns fit an ordered sequential mechanism: <em>"The steady-state initial velocity and product inhibition patterns are consistent with an ordered sequential kinetic mechanism in which NADPH binding is followed by ketopantoate binding, and pantoate release precedes NADP(+) release"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/10736170/">PMID: 10736170</a>.</p>
+<p>The chemistry is stereospecific: <em>"The stereospecific transfer of the pro-S hydrogen atom of NADPH to the C-2 position of ketopantoate was demonstrated by (1)H NMR spectroscopy"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/10736170/">PMID: 10736170</a>, which yields D-(–)-(R)-pantoate. A single general acid/base (pK ≈ 7.8–8.4) operates during turnover, and hydride transfer is not fully rate-limiting. The monomeric two-domain fold is corroborated by the 1.7 Å crystal structure: <em>"The enzyme is monomeric and has two domains separated by a cleft. The N-terminal domain has an alphabeta-fold of the Rossmann type"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/11724562/">PMID: 11724562</a>. PP_2325 (315 aa, ~34 kDa) is the <em>P. putida</em> ortholog of this enzyme and is expected to share these properties.</p>
+<h3 id="finding-4-pp_2325-performs-the-final-step-of-the-pantoate-branch-of-pantothenatecoa-biosynthesis-in-the-cytoplasm-it-belongs-to-the-6-pgdh-c-terminal-domain-like-superfamily">Finding 4 — PP_2325 performs the final step of the pantoate branch of pantothenate/CoA biosynthesis in the cytoplasm; it belongs to the 6-PGDH C-terminal-domain-like superfamily</h3>
+<p>The bacterial pantothenate biosynthetic pathway comprises four enzymes. As summarized: <em>"the pantothenate biosynthetic pathway is well-established in bacteria, comprising four enzymic reactions catalysed by ketopantoate hydroxymethyltransferase (KPHMT), L-aspartate-alpha-decarboxylase (ADC), pantothenate synthetase (PS) and ketopantoate reductase (KPR) encoded by panB, panD, panC and panE genes, respectively"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/18726075/">PMID: 18726075</a>.</p>
+<p>UniProt places PP_2325 at <em>"(R)-pantothenate biosynthesis; (R)-pantoate from 3-methyl-2-oxobutanoate: step 2/2"</em>. In sequence, PanB (KPHMT) converts 3-methyl-2-oxobutanoate (ketoisovalerate) into ketopantoate; KPR (PP_2325) then reduces ketopantoate to (R)-pantoate; PanC (pantothenate synthetase) condenses (R)-pantoate with β-alanine to form pantothenate, the direct precursor of CoA and ACP.</p>
+<p>Structurally, KPR belongs to a larger superfamily: <em>"KPR is shown to be a member of the 6-phosphogluconate dehydrogenase C-terminal domain-like superfamily"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/11724562/">PMID: 11724562</a>, which matches PP_2325's InterPro assignments IPR008927 and IPR013328. The gene has a documented dual identity: in <em>Salmonella</em>, <em>"apbA and panE are allelic and map to 10 min on both the S. typhimurium and E. coli chromosomes"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/9721324/">PMID: 9721324</a>, confirming that the ApbA and PanE names denote the same ketopantoate reductase gene product. In <em>E. coli</em>, a second, moonlighting KPR activity is provided by ilvC (ketol-acid reductoisomerase).</p>
+<h3 id="finding-5-pp_2325-is-a-divergent-but-bona-fide-kpr-ortholog-pantothenate-biosynthesis-is-conditionally-essential-in-p-putida-kt2440-on-minimal-medium">Finding 5 — PP_2325 is a divergent but bona fide KPR ortholog; pantothenate biosynthesis is conditionally essential in <em>P. putida</em> KT2440 on minimal medium</h3>
+<p>Global pairwise alignment (BLOSUM62) of PP_2325 (315 aa) against the experimentally characterized <em>E. coli</em> PanE (303 aa) yields 27.0% identity over 293 aligned positions. This is squarely within the documented low-similarity range for the KPR family. As directly stated: <em>"The sequence similarity among putative KPRs is limited and KPR itself belongs to a large superfamily of 6-phosphogluconate dehydrogenases"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/20876192/">PMID: 20876192</a>. Despite this divergence, PP_2325 retains the diagnostic N-terminal Rossmann NADP-binding motif and the KPR-specific InterPro signatures (ApbA IPR003710, KPA_reductase IPR013752).</p>
+<p>Physiologically, a genome-wide mini-Tn5 mutant screen of <em>P. putida</em> KT2440 on glucose minimal medium recovered vitamin/amino-acid biosynthesis auxotrophs: <em>"Among the set of identified conditionally essential genes were a number of genes involved in the biosynthesis of certain amino acids and vitamins"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">PMID: 20158506</a>. Because de novo pantothenate/CoA production requires KPR activity, the enzyme is expected to be required for growth unless pantothenate is supplied. As in <em>E. coli</em>, a secondary KPR activity from ketol-acid reductoisomerase (IlvC) may partly mask the phenotype of a single panE knockout.</p>
+<h3 id="finding-6-per-residue-catalytic-site-conservation-cannot-be-verified-by-naive-pairwise-alignment-hmminterpro-annotation-is-the-appropriate-method-for-this-divergent-family">Finding 6 — Per-residue catalytic-site conservation cannot be verified by naive pairwise alignment; HMM/InterPro annotation is the appropriate method for this divergent family</h3>
+<p>Attempts to map the experimentally defined <em>E. coli</em> PanE catalytic/binding residues (Arg31, Lys72, Asn98, Lys176, Ser244, Glu256, plus substrate-contacting Asn180/194/241) directly onto PP_2325 by hand-rolled global alignment were inconclusive. A linear-gap Needleman–Wunsch alignment gave 27% identity, whereas an affine-gap (Gotoh) alignment gave only 19% identity with the catalytic columns clearly misregistered (e.g., <em>E. coli</em> K72 aligning to a non-equivalent PP position 37). This instability reflects the intrinsically low sequence similarity of the family rather than the absence of the catalytic residues — the same limitation noted in the family: <em>"The sequence similarity among putative KPRs is limited and KPR itself belongs to a large superfamily of 6-phosphogluconate dehydrogenases"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/20876192/">PMID: 20876192</a>.</p>
+<p>Reliable residue-level equivalence therefore requires profile-HMM or structure-based alignment. PP_2325 is positively assigned KPR-specific InterPro/Pfam signatures (ApbA IPR003710, KPA_reductase IPR013752) that are built from curated multiple alignments encoding the conserved catalytic positions, and it directly retains the N-terminal Rossmann NADP-binding motif (GSGAIG, residues 12–17) confirmed by sequence inspection. This finding is methodologically important: it explains why the annotation rests on HMM/domain evidence rather than a simple pairwise residue match.</p>
+<h3 id="finding-7-kegg-independently-assigns-pp_2325-to-k00077-ec-111169-pfam-apba-apba_c-confirm-both-functional-domains-the-gene-is-not-in-a-pan-operon">Finding 7 — KEGG independently assigns PP_2325 to K00077 (EC 1.1.1.169); Pfam ApbA + ApbA_C confirm both functional domains; the gene is not in a pan operon</h3>
+<p>KEGG (entry <code>ppu:PP_2325</code>) independently annotates the gene as 2-dehydropantoate 2-reductase, KEGG Orthology K00077, EC 1.1.1.169, mapped to pathways ppu00770 (Pantothenate and CoA biosynthesis) and ppu01240 (Biosynthesis of cofactors), and classified as an oxidoreductase acting on CH-OH groups with NAD(P)⁺ as acceptor. KEGG lists Pfam motifs ApbA (PF02558; N-terminal NAD(P)-binding/Rossmann domain) and ApbA_C (PF08546; C-terminal catalytic domain), directly confirming that PP_2325 possesses both the cofactor-binding and the catalytic domains characteristic of KPR.</p>
+<p>The gene occupies genome coordinates 2,652,614–2,653,561 (948 bp, forward strand). Genomic-neighborhood analysis shows that PP_2325 is <strong>not</strong> part of a pantothenate operon: the upstream gene PP_2324 (K01626, DAHP synthase, aromatic amino-acid biosynthesis) is divergently transcribed on the opposite strand, and the downstream same-strand gene PP_2326 is an unrelated universal stress protein. The panB/panC/panD genes are located elsewhere in the genome. This gene arrangement is consistent with independent transcriptional regulation of ketopantoate reductase rather than co-regulation within a biosynthetic gene cluster.</p>
+<h3 id="finding-8-p-putida-encodes-a-complete-pantothenate-pathway-with-a-panbc-cluster-an-ilvc-backup-and-three-kpr-family-paralogs-pp_2325-is-the-canonical-curated-paneapba">Finding 8 — <em>P. putida</em> encodes a complete pantothenate pathway with a panBC cluster, an IlvC backup, and three KPR-family paralogs; PP_2325 is the canonical curated PanE/ApbA</h3>
+<p>KEGG KO-to-gene mapping for <em>P. putida</em> KT2440 (ppu) resolves the pathway components: panB = K00606 → PP_4699 and panC = K01918 → PP_4700 (adjacent loci forming a panBC cluster, located far from PP_2325); ilvC = K00053 → PP_4678 (present, providing the documented secondary/moonlighting ketopantoate reductase activity). Notably, three genes are assigned to K00077 (2-dehydropantoate 2-reductase): <strong>PP_1351, PP_2325, and PP_2998</strong> — indicating multiple KPR-family paralogs in this genome, consistent with the "KPR-Related" InterPro superfamily IPR051402. PP_2325 is the paralog carrying the canonical ApbA/PanE UniProt curation (Q88KG5) and both ApbA + ApbA_C Pfam domains.</p>
+<p>KEGG returned no gene under panD (K01579, aspartate 1-decarboxylase), suggesting that the β-alanine supply for pantothenate in <em>P. putida</em> may proceed via an alternative or divergent route. The existence of an IlvC ortholog plus two additional K00077 paralogs implies that a single PP_2325 knockout might be phenotypically buffered, mirroring the <em>E. coli</em> situation where an ilvC panE double mutant is required to fully abolish KPR activity.</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<h3 id="the-reaction-and-its-place-in-metabolism">The reaction and its place in metabolism</h3>
+<p>PP_2325 catalyzes the second (committed, reductive) step of the pantoate branch of pantothenate biosynthesis:</p>
+<div class="codehilite"><pre><span></span><code>   3-methyl-2-oxobutanoate (ketoisovalerate)
+      │
+      │   PanB (KPHMT, PP_4699)  + 5,10-CH2-THF
+      ▼
+2-dehydropantoate  (ketopantoate)
+      │
+      │   ★ PP_2325 (KPR / PanE / ApbA, Q88KG5)  + NADPH → NADP+
+      │      pro-S hydride to C2, ordered sequential mechanism
+      ▼
+  (R)-pantoate
+      │
+      │   PanC (pantothenate synthetase, PP_4700)  + β-alanine + ATP
+      ▼
+  (R)-pantothenate  (vitamin B5)
+      │
+      │   PanK → ... → Coenzyme A  &amp;  Acyl Carrier Protein (ACP)
+      ▼
+     central &amp; lipid metabolism (fatty acids, TCA, PHA synthesis, etc.)
+</code></pre></div>
+
+<p>The enzyme is the sole dedicated reductase of this branch and produces the chiral (R)-pantoate needed downstream. Because CoA and ACP are indispensable for fatty-acid metabolism, the TCA cycle, and — importantly for <em>P. putida</em> — medium-chain-length polyhydroxyalkanoate (PHA) synthesis and diverse aromatic/terpenoid catabolism, KPR sits upstream of a large fraction of the organism's carbon flux.</p>
+<h3 id="enzyme-architecture-and-catalytic-cycle">Enzyme architecture and catalytic cycle</h3>
+<p>The structural and kinetic model, transferred from characterized bacterial orthologs, is:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Property (from <em>E. coli</em> PanE)</th>
+<th>Basis for transfer to PP_2325</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Oligomeric state</td>
+<td>Monomer, ~34 kDa</td>
+<td>PP_2325 = 315 aa, ~34 kDa</td>
+</tr>
+<tr>
+<td>Fold</td>
+<td>Two domains: N-terminal Rossmann + C-terminal α-helical</td>
+<td>ApbA (PF02558) + ApbA_C (PF08546) present</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>NADPH (binds first)</td>
+<td>GSGAIG Rossmann motif, res 12–17</td>
+</tr>
+<tr>
+<td>Substrate</td>
+<td>Ketopantoate (binds second)</td>
+<td>Family / KO assignment K00077</td>
+</tr>
+<tr>
+<td>Kinetic mechanism</td>
+<td>Ordered sequential; pantoate released before NADP⁺</td>
+<td>Family-conserved</td>
+</tr>
+<tr>
+<td>Chemistry</td>
+<td>Stereospecific pro-S hydride transfer to C2 → (R)-pantoate</td>
+<td>Family-conserved</td>
+</tr>
+<tr>
+<td>Catalytic residues</td>
+<td>Asn98, Lys176, Glu256 (catalysis); Arg31, Lys72 (cofactor); Ser244 (substrate)</td>
+<td>Encoded in InterPro HMM; not verifiable by naive alignment</td>
+</tr>
+<tr>
+<td>Conformational change</td>
+<td>Hinge-bending domain closure repositions Lys176</td>
+<td>Family-conserved</td>
+</tr>
+</tbody>
+</table>
+<p>An important nuance emerges from comparative studies: while <em>E. coli</em> KPR is monomeric and follows a strictly ordered mechanism, the <em>Staphylococcus aureus</em> enzyme is a stable dimer showing kinetic cooperativity for NADPH (Hill coefficient ~2.5) that arises from a random-addition mechanism kinetically biased toward NADPH-first binding <a href="https://pubmed.ncbi.nlm.nih.gov/25946571/">PMID: 25946571</a>. The oligomeric state and exact kinetic behavior of PP_2325 therefore cannot be assumed a priori and would require direct biochemical study.</p>
+<h3 id="localization">Localization</h3>
+<p>Ketopantoate reductase is a soluble cytoplasmic enzyme. It has no signal peptide, no transmembrane segments, and its substrates/products (ketopantoate, pantoate, NADPH/NADP⁺) are cytosolic metabolites. Its role is carried out entirely within the cytoplasm, where it participates in soluble intermediary metabolism.</p>
+<h3 id="redundancy-and-regulation">Redundancy and regulation</h3>
+<p>The <em>P. putida</em> genome presents a more complex picture than a single dedicated KPR. Three genes map to K00077 (PP_1351, PP_2325, PP_2998), and an IlvC ortholog (PP_4678) can supply moonlighting KPR activity — a phenomenon experimentally demonstrated in other systems, where <em>"functional replacement of a pantothenate biosynthesis enzyme, 2-dehydropantoate 2-reductase (E.C. 1.1.1.169), by an endosymbiont gene, ilvC, encoding a substrate ambiguous enzyme"</em> was shown <a href="https://pubmed.ncbi.nlm.nih.gov/25527092/">PMID: 25527092</a>. PP_2325 is nonetheless the canonically curated PanE/ApbA reductase, distinguished by its UniProt curation and complete ApbA + ApbA_C domain complement. Its non-operonic genomic context (isolated from panBC/panD) implies independent regulation.</p>
+<p>In archaea, KPR is a feedback regulatory node for CoA biosynthesis (CoA competitively inhibits at the NAD(P)H site) <a href="https://pubmed.ncbi.nlm.nih.gov/23941541/">PMID: 23941541</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/26757028/">PMID: 26757028</a>. Whether the <em>P. putida</em> enzyme is similarly feedback-regulated is unknown, as bacterial CoA feedback regulation classically targets pantothenate kinase rather than KPR.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15966718/">15966718</a></td>
+<td><em>Crystal structure of E. coli KPR with NADP+ bound</em></td>
+<td>Establishes reaction, NADPH cofactor, EC 1.1.1.169, pathway role, and two-domain cofactor binding</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17229734/">17229734</a></td>
+<td><em>E. coli KPR ternary complex with NADP+ and pantoate</em></td>
+<td>Identifies catalytic residues (Asn98, Lys176, Glu256), substrate recognition, conformational change</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10736170/">10736170</a></td>
+<td><em>Kinetic/mechanistic analysis of E. coli panE KPR</em></td>
+<td>Ordered sequential mechanism; stereospecific pro-S hydride transfer to C2</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11724562/">11724562</a></td>
+<td><em>E. coli KPR crystal structure at 1.7 Å</em></td>
+<td>Monomeric two-domain Rossmann architecture; 6-PGDH C-terminal superfamily assignment</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18726075/">18726075</a></td>
+<td><em>Engineering pantothenate levels in plants</em></td>
+<td>Defines the four-enzyme bacterial pathway (panB/panD/panC/panE) placing KPR as the reductase</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9721324/">9721324</a></td>
+<td><em>panE maps at 10 min, allelic to apbA in S. typhimurium</em></td>
+<td>Establishes ApbA = PanE identity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9488683/">9488683</a></td>
+<td><em>ApbA of S. typhimurium required for thiamine via APB pathway</em></td>
+<td>Confirms ApbA is ketopantoate reductase; monomer, NADPH-preferring</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20876192/">20876192</a></td>
+<td><em>Detecting subtle functional differences in KPR</em></td>
+<td>Documents limited KPR sequence similarity; justifies HMM-based annotation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">20158506</a></td>
+<td><em>Conditionally essential genes of P. putida KT2440</em></td>
+<td>Organism-specific evidence that vitamin biosynthesis genes are conditionally essential on minimal medium</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25946571/">25946571</a></td>
+<td><em>Kinetic cooperativity in dimeric S. aureus KPR</em></td>
+<td>Shows oligomeric state/kinetics vary across KPR family — cautions against over-transfer</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25527092/">25527092</a></td>
+<td><em>Substrate-ambiguous enzyme in symbiont genome reduction</em></td>
+<td>Demonstrates IlvC can functionally replace KPR (EC 1.1.1.169), supporting redundancy model</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23941541/">23941541</a></td>
+<td><em>Archaeal KPR and CoA biosynthesis regulation</em></td>
+<td>KPR as a feedback regulatory node in archaea; NADH-preferring variant exists</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26757028/">26757028</a></td>
+<td><em>Archaeal KPR complexed with CoA and 2-oxopantoate</em></td>
+<td>Structural basis for CoA feedback inhibition at the NAD(P)H site</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23243306/">23243306</a></td>
+<td><em>PanG, a new ketopantoate reductase</em></td>
+<td>Shows multiple non-orthologous KPRs exist; convertibility of KPRs to pantoate</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10553653/">10553653</a></td>
+<td><em>Pantothenate production via panE overexpression</em></td>
+<td>panE encodes 303-aa, 33.8 kDa KPR; overexpression boosts pantothenate excretion</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>consistency across UniProt, KEGG, InterPro/Pfam, and the primary structural/kinetic literature</strong> is the strongest aspect of this annotation: four independent annotation systems and multiple experimentally characterized orthologs converge on the same assignment. The primary <strong>challenge</strong> is the absence of direct experimental characterization of the <em>P. putida</em> PP_2325 protein itself — all mechanistic detail is transferred from orthologs — combined with the family's low sequence identity and evidence that oligomeric state/kinetics vary between homologs.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of PP_2325.</strong> There is no published enzymology, crystal structure, or knockout phenotype for the <em>P. putida</em> KT2440 protein specifically. All mechanistic claims (kinetics, stereochemistry, catalytic residues, oligomeric state) are inferred from orthologs, principally <em>E. coli</em> PanE.</p>
+</li>
+<li>
+<p><strong>Low sequence identity limits residue-level inference.</strong> At ~27% identity to <em>E. coli</em> PanE, naive pairwise alignment cannot register the catalytic residues reliably (Finding 6). Residue equivalence rests on profile-HMM assignment. A structure-based alignment (e.g., against an AlphaFold model) was not performed and would strengthen residue-level claims.</p>
+</li>
+<li>
+<p><strong>Family-level variability in mechanism.</strong> KPRs range from monomeric/ordered (<em>E. coli</em>) to dimeric/cooperative (<em>S. aureus</em>), and some prefer NADH over NADPH (archaeal Tk-KPR). The oligomeric state, cofactor preference, and kinetic mechanism of PP_2325 are therefore not settled by homology alone.</p>
+</li>
+<li>
+<p><strong>Genetic redundancy complicates loss-of-function interpretation.</strong> With three K00077 paralogs (PP_1351, PP_2325, PP_2998) plus a potentially moonlighting IlvC (PP_4678), a single PP_2325 deletion may not produce a pantothenate auxotrophy, obscuring in vivo confirmation of its role.</p>
+</li>
+<li>
+<p><strong>Missing/divergent panD.</strong> No canonical aspartate 1-decarboxylase (K01579) was mapped, leaving the β-alanine supply route for pantothenate synthesis in <em>P. putida</em> unresolved. This is a pathway-level gap, not specific to PP_2325.</p>
+</li>
+<li>
+<p><strong>Regulation unknown.</strong> Whether PP_2325 is feedback-inhibited by CoA (as in archaea) or transcriptionally regulated (its non-operonic context suggests independent control) has not been investigated.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-and-actions">Proposed Follow-up Experiments and Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzyme assay.</strong> Clone PP_2325, purify the protein, and measure NADPH-dependent reduction of chemically synthesized ketopantoate spectrophotometrically (NADPH oxidation at 340 nm). Determine KM(NADPH), KM(ketopantoate), and kcat, and test NADH vs NADPH preference to place PP_2325 relative to bacterial vs archaeal KPR types.</p>
+</li>
+<li>
+<p><strong>Determine oligomeric state.</strong> Use size-exclusion chromatography and/or analytical ultracentrifugation to distinguish a monomeric (<em>E. coli</em>-like) from a dimeric (<em>S. aureus</em>-like) assembly, and test for kinetic cooperativity via NADPH saturation curves (Hill coefficient).</p>
+</li>
+<li>
+<p><strong>Structural validation.</strong> Generate an AlphaFold model of Q88KG5 and perform a structure-based superposition against <em>E. coli</em> KPR (structures from PMID 11724562 / 17229734) to confirm spatial conservation of the Asn98/Lys176/Glu256-equivalent residues; ideally solve an experimental structure with NADP⁺ and pantoate bound.</p>
+</li>
+<li>
+<p><strong>Genetic dissection of redundancy.</strong> Construct single (ΔPP_2325) and combinatorial (ΔPP_2325 ΔPP_1351 ΔPP_2998 ΔilvC) deletion mutants and score for pantothenate auxotrophy on minimal medium ± pantothenate/pantoate to establish which paralog(s) carry the physiological KPR activity in vivo.</p>
+</li>
+<li>
+<p><strong>Complementation test.</strong> Confirm functional identity by complementing an <em>E. coli</em> ilvC panE double mutant (which lacks all KPR activity) with PP_2325, as was done successfully for panG and EF1861 <a href="https://pubmed.ncbi.nlm.nih.gov/23243306/">PMID: 23243306</a>.</p>
+</li>
+<li>
+<p><strong>Feedback-regulation test.</strong> Assay PP_2325 activity in the presence of CoA to determine whether this bacterial enzyme, like its archaeal counterparts, is subject to CoA feedback inhibition at the nucleotide-binding site.</p>
+</li>
+<li>
+<p><strong>Resolve the β-alanine route.</strong> Search the <em>P. putida</em> genome/transcriptome for a divergent aspartate decarboxylase or an alternative β-alanine source (e.g., from spermine/uracil degradation) to complete the pathway annotation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_2325 (Q88KG5) is the ketopantoate reductase (2-dehydropantoate 2-reductase; PanE/ApbA; EC 1.1.1.169; K00077) of <em>Pseudomonas putida</em> KT2440 — a soluble cytoplasmic, NADPH-dependent oxidoreductase that stereospecifically reduces ketopantoate to (R)-pantoate in the committed reductive step of pantothenate (vitamin B5) biosynthesis, upstream of coenzyme A and acyl carrier protein. This assignment is supported by convergent UniProt, KEGG, and InterPro/Pfam annotations, by the diagnostic Rossmann NADP-binding motif and dual ApbA/ApbA_C domains, and by extensive biochemical and structural characterization of bacterial orthologs, with the caveats that the family is highly divergent, that <em>P. putida</em> harbors partially redundant KPR-family paralogs and a moonlighting IlvC, and that no direct experimental characterization of the PP_2325 protein itself yet exists.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_2325-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_2325-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15966718</li>
+<li>PMID:17229734</li>
+<li>PMID:10736170</li>
+<li>PMID:11724562</li>
+<li>PMID:18726075</li>
+<li>PMID:9721324</li>
+<li>PMID:20876192</li>
+<li>PMID:20158506</li>
+<li>PMID:25946571</li>
+<li>PMID:25527092</li>
+<li>PMID:23941541</li>
+<li>PMID:26757028</li>
+<li>PMID:23243306</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2325-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KG5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_2325-curation-notes">PP_2325 curation notes</h1>
+<h2 id="ketopantoate-reductase-assignment">Ketopantoate-reductase assignment</h2>
+<p>Q88KG5 is a 315-aa ApbA-fold oxidoreductase assigned to<br />
+PANTHER <code>PTHR21708:SF26</code> and InterPro <code>IPR051402</code> (KPR-related), rather than the<br />
+canonical PanE family <code>PTHR43765</code>/<code>IPR050838</code> represented by KT2440 PanE<br />
+Q88N64. The current enzyme name, EC 1.1.1.169, Rhea reaction, and pantothenate<br />
+pathway assignment are all computational transfers. [file:PSEPK/PP_2325/PP_2325-uniprot.txt<br />
+"DR   PANTHER; PTHR21708:SF26; 2-DEHYDROPANTOATE 2-REDUCTASE; 1."]</p>
+<p>The experimentally studied <em>Pseudomonas aeruginosa</em> second ketopantoate<br />
+reductase copy, PaKPR2/PA1752 (Q9I2Y5), is in the same PANTHER subfamily.<br />
+OrtholugeDB identifies PP_2325 as the reciprocal-best-BLAST ortholog of PA1752<br />
+in KT2440. <a href="https://pseudoluge.pseudomonas.com/named/list/search?field=locus_tag&amp;value=PA1752">OrtholugeDB PA1752 ortholog query</a><br />
+Structural and biochemical analysis found that PaKPR2 is inactive toward the<br />
+natural ketopantoate substrate and instead reduces multiple alpha-keto acids.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38962820" title="resulting in its inactivity toward the natural substrate ketopantoate">PMID:38962820</a></p>
+<p>This is strong evidence against treating the automated substrate-specific GO<br />
+annotation as established for PP_2325, but it is still ortholog transfer rather<br />
+than a direct assay of Q88KG5. The first-pass review should therefore remove the<br />
+specific ketopantoate/pantothenate assertions while describing the supported<br />
+core only as a KPR-related alpha-keto-acid oxidoreductase of unresolved native<br />
+substrate.</p>
+<h2 id="openscientist-report-discrepancy">OpenScientist report discrepancy</h2>
+<p>The gene-level OpenScientist report recapitulates the UniProt/KEGG PanE label<br />
+from generic ApbA-family signatures and approximately 27% identity to <em>E. coli</em><br />
+PanE. It did not retrieve or evaluate the 2024 PaKPR2 biochemical study or the<br />
+OrtholugeDB reciprocal-best relationship to PA1752, and it explicitly notes<br />
+that there is no direct PP_2325 experiment.<br />
+[file:PSEPK/PP_2325/PP_2325-deep-research-openscientist.md "No direct<br />
+experimental characterization of PP_2325."]</p>
+<p>For substrate-specific curation, the closer experimentally characterized<br />
+Pseudomonas ortholog is more informative than a distant generic family match.<br />
+The report is retained as retrieval provenance, but its PanE conclusion is not<br />
+adopted.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KG5
+gene_symbol: PP_2325
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_2325 encodes a soluble ApbA-fold NAD(P)-dependent oxidoreductase related
+  to ketopantoate reductases. Q88KG5 belongs to a KPR-related PANTHER subfamily
+  distinct from the canonical PanE family. Its reciprocal-best Pseudomonas
+  aeruginosa ortholog, PaKPR2, has evolved broad alpha-keto-acid reductase
+  activity and is inactive toward ketopantoate, so the native substrate of the
+  KT2440 protein remains unresolved.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is consistent with this soluble oxidoreductase.
+    action: ACCEPT
+    reason: &gt;-
+      Q88KG5 has a soluble Rossmann-like/ApbA architecture and no signal
+      peptide or transmembrane segment.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2325/PP_2325-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/PP_2325/PP_2325-uniprot.txt
+      supporting_text: &#34;DR   SUPFAM; SSF51735; NAD(P)-binding Rossmann-fold domains; 1.&#34;
+- term:
+    id: GO:0008677
+    label: 2-dehydropantoate 2-reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The substrate-specific KPR assignment is not supported for this paralog.
+    action: REMOVE
+    reason: &gt;-
+      The annotation is an electronic EC/rule transfer within a functionally
+      heterogeneous KPR-related family. PP_2325 is the reciprocal-best-BLAST
+      KT2440 ortholog of P. aeruginosa PaKPR2, which was structurally and
+      biochemically shown to be inactive toward ketopantoate and active on
+      other alpha-keto acids. This supports a broad oxidoreductase role but
+      argues against retaining the specific ketopantoate reaction.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2325/PP_2325-goa.tsv
+      supporting_text: &#34;GO:0008677\t2-dehydropantoate 2-reductase activity&#34;
+    - reference_id: file:PSEPK/PP_2325/PP_2325-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR051402; KPR-Related.&#34;
+    - reference_id: file:PSEPK/PP_2325/PP_2325-notes.md
+      supporting_text: &#34;OrtholugeDB identifies PP_2325 as the reciprocal-best-BLAST ortholog of PA1752&#34;
+    - reference_id: PMID:38962820
+      supporting_text: &#34;resulting in its inactivity toward the natural substrate ketopantoate&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: ISS
+  original_reference_id: PMID:38962820
+  qualifier: enables
+  review:
+    summary: A broad oxidoreductase annotation captures the supported family-level function without asserting a substrate.
+    action: NEW
+    reason: &gt;-
+      Q88KG5 has an NAD(P)-binding ApbA oxidoreductase architecture and is the
+      close Pseudomonas ortholog of an experimentally characterized broad
+      alpha-keto-acid reductase. The available evidence does not justify a more
+      specific native substrate term.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2325/PP_2325-uniprot.txt
+      supporting_text: &#34;DR   SUPFAM; SSF51735; NAD(P)-binding Rossmann-fold domains; 1.&#34;
+    - reference_id: file:PSEPK/PP_2325/PP_2325-notes.md
+      supporting_text: &#34;KPR-related alpha-keto-acid oxidoreductase of unresolved native substrate&#34;
+    - reference_id: PMID:38962820
+      supporting_text: &#34;active against several important α-keto-acid substrates&#34;
+- term:
+    id: GO:0015940
+    label: pantothenate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Pantothenate-pathway placement is an electronic consequence of the unsupported KPR reaction.
+    action: REMOVE
+    reason: &gt;-
+      UniPathway placement depends on the EC 1.1.1.169 assignment. The close
+      experimentally characterized ortholog does not reduce ketopantoate, and
+      canonical panE/PP_1351 already supplies the pathway reaction in KT2440.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2325/PP_2325-goa.tsv
+      supporting_text: &#34;GO:0015940\tpantothenate biosynthetic process&#34;
+    - reference_id: file:PSEPK/PP_2325/PP_2325-notes.md
+      supporting_text: &#34;remove the specific ketopantoate/pantothenate assertions&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+      supporting_text: &#34;The key curation question is which paralog is the physiologic flux carrier&#34;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:38962820
+  title: Implication of Molecular Constraints Facilitating the Functional Evolution of Pseudomonas aeruginosa KPR2 into a Versatile α-Keto-Acid Reductase.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified direct structural and biochemical evidence for PaKPR2,
+      the reciprocal-best-BLAST P. aeruginosa ortholog of PP_2325. Transfer to
+      Q88KG5 remains orthology-based rather than a direct assay.
+  findings:
+  - statement: &gt;-
+      PaKPR2 is inactive on ketopantoate and instead reduces multiple
+      alpha-keto-acid substrates.
+    supporting_text: &#34;resulting in its inactivity toward the natural substrate ketopantoate&#34;
+- id: file:PSEPK/PP_2325/PP_2325-uniprot.txt
+  title: UniProtKB entry for PP_2325
+  findings:
+  - statement: &gt;-
+      The unreviewed record carries an electronically transferred EC 1.1.1.169
+      assignment and places Q88KG5 in a broad KPR-related ApbA family.
+- id: file:PSEPK/PP_2325/PP_2325-goa.tsv
+  title: QuickGO GOA annotations for PP_2325
+  findings:
+  - statement: The fetched GOA table contains the three electronic annotations reviewed for PP_2325.
+- id: file:PSEPK/PP_2325/PP_2325-notes.md
+  title: Manual curation notes for PP_2325
+  findings:
+  - statement: &gt;-
+      The notes record the family distinction and OrtholugeDB reciprocal-best
+      orthology between PP_2325 and P. aeruginosa PA1752/PaKPR2, and explain
+      why that evidence supersedes the generic PanE inference in the gene-level
+      retrieval report.
+- id: file:PSEPK/PP_2325/PP_2325-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_2325
+  findings:
+  - statement: &gt;-
+      The report usefully retrieves generic KPR structure and mechanism but
+      repeats the electronic PanE assignment from distant E. coli similarity
+      without evaluating the closer PaKPR2 ortholog. It also confirms that no
+      direct experiment has tested Q88KG5.
+    supporting_text: &#34;No direct experimental characterization of PP_2325.&#34;
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__coenzyme_a_biosynthesis__ppu00770-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK pantothenate and CoA biosynthesis
+  findings:
+  - statement: &gt;-
+      The pathway report identifies paralog ambiguity at the ketopantoate
+      reductase step; manual orthology review resolves PP_2325 away from the
+      canonical PanE role.
+core_functions:
+- description: &gt;-
+    KPR-related NAD(P)-dependent alpha-keto-acid oxidoreductase whose native
+    substrate is unresolved; the close PaKPR2 ortholog does not reduce
+    ketopantoate.
+  molecular_function:
+    id: GO:0016491
+    label: oxidoreductase activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/PP_2325/PP_2325-uniprot.txt
+    supporting_text: &#34;DR   InterPro; IPR051402; KPR-Related.&#34;
+  - reference_id: PMID:38962820
+    supporting_text: &#34;active against several important α-keto-acid substrates&#34;
+  - reference_id: file:PSEPK/PP_2325/PP_2325-notes.md
+    supporting_text: &#34;PP_2325 as the reciprocal-best-BLAST ortholog of PA1752&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: What are the native alpha-keto-acid substrate and physiological pathway of PP_2325?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88KG5 and compare reduction of ketopantoate with the alpha-keto-acid
+    panel used for PaKPR2, then test the strongest substrates in targeted
+    KT2440 deletion and metabolomics experiments.
+  experiment_type: biochemical and genetic analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
