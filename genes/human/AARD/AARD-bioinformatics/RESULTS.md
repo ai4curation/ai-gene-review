@@ -17,17 +17,20 @@ architecture, the assay explains the set better than any function does.
 | Partner accessions in the GOA file | 15 |
 |---|---|
 | Successfully retrieved from UniProt | 15 |
-| **With an annotated coiled-coil region** | **9** |
-| Proportion coiled-coil | **60%** |
+| **With a coiled-coil FEATURE** | **7** |
+| With a coiled-coil feature or keyword | 9 |
+| Proportion coiled-coil | **47%** |
 
 ### Is that rate actually unusual? (null model)
 
 Background, fetched from UniProt: **2059 of 20431** reviewed human
 proteins carry a coiled-coil feature = **10.1%**.
 
-- Observed in this partner set: **60%**
-- Enrichment: **6.0-fold**
-- Binomial P(X >= 9 | n=15, p=0.101) = **3.04e-06**
+- Observed in this partner set: **47%** (7/15)
+- Enrichment: **4.6-fold**
+- Binomial P(X >= 7 | n=15, p=0.101) = **3.26e-04**
+
+Both figures use the coiled-coil FEATURE, on numerator and denominator alike. For completeness, on the more liberal feature-or-keyword criterion (9/15 partners), the matching background is **10.6%** (keyword:KW-0175), giving **5.6-fold** and P = **4.79e-06**. Mixing the two criteria - a keyword numerator against a feature denominator - would overstate the enrichment, so it is not done here.
 
 The enrichment is therefore real rather than assumed, though with n=15 this is
 a descriptive statistic and not a controlled test: the relevant comparison would

@@ -29,9 +29,14 @@ preys in yeast two-hybrid are enriched for coiled-coil proteins, which associate
 through heptad-repeat surfaces. `AARD-bioinformatics/analyze_partners.py` reads the accessions
 straight out of `AARD-goa.tsv` and fetches UniProt features at run time.
 
-**Result: 9 of 15 partners (60%) carry an annotated coiled-coil region.** Against a background
-of **2059 / 20431 reviewed human proteins (10.1%)**, fetched from UniProt for the purpose, that
-is a **6.0-fold enrichment**, binomial P(X≥9 | n=15, p=0.101) = **3×10⁻⁶**. With n=15 this is a
+**Result: 7 of 15 partners (47%) carry a coiled-coil FEATURE.** Against a background of
+**2059 / 20431 reviewed human proteins with that feature (10.1%)**, fetched from UniProt for the
+purpose, that is a **4.6-fold enrichment**, binomial P(X≥7 | n=15, p=0.101) = **3.3×10⁻⁴**.
+Numerator and denominator deliberately use the same criterion: two more partners (KRT24, KRT27)
+carry only the *Coiled coil* KEYWORD, which is assigned more liberally than the feature, so
+scoring them against a feature-only background would inflate the result. On the consistent
+feature-or-keyword pair it is 9/15 against a 10.6% keyword background — **5.6-fold**,
+P = 4.8×10⁻⁶ — the same conclusion either way. With n=15 this is a
 descriptive statistic rather than a controlled test — the ideal comparison would be against
 other single-publication prey sets from the same screen — but the enrichment is now *measured*
 rather than asserted.

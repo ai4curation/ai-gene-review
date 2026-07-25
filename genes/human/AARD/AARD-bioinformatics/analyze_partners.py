@@ -147,14 +147,23 @@ def main() -> None:
     for r in rows:
         print(f"  {r['acc']:<10} {r['gene']:<10} coiled-coil segments: {r['n_coiled']}")
 
-    n_coiled = sum(1 for r in rows if r["n_coiled"] > 0 or r["coiled_kw"])
+    # Numerator and denominator must use the SAME criterion. The Coiled coil KEYWORD is
+    # assigned more liberally than the ft_coiled FEATURE, so counting the numerator on
+    # "feature OR keyword" while measuring the background on features alone inflates the
+    # enrichment. Compute both criteria consistently and headline the feature-only pair.
+    n_coiled_ft = sum(1 for r in rows if r["n_coiled"] > 0)
+    n_coiled_any = sum(1 for r in rows if r["n_coiled"] > 0 or r["coiled_kw"])
+    n_coiled = n_coiled_ft  # headline figure: feature-only, matching the feature background
 
     # Null model: what coiled-coil rate would be unsurprising? Without this, "enriched"
     # is an assertion of the same kind the review is sceptical of elsewhere.
     n_human = count_hits("reviewed:true+AND+organism_id:9606")
     n_human_cc = count_hits("reviewed:true+AND+organism_id:9606+AND+ft_coiled:*")
+    n_human_cc_kw = count_hits("reviewed:true+AND+organism_id:9606+AND+keyword:KW-0175")
     bg = (n_human_cc / n_human) if (n_human and n_human_cc) else None
+    bg_any = (n_human_cc_kw / n_human) if (n_human and n_human_cc_kw) else None
     pval = binomial_upper_tail(n_coiled, len(rows), bg) if (bg and rows) else None
+    pval_any = binomial_upper_tail(n_coiled_any, len(rows), bg_any) if (bg_any and rows) else None
 
     # Collapse hierarchical location strings to top-level compartments.
     loc_counts: Counter[str] = Counter()
@@ -192,7 +201,8 @@ def main() -> None:
     L.append(f"| Partner accessions in the GOA file | {len(accs)} |")
     L.append("|---|---|")
     L.append(f"| Successfully retrieved from UniProt | {len(rows)} |")
-    L.append(f"| **With an annotated coiled-coil region** | **{n_coiled}** |")
+    L.append(f"| **With a coiled-coil FEATURE** | **{n_coiled_ft}** |")
+    L.append(f"| With a coiled-coil feature or keyword | {n_coiled_any} |")
     if len(rows):
         L.append(f"| Proportion coiled-coil | **{100 * n_coiled / len(rows):.0f}%** |")
     L.append("")
@@ -202,10 +212,21 @@ def main() -> None:
         L.append(f"Background, fetched from UniProt: **{n_human_cc} of {n_human}** reviewed human")
         L.append(f"proteins carry a coiled-coil feature = **{100 * bg:.1f}%**.")
         L.append("")
-        L.append(f"- Observed in this partner set: **{100 * n_coiled / len(rows):.0f}%**")
-        L.append(f"- Enrichment: **{(n_coiled / len(rows)) / bg:.1f}-fold**")
+        L.append(f"- Observed in this partner set: **{100 * n_coiled_ft / len(rows):.0f}%** "
+                 f"({n_coiled_ft}/{len(rows)})")
+        L.append(f"- Enrichment: **{(n_coiled_ft / len(rows)) / bg:.1f}-fold**")
         if pval is not None:
-            L.append(f"- Binomial P(X >= {n_coiled} | n={len(rows)}, p={bg:.3f}) = **{pval:.2e}**")
+            L.append(f"- Binomial P(X >= {n_coiled_ft} | n={len(rows)}, p={bg:.3f}) = **{pval:.2e}**")
+        L.append("")
+        L.append("Both figures use the coiled-coil FEATURE, on numerator and denominator alike. "
+                 "For completeness, on the more liberal feature-or-keyword criterion "
+                 f"({n_coiled_any}/{len(rows)} partners), the matching background is "
+                 + (f"**{100 * bg_any:.1f}%** (keyword:KW-0175), giving "
+                    f"**{(n_coiled_any / len(rows)) / bg_any:.1f}-fold**"
+                    + (f" and P = **{pval_any:.2e}**" if pval_any is not None else "")
+                    if bg_any is not None else "unavailable")
+                 + ". Mixing the two criteria - a keyword numerator against a feature "
+                   "denominator - would overstate the enrichment, so it is not done here.")
         L.append("")
         L.append("The enrichment is therefore real rather than assumed, though with n=15 this is")
         L.append("a descriptive statistic and not a controlled test: the relevant comparison would")
