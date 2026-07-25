@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hisI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hisI</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D15" target="_blank" class="term-link">
+                        Q88D15
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hisI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D15" data-a="DESCRIPTION: hisI encodes phosphoribosyl-AMP cyclohydrolase (EC..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>hisI encodes phosphoribosyl-AMP cyclohydrolase (EC 3.5.4.19), which hydrolyzes the adenine ring of phosphoribosyl-AMP in the third reaction of L-histidine biosynthesis. The 130-residue Pseudomonas putida KT2440 enzyme is a standalone cyclohydrolase rather than a HisIE fusion and binds magnesium and zinc ions. The preceding phosphoribosyl-ATP diphosphatase reaction is carried out by the adjacent standalone HisE protein, Q88D14.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                    GO:0000105
+                                </a>
+                            </span>
+                            <span class="term-label">L-histidine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D15" data-a="GO:0000105" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisI performs the third reaction of the PRPP-to-histidine pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt entry and UniPathway assignment place the exact cyclohydrolase reaction at step 3 of 9 in L-histidine biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D15" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding is supported for the standalone cyclohydrolase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniRule records one Mg2+ ion per subunit. This is relevant catalytic context but is less informative than the specific cyclohydrolase activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004635" target="_blank" class="term-link">
+                                    GO:0004635
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosyl-AMP cyclohydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D15" data-a="GO:0004635" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining HisI activity in KT2440.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004635 matches EC 3.5.4.19, RHEA:20049, the reviewed product name, and the HisI/PRA-CH family assignments.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hisI/hisI-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">encodes phosphoribosyl-AMP cyclohydrolase (PRA-CH; EC 3.5.4.19), the enzyme that catalyzes the third step of the *de novo* L-histidine biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004636" target="_blank" class="term-link">
+                                    GO:0004636
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosyl-ATP diphosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D15" data-a="GO:0004636" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The diphosphatase activity belongs to the separate HisE protein in KT2440.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This ARBA assignment appears to have propagated across a family that also contains bifunctional HisIE proteins. Q88D15 is a 130-residue standalone phosphoribosyl-AMP cyclohydrolase, whereas adjacent Q88D14 is the reviewed standalone phosphoribosyl-ATP diphosphatase with EC 3.6.1.31 and RHEA:22828.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hisI/hisI-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">*hisI* is a **standalone monofunctional gene** (PP_5014, 130 aa) sitting adjacent to a separate monofunctional *hisE* gene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D15" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisI is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported by UniProt but is contextual rather than the core biochemical function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D15" data-a="GO:0008270" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc binding is supported for the standalone cyclohydrolase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniRule records one Zn2+ ion per subunit. This is supporting cofactor context rather than a pathway-defining activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes the adenine ring of phosphoribosyl-AMP to form the ProFAR intermediate in L-histidine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88D15" data-a="FUNCTION: Hydrolyzes the adenine ring of phosphoribosyl-AMP ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004635" target="_blank" class="term-link">
+                            phosphoribosyl-AMP cyclohydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                L-histidine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hisI/hisI-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the hydrolysis of the adenine ring of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hisI/hisI-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the third step of the *de novo* L-histidine biosynthetic pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisI/hisI-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK hisI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88D15 as the standalone phosphoribosyl-AMP cyclohydrolase for step 3 of L-histidine biosynthesis and records Mg2+ and Zn2+ binding.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisI/hisI-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK hisI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the six existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisE/hisE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for the adjacent PSEPK hisE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88D14 as the standalone phosphoribosyl-ATP pyrophosphatase, excluding that activity from Q88D15.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisI/hisI-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional report for PSEPK HisI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Corroborates the monofunctional phosphoribosyl-AMP cyclohydrolase assignment and the separate adjacent HisE architecture. Detailed metal, mechanism, and oligomer claims are transferred from orthologs rather than demonstrated directly for Q88D15.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hisI-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D15" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hisI* (PP_5014, Q88D15) — Phosphoribosyl-AMP Cyclohydrolase from *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T05:24:49.335692</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hisI-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hisI-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-hisi-pp_5014-q88d15-phosphoribosyl-amp-cyclohydrolase-from-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hisI</em> (PP_5014, Q88D15) — Phosphoribosyl-AMP Cyclohydrolase from <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>The gene <em>hisI</em> (locus PP_5014; UniProt Q88D15) of <em>Pseudomonas putida</em> KT2440 encodes phosphoribosyl-AMP cyclohydrolase (PRA-CH; EC 3.5.4.19), the enzyme that catalyzes the third step of the <em>de novo</em> L-histidine biosynthetic pathway.</strong> Its identity is unambiguous: the UniProt/HAMAP annotation (rule MF_01021), the InterPro/Pfam domain architecture (PRA-CH family, PF01502), and the primary and structural literature on orthologous PRA-CH enzymes all converge on the same function. The gene symbol <em>hisI</em> is used consistently across bacteria for this cyclohydrolase activity, and no conflicting gene-identity issues were encountered during the investigation.</p>
+<p>The enzyme performs a chemically distinctive reaction: the <strong>hydrolytic opening of the adenine (purine) ring</strong> of the intermediate N1-(5′-phospho-β-D-ribosyl)-AMP (PR-AMP) by cleaving the <strong>N1–C6 bond</strong>, producing the ring-opened formimino compound <strong>ProFAR</strong> (N-(5′-phospho-D-ribosylformimino)-5-amino-1-(5″-phospho-D-ribosyl)-4-imidazolecarboxamide), which is then handed to the downstream isomerase HisA. This ring-opening chemistry is unique to histidine biosynthesis and represents the committed conversion of a purine-derived precursor into the histidine-specific portion of the pathway. HisI is a <strong>Zn²⁺/Mg²⁺-dependent metalloenzyme</strong>: it carries one essential, tightly bound catalytic Zn²⁺ (coordinated by three cysteines, Cys78/Cys95/Cys102 in the <em>P. putida</em> sequence) plus a lower-affinity Mg²⁺ requirement, and it functions as an <strong>obligate cytoplasmic homodimer</strong> with a shared, inter-subunit active site.</p>
+<p>A notable organism-specific feature is that in <em>P. putida</em> KT2440, <em>hisI</em> is a <strong>standalone monofunctional gene</strong> (PP_5014, 130 aa) sitting adjacent to a separate monofunctional <em>hisE</em> gene (PP_5015, phosphoribosyl-ATP pyrophosphohydrolase, EC 3.6.1.31). This contrasts with the enteric bacteria (<em>E. coli</em>, <em>Salmonella</em>) and plants, where the two activities are fused into a single bifunctional HisIE/HISN2 polypeptide. This organization reflects the "piecewise" evolutionary assembly of the proteobacterial histidine operon into scattered mini-operons. Below, each of these conclusions is developed with its supporting evidence, followed by a mechanistic model, an evaluation of the evidence base, limitations, and proposed follow-up work.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hisi-catalyzes-step-3-of-histidine-biosynthesis-hydrolytic-opening-of-the-purine-ring-of-pr-amp">Finding 1 — HisI catalyzes step 3 of histidine biosynthesis: hydrolytic opening of the purine ring of PR-AMP</h3>
+<p>The core function of PP_5014 is defined by its EC number and pathway annotation. UniProt Q88D15 assigns <strong>EC 3.5.4.19</strong> and the reaction:</p>
+<blockquote>
+<p>1-(5-phospho-β-D-ribosyl)-5′-AMP + H₂O → 1-(5-phospho-β-D-ribosyl)-5-[(5-phospho-β-D-ribosylamino)methylideneamino]imidazole-4-carboxamide (ProFAR)</p>
+</blockquote>
+<p>This is annotated as <strong>step 3 of 9</strong> in L-histidine biosynthesis. The protein is small (130 aa, ~15 kDa) and belongs to the PRA-CH family (Pfam PF01502). Mechanistically, the enzyme opens the adenine (purine) ring by hydrolyzing the <strong>N1–C6 bond</strong>, a transformation that occurs nowhere else in metabolism, marking this as the histidine-committed step.</p>
+<p>The primary literature directly corroborates this assignment. A structural study of the orthologous archaeal enzyme states plainly that "<strong>Hydrolysis of phosphoribosyl-AMP, the third step in the histidine biosynthetic pathway, is carried out by PR-AMP cyclohydrolase, the product of the <em>hisI</em> gene</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/16042384/">PMID: 16042384</a>). The biochemical characterization of the monofunctional enzyme specifies the exact chemistry, describing the enzyme as "<strong>catalyzing the hydrolysis of the N1-C6 bond of the purine substrate, a reaction unique to this pathway</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9931020/">PMID: 9931020</a>). Taken together, these establish HisI as the PRA-CH of <em>P. putida</em>, catalyzing the ring-opening hydrolysis that defines the third step of histidine biosynthesis.</p>
+<h3 id="finding-2-hisi-is-a-zn2mg2-dependent-metalloenzyme-with-three-cysteine-zinc-ligands">Finding 2 — HisI is a Zn²⁺/Mg²⁺-dependent metalloenzyme with three cysteine zinc ligands</h3>
+<p>HisI requires two metal cofactors. The UniProt/HAMAP annotation (MF_01021) for Q88D15 lists both <strong>Zn²⁺</strong> and <strong>Mg²⁺</strong>. The <em>P. putida</em> sequence contains exactly three cysteines — <strong>Cys78, Cys95, Cys102</strong> — which serve as the annotated Zn²⁺ ligands, while the Mg²⁺ site is built from aspartate side chains (<strong>Asp77, Asp79, Asp81</strong>).</p>
+<p>The functional roles of these metals are established biochemically. In the monofunctional PRA-CH, "<strong>Bound to the enzyme is 1 equiv of Zn²⁺ that can be removed only by extended dialysis with 1,10-phenanthroline (Kd ≤ 10⁻⁹ M). Removal of the Zn²⁺ correlates with the loss of enzyme activity</strong>" — demonstrating that the tightly bound Zn²⁺ is catalytically essential (<a href="https://pubmed.ncbi.nlm.nih.gov/9931020/">PMID: 9931020</a>). The same study shows that, in addition, "<strong>free Mg²⁺ (Ks = 4.9 ± 0.7 µM) is required for catalytic activity</strong>," matching the dual-cofactor UniProt annotation (<a href="https://pubmed.ncbi.nlm.nih.gov/9931020/">PMID: 9931020</a>).</p>
+<p>The structural basis of the zinc site is resolved in the 1.7 Å crystal structure of the <em>Methanobacterium thermoautotrophicum</em> enzyme, in which "<strong>These metal binding sites include three cysteine ligands, two from one monomer and the third from the second monomer</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/16042384/">PMID: 16042384</a>). This three-cysteine coordination — spanning the dimer interface — is consistent with the three cysteines (Cys78/Cys95/Cys102) present in <em>P. putida</em> HisI. The Zn²⁺ almost certainly serves to activate a water molecule (or polarize the substrate) for the hydrolytic ring-opening attack, while Mg²⁺ likely stabilizes the anionic phosphoribosyl groups of the substrate.</p>
+<h3 id="finding-3-hisi-is-an-obligate-cytoplasmic-homodimer-with-a-shared-inter-subunit-active-site">Finding 3 — HisI is an obligate cytoplasmic homodimer with a shared inter-subunit active site</h3>
+<p>The enzyme's quaternary structure and localization are well defined. UniProt Q88D15 (via HAMAP MF_01021) annotates the <strong>subunit as a homodimer</strong> and the <strong>subcellular location as cytoplasm</strong>. Because histidine biosynthesis is a soluble metabolic pathway using phosphorylated, highly polar intermediates, cytoplasmic localization is expected and consistent with the enzyme carrying no signal peptide or transmembrane segments.</p>
+<p>Structural analysis shows the dimerization is not incidental but functionally required. In the <em>M. thermoautotrophicum</em> structure, "<strong>The putative substrate-binding cleft is formed at the interface between the two monomers of the dimer. This fact, combined with the localization of the Zn²⁺-binding site, indicates that the enzyme is an obligate dimer</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/16042384/">PMID: 16042384</a>). Because one of the three zinc ligands is contributed by the partner subunit (Finding 2), the active site literally cannot be assembled by a monomer. HisI therefore carries out its function as a <strong>soluble cytoplasmic homodimer</strong>, with each of the two composite active sites built from residues of both protomers.</p>
+<h3 id="finding-4-in-p-putida-hisi-pra-ch-and-hise-pra-ph-are-separate-monofunctional-genes-not-a-fused-bifunctional-enzyme">Finding 4 — In <em>P. putida</em>, <em>hisI</em> (PRA-CH) and <em>hisE</em> (PRA-PH) are separate monofunctional genes, not a fused bifunctional enzyme</h3>
+<p>A genome-level distinction of <em>P. putida</em> is that the two consecutive activities of the pathway — phosphoribosyl-ATP pyrophosphohydrolase (PRA-PH; step 2) and phosphoribosyl-AMP cyclohydrolase (PRA-CH; step 3) — are encoded by <strong>two separate genes</strong>. <em>hisI</em> = PP_5014 (Q88D15, 130 aa, EC 3.5.4.19, PRA-CH only) lies immediately adjacent to <em>hisE</em> = PP_5015 (Q88D14, 111 aa, EC 3.6.1.31, PRA-PH), forming a <em>hisIE</em> gene pair of two standalone polypeptides.</p>
+<p>This organization differs from the enteric bacteria and plants, where PRA-PH and PRA-CH are fused into a single bifunctional polypeptide. The Arabidopsis study that mapped the two domains notes that "<strong>the functional domains for the PRA-CH (hisI) and PRA-PH (hisE) resided in the N-terminal and the C-terminal halves</strong>" of the fused enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/9733547/">PMID: 9733547</a>) — a fusion that in <em>P. putida</em> corresponds instead to two distinct genes. Evolutionary analyses explain this pattern: across proteobacteria the histidine genes were assembled "piecewise" from scattered monofunctional units into mini-operons, and in <em>P. putida</em> KT2440 the his genes remain in three separate genomic clusters — <em>hisGDC</em>, the <em>hisBHAF</em> core, and <em>hisIE</em> — "<strong>three mini-operons (hisGDC, hisBHAF, hisIE) transcribed from independent promoters</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/15871048/">PMID: 15871048</a>). That <em>hisI</em> can encode a purely unifunctional PRA-CH is directly precedented in <em>Rhodobacter sphaeroides</em>, where "<strong>the R. sphaeroides hisI gene encodes a unifunctional protein</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/8760919/">PMID: 8760919</a>). <em>P. putida</em> HisI therefore represents the standalone, monofunctional cyclohydrolase form of this enzyme.</p>
+<h3 id="finding-5-catalytic-mechanism-adenine-ring-opening-followed-by-rate-limiting-proton-transfer-yielding-profar">Finding 5 — Catalytic mechanism: adenine ring-opening followed by rate-limiting proton transfer, yielding ProFAR</h3>
+<p>The chemical mechanism has been probed by pre-steady-state kinetics of the bifunctional HisIE enzyme, whose HisI-like cyclohydrolase domain is homologous to <em>P. putida</em> HisI. In the pathway, the upstream <strong>HisE/PRA-PH</strong> converts PR-ATP to PR-AMP, and <strong>HisI/PRA-CH</strong> then hydrolyzes PR-AMP to <strong>ProFAR</strong>, which the downstream <strong>HisA</strong> isomerizes. Kinetic dissection revealed a lag followed by a burst in ProFAR formation, a large solvent deuterium kinetic isotope effect that decreases at basic pH, and no solvent viscosity effect — a pattern that pinpoints a slow chemical step: "<strong>These observations are consistent with a rate-limiting unimolecular step involving a proton transfer following adenine ring opening</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/37288093/">PMID: 37288093</a>). The same study identifies the product and the responsible domain: "<strong>cyclohydrolysis of PRAMP to N-(5′-phospho-D-ribosylformimino)-5-amino-1-(5″-phospho-D-ribosyl)-4-imidazolecarboxamide (ProFAR) in the N-terminal HisI-like domain</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/37288093/">PMID: 37288093</a>).</p>
+<p>This mechanistic picture is complemented by the pH dependence of the monofunctional enzyme, which "<strong>shows a single titration event in the kcat/Km profile with a pKa of 7.3 that is consistent with the functional role of a metal site in catalysis</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9931020/">PMID: 9931020</a>). Together these data support a mechanism in which the active-site metal (Zn²⁺) activates water/hydroxide to attack the N1–C6 bond and open the purine ring, after which a rate-limiting unimolecular proton-transfer step completes formation of the ring-opened ProFAR product.</p>
+<h3 id="finding-6-hisi-adopts-the-conserved-hisi-like-fold-diagnostic-of-the-pra-ch-family">Finding 6 — HisI adopts the conserved HisI-like α/β fold diagnostic of the PRA-CH family</h3>
+<p>Domain and fold annotations independently corroborate the functional assignment. InterPro annotation of Q88D15 includes family <strong>IPR026660</strong> (Phosphoribosyl-AMP cyclohydrolase), domain <strong>IPR002496</strong>, and superfamily <strong>IPR038019</strong>; Pfam <strong>PF01502</strong>; HAMAP <strong>MF_01021</strong> (hisI); NCBIfam <strong>NF000768</strong>; PANTHER <strong>PTHR42945</strong> (Histidine biosynthesis PRA-CH/PRA-PH); CATH-Gene3D <strong>G3DSA:3.10.20.810</strong>; and SCOP/SUPERFAMILY <strong>SSF141734</strong> ("HisI-like"). This set of orthogonal classifications reinforces the UniProt PRA-CH call, and the fold matches the experimentally determined <em>M. thermoautotrophicum</em> HisI structure (PDB, 1.7 Å; <a href="https://pubmed.ncbi.nlm.nih.gov/16042384/">PMID: 16042384</a>). The consistency of family, domain, superfamily, and fold assignments provides high confidence that Q88D15 is a <em>bona fide</em> member of the PRA-CH family and shares the catalytic architecture characterized in the structural studies.</p>
+<h3 id="finding-7-hisi-is-required-for-de-novo-histidine-biosynthesis-and-links-the-pathway-to-purinenucleotide-metabolism">Finding 7 — HisI is required for <em>de novo</em> histidine biosynthesis and links the pathway to purine/nucleotide metabolism</h3>
+<p>The biological necessity of the PRA-CH step is established genetically by complementation. Bacterial <em>hisI</em> mutants are histidine auxotrophs that can be rescued by heterologous PRA-CH genes or domains. The Arabidopsis study reports that "<strong>By complementing a hisI mutation of Escherichia coli with an Arabidopsis cDNA library, we isolated an Arabidopsis cDNA (At-IE)</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9733547/">PMID: 9733547</a>), demonstrating that the PRA-CH activity is essential for histidine prototrophy and is functionally interchangeable across large evolutionary distances.</p>
+<p>Histidine biosynthesis is also metabolically interwoven with nucleotide metabolism. The pathway consumes PRPP and ATP to build the imidazole ring, and downstream the HisHF (imidazole-glycerol-phosphate synthase) step releases AICAR (5-aminoimidazole-4-carboxamide ribotide), an intermediate that re-enters <em>de novo</em> purine biosynthesis. Evolutionary analyses note this interconnection, describing "<strong>the his 'core,' a cluster consisting of four genes (hisBHAF) whose products interconnect histidine biosynthesis to both de novo synthesis of purine metabolism</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/15871048/">PMID: 15871048</a>). HisI sits at the entry to this histidine-committed branch, converting a purine-derived (AMP-containing) precursor into the first histidine-specific intermediate.</p>
+<h3 id="finding-8-the-catalytic-zn-binding-cysteine-cluster-is-conserved-between-p-putida-hisi-and-the-e-coli-hisie-cyclohydrolase-domain">Finding 8 — The catalytic Zn-binding cysteine cluster is conserved between <em>P. putida</em> HisI and the <em>E. coli</em> HisIE cyclohydrolase domain</h3>
+<p>Sequence comparison confirms that the zinc-ligating cysteine set is conserved across the monofunctional and bifunctional forms. <em>P. putida</em> HisI (Q88D15, 130 aa) carries exactly three cysteines at positions <strong>78, 95, 102</strong>, embedded in the conserved PRA-CH motif <code>...GHIACHTGRESC...</code> (residues ~91–102). The N-terminal HisI (cyclohydrolase) domain of the <em>E. coli</em> bifunctional HisIE (P06987, 355 aa) carries a matching N-terminal cysteine cluster at positions <strong>93, 101, 103</strong>, whereas its remaining cysteines (254, 265, 269) belong to the separate C-terminal HisE/PRA-PH domain. Thus the three-cysteine Zn²⁺ ligand set is conserved between the <em>P. putida</em> monofunctional enzyme and the <em>E. coli</em> bifunctional enzyme, and matches the structurally defined zinc site of the <em>M. thermoautotrophicum</em> HisI, where "<strong>These metal binding sites include three cysteine ligands, two from one monomer and the third from the second monomer</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/16042384/">PMID: 16042384</a>). This conservation strongly implies that <em>P. putida</em> HisI uses the same zinc-dependent catalytic machinery.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-the-histidine-biosynthetic-pathway">Position in the histidine biosynthetic pathway</h3>
+<p>HisI operates at the third of nine steps in the <em>de novo</em> L-histidine biosynthetic pathway. The immediate upstream and downstream context is:</p>
+<div class="codehilite"><pre><span></span><code> Step 1: HisG (ATP-PRT)      PRPP + ATP ──────────────► PR-ATP
+ Step 2: HisE (PRA-PH)       PR-ATP + H2O ────────────► PR-AMP + PPi
+ Step 3: HisI (PRA-CH)  ***  PR-AMP + H2O ────────────► ProFAR      &lt;-- THIS ENZYME
+ Step 4: HisA (isomerase)    ProFAR ───────────────────► PRFAR
+ Step 5: HisHF (IGPS)        PRFAR + glutamine ────────► ImGP + AICAR (+ Glu)
+   <span class="k">...</span>   HisB, HisC, HisD    ──────────────────────────► L-histidine
+</code></pre></div>
+
+<p>HisI catalyzes the committed ring-opening that converts the AMP-derived, purine-ring-containing intermediate PR-AMP into the open-chain formimino compound <strong>ProFAR</strong>. The imidazole ring of PR-AMP is preserved and ultimately becomes the imidazole side chain of histidine, while the pyrimidine portion of the former adenine ring, once opened at N1–C6, is later cleaved off as AICAR at the HisHF step and recycled into purine biosynthesis. HisI thus marks the metabolic branch point where a purine-nucleotide precursor is committed to histidine.</p>
+<h3 id="catalytic-architecture-and-chemistry">Catalytic architecture and chemistry</h3>
+<div class="codehilite"><pre><span></span><code>Subunit A                         Subunit B
+     ┌───────────────┐                ┌───────────────┐
+     │ Cys78  Cys95  │   Zn2+ site    │               │
+     │ Cys102 ───────┼──── Zn2+ ──────┼─── (3rd Cys   │
+     │               │   (shared)     │    from        │
+     │ Asp77/79/81 ──┼──── Mg2+       │    partner)    │
+     └───────┬───────┘                └───────┬───────┘
+     │      shared active-site cleft  │
+     └──────── at dimer interface ────┘
+
+   Chemistry:  Zn2+-activated water/OH- attacks N1-C6 bond
+       → adenine (purine) ring opens
+       → rate-limiting unimolecular proton transfer
+       → ProFAR released
+</code></pre></div>
+
+<p>The enzyme is an <strong>obligate homodimer</strong>: each active site is assembled at the interface, drawing zinc ligands from both subunits. The catalytically essential Zn²⁺ (Kd ≤ 10⁻⁹ M) is best interpreted as a Lewis acid that activates a water molecule for nucleophilic attack on the N1–C6 bond, consistent with the single kcat/Km titration (pKa 7.3) attributed to a metal-water site. Kinetics of the homologous HisIE enzyme indicate that ring opening is followed by a <strong>rate-limiting unimolecular proton-transfer step</strong>; the large solvent deuterium isotope effect that diminishes at basic pH is the diagnostic signature of this proton transfer. A lower-affinity Mg²⁺ (Ks ≈ 4.9 µM), coordinated by the Asp77/Asp79/Asp81 cluster, likely stabilizes the two anionic 5′-phosphoribosyl moieties of the substrate/product.</p>
+<h3 id="genomic-and-evolutionary-organization">Genomic and evolutionary organization</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>P. putida</em> KT2440</th>
+<th><em>E. coli</em> / <em>Salmonella</em></th>
+<th>Plants (Arabidopsis, <em>Medicago</em>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRA-CH (step 3)</td>
+<td><em>hisI</em> = PP_5014 (standalone, 130 aa)</td>
+<td>N-terminal domain of HisIE</td>
+<td>PRA-CH domain of bifunctional HISN2</td>
+</tr>
+<tr>
+<td>PRA-PH (step 2)</td>
+<td><em>hisE</em> = PP_5015 (standalone, 111 aa)</td>
+<td>C-terminal domain of HisIE</td>
+<td>PRA-PH domain of HISN2</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>Two separate monofunctional genes (<em>hisIE</em> pair)</td>
+<td>Single fused bifunctional gene</td>
+<td>Single fused bifunctional gene</td>
+</tr>
+<tr>
+<td>Genomic layout</td>
+<td>Three mini-operons: <em>hisGDC</em>, <em>hisBHAF</em>, <em>hisIE</em></td>
+<td>Single compact <em>his</em> operon</td>
+<td>Nuclear genes</td>
+</tr>
+</tbody>
+</table>
+<p>This comparison highlights that the <em>P. putida</em> enzyme is one polypeptide with one job — a "clean" model system for studying PRA-CH catalysis without the confounding presence of a fused PRA-PH domain. The scattered, three-cluster genomic layout in <em>P. putida</em> reflects the "piecewise" assembly model of the proteobacterial histidine operon, in which small units (some with their own promoters) were accreted over evolutionary time rather than assembled at once.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16042384/">16042384</a></td>
+<td><em>Crystal structure of M. thermoautotrophicum PRA-CH HisI</em></td>
+<td><strong>Primary structural evidence.</strong> Defines HisI as PR-AMP cyclohydrolase (step 3); establishes the three-cysteine Zn site spanning the dimer interface; shows the inter-subunit active-site cleft and obligate dimer. Underpins Findings 1, 2, 3, 6, 8.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9931020/">9931020</a></td>
+<td><em>N1-(5′-phosphoribosyl)AMP cyclohydrolase: a unique metalloenzyme</em></td>
+<td><strong>Primary biochemical evidence.</strong> Demonstrates essential tightly-bound Zn²⁺ (Kd ≤ 10⁻⁹ M), separate Mg²⁺ requirement (Ks 4.9 µM), N1–C6 bond cleavage unique to the pathway, and pKa 7.3 metal-water titration. Underpins Findings 1, 2, 5.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37288093/">37288093</a></td>
+<td><em>Catalytic cycle of bifunctional PRA-PH/PRA-CH</em></td>
+<td><strong>Primary kinetic/mechanistic evidence.</strong> Pre-steady-state kinetics reveal ring opening followed by rate-limiting proton transfer, and identify ProFAR as the product of the HisI-like domain. Underpins Finding 5. (Study is of the bifunctional enzyme's HisI-like domain, homologous to <em>P. putida</em> HisI — an inference across orthologs.)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9733547/">9733547</a></td>
+<td><em>Arabidopsis bifunctional PRA-PH/PRA-CH (At-IE)</em></td>
+<td>Defines the <em>hisI</em> (PRA-CH) and <em>hisE</em> (PRA-PH) functional domains; provides complementation evidence that PRA-CH is essential for His prototrophy. Underpins Findings 4, 7.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15871048/">15871048</a></td>
+<td><em>Piecewise building of the proteobacterial histidine operon</em></td>
+<td>Documents the <em>hisIE</em> mini-operon and three-cluster his-gene organization; links histidine to purine metabolism via the <em>hisBHAF</em> core. Underpins Findings 4, 7.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8760919/">8760919</a></td>
+<td><em>R. sphaeroides hisL/hisI unifunctionality</em></td>
+<td>Precedent that a bacterial <em>hisI</em> can encode a purely unifunctional PRA-CH, as in <em>P. putida</em>. Underpins Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33958623/">33958623</a></td>
+<td><em>Structural/mechanistic insights into plant HISN2</em></td>
+<td>Corroborating structural context: crystal structures of the bifunctional plant PRA-CH/PRA-PH with AMP bound to each domain; PRA-CH domain analogous to bacterial <em>hisI</em>. Supports the domain-homology framework (Findings 4, 5).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19888544/">19888544</a></td>
+<td><em>Evolution of his genes in archaea / LUCA</em></td>
+<td>Context: in most Archaea his genes are monofunctional and scattered, consistent with the standalone monofunctional <em>hisI</em> seen in <em>P. putida</em>. Supports Finding 4.</td>
+</tr>
+</tbody>
+</table>
+<p>Additional <em>P. putida</em>-focused papers reviewed (e.g., on CbrA/B carbon/nitrogen regulation, Crc catabolite control, and c-di-GMP/biofilm signaling — PMIDs 25031426, 20553554, 19526543, 27489550, 35001503) confirmed that histidine metabolism in <em>P. putida</em> is embedded in the organism's broader carbon/nitrogen regulatory networks (histidine is a usable carbon/nitrogen source), but none of them implicate the biosynthetic PRA-CH (HisI) in any moonlighting or signaling role. This absence is itself informative: it supports the conclusion that HisI's function is confined to biosynthetic catalysis.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> protein.</strong> All catalytic, metal-binding, and structural conclusions rest on <strong>orthologous</strong> enzymes — the <em>M. thermoautotrophicum</em> crystal structure, the monofunctional archaeal metalloenzyme biochemistry, and the bifunctional HisIE/HISN2 kinetics. The functional transfer to Q88D15 is a well-supported inference (family membership, domain conservation, and the conserved Cys78/Cys95/Cys102 zinc cluster all align), but no purified <em>P. putida</em> HisI has been kinetically or structurally characterized in the literature reviewed.</p>
+</li>
+<li>
+<p><strong>Residue numbering for metal ligands is inferred.</strong> The Zn (Cys78/95/102) and Mg (Asp77/79/81) positions are derived from the <em>P. putida</em> sequence and the conserved PRA-CH motif, consistent with the structural ortholog, but have not been experimentally mutated/verified in Q88D15 itself.</p>
+</li>
+<li>
+<p><strong>Mechanistic detail is extrapolated from the bifunctional enzyme.</strong> The "ring-opening then rate-limiting proton transfer" mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/37288093/">PMID: 37288093</a>) was established on a bifunctional HisIE. While the HisI-like domain is homologous, subtle kinetic differences between fused and standalone enzymes cannot be excluded.</p>
+</li>
+<li>
+<p><strong>Regulation and expression in <em>P. putida</em> are not fully resolved.</strong> The <em>hisIE</em> mini-operon is transcribed from an independent promoter, but the specific regulatory inputs (e.g., histidine-mediated feedback, growth-condition dependence) on PP_5014 expression were not directly established here.</p>
+</li>
+<li>
+<p><strong>No structure of the <em>P. putida</em> enzyme (experimental or predicted) was analyzed.</strong> An AlphaFold model of Q88D15 exists in principle but was not evaluated; doing so could confirm the dimer interface and metal-site geometry computationally.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzyme assay.</strong> Clone PP_5014, express and purify the His-tagged protein, and measure PRA-CH activity (PR-AMP → ProFAR) spectrophotometrically. Determine kcat, Km for PR-AMP, and the pH-rate profile to confirm the predicted pKa ≈ 7.3 metal-water titration.</p>
+</li>
+<li>
+<p><strong>Metal-dependence and stoichiometry.</strong> Quantify bound Zn²⁺ (ICP-MS / atomic absorption) and test activity loss upon chelation (1,10-phenanthroline), replicating the ≤10⁻⁹ M Zn²⁺ affinity result for the <em>P. putida</em> ortholog. Titrate Mg²⁺ to verify the low-affinity requirement.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of the predicted ligands.</strong> Mutate Cys78, Cys95, Cys102 (Zn) and Asp77/79/81 (Mg) individually to confirm their roles in catalysis and metal binding, directly testing the inferred residue assignments.</p>
+</li>
+<li>
+<p><strong>Quaternary-structure confirmation.</strong> Use size-exclusion chromatography with multi-angle light scattering (SEC-MALS) or analytical ultracentrifugation to verify the obligate homodimer, and, if feasible, solve the crystal or cryo-EM structure of <em>P. putida</em> HisI to confirm the inter-subunit active site.</p>
+</li>
+<li>
+<p><strong>Genetic essentiality/complementation.</strong> Construct a PP_5014 deletion in <em>P. putida</em> KT2440 and confirm histidine auxotrophy (growth rescued by histidine supplementation), and complement an <em>E. coli hisI</em> mutant with PP_5014 to demonstrate functional PRA-CH activity <em>in vivo</em>.</p>
+</li>
+<li>
+<p><strong>Computational validation.</strong> Analyze the AlphaFold model of Q88D15 (pLDDT, dimer prediction via AlphaFold-Multimer) to corroborate the metal-site geometry and dimer interface, and dock PR-AMP to test the proposed catalytic arrangement.</p>
+</li>
+<li>
+<p><strong>Expression/regulation profiling.</strong> Use RT-qPCR or RNA-seq under histidine-replete vs. limited conditions to characterize regulation of the <em>hisIE</em> mini-operon in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The evidence — spanning UniProt/HAMAP annotation, InterPro/Pfam/CATH/SCOP domain and fold classification, a high-resolution crystal structure of an archaeal ortholog, detailed metalloenzyme biochemistry, pre-steady-state mechanistic kinetics of the homologous bifunctional enzyme, complementation genetics, and comparative genomics — converges on a single, high-confidence conclusion. <strong>HisI (PP_5014, Q88D15) is a soluble cytoplasmic, Zn²⁺/Mg²⁺-dependent, obligate homodimeric phosphoribosyl-AMP cyclohydrolase (PRA-CH, EC 3.5.4.19) that catalyzes the third step of <em>de novo</em> L-histidine biosynthesis</strong> — the hydrolytic opening of the adenine ring (N1–C6 bond cleavage) of PR-AMP to form ProFAR. In <em>P. putida</em> KT2440 it is a standalone monofunctional enzyme encoded separately from the adjacent <em>hisE</em> (PRA-PH), reflecting the piecewise evolutionary assembly of the proteobacterial histidine genes. Its function is squarely biochemical and biosynthetic; no signaling or moonlighting role is indicated.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hisI-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hisI-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:16042384</li>
+<li>PMID:9931020</li>
+<li>PMID:9733547</li>
+<li>PMID:15871048</li>
+<li>PMID:8760919</li>
+<li>PMID:37288093</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D15
+gene_symbol: hisI
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  hisI encodes phosphoribosyl-AMP cyclohydrolase (EC 3.5.4.19), which hydrolyzes
+  the adenine ring of phosphoribosyl-AMP in the third reaction of L-histidine
+  biosynthesis. The 130-residue Pseudomonas putida KT2440 enzyme is a standalone
+  cyclohydrolase rather than a HisIE fusion and binds magnesium and zinc ions.
+  The preceding phosphoribosyl-ATP diphosphatase reaction is carried out by the
+  adjacent standalone HisE protein, Q88D14.
+existing_annotations:
+- term:
+    id: GO:0000105
+    label: L-histidine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: HisI performs the third reaction of the PRPP-to-histidine pathway.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed UniProt entry and UniPathway assignment place the exact
+      cyclohydrolase reaction at step 3 of 9 in L-histidine biosynthesis.
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Magnesium binding is supported for the standalone cyclohydrolase.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniRule records one Mg2+ ion per subunit. This is relevant catalytic
+      context but is less informative than the specific cyclohydrolase activity.
+- term:
+    id: GO:0004635
+    label: phosphoribosyl-AMP cyclohydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining HisI activity in KT2440.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0004635 matches EC 3.5.4.19, RHEA:20049, the reviewed product name,
+      and the HisI/PRA-CH family assignments.
+    supported_by:
+    - reference_id: file:PSEPK/hisI/hisI-deep-research-openscientist.md
+      supporting_text: &gt;-
+        encodes phosphoribosyl-AMP cyclohydrolase (PRA-CH; EC 3.5.4.19), the
+        enzyme that catalyzes the third step of the *de novo* L-histidine
+        biosynthetic pathway
+- term:
+    id: GO:0004636
+    label: phosphoribosyl-ATP diphosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: The diphosphatase activity belongs to the separate HisE protein in KT2440.
+    action: REMOVE
+    reason: &gt;-
+      This ARBA assignment appears to have propagated across a family that also
+      contains bifunctional HisIE proteins. Q88D15 is a 130-residue standalone
+      phosphoribosyl-AMP cyclohydrolase, whereas adjacent Q88D14 is the reviewed
+      standalone phosphoribosyl-ATP diphosphatase with EC 3.6.1.31 and
+      RHEA:22828.
+    supported_by:
+    - reference_id: file:PSEPK/hisI/hisI-deep-research-openscientist.md
+      supporting_text: &gt;-
+        *hisI* is a **standalone monofunctional gene** (PP_5014, 130 aa) sitting
+        adjacent to a separate monofunctional *hisE* gene
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: HisI is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The location is supported by UniProt but is contextual rather than the
+      core biochemical function.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Zinc binding is supported for the standalone cyclohydrolase.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniRule records one Zn2+ ion per subunit. This is supporting cofactor
+      context rather than a pathway-defining activity.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/hisI/hisI-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK hisI
+  findings:
+  - statement: &gt;-
+      Identifies Q88D15 as the standalone phosphoribosyl-AMP cyclohydrolase for
+      step 3 of L-histidine biosynthesis and records Mg2+ and Zn2+ binding.
+- id: file:PSEPK/hisI/hisI-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK hisI
+  findings:
+  - statement: Contains the six existing annotations reviewed above.
+- id: file:PSEPK/hisE/hisE-uniprot.txt
+  title: UniProtKB reviewed entry for the adjacent PSEPK hisE
+  findings:
+  - statement: &gt;-
+      Identifies Q88D14 as the standalone phosphoribosyl-ATP pyrophosphatase,
+      excluding that activity from Q88D15.
+- id: file:PSEPK/hisI/hisI-deep-research-openscientist.md
+  title: OpenScientist functional report for PSEPK HisI
+  findings:
+  - statement: &gt;-
+      Corroborates the monofunctional phosphoribosyl-AMP cyclohydrolase
+      assignment and the separate adjacent HisE architecture. Detailed metal,
+      mechanism, and oligomer claims are transferred from orthologs rather than
+      demonstrated directly for Q88D15.
+core_functions:
+- description: &gt;-
+    Hydrolyzes the adenine ring of phosphoribosyl-AMP to form the ProFAR
+    intermediate in L-histidine biosynthesis.
+  molecular_function:
+    id: GO:0004635
+    label: phosphoribosyl-AMP cyclohydrolase activity
+  directly_involved_in:
+  - id: GO:0000105
+    label: L-histidine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/hisI/hisI-uniprot.txt
+    supporting_text: Catalyzes the hydrolysis of the adenine ring of
+  - reference_id: file:PSEPK/hisI/hisI-deep-research-openscientist.md
+    supporting_text: &gt;-
+      catalyzes the third step of the *de novo* L-histidine biosynthetic pathway
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0500 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0500</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QJ2" target="_blank" class="term-link">
+                        Q88QJ2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0500";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QJ2" data-a="DESCRIPTION: PP_0500 encodes a cytosolic dTDP-4-dehydrorhamnose..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0500 encodes a cytosolic dTDP-4-dehydrorhamnose reductase in Pseudomonas putida KT2440. Like RfbD, it catalyzes the NADPH-dependent reduction of dTDP-4-dehydro-beta-L-rhamnose to dTDP-beta-L-rhamnose (EC 1.1.1.133), the final step of dTDP-L-rhamnose biosynthesis. dTDP-L-rhamnose is the activated sugar donor used for L-rhamnose incorporation into cell-surface polysaccharides such as O-antigen.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QJ2" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is appropriate for this soluble nucleotide-sugar enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TreeGrafter assigns cytosol, consistent with soluble PP_0500.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008831" target="_blank" class="term-link">
+                                    GO:0008831
+                                </a>
+                            </span>
+                            <span class="term-label">dTDP-4-dehydrorhamnose reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QJ2" data-a="GO:0008831" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of PP_0500.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records EC 1.1.1.133 and the dTDP-4-dehydrorhamnose reductase reaction for Q88QJ2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0500/PP_0500-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009243" target="_blank" class="term-link">
+                                    GO:0009243
+                                </a>
+                            </span>
+                            <span class="term-label">O antigen biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QJ2" data-a="GO:0009243" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> O-antigen biosynthesis is plausible downstream context for dTDP-L-rhamnose use.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_0500 makes an activated sugar nucleotide that can feed O-antigen/LPS biosynthesis, but the immediate core process is dTDP-rhamnose biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019305" target="_blank" class="term-link">
+                                    GO:0019305
+                                </a>
+                            </span>
+                            <span class="term-label">dTDP-rhamnose biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QJ2" data-a="GO:0019305" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_0500 can complete dTDP-L-rhamnose biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88QJ2 in carbohydrate biosynthesis, dTDP-L-rhamnose biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0500/PP_0500-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Carbohydrate biosynthesis; dTDP-L-rhamnose biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytosolic dTDP-4-dehydrorhamnose reductase paralog that can complete dTDP-L-rhamnose biosynthesis by reducing the 4-keto L-rhamnose nucleotide-sugar intermediate.</h3>
+                <span class="vote-buttons" data-g="Q88QJ2" data-a="FUNCTION: Cytosolic dTDP-4-dehydrorhamnose reductase paralog..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008831" target="_blank" class="term-link">
+                            dTDP-4-dehydrorhamnose reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019305" target="_blank" class="term-link">
+                                dTDP-rhamnose biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0500/PP_0500-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0500/PP_0500-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Carbohydrate biosynthesis; dTDP-L-rhamnose biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">O-antigen biosynthesis is reviewed as downstream glycan context for the activated rhamnose donor.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosol localization retained.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA source for accepted dTDP-4-dehydrorhamnose reductase and dTDP-rhamnose biosynthesis annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0500/PP_0500-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK PP_0500</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Reaction=dTDP-beta-L-rhamnose + NADP(+) = dTDP-4-dehydro-beta-L-"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Binds 1 Mg(2+) ion per monomer."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"PATHWAY: Carbohydrate biosynthesis; dTDP-L-rhamnose biosynthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0500-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QJ2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_0500 (Q88QJ2) — dTDP-4-dehydrorhamnose reductase (RmlD)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-16T12:04:42.044350</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0500-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0500-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_0500-q88qj2-dtdp-4-dehydrorhamnose-reductase-rmld">Functional Annotation Report: PP_0500 (Q88QJ2) — dTDP-4-dehydrorhamnose reductase (RmlD)</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) — proteome code PSEPK<br />
+<strong>UniProt:</strong> Q88QJ2 · <strong>Locus:</strong> PP_0500 · <strong>EC:</strong> 1.1.1.133 · <strong>Length:</strong> 294 aa<br />
+<strong>Family:</strong> dTDP-4-dehydrorhamnose reductase (RmlD) family; short-chain dehydrogenase/reductase (SDR) superfamily<br />
+<strong>Domains/signatures:</strong> PF04321 (RmlD_sub_bind); IPR005913 (dTDP_dehydrorham_reduct); IPR029903 (RmlD-like-bd); IPR036291 (NAD(P)-bd domain superfamily)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (answer to the research question)</h2>
+<p>PP_0500 encodes <strong>RmlD, dTDP-4-dehydrorhamnose reductase (EC 1.1.1.133)</strong>, the enzyme that catalyzes the <strong>fourth and final step of dTDP-L-rhamnose biosynthesis</strong>. Using <strong>NAD(P)H as the hydride donor and a Mg²⁺ cofactor</strong>, RmlD reduces the C4 keto group of dTDP-4-keto-6-deoxy-L-mannose (dTDP-6-deoxy-L-<em>lyxo</em>-4-hexulose) to produce <strong>dTDP-β-L-rhamnose</strong>, the activated nucleotide-sugar donor used by rhamnosyltransferases to build rhamnose-containing cell-surface glycans. The enzyme is a <strong>soluble, cytoplasmic, Mg²⁺-dependent homodimer</strong> of the SDR superfamily. The gene identity is unambiguous and fully consistent with the provided UniProt annotation.</p>
+<hr />
+<h2 id="2-geneprotein-identity-verification">2. Gene/Protein Identity Verification</h2>
+<p>The requested verification steps are satisfied:</p>
+<ul>
+<li><strong>Symbol ↔ description match:</strong> UniProt Q88QJ2 (PP_0500) is named "dTDP-4-dehydrorhamnose reductase," EC 1.1.1.133, with catalytic-activity, cofactor (Mg²⁺) and pathway ("dTDP-L-rhamnose biosynthesis") annotations that match the RmlD family description exactly.</li>
+<li><strong>Organism correct:</strong> Entry belongs to <em>P. putida</em> KT2440 (taxid 160488).</li>
+<li><strong>Family/domains align with literature:</strong> The Pfam/InterPro signatures (PF04321 RmlD_sub_bind; NAD(P)-binding domain) are the canonical RmlD signatures, and the enzymology matches the definitive <em>Salmonella</em> RmlD structural study (Blankenfeldt et al., 2002).</li>
+<li><strong>No conflicting gene of the same symbol was found.</strong> "RmlD" is used consistently across bacteria for this single enzymatic activity; there is no ambiguity for this locus.</li>
+</ul>
+<p>The literature on RmlD is authoritative and directly applicable, so research proceeded on the correct target.</p>
+<hr />
+<h2 id="3-primary-function-reaction-catalyzed-and-substrate-specificity">3. Primary Function — Reaction Catalyzed and Substrate Specificity</h2>
+<p><strong>Reaction (UniProt Q88QJ2 catalytic activity; Rhea):</strong></p>
+<blockquote>
+<p>dTDP-β-L-rhamnose + NADP⁺  ⇌  dTDP-4-dehydro-β-L-rhamnose + NADPH + H⁺</p>
+</blockquote>
+<p>In the biosynthetic (reductive) direction the enzyme converts <strong>dTDP-4-keto-6-deoxy-L-mannose → dTDP-L-rhamnose</strong>. UniProt summarizes the function as: <em>"Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to yield dTDP-L-rhamnose."</em></p>
+<p><strong>Mechanism (from the <em>Salmonella enterica</em> RmlD crystal structure; Blankenfeldt et al., EMBO J 2002, PMID 12057193):</strong><br />
+- <em>"RmlD … catalyzes the final step in the conversion of dTDP-D-glucose to dTDP-L-rhamnose in an NAD(P)H- and Mg²⁺-dependent reaction."</em><br />
+- Catalysis proceeds by <strong>hydride transfer from the nicotinamide ring of the cofactor to the C4′-carbonyl (keto) group of the substrate</strong>, with the substrate <em>"activated through protonation by a conserved tyrosine"</em> — the classic SDR Ser/Tyr/Lys catalytic machinery, here with a proposed novel role for the catalytic Ser/Thr.<br />
+- NAD(P)H binds in a <strong>solvent-exposed cleft, allowing facile cofactor exchange.</strong></p>
+<p><strong>Cofactors:</strong> NAD(P)H (the <em>S. enterica</em> enzyme binds both NADH and NADPH; the <em>P. putida</em> entry is annotated NADP-binding) and <strong>one Mg²⁺ per monomer</strong> (UniProt: "Binds 1 Mg(2+) ion per monomer").</p>
+<p><strong>Substrate specificity:</strong> RmlD is specific for the <strong>dTDP-activated</strong> 4-keto-6-deoxy-hexose intermediate of the rhamnose pathway; it is the committed reductase that fixes the L-<em>manno</em> (rhamnose) configuration at C4. It is highly substrate-specific for the nucleotide-sugar produced by the upstream epimerase RmlC.</p>
+<hr />
+<h2 id="4-pathway-context-dtdp-l-rhamnose-biosynthesis-rmlabcd">4. Pathway Context — dTDP-L-rhamnose Biosynthesis (RmlABCD)</h2>
+<p>RmlD is the last of four enzymes of the conserved <strong>RmlABCD</strong> pathway that converts glucose-1-phosphate and dTTP into dTDP-L-rhamnose (reviewed in PMID 36014553; enzymology confirmed for reconstituted RmlABCD systems, e.g. PMID 34819927, PMID 42197457):</p>
+<ol>
+<li><strong>RmlA</strong> — glucose-1-phosphate thymidylyltransferase (EC 2.7.7.24): Glc-1-P + dTTP → dTDP-D-glucose</li>
+<li><strong>RmlB</strong> — dTDP-D-glucose 4,6-dehydratase (EC 4.2.1.46): → dTDP-4-keto-6-deoxy-D-glucose</li>
+<li><strong>RmlC</strong> — dTDP-4-dehydrorhamnose 3,5-epimerase (EC 5.1.3.13): → dTDP-4-keto-6-deoxy-L-mannose</li>
+<li><strong>RmlD (PP_0500)</strong> — dTDP-4-dehydrorhamnose reductase (EC 1.1.1.133): → <strong>dTDP-L-rhamnose</strong></li>
+</ol>
+<p><strong>Pathway genes in <em>P. putida</em> KT2440.</strong> The upstream enzymes are encoded in a separate genomic locus from <em>rmlD</em>:<br />
+- RmlA = <strong>PP_1783</strong> (Q88LZ3), RmlC = <strong>PP_1782</strong> (Q88LZ4), RmlB = <strong>PP_1785</strong> (Q88LZ1) — a small <em>rml</em> cluster around PP_1782–1785.<br />
+- RmlD = <strong>PP_0500</strong> (Q88QJ2), located separately.</p>
+<p>This "split" arrangement (the RmlD reductase remote from the RmlABC core) is common in Gram-negative genomes and does not change the biochemistry: PP_0500 supplies the reductase activity that completes the pathway.</p>
+<p><strong>Fate of the product.</strong> dTDP-L-rhamnose is <em>"used by prokaryotic rhamnosyltransferases as the glycosyl donor for the synthesis of rhamnose-containing polysaccharides"</em> (PMID 34819927). In <em>Pseudomonas</em> and other Gram-negatives, L-rhamnose is a building block of the <strong>lipopolysaccharide (LPS) O-antigen and core</strong> and of other cell-surface/exo-polysaccharides; the RmlD product is therefore a metabolic feed-in point for <strong>cell-envelope glycan assembly</strong>.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>RmlD functions in the <strong>cytoplasm</strong>, as part of soluble nucleotide-sugar metabolism, upstream of the membrane-associated steps that assemble and export glycans:<br />
+- The 294-aa sequence contains <strong>no signal peptide and no predicted transmembrane helices</strong>, and UniProt annotates it as a soluble oxidoreductase (NADP ligand keyword) with no membrane/secretion localization — consistent with a cytosolic enzyme.<br />
+- Its substrates and products (dTDP-sugars, NAD(P)H, Mg²⁺) are cytoplasmic metabolites.<br />
+- Mechanistically the enzyme is a <strong>homodimer with a Mg²⁺-containing dimer interface</strong> (Blankenfeldt et al., 2002), i.e. it operates as a soluble oligomer rather than a membrane complex.</p>
+<p>The downstream product is subsequently used at the inner membrane/periplasmic face by rhamnosyltransferases during glycan biosynthesis, but RmlD's own catalytic step is cytoplasmic.</p>
+<hr />
+<h2 id="6-structure-and-evolutionary-classification">6. Structure and Evolutionary Classification</h2>
+<ul>
+<li><strong>Fold/superfamily:</strong> RmlD belongs to the <strong>short-chain dehydrogenase/reductase (SDR) superfamily</strong> (Rossmann NAD(P)-binding fold; IPR036291) with a C-terminal RmlD substrate-binding domain (PF04321). It retains the SDR catalytic Ser/Tyr/Lys triad, with a conserved tyrosine acting as the catalytic acid.</li>
+<li><strong>Distinctive feature:</strong> Unlike canonical SDRs, RmlD <em>"has a novel dimer interface that contains Mg²⁺"</em> and requires the metal for activity (PMID 12057193) — a defining biochemical hallmark of this family that separates it from ordinary NAD(P)-dependent reductases.</li>
+<li><strong>Evidence class for PP_0500:</strong> The <em>P. putida</em> annotation is <strong>inference by orthology / family rule</strong> (UniProt automated rules ARBA/RuleBase RU364082) built on strong experimental characterization of RmlD orthologs (e.g., <em>Salmonella enterica</em> structure/mechanism; multiple reconstituted RmlABCD systems). The specific enzyme from strain KT2440 has not, to my knowledge, been individually crystallized or kinetically characterized, but sequence/domain conservation to characterized RmlD enzymes is unambiguous.</li>
+<li><strong>Independent sequence check (this study).</strong> Global pairwise alignment of the 294-aa PP_0500 sequence to reviewed, experimentally characterized EC 1.1.1.133 enzymes gives <strong>~29–31% identity</strong>: <em>Salmonella</em> RmlD P26392 (the crystallized enzyme, PDB 1KBZ) <strong>29.1%</strong> (83/285); <em>M. tuberculosis</em> P9WH09 <strong>31.0%</strong>; <em>Streptomyces griseus</em> P29781 <strong>31.2%</strong>; <em>M. smegmatis</em> A0QTF8 <strong>30.1%</strong>. This "twilight-zone" identity is typical <em>within</em> the RmlD family across distant taxa. PP_0500 also carries the diagnostic <strong>N-terminal glycine-rich Rossmann NAD(P)-binding motif</strong> (…M<strong>LLGGGNALGQ</strong>…, a GxxGxxG-type loop; IPR036291) plus the RmlD substrate-binding domain (PF04321) — corroborating, by sequence and evolutionary inference, that PP_0500 is a genuine RmlD and not a mis-annotation.</li>
+</ul>
+<hr />
+<h2 id="7-biological-importance-and-significance">7. Biological Importance and Significance</h2>
+<ul>
+<li><strong>Cell-envelope function.</strong> L-Rhamnose contributes to LPS/cell-wall glycans; genetic loss of rmlD ablates cell-wall rhamnose. In <em>Streptococcus mutans</em>, <em>"loss of either rmlD or rgpG results in ablation of rhamnose content in the … cell wall,"</em> and rmlD deletion caused <em>"a severe growth defect … [and] elevated susceptibility … to acid and oxidative stress"</em> (PMID 31871035). This illustrates the pathway's contribution to envelope integrity, stress resistance and (in pathogens) virulence — though these specific phenotypes are from other species and are inferred, not demonstrated, for <em>P. putida</em>.</li>
+<li><strong>Antibacterial target.</strong> Because <em>"[rhamnose-associated molecules] are present in bacteria but not mammals"</em> (PMID 36014553) and <em>"L-rhamnose biosynthesis is an antibacterial target"</em> (PMID 12057193), RmlD (with RmlA–C) is pursued as a selective antibacterial/anti-tuberculosis target (e.g., inhibitor/modeling studies, PMID 33547544).</li>
+<li><strong>Biotechnology.</strong> RmlABCD systems, including the RmlD reductase, are used in one-pot enzymatic synthesis of dTDP-L-rhamnose for glycochemistry (PMID 34819927, PMID 42197457).</li>
+</ul>
+<hr />
+<h2 id="8-supported-vs-refuted-hypotheses">8. Supported vs. Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0500 is RmlD / dTDP-4-dehydrorhamnose reductase (EC 1.1.1.133)</td>
+<td><strong>Supported</strong></td>
+<td>UniProt catalytic activity + family signatures; matches characterized RmlD enzymology</td>
+</tr>
+<tr>
+<td>Reaction = NAD(P)H/Mg²⁺-dependent reduction of dTDP-4-keto-6-deoxy-L-mannose → dTDP-L-rhamnose</td>
+<td><strong>Supported</strong></td>
+<td>UniProt; Blankenfeldt et al. 2002 (PMID 12057193)</td>
+</tr>
+<tr>
+<td>Product dTDP-L-rhamnose is a rhamnosyl donor for surface glycans (LPS/O-antigen)</td>
+<td><strong>Supported</strong></td>
+<td>PMID 34819927; review PMID 36014553</td>
+</tr>
+<tr>
+<td>Enzyme is a cytoplasmic Mg²⁺-dependent homodimer (SDR superfamily)</td>
+<td><strong>Supported</strong></td>
+<td>PMID 12057193; UniProt cofactor note; no TM/signal in sequence</td>
+</tr>
+<tr>
+<td>Full RmlABCD pathway present in KT2440 (RmlA/B/C at PP_1782–1785)</td>
+<td><strong>Supported</strong></td>
+<td>UniProt EC-based queries in taxid 160488</td>
+</tr>
+<tr>
+<td>KT2440-specific in vitro kinetics / structure of PP_0500 exist</td>
+<td><strong>Refuted / not found</strong></td>
+<td>No primary biochemical study of the KT2440 enzyme located</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-limitations-and-future-directions">9. Limitations and Future Directions</h2>
+<ul>
+<li>Functional assignment of PP_0500 rests on <strong>orthology and family rules</strong>, not on direct biochemical or genetic characterization of the <em>P. putida</em> KT2440 enzyme; the reaction/mechanism details derive from orthologs (chiefly <em>S. enterica</em> RmlD).</li>
+<li>The precise glycan destination of dTDP-L-rhamnose in KT2440 (O-antigen vs. core vs. other exopolysaccharide) was not resolved from a strain-specific LPS-composition study; this is stated as the general Gram-negative role. Targeted literature searches for a KT2440-specific LPS/O-antigen sugar-composition analysis, and for a <em>PP_0500</em>-specific essentiality/transposon phenotype, returned <strong>no primary strain-specific data</strong> (though KT2440 is intensively studied as a biotechnology chassis, e.g. PMID 38975763). Rhamnose/O-antigen genes are generally dispensable for viability under laboratory conditions in pseudomonads, so <em>PP_0500</em> is expected to be non-essential in rich medium — but this is an inference, not a measured result for this locus.</li>
+<li><strong>Future work:</strong> heterologous expression + kinetic assay of PP_0500; <em>rmlD</em> knockout in KT2440 to test LPS-rhamnose loss and phenotype; structural confirmation (crystal/AlphaFold) of the Mg²⁺ dimer interface; tracing which surface glycan(s) incorporate the rhamnose.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key references</h3>
+<ul>
+<li>Blankenfeldt W. et al. (2002) <em>EMBO J</em> — RmlD (dTDP-6-deoxy-L-lyxo-4-hexulose reductase) structure and Mg²⁺-dependent mechanism. <strong>PMID 12057193</strong></li>
+<li>Review: Rhamnose-Containing Compounds: Biosynthesis and Applications (2022). <strong>PMID 36014553</strong></li>
+<li>One-pot RmlABCD synthesis of dTDP-L-rhamnose (2021). <strong>PMID 34819927</strong></li>
+<li>RmlABCD from marine bacteria; dTDP-L-rhamnose synthesis (2026). <strong>PMID 42197457</strong></li>
+<li>rmlD disruption in <em>S. mutans</em> — cell-wall rhamnose and fitness (2020). <strong>PMID 31871035</strong></li>
+<li>RmlD <em>M. tuberculosis</em> modeling/inhibitors (2021). <strong>PMID 33547544</strong></li>
+<li>UniProt Q88QJ2 (PP_0500), <em>P. putida</em> KT2440.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0500-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0500-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QJ2
+gene_symbol: PP_0500
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_0500 encodes a cytosolic dTDP-4-dehydrorhamnose reductase in Pseudomonas
+  putida KT2440. Like RfbD, it catalyzes the NADPH-dependent reduction of
+  dTDP-4-dehydro-beta-L-rhamnose to dTDP-beta-L-rhamnose (EC 1.1.1.133), the
+  final step of dTDP-L-rhamnose biosynthesis. dTDP-L-rhamnose is the activated
+  sugar donor used for L-rhamnose incorporation into cell-surface
+  polysaccharides such as O-antigen.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol is appropriate for this soluble nucleotide-sugar enzyme.
+    action: ACCEPT
+    reason: TreeGrafter assigns cytosol, consistent with soluble PP_0500.
+- term:
+    id: GO:0008831
+    label: dTDP-4-dehydrorhamnose reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the core molecular function of PP_0500.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records EC 1.1.1.133 and the dTDP-4-dehydrorhamnose reductase
+      reaction for Q88QJ2.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0500/PP_0500-uniprot.txt
+      supporting_text: Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to
+- term:
+    id: GO:0009243
+    label: O antigen biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      O-antigen biosynthesis is plausible downstream context for
+      dTDP-L-rhamnose use.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      PP_0500 makes an activated sugar nucleotide that can feed O-antigen/LPS
+      biosynthesis, but the immediate core process is dTDP-rhamnose
+      biosynthesis.
+- term:
+    id: GO:0019305
+    label: dTDP-rhamnose biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PP_0500 can complete dTDP-L-rhamnose biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt places Q88QJ2 in carbohydrate biosynthesis,
+      dTDP-L-rhamnose biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0500/PP_0500-uniprot.txt
+      supporting_text: &#34;PATHWAY: Carbohydrate biosynthesis; dTDP-L-rhamnose biosynthesis.&#34;
+references:
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings:
+  - statement: &gt;-
+      O-antigen biosynthesis is reviewed as downstream glycan context for the
+      activated rhamnose donor.
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: Cytosol localization retained.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: &gt;-
+      Combined IEA source for accepted dTDP-4-dehydrorhamnose reductase and
+      dTDP-rhamnose biosynthesis annotations.
+- id: file:PSEPK/PP_0500/PP_0500-uniprot.txt
+  title: UniProtKB entry for PSEPK PP_0500
+  findings:
+  - supporting_text: Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to
+  - supporting_text: Reaction=dTDP-beta-L-rhamnose + NADP(+) = dTDP-4-dehydro-beta-L-
+  - supporting_text: Binds 1 Mg(2+) ion per monomer.
+  - supporting_text: &#34;PATHWAY: Carbohydrate biosynthesis; dTDP-L-rhamnose biosynthesis.&#34;
+core_functions:
+- description: &gt;-
+    Cytosolic dTDP-4-dehydrorhamnose reductase paralog that can complete
+    dTDP-L-rhamnose biosynthesis by reducing the 4-keto L-rhamnose
+    nucleotide-sugar intermediate.
+  molecular_function:
+    id: GO:0008831
+    label: dTDP-4-dehydrorhamnose reductase activity
+  directly_involved_in:
+  - id: GO:0019305
+    label: dTDP-rhamnose biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/PP_0500/PP_0500-uniprot.txt
+    supporting_text: Catalyzes the reduction of dTDP-6-deoxy-L-lyxo-4-hexulose to
+  - reference_id: file:PSEPK/PP_0500/PP_0500-uniprot.txt
+    supporting_text: &#34;PATHWAY: Carbohydrate biosynthesis; dTDP-L-rhamnose biosynthesis.&#34;
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

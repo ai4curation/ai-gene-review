@@ -1,0 +1,2509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lspA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lspA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88Q91" target="_blank" class="term-link">
+                        Q88Q91
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lspA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88Q91" data-a="DESCRIPTION: lspA encodes lipoprotein signal peptidase II, a mu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>lspA encodes lipoprotein signal peptidase II, a multi-pass inner-membrane peptidase A8/aspartyl protease that removes signal peptides from diacylglyceryl-modified bacterial prolipoproteins. In the canonical bacterial lipoprotein maturation pathway, LspA acts after Lgt installs the diacylglyceryl group on the lipobox cysteine and before Lnt performs terminal N-acylation.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>lipoprotein signal peptidase activity</h3>
+                <span class="vote-buttons" data-g="Q88Q91" data-a="lipoprotein signal peptidase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of the hydrolysis of the signal peptide from a bacterial membrane diacylglyceryl-prolipoprotein, cleaving immediately N-terminal to the lipid-modified lipobox cysteine.</p>
+
+
+
+            <p><strong>Justification:</strong> GOA currently represents LspA with the broad parent GO:0004190 aspartic-type endopeptidase activity, but LspA is a specific signal peptidase II/prolipoprotein signal peptidase with defined substrate context and pathway order.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004190" target="_blank" class="term-link">
+                    aspartic-type endopeptidase activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:PSEPK/lspA/lspA-uniprot.txt
+
+
+                    : This protein specifically catalyzes the removal of signal
+
+                </li>
+
+                <li>
+
+                    file:PSEPK/lspA/lspA-deep-research-openscientist.md
+
+
+                    : Its primary catalytic function is precise: it hydrolyzes the peptide bond immediately N-terminal to the lipid-modified cysteine of a diacylglyceryl-prolipoprotein
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004190" target="_blank" class="term-link">
+                                    GO:0004190
+                                </a>
+                            </span>
+                            <span class="term-label">aspartic-type endopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q91" data-a="GO:0004190" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LspA is a membrane-embedded peptidase A8/aspartyl protease that removes the signal peptide from diacylglyceryl-modified prolipoproteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004190 is broad, but it correctly captures the catalytic class currently available in GOA for LspA. UniProt assigns EC 3.4.23.36, names the protein lipoprotein signal peptidase, and annotates two aspartate active-site residues. A more specific lipoprotein signal peptidase molecular-function term would be preferable if GO adds one.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Lipoprotein signal peptidase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.23.36</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=Release of signal peptides from bacterial membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004190	aspartic-type endopeptidase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">It is an essential, integral inner-membrane **aspartyl protease**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q91" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane is the correct GO cellular-component term for bacterial inner-membrane LspA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places LspA in the cell inner membrane as a multi-pass membrane protein, and GOA records the corresponding bacterial plasma membrane localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q91" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteolysis is technically true but too broad for LspA&#39;s role in bacterial lipoprotein maturation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LspA does not act as a general protease; it cleaves signal peptides from diacylglyceryl-modified prolipoproteins in the lipoprotein biosynthetic pathway. The separate NEW GO:0042158 annotation captures that process without creating a duplicate replacement landing point.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Protein modification; lipoprotein biosynthesis (signal peptide</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">This protein specifically catalyzes the removal of signal</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006508	proteolysis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q91" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The membrane annotation is correct but less precise than plasma membrane for this bacterial inner-membrane enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro supports a membrane-associated LspA family assignment, but UniProt and GOA already provide the more precise bacterial plasma membrane annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042158" target="_blank" class="term-link">
+                                    GO:0042158
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/lspA/lspA-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88Q91" data-a="GO:0042158" data-r="file:PSEPK/lspA/lspA-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LspA is the signal-peptide cleavage step of bacterial lipoprotein biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly places LspA in protein modification, lipoprotein biosynthesis, signal peptide cleavage. This process term is present for lgt and lnt and should also cover the intervening LspA step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Protein modification; lipoprotein biosynthesis (signal peptide</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lspA/lspA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">performs the committed, second step of the universal bacterial lipoprotein biogenesis pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Signal peptidase II cleavage of the peptide bond immediately upstream of the diacylglyceryl-modified lipobox cysteine during bacterial lipoprotein maturation.</h3>
+                <span class="vote-buttons" data-g="Q88Q91" data-a="FUNCTION: Signal peptidase II cleavage of the peptide bond i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004190" target="_blank" class="term-link">
+                            aspartic-type endopeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042158" target="_blank" class="term-link">
+                                lipoprotein biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lspA/lspA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Lipoprotein signal peptidase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lspA/lspA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Protein modification; lipoprotein biosynthesis (signal peptide</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lspA/lspA-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004190	aspartic-type endopeptidase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lspA/lspA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">performs the committed, second step of the universal bacterial lipoprotein biogenesis pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro IPR001872 identifies LspA as a peptidase A8 membrane protease, but the broad proteolysis and membrane terms need refinement in review.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined UniProt automated evidence supplies the aspartic-type endopeptidase and plasma membrane annotations for LspA.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lspA/lspA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for lspA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt/HAMAP identifies Q88Q91 as lipoprotein signal peptidase II, EC 3.4.23.36, in the lipoprotein biosynthesis signal-peptide cleavage pathway, with multi-pass inner-membrane localization and two aspartate active-site residues.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lspA/lspA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for lspA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four existing annotations reviewed for lspA.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR33695/PTHR33695-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for lspA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places LspA in the lipoprotein signal peptidase family, consistent with the peptidase A8/InterPro IPR001872 assignment.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lspA/lspA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for lspA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supports LspA as the inner-membrane signal peptidase II step between Lgt and Lnt in bacterial lipoprotein maturation and notes that direct KT2440-specific biochemical characterization is still inferential from conserved orthologs.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO add a specific lipoprotein signal peptidase activity term for bacterial LspA/SPase II rather than relying on broad aspartic-type endopeptidase activity?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO molecular function curators</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88Q91" data-a="Q: Should GO add a specific lipoprotein signal peptid..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_0604 essential under standard KT2440 growth conditions, and what lipoprotein substrates accumulate when LspA activity is inhibited or depleted?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pseudomonas envelope biogenesis experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88Q91" data-a="Q: Is PP_0604 essential under standard KT2440 growth ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct a conditional lspA depletion strain and assay accumulation of unprocessed prolipoproteins, envelope stress, and growth defects.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: conditional depletion and lipoproteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88Q91" data-a="EXPERIMENT: Construct a conditional lspA depletion strain and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute PP_0604 in membrane mimetics with diacylglyceryl-prolipoprotein peptide substrates and test cleavage plus globomycin/myxovirescin inhibition.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro peptidase assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88Q91" data-a="EXPERIMENT: Reconstitute PP_0604 in membrane mimetics with dia..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lspA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88Q91" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">LspA (Q88Q91, PP_0604) in *Pseudomonas putida* KT2440: Lipoprotein Signal Peptidase II</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-14T06:53:28.004471</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lspA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lspA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="lspa-q88q91-pp_0604-in-pseudomonas-putida-kt2440-lipoprotein-signal-peptidase-ii">LspA (Q88Q91, PP_0604) in <em>Pseudomonas putida</em> KT2440: Lipoprotein Signal Peptidase II</h1>
+<p><strong>Gene:</strong> <em>lspA</em> (ordered locus <strong>PP_0604</strong>) · <strong>Protein:</strong> Lipoprotein signal peptidase II (SPase II)<br />
+<strong>UniProt:</strong> Q88Q91 · <strong>EC 3.4.23.36</strong> · <strong>Family:</strong> Peptidase A8 (Pfam PF01252 / InterPro IPR001872)<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>LspA (Q88Q91; locus tag PP_0604) in <em>Pseudomonas putida</em> strain KT2440 is lipoprotein signal peptidase II (Signal Peptidase II / SPase II; also called prolipoprotein signal peptidase; EC 3.4.23.36).</strong> It is an essential, integral inner-membrane <strong>aspartyl protease</strong> that performs the committed, second step of the universal bacterial lipoprotein biogenesis pathway. Its primary catalytic function is precise: it hydrolyzes the peptide bond immediately N-terminal to the lipid-modified cysteine of a diacylglyceryl-prolipoprotein, thereby removing the signal peptide and generating the mature apolipoprotein N-terminus. Gene-symbol, organism, protein family (peptidase A8; Pfam PF01252 / InterPro IPR001872), and domain architecture all align cleanly with the UniProt-provided identity — <strong>there is no gene-symbol ambiguity</strong>; "lspA" unambiguously denotes lipoprotein signal peptidase II across bacteria.</p>
+<p>The enzyme's substrate specificity is defined by the conserved <strong>lipobox</strong> motif: it cleaves at –Xaa–Yaa–Zaa–|–(<em>S</em>,diacylglyceryl)Cys–, where Xaa is hydrophobic (preferentially Leu), and Yaa (Ala/Ser) and Zaa (Gly/Ala) carry small, neutral side chains. Critically, LspA acts <em>only after</em> the upstream enzyme Lgt (phosphatidylglycerol::prolipoprotein diacylglyceryl transferase) has attached a diacylglyceryl group to the invariant lipobox cysteine — LspA is specific for prolipoproteins and does not process ordinary secretory preproteins (which are handled by signal peptidase I / LepB). After LspA cleavage, the downstream enzyme Lnt N-acylates the cysteine, completing the mature triacylated lipoprotein that is then sorted by the Lol system. This places LspA firmly in the linear pathway <strong>Lgt → LspA → Lnt</strong>.</p>
+<p>LspA carries out catalysis within the <strong>cytoplasmic (inner) membrane</strong> as a multi-pass membrane protein (five predicted transmembrane helices), with its two catalytic aspartates (Asp126 and Asp145 in Q88Q91) positioned in a membrane-embedded active site that faces the periplasmic/outer-leaflet side, where the lipid-anchored prolipoprotein presents its signal peptide. This functional assignment is supported by high-confidence bioinformatic evidence (exact conservation of catalytic residues and flanking motifs with experimentally validated <em>E. coli</em>, <em>P. aeruginosa</em>, and <em>S. aureus</em> orthologs; a conserved ileS–lspA genomic neighborhood; and an AlphaFold structural model of the catalytic dyad) and, indirectly but strongly, by extensive experimental characterization of those orthologs — including crystal structures, catalytic-residue mutagenesis, and inhibition by the natural-product antibiotics globomycin and myxovirescin (antibiotic TA). LspA is a validated, essential antibiotic target in Gram-negative bacteria.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-lspa-is-an-integral-inner-membrane-aspartyl-protease-that-removes-prolipoprotein-signal-peptides-ec-342336">Finding 1 — LspA is an integral inner-membrane aspartyl protease that removes prolipoprotein signal peptides (EC 3.4.23.36)</h3>
+<p>UniProt entry <strong>Q88Q91</strong> (<em>P. putida</em> KT2440, locus PP_0604, 171 amino acids) annotates the FUNCTION as specifically catalyzing "the removal of signal peptides from prolipoproteins," classifies the enzyme under <strong>EC 3.4.23.36</strong>, assigns it to <strong>peptidase family A8</strong>, and applies the molecular-function keyword <strong>"Aspartyl protease."</strong> Two annotated active-site residues are both aspartates, which was verified by direct sequence indexing of Q88Q91: position <strong>126 = Asp</strong> (local context HVV<strong>D</strong>FIL) and position <strong>145 = Asp</strong> (local context NVA<strong>D</strong>SAI). The sequence is ~56% hydrophobic and contains five predicted transmembrane helices (residues 12–32, 42–62, 70–90, 96–116, and 137–157), consistent with an integral membrane protease.</p>
+<p>This assignment is corroborated by direct experimental work on close orthologs. Crystal-structure and mutagenesis studies of <em>P. aeruginosa</em> LspA established that "posttranslational processing requires a signal peptidase II (LspA) that removes the signal peptide" and that "mutagenesis studies identify LspA as an aspartyl peptidase" (<a href="https://pubmed.ncbi.nlm.nih.gov/26912896/">PMID: 26912896</a>). Because the two catalytic aspartates and their sequence context are conserved between the <em>P. aeruginosa</em>/<em>E. coli</em> orthologs and Q88Q91, this experimental definition of catalytic class transfers with high confidence to the <em>P. putida</em> enzyme. LspA therefore belongs to the unusual group of <strong>membrane-embedded aspartyl proteases</strong> that use a paired-aspartate mechanism rather than the classic serine-protease chemistry of signal peptidase I.</p>
+<h3 id="finding-2-lspa-catalyzes-the-committed-second-step-of-the-conserved-lipoprotein-biogenesis-pathway-lgt-lspa-lnt">Finding 2 — LspA catalyzes the committed second step of the conserved lipoprotein biogenesis pathway (Lgt → LspA → Lnt)</h3>
+<p>UniProt assigns Q88Q91 to the PATHWAY "Protein modification; lipoprotein biosynthesis (signal peptide cleavage)." In the canonical, conserved bacterial pathway, preprolipoproteins are exported across the inner membrane by the Sec (or Tat) machinery. The first committed enzyme, <strong>Lgt</strong>, recognizes the lipobox and "converts them to prolipoproteins by adding a diacylglyceryl group to the sulfhydryl side chain of the invariant Cys" (<a href="https://pubmed.ncbi.nlm.nih.gov/32490790/">PMID: 32490790</a>). <strong>LspA then cleaves the signal peptide immediately N-terminal to this now-modified cysteine</strong>, producing apolipoprotein. Finally, <strong>Lnt</strong> N-acylates the free α-amino group of the cysteine to yield the mature triacylated lipoprotein.</p>
+<p>LspA's role as the processing enzyme in this pathway is reinforced by antibiotic-mechanism studies. In <em>E. coli</em>, "the lspA gene … encodes the type II signal peptidase that cleaves signal sequences from prolipoproteins," and the myxobacterial antibiotic TA (myxovirescin) "was shown to inhibit Lpp prolipoprotein processing, similar to the known LspA inhibitor globomycin" (<a href="https://pubmed.ncbi.nlm.nih.gov/22232277/">PMID: 22232277</a>). The fact that specific small molecules block prolipoprotein maturation by targeting LspA firmly places the enzyme at the signal-peptide-cleavage node of the pathway.</p>
+<h3 id="finding-3-substrate-specificity-cleavage-at-the-lipobox-requiring-pre-attached-diacylglyceryl-cysteine">Finding 3 — Substrate specificity: cleavage at the lipobox, requiring pre-attached diacylglyceryl-cysteine</h3>
+<p>The UniProt CATALYTIC ACTIVITY for EC 3.4.23.36 states that LspA "hydrolyzes –Xaa–Yaa–Zaa–|–(<em>S</em>,diacylglyceryl)Cys–, in which Xaa is hydrophobic (preferably Leu), and Yaa (Ala or Ser) and Zaa (Gly or Ala) have small, neutral side chains." This corresponds to the conserved <strong>lipobox</strong> consensus <strong>[LVI]-[ASTVI]-[GAS]-C</strong>. Two features define the specificity:</p>
+<ol>
+<li><strong>Sequence context</strong> — LspA recognizes the small-residue lipobox rather than a single rigid sequence, enabling it to process the diverse repertoire of cellular lipoproteins.</li>
+<li><strong>Prior lipid modification</strong> — LspA acts strictly <em>after</em> Lgt has diacylglyceryl-modified the invariant cysteine. It is therefore specific for <strong>prolipoproteins</strong>, and does not substitute for signal peptidase I (LepB), which processes standard secretory preproteins.</li>
+</ol>
+<p>Structural studies of orthologs explain both the breadth and the chemistry. Antibiotic-bound structures show that globomycin and myxovirescin "appear to inhibit identically as non-cleavable tetrahedral intermediate analogs" (<a href="https://pubmed.ncbi.nlm.nih.gov/31919415/">PMID: 31919415</a>), meaning they occupy the substrate groove and mimic the transition state that forms during peptide-bond hydrolysis. Complementary molecular-dynamics and spectroscopic work concludes that LspA possesses "a flexible and adaptable active site, which explains how LspA accommodates and processes such a variety of substrates" (<a href="https://pubmed.ncbi.nlm.nih.gov/35505611/">PMID: 35505611</a>). Thus the enzyme achieves broad lipoprotein coverage by recognizing the conserved lipobox and its lipid anchor within a conformationally plastic pocket.</p>
+<h3 id="finding-4-localization-inner-cytoplasmic-membrane-multi-pass-with-a-periplasm-facing-active-site">Finding 4 — Localization: inner (cytoplasmic) membrane, multi-pass, with a periplasm-facing active site</h3>
+<p>UniProt SUBCELLULAR LOCATION for Q88Q91 is "Cell inner membrane; Multi-pass membrane protein." The sequence supports this directly: five predicted TM helices and ~56% hydrophobic residues. Crystal structures of the <em>P. aeruginosa</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26912896/">PMID: 26912896</a>) and <em>S. aureus</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/31919415/">PMID: 31919415</a>) orthologs reveal a compact transmembrane fold in which the two catalytic aspartates sit in a membrane-embedded active site accessible from the periplasmic/outer-leaflet side. This orientation matches the biology of the substrate: "lipoproteins are synthesized with a signal peptide securing them to the cytoplasmic membrane with the lipoprotein domain in the periplasm or outside the cell" (<a href="https://pubmed.ncbi.nlm.nih.gov/26912896/">PMID: 26912896</a>), so LspA must cleave at the membrane–periplasm interface. Dynamic studies further show that "the periplasmic helix fluctuates on the nanosecond timescale and samples unique conformations in the different states" (<a href="https://pubmed.ncbi.nlm.nih.gov/35505611/">PMID: 35505611</a>), identifying a periplasm-facing helix that gates the active site during catalysis. LspA therefore performs its reaction <em>within the inner membrane</em>, presenting its catalytic dyad toward the periplasmic face where the lipid-anchored prolipoprotein extends.</p>
+<h3 id="finding-5-evolutionary-conservation-p-putida-catalytic-aspartates-align-exactly-with-validated-e-coli-residues">Finding 5 — Evolutionary conservation: <em>P. putida</em> catalytic aspartates align exactly with validated <em>E. coli</em> residues</h3>
+<p>A direct comparison of UniProt active-site annotations shows precise conservation. <em>E. coli</em> LspA (<strong>P00804</strong>, 164 aa) has catalytic <strong>Asp123</strong> (context FVV<strong>D</strong>MID) and <strong>Asp141</strong> (context NLA<strong>D</strong>TAI); <em>P. putida</em> Q88Q91 (171 aa) has catalytic <strong>Asp126</strong> (context HVV<strong>D</strong>FIL) and <strong>Asp145</strong> (context NVA<strong>D</strong>SAI). Both aspartates and their flanking motifs — a <strong>[FH]VVD</strong> hydrophobic-Asp motif and a conserved <strong>N-x-A-D-x-A-I</strong> motif — are conserved, and both orthologs belong to peptidase family A8 (Pfam PF01252 / IPR001872). Because the <em>E. coli</em>/<em>P. aeruginosa</em> catalytic aspartates were experimentally validated by mutagenesis ("mutagenesis studies identify LspA as an aspartyl peptidase," <a href="https://pubmed.ncbi.nlm.nih.gov/26912896/">PMID: 26912896</a>), this exact alignment permits high-confidence transfer of the catalytic-dyad assignment to the <em>P. putida</em> enzyme.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>E. coli</em> LspA (P00804)</th>
+<th><em>P. putida</em> LspA (Q88Q91)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>164 aa</td>
+<td>171 aa</td>
+</tr>
+<tr>
+<td>Catalytic Asp #1</td>
+<td>Asp123 (FVV<strong>D</strong>MID)</td>
+<td>Asp126 (HVV<strong>D</strong>FIL)</td>
+</tr>
+<tr>
+<td>Catalytic Asp #2</td>
+<td>Asp141 (NLA<strong>D</strong>TAI)</td>
+<td>Asp145 (NVA<strong>D</strong>SAI)</td>
+</tr>
+<tr>
+<td>Family / Pfam</td>
+<td>Peptidase A8 / PF01252</td>
+<td>Peptidase A8 / PF01252</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Inner membrane, multi-pass</td>
+<td>Inner membrane, multi-pass</td>
+</tr>
+</tbody>
+</table>
+<p>Broader phylogenetic evidence reinforces functional interchangeability across the family: in <em>Myxococcus xanthus</em>, LspA orthologs "contained nearly all the conserved residues characteristic of SPaseII family members," could complement an <em>E. coli</em> ΔlspA mutation, and conferred globomycin/TA resistance when overexpressed (<a href="https://pubmed.ncbi.nlm.nih.gov/24391051/">PMID: 24391051</a>).</p>
+<h3 id="finding-6-lspa-is-an-essential-validated-antibiotic-target">Finding 6 — LspA is an essential, validated antibiotic target</h3>
+<p>Multiple independent studies describe LspA/SPase II as essential to the Gram-negative lipoprotein biosynthetic pathway and an attractive antibacterial target. It is "an essential enzyme in the lipoprotein biosynthetic pathway of Gram-negative bacteria, making it an attractive target for antibacterial drug discovery" (<a href="https://pubmed.ncbi.nlm.nih.gov/38712757/">PMID: 38712757</a>), and members of this pathway "are essential in Gram-negative bacteria, are important for virulence in Gram-positive bacteria" (<a href="https://pubmed.ncbi.nlm.nih.gov/35505611/">PMID: 35505611</a>). LspA is inhibited by the natural cyclic depsipeptide <strong>globomycin</strong> and the macrocyclic <strong>myxovirescin/antibiotic TA</strong>, which act as non-cleavable tetrahedral-intermediate mimics (<a href="https://pubmed.ncbi.nlm.nih.gov/31919415/">PMID: 31919415</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/26912896/">PMID: 26912896</a>). Inhibition causes a toxic buildup of unprocessed prolipoprotein: "a block in Lpp expression or prevention of Lpp covalent cell wall attachment confers TA resistance by alleviating a toxic buildup of mislocalized pro-Lpp" (<a href="https://pubmed.ncbi.nlm.nih.gov/22232277/">PMID: 22232277</a>), explaining why the step is essential. Active drug-discovery programs target LspA with optimized globomycin analogs and computationally designed cyclic peptides (<a href="https://pubmed.ncbi.nlm.nih.gov/32768648/">PMID: 32768648</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/38712757/">PMID: 38712757</a>). Biophysically, LspA is a ~20 kDa integral membrane enzyme amenable to reconstitution and structural study (<a href="https://pubmed.ncbi.nlm.nih.gov/40119522/">PMID: 40119522</a>).</p>
+<h3 id="finding-7-genomic-context-the-conserved-ileslspa-neighborhood">Finding 7 — Genomic context: the conserved ileS–lspA neighborhood</h3>
+<p>UniProt locus queries of the <em>P. putida</em> KT2440 genome place lspA in a conserved neighborhood: <strong>PP_0603 = Q88Q92</strong> (isoleucine–tRNA ligase, ileS, 943 aa) immediately upstream of <strong>PP_0604 = Q88Q91</strong> (lspA, 171 aa), with <strong>PP_0605 = Q88Q90</strong> (peptidyl-prolyl cis-trans isomerase, 145 aa) downstream. The <strong>ileS–lspA</strong> juxtaposition is a conserved feature across many bacterial genomes — including <em>E. coli</em>, where lspA is co-transcribed with ileS in an operon — providing an additional orthology signal that reinforces the functional assignment.</p>
+<h3 id="finding-8-alphafold-model-confirms-a-juxtaposed-catalytic-aspartyl-dyad">Finding 8 — AlphaFold model confirms a juxtaposed catalytic aspartyl dyad</h3>
+<p>The AlphaFold DB model <strong>AF-Q88Q91-F1</strong> (v6; global pLDDT 90.1; core residues 20–160 mean pLDDT 94.6) predicts the two annotated catalytic aspartates at very high local confidence (Asp126 pLDDT 98.4; Asp145 pLDDT 98.2). Their carboxyl groups are directly juxtaposed — minimum OD–OD oxygen distance <strong>3.67 Å</strong> and CG–CG distance <strong>5.70 Å</strong> — the hallmark geometry of a <strong>paired-aspartate (aspartyl protease) active site</strong>, in which the two carboxylates coordinate a catalytic water/proton for peptide-bond hydrolysis. The predicted pocket assembles residues from the conserved GNLYD motif (Asn114 region), the Asp126 loop, and the N140–Asp145 (N-x-A-D-x-A-I) motif, plus TM-helix residues near positions 54–56, matching the active-site architecture observed in ortholog crystal structures. This structural prediction independently corroborates, at the level of 3D geometry, the catalytic-dyad assignment derived from sequence and homology.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>LspA is the <strong>committed maturation protease</strong> of bacterial lipoproteins. The pathway and LspA's place in it can be summarized as follows:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">Cytoplasm</span><span class="w">            </span><span class="n">Preprolipoprotein</span><span class="w"> </span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="k">signal</span><span class="o">-</span><span class="n">lipobox</span><span class="o">-</span><span class="n">mature</span><span class="p">)</span>
+<span class="w">    </span><span class="o">|</span><span class="w">                         </span><span class="o">|</span><span class="w"> </span><span class="n">Sec</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Tat</span><span class="w"> </span><span class="k">export</span>
+<span class="w">    </span><span class="n">v</span><span class="w">                         </span><span class="n">v</span>
+<span class="w"> </span><span class="o">============</span><span class="w"> </span><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span><span class="w"> </span><span class="o">==================================================</span>
+<span class="w">   </span><span class="n">Step</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="n">Lgt</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="n">adds</span><span class="w"> </span><span class="n">diacylglyceryl</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">invariant</span><span class="w"> </span><span class="n">lipobox</span><span class="w"> </span><span class="n">Cys</span><span class="w">  </span><span class="p">(</span><span class="n">prolipoprotein</span><span class="p">)</span>
+<span class="w">         </span><span class="o">|</span>
+<span class="w">   </span><span class="n">Step</span><span class="w"> </span><span class="mi">2</span><span class="w">  </span><span class="n">LspA</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">cleaves</span><span class="w">  </span><span class="o">...</span><span class="n">Xaa</span><span class="o">-</span><span class="n">Yaa</span><span class="o">-</span><span class="n">Zaa</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">diacylglyceryl</span><span class="p">)</span><span class="n">Cys</span><span class="o">...</span><span class="w">   </span><span class="o">&lt;--</span><span class="w"> </span><span class="n">THIS</span><span class="w"> </span><span class="n">ENZYME</span>
+<span class="w">         </span><span class="o">|</span><span class="w">   </span><span class="p">(</span><span class="n">removes</span><span class="w"> </span><span class="k">signal</span><span class="w"> </span><span class="n">peptide</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">apolipoprotein</span><span class="p">)</span>
+<span class="w">   </span><span class="n">Step</span><span class="w"> </span><span class="mi">3</span><span class="w">  </span><span class="n">Lnt</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">acylates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">Cys</span><span class="w"> </span><span class="n">alpha</span><span class="o">-</span><span class="n">amine</span><span class="w"> </span><span class="p">(</span><span class="n">mature</span><span class="w"> </span><span class="n">triacyl</span><span class="o">-</span><span class="n">lipoprotein</span><span class="p">)</span>
+<span class="w"> </span><span class="o">============================================================================</span>
+<span class="w">         </span><span class="o">|</span><span class="w">  </span><span class="n">Lol</span><span class="w"> </span><span class="n">system</span><span class="w"> </span><span class="n">sorts</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="n">vs</span><span class="w"> </span><span class="n">outer</span><span class="w"> </span><span class="n">membrane</span>
+<span class="w">         </span><span class="n">v</span>
+<span class="w">  </span><span class="n">Periplasm</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Outer</span><span class="w"> </span><span class="n">membrane</span>
+</code></pre></div>
+
+<p><strong>Reaction catalyzed:</strong> hydrolysis of the peptide bond on the N-terminal side of the diacylglyceryl-modified cysteine within the lipobox. <strong>Substrate:</strong> diacylglyceryl-prolipoproteins bearing the lipobox –Xaa(hydrophobic/Leu)–Yaa(Ala/Ser)–Zaa(Gly/Ala)–|–Cys–. <strong>Product:</strong> the mature apolipoprotein N-terminus (a lipid-anchored, diacylglyceryl-Cys-headed protein) plus the released signal peptide. <strong>Catalytic mechanism:</strong> a membrane-embedded aspartyl-protease dyad (Asp126 + Asp145) activating a water molecule for nucleophilic attack, proceeding through a tetrahedral intermediate — the exact species that globomycin and myxovirescin mimic to inhibit the enzyme.</p>
+<p><strong>Localization and topology:</strong> LspA is embedded in the inner membrane with five TM helices; its active site sits within the membrane and faces the periplasmic/outer-leaflet side, where the lipid-anchored substrate presents its cleavage site. A mobile periplasmic helix gates the active site during turnover.</p>
+<p><strong>Why it matters (essentiality):</strong> Blocking LspA halts lipoprotein maturation and causes a toxic accumulation of unprocessed diacylglyceryl-prolipoprotein in the inner membrane, compromising envelope integrity. This is the biochemical basis for LspA's essentiality in Gram-negative bacteria and for its appeal as an antibiotic target. In <em>P. putida</em> KT2440 specifically, downstream lipoproteins whose maturation depends on LspA include envelope-integrity and biotechnologically relevant proteins such as the peptidoglycan-associated lipoprotein OprL/Pal (<a href="https://pubmed.ncbi.nlm.nih.gov/8626299/">PMID: 8626299</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/38608840/">PMID: 38608840</a>) and OprI (<a href="https://pubmed.ncbi.nlm.nih.gov/40607986/">PMID: 40607986</a>) — illustrating the broad physiological reach of a single upstream processing enzyme.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26912896/">26912896</a></td>
+<td><em>Structural basis of LspA action and inhibition by globomycin</em></td>
+<td>Crystal structure + mutagenesis of <em>P. aeruginosa</em> LspA; defines aspartyl-peptidase class, signal-peptide removal, and inner-membrane/periplasm topology (F001, F002, F004, F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31919415/">31919415</a></td>
+<td><em>Structures of S. aureus LspA with globomycin and myxovirescin</em></td>
+<td>Inhibitors act as non-cleavable tetrahedral-intermediate analogs; supports mechanism and substrate-groove specificity (F003, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35505611/">35505611</a></td>
+<td><em>Conformational dynamics of LspA upon antibiotic/substrate binding</em></td>
+<td>Flexible active site accommodates diverse substrates; periplasmic helix gates catalysis; essentiality (F003, F004, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22232277/">22232277</a></td>
+<td><em>Myxovirescin inhibits type II signal peptidase</em></td>
+<td>LspA cleaves prolipoprotein signal sequences; inhibition causes toxic pro-Lpp buildup (F002, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32490790/">32490790</a></td>
+<td><em>Role of Lgt in lipoprotein biogenesis</em></td>
+<td>Establishes the upstream Lgt step producing LspA's diacylglyceryl-Cys substrate (F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38712757/">38712757</a></td>
+<td><em>Computational design of cyclic peptide LspA inhibitors</em></td>
+<td>States LspA is essential in Gram-negatives and a validated drug target (F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32768648/">32768648</a></td>
+<td><em>Optimization of globomycin analogs</em></td>
+<td>LspA as essential pathway member and antibacterial target; SAR of inhibitors (F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40119522/">40119522</a></td>
+<td><em>ssNMR of membrane proteins in lipid cubic phase</em></td>
+<td>Describes LspA as a ~20 kDa integral membrane enzyme (F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24391051/">24391051</a></td>
+<td><em>lspA redundancy in M. xanthus</em></td>
+<td>LspA orthologs conserve SPaseII residues; complement <em>E. coli</em> ΔlspA; confer globomycin/TA resistance when overexpressed (F005, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8626299/">8626299</a></td>
+<td><em>P. putida Pal/OprL lipoprotein</em></td>
+<td>Example of a <em>P. putida</em> KT2440 lipoprotein (LspA substrate) important for envelope integrity (mechanistic context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38608840/">38608840</a></td>
+<td><em>PHA proteomics; OprL as phasin</em></td>
+<td>Further characterizes a <em>P. putida</em> outer-membrane lipoprotein downstream of LspA processing (context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40607986/">40607986</a></td>
+<td><em>Engineered vesicle production via OprF/OprI deletion</em></td>
+<td>OprI, a <em>P. putida</em> lipoprotein, matures via the LspA pathway (context)</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is unusually strong for the <em>mechanism and general biology</em> of LspA because multiple orthologs have been solved crystallographically and dissected by mutagenesis and antibiotic-inhibition studies. The assignment to the specific <em>P. putida</em> protein (Q88Q91) rests on <strong>orthology inference</strong> — exact conservation of catalytic residues, family membership, membrane topology, and syntenic gene context — reinforced by an independent AlphaFold structural model that reproduces the paired-aspartate active-site geometry.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct biochemical characterization of the <em>P. putida</em> enzyme.</strong> All catalytic, structural, and inhibition data derive from orthologs (<em>E. coli</em>, <em>P. aeruginosa</em>, <em>S. aureus</em>, <em>M. xanthus</em>). The functional assignment for Q88Q91 is therefore inferential (homology + structure + synteny), albeit high-confidence. No purified-enzyme assay, crystal structure, or knockout phenotype specific to PP_0604 has been reported here.</li>
+<li><strong>Essentiality in <em>P. putida</em> KT2440 is inferred, not demonstrated.</strong> LspA essentiality is documented in <em>E. coli</em> and other Gram-negatives; a <em>P. putida</em>-specific conditional-lethal or transposon-essentiality confirmation was not located.</li>
+<li><strong>Substrate repertoire in <em>P. putida</em> is not experimentally mapped.</strong> While the lipobox specificity is well established generically, the full set of <em>P. putida</em> KT2440 lipoproteins processed by LspA has not been enumerated experimentally in this investigation.</li>
+<li><strong>AlphaFold caveats.</strong> The model confidently predicts the catalytic-dyad geometry, but a predicted static model cannot capture substrate-bound conformational states or membrane-embedding details that only experimental structures/dynamics provide.</li>
+<li><strong>Regulation and expression</strong> of lspA in <em>P. putida</em> (promoter, operon boundaries, growth-phase dependence) were inferred from the ileS–lspA synteny rather than measured.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Genetic essentiality test in <em>P. putida</em> KT2440.</strong> Attempt a clean lspA (PP_0604) deletion; if non-recoverable, construct a conditional (e.g., inducible or complemented) mutant to confirm essentiality and characterize the depletion phenotype (accumulation of diacylglyceryl-prolipoprotein, envelope defects, sensitivity to SDS/EDTA).</li>
+<li><strong>Heterologous complementation.</strong> Test whether PP_0604 complements an <em>E. coli</em> ΔlspA strain (as demonstrated for <em>M. xanthus</em> orthologs, <a href="https://pubmed.ncbi.nlm.nih.gov/24391051/">PMID: 24391051</a>), directly confirming SPaseII activity.</li>
+<li><strong>Catalytic-residue mutagenesis.</strong> Generate D126A and D145A variants and assay loss of prolipoprotein processing (e.g., via globomycin-comparable pro-Lpp accumulation assays), experimentally validating the predicted aspartyl dyad in the <em>P. putida</em> enzyme.</li>
+<li><strong>In vitro reconstitution and inhibitor profiling.</strong> Purify PP_0604 (a ~20 kDa integral membrane enzyme; cf. <a href="https://pubmed.ncbi.nlm.nih.gov/40119522/">PMID: 40119522</a>), reconstitute in lipid, and measure globomycin/myxovirescin inhibition to confirm conserved pharmacology.</li>
+<li><strong>Substrate mapping.</strong> Use a globomycin-block plus radioactive-palmitate labeling strategy and proteomics to enumerate the <em>P. putida</em> KT2440 lipoprotein maturome dependent on LspA, including confirmed lipoproteins such as OprL/Pal and OprI.</li>
+<li><strong>Structural determination.</strong> Solve the <em>P. putida</em> LspA structure (X-ray in lipid cubic phase, cryo-EM, or ssNMR) to move the active-site geometry from prediction (AlphaFold) to experiment.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>LspA (Q88Q91 / PP_0604) in <em>Pseudomonas putida</em> KT2440 is lipoprotein signal peptidase II (SPase II, EC 3.4.23.36): an essential, integral inner-membrane aspartyl protease that removes the signal peptide from diacylglyceryl-modified prolipoproteins by cleaving immediately N-terminal to the lipid-anchored lipobox cysteine.</strong> It uses a conserved catalytic aspartate dyad (Asp126 + Asp145), acts at the inner-membrane/periplasm interface, and performs the committed second step of the universal lipoprotein biogenesis pathway (Lgt → LspA → Lnt). The assignment is made with high confidence from exact catalytic-residue and family conservation, conserved ileS–lspA synteny, an AlphaFold-predicted paired-aspartate active site, and the deep experimental characterization of its bacterial orthologs.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lspA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lspA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:26912896</li>
+<li>PMID:32490790</li>
+<li>PMID:22232277</li>
+<li>PMID:31919415</li>
+<li>PMID:35505611</li>
+<li>PMID:24391051</li>
+<li>PMID:38712757</li>
+<li>PMID:32768648</li>
+<li>PMID:40119522</li>
+<li>PMID:8626299</li>
+<li>PMID:38608840</li>
+<li>PMID:40607986</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88Q91
+gene_symbol: lspA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: lspA encodes lipoprotein signal peptidase II, a multi-pass inner-membrane peptidase A8/aspartyl protease that removes signal peptides from diacylglyceryl-modified bacterial prolipoproteins. In the canonical bacterial lipoprotein maturation pathway, LspA acts after Lgt installs the diacylglyceryl group on the lipobox cysteine and before Lnt performs terminal N-acylation.
+existing_annotations:
+- term:
+    id: GO:0004190
+    label: aspartic-type endopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: LspA is a membrane-embedded peptidase A8/aspartyl protease that removes the signal peptide from diacylglyceryl-modified prolipoproteins.
+    action: ACCEPT
+    reason: GO:0004190 is broad, but it correctly captures the catalytic class currently available in GOA for LspA. UniProt assigns EC 3.4.23.36, names the protein lipoprotein signal peptidase, and annotates two aspartate active-site residues. A more specific lipoprotein signal peptidase molecular-function term would be preferable if GO adds one.
+    supported_by:
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;RecName: Full=Lipoprotein signal peptidase&#34;
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;EC=3.4.23.36&#34;
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;Reaction=Release of signal peptides from bacterial membrane&#34;
+    - reference_id: file:PSEPK/lspA/lspA-goa.tsv
+      supporting_text: &#34;GO:0004190\taspartic-type endopeptidase activity&#34;
+    - reference_id: file:PSEPK/lspA/lspA-deep-research-openscientist.md
+      supporting_text: &#34;It is an essential, integral inner-membrane **aspartyl protease**&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Plasma membrane is the correct GO cellular-component term for bacterial inner-membrane LspA.
+    action: ACCEPT
+    reason: UniProt places LspA in the cell inner membrane as a multi-pass membrane protein, and GOA records the corresponding bacterial plasma membrane localization.
+    supported_by:
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+    - reference_id: file:PSEPK/lspA/lspA-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Proteolysis is technically true but too broad for LspA&#39;s role in bacterial lipoprotein maturation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: LspA does not act as a general protease; it cleaves signal peptides from diacylglyceryl-modified prolipoproteins in the lipoprotein biosynthetic pathway. The separate NEW GO:0042158 annotation captures that process without creating a duplicate replacement landing point.
+    supported_by:
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;PATHWAY: Protein modification; lipoprotein biosynthesis (signal peptide&#34;
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;This protein specifically catalyzes the removal of signal&#34;
+    - reference_id: file:PSEPK/lspA/lspA-goa.tsv
+      supporting_text: &#34;GO:0006508\tproteolysis&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: The membrane annotation is correct but less precise than plasma membrane for this bacterial inner-membrane enzyme.
+    action: MODIFY
+    reason: InterPro supports a membrane-associated LspA family assignment, but UniProt and GOA already provide the more precise bacterial plasma membrane annotation.
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+    supported_by:
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+    - reference_id: file:PSEPK/lspA/lspA-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+- term:
+    id: GO:0042158
+    label: lipoprotein biosynthetic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: LspA is the signal-peptide cleavage step of bacterial lipoprotein biosynthesis.
+    action: NEW
+    reason: UniProt explicitly places LspA in protein modification, lipoprotein biosynthesis, signal peptide cleavage. This process term is present for lgt and lnt and should also cover the intervening LspA step.
+    supported_by:
+    - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+      supporting_text: &#34;PATHWAY: Protein modification; lipoprotein biosynthesis (signal peptide&#34;
+    - reference_id: file:PSEPK/lspA/lspA-deep-research-openscientist.md
+      supporting_text: &#34;performs the committed, second step of the universal bacterial lipoprotein biogenesis pathway&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro IPR001872 identifies LspA as a peptidase A8 membrane protease, but the broad proteolysis and membrane terms need refinement in review.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined UniProt automated evidence supplies the aspartic-type endopeptidase and plasma membrane annotations for LspA.
+- id: file:PSEPK/lspA/lspA-uniprot.txt
+  title: UniProtKB reviewed entry for lspA
+  findings:
+  - statement: UniProt/HAMAP identifies Q88Q91 as lipoprotein signal peptidase II, EC 3.4.23.36, in the lipoprotein biosynthesis signal-peptide cleavage pathway, with multi-pass inner-membrane localization and two aspartate active-site residues.
+- id: file:PSEPK/lspA/lspA-goa.tsv
+  title: QuickGO GOA annotations for lspA
+  findings:
+  - statement: The fetched GOA table contains the four existing annotations reviewed for lspA.
+- id: file:interpro/panther/PTHR33695/PTHR33695-metadata.yaml
+  title: PANTHER family metadata for lspA
+  findings:
+  - statement: PANTHER places LspA in the lipoprotein signal peptidase family, consistent with the peptidase A8/InterPro IPR001872 assignment.
+- id: file:PSEPK/lspA/lspA-deep-research-openscientist.md
+  title: OpenScientist gene research for lspA
+  findings:
+  - statement: OpenScientist supports LspA as the inner-membrane signal peptidase II step between Lgt and Lnt in bacterial lipoprotein maturation and notes that direct KT2440-specific biochemical characterization is still inferential from conserved orthologs.
+core_functions:
+- description: Signal peptidase II cleavage of the peptide bond immediately upstream of the diacylglyceryl-modified lipobox cysteine during bacterial lipoprotein maturation.
+  molecular_function:
+    id: GO:0004190
+    label: aspartic-type endopeptidase activity
+  directly_involved_in:
+  - id: GO:0042158
+    label: lipoprotein biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+    supporting_text: &#34;RecName: Full=Lipoprotein signal peptidase&#34;
+  - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+    supporting_text: &#34;PATHWAY: Protein modification; lipoprotein biosynthesis (signal peptide&#34;
+  - reference_id: file:PSEPK/lspA/lspA-goa.tsv
+    supporting_text: &#34;GO:0004190\taspartic-type endopeptidase activity&#34;
+  - reference_id: file:PSEPK/lspA/lspA-deep-research-openscientist.md
+    supporting_text: &#34;performs the committed, second step of the universal bacterial lipoprotein biogenesis pathway&#34;
+proposed_new_terms:
+- proposed_name: lipoprotein signal peptidase activity
+  proposed_definition: Catalysis of the hydrolysis of the signal peptide from a bacterial membrane diacylglyceryl-prolipoprotein, cleaving immediately N-terminal to the lipid-modified lipobox cysteine.
+  justification: GOA currently represents LspA with the broad parent GO:0004190 aspartic-type endopeptidase activity, but LspA is a specific signal peptidase II/prolipoprotein signal peptidase with defined substrate context and pathway order.
+  proposed_parent:
+    id: GO:0004190
+    label: aspartic-type endopeptidase activity
+  supported_by:
+  - reference_id: file:PSEPK/lspA/lspA-uniprot.txt
+    supporting_text: &#34;This protein specifically catalyzes the removal of signal&#34;
+  - reference_id: file:PSEPK/lspA/lspA-deep-research-openscientist.md
+    supporting_text: &#34;Its primary catalytic function is precise: it hydrolyzes the peptide bond immediately N-terminal to the lipid-modified cysteine of a diacylglyceryl-prolipoprotein&#34;
+suggested_questions:
+- question: Should GO add a specific lipoprotein signal peptidase activity term for bacterial LspA/SPase II rather than relying on broad aspartic-type endopeptidase activity?
+  experts:
+  - GO molecular function curators
+- question: Is PP_0604 essential under standard KT2440 growth conditions, and what lipoprotein substrates accumulate when LspA activity is inhibited or depleted?
+  experts:
+  - Pseudomonas envelope biogenesis experts
+suggested_experiments:
+- description: Construct a conditional lspA depletion strain and assay accumulation of unprocessed prolipoproteins, envelope stress, and growth defects.
+  experiment_type: conditional depletion and lipoproteomics
+- description: Reconstitute PP_0604 in membrane mimetics with diacylglyceryl-prolipoprotein peptide substrates and test cleavage plus globomycin/myxovirescin inhibition.
+  experiment_type: in vitro peptidase assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
