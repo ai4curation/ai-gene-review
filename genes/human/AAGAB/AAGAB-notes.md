@@ -1,0 +1,107 @@
+# AAGAB (p34, alpha- and gamma-adaptin-binding protein) — review notes
+
+PAINT no-IBA project review, using the `affinage` deep-research provider
+(`AAGAB-deep-research-affinage.md`, gates passed) plus UniProt Q6PD74, the GOA TSV and the
+primary literature.
+
+## The problem with this gene's GO record
+
+AAGAB has **18 GOA annotations and not one of them says what the protein does.**
+
+- 15 × `GO:0005515 protein binding` (IPI)
+- 3 × cytosol / cytoplasm localisation
+
+There is **no molecular function** beyond bare binding and **no biological process at all**.
+Meanwhile AAGAB has been the subject of a decade of focused mechanistic work and is, by the
+title of one of its own papers, "an assembly chaperone regulating AP1 and AP2 clathrin
+adaptors" [PMID:34494650, "AAGAB is an assembly chaperone regulating AP1 and AP2 clathrin
+adaptors."]. UniProt is also stale here, offering only a hedged
+"May be involved in endocytic recycling of growth factor receptors such as EGFR" from 2012
+[file:human/AAGAB/AAGAB-uniprot.txt, "May be involved in endocytic recycling of growth factor"].
+
+This is the largest gap between literature and annotation I have hit in this campaign so far.
+
+## What AAGAB actually does
+
+AAGAB is the dedicated **assembly chaperone for heterotetrameric AP-type clathrin adaptor
+complexes**. It is not a folding chaperone — the subunits are already folded — it enforces an
+*ordered assembly pathway* and protects unassembled intermediates from degradation.
+
+- **AP-2.** AAGAB guides sequential subunit association; without it, AP2 subunits fail to
+  assemble and are degraded [PMID:31353312].
+- **AP-1.** AAGAB binds and stabilises the γ and σ subunits; mutation abolishes AP1 assembly
+  [PMID:34494650, "AAGAB promotes AP1 assembly by binding and stabilizing the γ and σ subunits
+  of AP1"]. Notably it is **not** required for AP-3
+  [PMID:34494650, "However, AAGAB is not involved in the formation of other adaptor complexes,
+  including AP3."] — a specificity fact worth preserving.
+- **AP-4.** AAGAB binds and stabilises ε and σ4; knockout cells phenocopy AP-4 subunit mutants,
+  accumulating ATG9A at the TGN
+  [PMID:35976721, "we report that the alpha- and gamma-adaptin-binding protein (AAGAB, also
+  known as p34) binds to and stabilizes the AP-4 ε and σ4 subunits, thus promoting complex
+  assembly."]. The same paper states the general point plainly: assembly "is not spontaneous
+  but AAGAB-assisted".
+
+Architecture (PMID:36598941): an N-terminal **type I pseudoGTPase** domain (catalytically
+inactive) that engages the small σ subunits, and a C-terminal dimerisation domain that
+recognises AP1-γ and AP2-α through a shared surface. AAGAB is a homodimer that converts to
+monomer on binding adaptor subunits. PPKP1 disease mutations truncate the CTD, destabilising
+the protein and abolishing chaperone function — which ties the molecular mechanism directly to
+the human disease. For AP-2 there is a documented handoff to CCDC32 (PMID:39145939), so AAGAB
+genuinely **does not form part of the finished complex** — the exact wording of GO:0051131.
+
+## The 15 `protein binding` annotations are not junk
+
+Every one of them comes from a large-scale interactome screen (HuRI/Rolland, Luck binary
+interactome, BioPlex/Huttlin, OpenCell endogenous tagging, Schaffer multimodal cell maps, and
+an interactome-perturbation study). My first instinct was to mark them over-annotated. That
+would have been wrong.
+
+Resolving the WITH/FROM ids shows what they actually recovered:
+
+| Partner | Identity | Screens recovering it |
+|---|---|---|
+| P53680 | **AP2S1** (AP-2 σ2) | 7 of 7 |
+| O94973 | **AP2A2** (AP-2 α2) | 2 |
+| O43747-2 | **AP1G1** (AP-1 γ1) | 2 |
+| Q96PC3 | **AP1S3** (AP-1 σ3) | 3 |
+| Q96ES5 | HEATR1 | 1 |
+
+AP2S1 is recovered by **seven orthogonal methods** (Y2H, AP-MS, endogenous tagging,
+proximity), and the partner set is precisely the σ and γ/α subunits that the focused
+mechanistic literature identifies as AAGAB's clients. These are real, reproducible,
+mechanistically meaningful interactions recorded under an uninformative term. The right action
+is `MODIFY` to something informative, not `MARK_AS_OVER_ANNOTATED`.
+
+**HEATR1 is the exception**: a single hit, no follow-up, and a nucleolar ribosome-biogenesis
+protein with no mechanistic connection to adaptor assembly. That one is marked over-annotated.
+
+This produces a deliberate `⚠ WARN` about inconsistent actions on `GO:0005515` (14 MODIFY,
+1 MARK_AS_OVER_ANNOTATED). The inconsistency is real biology — most of these interactions are
+the protein's core clients, one is screen noise — so the distinction is kept.
+
+## Term choices, and two gaps in GO
+
+- `GO:0035612 AP-2 adaptor complex binding` exists and is used for the AP2S1/AP2A2 entries.
+- **There is no `AP-1 adaptor complex binding` term.** Confirmed by OLS search. The AP-1
+  entries are therefore modified to `GO:0044877 protein-containing complex binding` (still an
+  improvement on bare protein binding) and the specific term is filed under
+  `proposed_new_terms`.
+- **There is no MF term for assembly-chaperone activity.** `GO:0044183 protein folding
+  chaperone` is explicitly about folding — its definition says "a protein folding chaperone
+  binds an unfolded protein to fold it" — and AAGAB's clients are folded subunits awaiting
+  assembly. Affinage's grounding proposed exactly this term, and importing it would have been
+  a mistake; this is a concrete instance of the AFFINAGE_EVALUATION warning not to import the
+  `mechanism_profile` GO ids. A proper MF term is filed under `proposed_new_terms`.
+- The BP side is well served: `GO:0051131 chaperone-mediated protein complex assembly` is an
+  exact fit ("...mediated by chaperone molecules that do not form part of the finished
+  complex"), added as `NEW`.
+
+## Recorded but not annotated
+
+- **NEDD4-1 / PTEN / SHIP2 axis** in hypoxic-ischaemic injury (PMID:33712741, PMID:41412220):
+  rat/cell models, single group, mechanism unclear relative to the adaptor-chaperone role.
+- **Synaptic vesicle recycling** in zebrafish (PMID:38253235): plausible downstream consequence
+  of impaired AP-2 assembly rather than a separate function.
+- **EGFR recycling** (PMID:23064416): the original 2012 observation, now best understood as a
+  downstream consequence of reduced AP-2. UniProt still leads with this hedge.
+- **PPKP1 palmoplantar keratoderma**: disease association, not a GO process.
