@@ -32,7 +32,7 @@ cellulose synthesis, and central hexose metabolism are also separate.
 - [x] Create and semantically validate the species-neutral two-part module.
 - [ ] Complete OpenScientist gene-level research.
 - [ ] Complete generic module OpenScientist research.
-- [ ] Complete module + `ppu00500` + PSEPK OpenScientist research.
+- [x] Complete module + `ppu00500` + PSEPK OpenScientist research.
 - [ ] Integrate useful research findings without treating provider output as authority.
 - [ ] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
