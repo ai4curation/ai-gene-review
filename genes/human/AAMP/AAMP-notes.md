@@ -4,23 +4,32 @@ PAINT no-IBA project review, using the `affinage` deep-research provider
 (`AAMP-deep-research-affinage.md`, gates passed) plus UniProt Q13685, the GOA TSV and the
 primary literature.
 
-## The most interesting finding: a self-referential IBA
+## The self-referential IBA — and why my first reading of it was wrong
 
 `GO:0014909 smooth muscle cell migration` is annotated **twice** — once IBA, once IEP. The IBA's
 WITH/FROM field is `PANTHER:PTN001068868|UniProtKB:Q13685`, and **`Q13685` is human AAMP
-itself** — the very gene being annotated (confirmed by UniProt lookup: `AAMP_HUMAN`).
+itself** — the very gene being annotated.
 
-So the phylogenetic inference is seeded by the target gene's own annotation. It transfers
-nothing: the human gene already carries the term directly. This is
-`EVIDENCE_CIRCULAR_OR_REDUNDANT` in the propagation taxonomy — "the target already has stronger
-direct evidence".
+I first read this as circular: the inference seeded by the target's own annotation, transferring
+nothing, and recorded it as `EVIDENCE_CIRCULAR_OR_REDUNDANT` / `CIRCULAR_PROPAGATION`.
 
-Two things follow:
+**That was wrong**, and the repository maintainer corrected it on the PR: *"self-referential IBA
+is valid. It means the curator has reviewed the source annotation and thinks it is a core
+function, it makes sense evolutionarily (there will be an IBD further up the tree)."*
 
-1. The **term is correct** — this is a real AAMP function — so the action is `ACCEPT`, not
-   `REMOVE`. The IBA is redundant, not wrong. Worth recording in `propagation_review` so the
-   redundancy is visible.
-2. The underlying direct annotation is coded **IEP** (expression pattern), which *understates*
+So the self-reference is not an artefact of the pipeline — it is a curation act. It records that
+a PAINT curator inspected the source annotation, judged the function **core** rather than
+peripheral, and found the assignment evolutionarily coherent. That is an *independent judgement
+layered on* the experimental annotation, not a restatement of it. The correct root cause is
+`NO_FAILURE_CORE`, and the review now says so.
+
+Lesson worth carrying: an unusual-looking provenance pattern is not automatically a defect.
+I inferred a failure mode from the *shape* of the WITH/FROM field without knowing what PAINT
+curators actually do with it.
+
+The second observation from that pair does stand, and the maintainer agreed with it
+(*"However, IEP is a little suspect"*): the direct annotation is coded **IEP** (expression
+pattern), which *understates*
    its own paper. PMID:18634987 is not an expression study: it reports
    [PMID:18634987, "The AAMP overexpression increases, while both treatment with anti-rAAMP-ab
    and transfection with siRNA decreases SMC migration."] plus in-vivo antibody blockade
@@ -62,7 +71,7 @@ All four `GO:0005515` IPI annotations report the same partner: **AEN** (Q8WTP8),
 apoptosis-enhancing nuclease, from four large-scale interactome papers. There is no functional
 follow-up and no described connection between AAMP and AEN.
 
-Meanwhile **none of the four recovered RHOA, RHOB, CDC42, NOD2 or CD276** — every partner with
+Meanwhile **none of the four recovered RHOA, RHOB, CDC42 or NOD2** — every partner with
 actual mechanistic follow-up. This is the third gene in this campaign (after AAGAB and AAMDC)
 where the high-throughput binding record and the functionally characterised interactions are
 disjoint sets. The pattern is worth naming: proteome-scale screens populate `GO:0005515` for
@@ -78,19 +87,37 @@ UniProt [file:human/AAMP/AAMP-uniprot.txt, "SUBCELLULAR LOCATION: Cell membrane.
 The cell-surface/extracellular pool is genuine and functionally relevant — it is where heparin
 binding and heparin-sensitive cell adhesion happen, and where the blocking antibody acts.
 
-## Suggestion 5: the obsolescence claim, verified in the open
+## Correction: GO:0017048 was merged, not obsoleted
 
-`GO:0017048 Rho GTPase binding` would have been the more specific MF for the RhoA/CDC42
-binding, and the choice of `GO:0031267` rests entirely on it being obsolete. That claim is
-load-bearing, so here is the lookup rather than an assertion:
+The MF term choice rests on `GO:0017048 Rho GTPase binding` not being available, and my first
+statement of why was imprecise. I ran an OLS lookup, got `label=GO_0017048, is_obsolete=true,
+is_root=true`, and wrote "obsolete". The reviewer challenged that — reasonably, since a bare
+CURIE-as-label plus `is_root: true` is also what you see for an id absent from the loaded
+ontology slice — and suggested the term might be a live child of `GO:0031267`.
+
+Checking QuickGO settles it, and **neither reading was right**:
 
 ```
-$ oaklib sqlite:obo:go
-GO:0017048 -> label=GO_0017048  is_obsolete=True   (OLS: is_obsolete: true, is_root: true)
-GO:0031267 -> small GTPase binding                 (live)
+GET /QuickGO/services/ontology/go/terms/GO:0017048
+  -> id: GO:0031267   name: small GTPase binding   isObsolete: False
+GET /QuickGO/services/ontology/go/terms/GO:0031267/complete
+  -> secondaryIds: [GO:0005084, GO:0008536, GO:0017016, GO:0017031,
+                    GO:0017048, GO:0017049, GO:0017137, GO:0017160,
+                    GO:0030306, GO:0034989, GO:0048365]
+  -> synonyms includes: "Rho GTPase binding"
 ```
 
-An obsolete term has no label and detaches to the root, which is what `GO_0017048` shows.
+`GO:0017048` was **merged into** `GO:0031267` — it is a secondary id, and "Rho GTPase binding"
+survives as a synonym of the merged term. It is neither obsolete-and-detached nor a live child.
+A QuickGO search for "Rho GTPase binding" returns no separate live term.
+
+So the outcome is unchanged but the reason is better: **there is no Rho-specific binding term to
+prefer**, because GO deliberately merged that granularity away. `GO:0031267` *is* that term now.
+
+Method note for the campaign: OLS's response for a merged id is genuinely ambiguous — it reports
+`is_obsolete: true` with a CURIE label. QuickGO's `/complete` endpoint, which lists
+`secondaryIds`, distinguishes merged from obsoleted. Use it when a term-availability claim is
+load-bearing.
 
 ## Actions
 
@@ -122,6 +149,6 @@ An obsolete term has no label and detaches to the root, which is what `GO_001704
   **unsigned parent** `GO:0070432`, because the paper says "modulates" and never establishes a
   direction — `GO:0070434`/`GO:0070433` would assert more than the data support.
 
-**CD276/B7-H3 dropped from the description.** It came from the affinage narrative citing
+**CD276/B7-H3 dropped from the review entirely** (description and the protein-binding summary). It came from the affinage narrative citing
 PMID:35919070, which is neither cited nor cached here. An unverifiable partner should not sit in
 a description.
