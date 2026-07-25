@@ -43,8 +43,8 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 - [x] Create and semantically validate the species-neutral multi-part module.
 - [ ] Complete OpenScientist gene-level research.
 - [ ] Complete generic module OpenScientist research.
-- [ ] Complete module + `ppu00920` + PSEPK OpenScientist research.
-- [ ] Resolve the CysNC APS-kinase-domain and PP_0860 questions after research.
+- [x] Complete module + `ppu00920` + PSEPK OpenScientist research.
+- [x] Resolve the CysNC APS-kinase-domain and PP_0860 questions after research.
 - [ ] Integrate useful research findings without treating provider output as authority.
 - [ ] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
