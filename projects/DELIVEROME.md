@@ -3,7 +3,7 @@ title: Deliverome GO Collaboration
 species:
   - human
   - mouse
-status: IN_PROGRESS
+maturity: IN_PROGRESS
 priority: high
 last_reviewed: 2026-07-19
 scope: Exploratory Deliverome-to-GO project focused on delivery-address semantics, internal trafficking model systems, and a human and mouse Rab7 comparison for post-internalization routing
