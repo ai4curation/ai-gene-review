@@ -78,6 +78,20 @@ UniProt [file:human/AAMP/AAMP-uniprot.txt, "SUBCELLULAR LOCATION: Cell membrane.
 The cell-surface/extracellular pool is genuine and functionally relevant — it is where heparin
 binding and heparin-sensitive cell adhesion happen, and where the blocking antibody acts.
 
+## Suggestion 5: the obsolescence claim, verified in the open
+
+`GO:0017048 Rho GTPase binding` would have been the more specific MF for the RhoA/CDC42
+binding, and the choice of `GO:0031267` rests entirely on it being obsolete. That claim is
+load-bearing, so here is the lookup rather than an assertion:
+
+```
+$ oaklib sqlite:obo:go
+GO:0017048 -> label=GO_0017048  is_obsolete=True   (OLS: is_obsolete: true, is_root: true)
+GO:0031267 -> small GTPase binding                 (live)
+```
+
+An obsolete term has no label and detaches to the root, which is what `GO_0017048` shows.
+
 ## Actions
 
 | Term | Evidence | Action |
@@ -92,3 +106,22 @@ binding and heparin-sensitive cell adhesion happen, and where the blocking antib
 | `GO:0031267` small GTPase binding | IPI (proposed) | NEW |
 | `GO:0050821` protein stabilization | IMP (proposed) | NEW |
 | `GO:0051057` positive regulation of small GTPase mediated signal transduction | IMP (proposed) | NEW |
+| `GO:1903141` negative regulation of establishment of endothelial barrier | IMP (proposed) | NEW |
+| `GO:0070432` regulation of NOD2 signaling pathway | IMP (proposed) | NEW |
+
+## Two further arms, added after review
+
+- **Endothelial barrier (PMID:39404373).** siRNA depletion of AAMP *increases* trans-endothelial
+  electrical resistance, so AAMP is a **negative** regulator of barrier function. The mechanism
+  is the same Rho axis: depletion lowers RhoA and RhoB activity, reducing actomyosin contraction
+  in resting endothelium. This paper is also the third independent lab to report AAMP-dependent
+  Rho regulation, and it extends it to RhoB.
+- **NOD2/NF-κB (PMID:19535145).** I had originally left this unannotated because the mechanism
+  is unresolved. That conflated *mechanism* with *evidence*: GO regulation terms do not require a
+  resolved mechanism, and the paper has overexpression plus siRNA in HEK293T. Annotated to the
+  **unsigned parent** `GO:0070432`, because the paper says "modulates" and never establishes a
+  direction — `GO:0070434`/`GO:0070433` would assert more than the data support.
+
+**CD276/B7-H3 dropped from the description.** It came from the affinage narrative citing
+PMID:35919070, which is neither cited nor cached here. An unverifiable partner should not sit in
+a description.
