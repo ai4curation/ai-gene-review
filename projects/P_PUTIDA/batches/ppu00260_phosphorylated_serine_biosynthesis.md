@@ -18,12 +18,15 @@ and phospholipid synthesis.
 ## Required Workflow
 
 - [x] Fetch the selected PSEPK records from UniProt and GOA.
-- [ ] Run OpenScientist deep research for the selected genes.
+- [x] Attempt OpenScientist deep research for the selected genes; the corrected
+  SerA and SerB requests each exhausted the 7,200-second provider timeout
+  without a report.
 - [x] Curate the new `serA` and `serB` reviews.
 - [x] Reuse the `serC` review from PR #2174 without duplicating its files.
 - [x] Create and semantically validate the species-neutral module.
 - [x] Run generic module-level OpenScientist research.
-- [ ] Run module + pathway + PSEPK OpenScientist research.
+- [x] Attempt module + pathway + PSEPK OpenScientist research; the corrected
+  request exhausted the 7,200-second provider timeout without a report.
 - [x] Validate and render all changed reviews, the module, and project pages.
 - [ ] Open one PR for this module and resolve review and CI feedback.
 
@@ -48,3 +51,6 @@ and phospholipid synthesis.
 - Generic OpenScientist research independently recovered the same three
   obligatory reaction roles and treated the SerA and SerC secondary
   activities as boundary-excluded chemistry.
+- The SerA, SerB, and species-aware requests were each allowed the full
+  configured 7,200 seconds with three iterations. No report was returned, so
+  no nonexistent source is cited or represented as pathway evidence.
