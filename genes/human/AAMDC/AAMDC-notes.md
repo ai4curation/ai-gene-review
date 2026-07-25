@@ -1,0 +1,99 @@
+# AAMDC (Mth938 domain-containing protein) — review notes
+
+PAINT no-IBA project review, using the `affinage` deep-research provider
+(`AAMDC-deep-research-affinage.md`, gates passed) plus UniProt Q9H7C9, the GOA TSV and the
+primary literature.
+
+## Headline: the IBAs here are *good*, and the `protein binding` set is worthless
+
+This gene is the near-mirror-image of A1BG (reviewed earlier in this campaign), which makes
+it a useful calibration point. There, the IBAs were wrong and needed removal. Here they are
+the **only** annotations with real evidence behind them, and the experimental-looking `IPI`
+annotations are the ones that should be discounted.
+
+## The two IBAs both trace to a genuine mouse ortholog with primary data
+
+Both IBAs cite `MGI:MGI:1913523`, which is **mouse *Aamdc*** — the true ortholog, not a
+paralog. Its own GO record carries, from PMID:22279136:
+
+- `GO:0045600 positive regulation of fat cell differentiation` — **IDA *and* IMP**
+- `GO:0045944 positive regulation of transcription by RNA polymerase II` — IDA
+- `GO:0043066 negative regulation of apoptotic process` — IMP
+
+and `GO:0005737 cytoplasm` by IDA from PMID:21622130.
+
+Reading the source paper confirms the adipogenesis annotation is well-founded and
+bidirectional — gain of function *and* loss of function
+[PMID:22279136, "Our results indicated that LI2 was sufficient to drive preadipocyte
+differentiation via modulating the phosphorylation level and transcriptional activity of
+CREB"] and [PMID:22279136, "knockdown of the LI2 protein resulted in preadipocyte apoptosis
+via caspase-3 activation during adipogenesis"]. (The mouse gene was called *LOC66273*
+isoform 2 / "LI2" in that paper; hence the "adipogenesis associated" in the human gene name.)
+
+So `GO:0045600` is exactly what IBA is for: a solid ortholog phenotype transferred to a human
+gene with no experimental data of its own. **ACCEPT.** UniProt's own FUNCTION line for human
+AAMDC is `ECO:0000250` (by similarity) for the same reason
+[file:human/AAMDC/AAMDC-uniprot.txt, "May play a role in preadipocyte differentiation and"].
+
+## The eight `protein binding` IPIs are all high-throughput, and five are a classic artefact
+
+| Partner | Screen |
+|---|---|
+| ACY3 (Q96HD9), GORASP2 (Q9H8Y8) | PMID:25416956 HuRI Y2H |
+| VPS9D1 (Q9Y2B5) | PMID:32296183 HuRI |
+| **APP-2, HTT, ATXN3, DNM2-2, GDAP1** | **PMID:32814053** |
+
+The five-partner block from PMID:32814053 is the giveaway. That paper is *"Interactome
+Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread
+Protein Aggregation in Affected Brains"* — its bait panel is aggregation-prone
+neurodegeneration proteins, and by its own title aggregation is pervasive in the dataset.
+A single small uncharacterised protein scoring against APP, huntingtin, ataxin-3, dynamin-2
+and GDAP1 in one screen is the signature of a sticky/promiscuous hit, not five distinct
+biological interactions. None has any follow-up, and AAMDC has no described role in
+neurodegeneration.
+
+The remaining three are unreplicated single Y2H hits.
+
+**The most telling observation: not one of the eight recovered RABGAP1L or RAB7A** — the only
+AAMDC interaction with functional follow-up in the literature. The GOA binding record for this
+gene is entirely orthogonal to its known biology. All eight are marked over-annotated.
+
+## What the human literature actually shows
+
+One substantial human paper, PMID:33772001 (Nat Commun 2021), studying AAMDC as an oncogene in
+the 11q13.5–14.1 (IntClust2) amplicon of ER+ breast cancer:
+
+- **AKT activation is causal, not correlative** —
+  [PMID:33772001, "Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting
+  in estrogen-independent tumor growth."] This supports a `NEW` `GO:0051897` annotation, and is
+  the only human functional annotation this gene can currently carry.
+- **PI3K-AKT-mTOR control and metabolic reprogramming** —
+  [PMID:33772001, "We show that AAMDC controls PI3K-AKT-mTOR signaling, regulating the
+  translation of ATF4 and MYC and modulating the transcriptional activity of AAMDC-dependent
+  promoters."]
+- **RABGAP1L/RAB7A endolysosomal platform** —
+  [PMID:33772001, "we provide evidence that AAMDC can interact with the RabGTPase-activating
+  protein RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes."] Note
+  the authors' own hedge ("can interact", "provide evidence"). Colocalisation is not
+  co-residence in a complex, so `GO:0036019 endolysosome` is proposed but flagged as resting
+  on colocalisation from a single study.
+
+## The molecular function is genuinely unknown
+
+Worth stating plainly, because it is the main knowledge gap: **AAMDC has no molecular function
+annotation of any kind, and none is currently justifiable.** Mouse *Aamdc* even carries an
+explicit `GO:0003674 molecular_function` **ND** (no data). The protein is a small Mth938-domain
+protein with a solved structure but no assigned activity, and affinage's `mechanism_profile`
+reports `molecular_activity: (none)` — the provider agreeing there is nothing to ground. Every
+described effect (adipogenesis, AKT activation, ATF4/MYC translation) is a downstream cellular
+consequence, not a biochemical activity. I have deliberately **not** invented an MF term.
+
+## Actions
+
+| Term | Evidence | Action |
+|---|---|---|
+| `GO:0045600` positive regulation of fat cell differentiation | IBA | ACCEPT |
+| `GO:0005737` cytoplasm | IBA, IEA, ISS | ACCEPT |
+| `GO:0005515` protein binding ×8 | IPI | MARK_AS_OVER_ANNOTATED |
+| `GO:0051897` positive regulation of PI3K/AKT signal transduction | IDA (proposed) | NEW |
+| `GO:0036019` endolysosome | IDA (proposed) | NEW |
