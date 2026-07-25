@@ -26,7 +26,7 @@ straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
 | NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation |
 | TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1→**0** ✗ | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575; the 1 reviewed "gap" is tobacco PMT paralog (see †) |
 | NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
-| NF002326 dGTPase | GO:0008832 dGTPase activity | **456** | 13 ⚠ | **refine** | NCBI gave broad GO:0016793; but all 13 reviewed are cautiously-named "dGTPase-*like*" (see †) |
+| NF002326 dGTPase | GO:0016793 (family) + GO:0008832 / GO:0106375 (clades) | (split) | — | **split** | ⚠️ **Corrected**: structural verification showed this family is substrate-heterogeneous, so it was **split** — family-level `exactMatch` to the parent GO:0016793 (gain ~0) + two `narrowMatch` sub-clades (strict dGTPase GO:0008832 marked *do-not-blanket-propagate*; broad SAMHD1-like GO:0106375). The apparent 456 net-new for the strict term applies only to the dGTPase core, not the whole family (see ‡‡ / the SSSOM split block) |
 | TIGR02791 VirB5 (T4SS) | GO:0043684 type IV secretion system complex | **298** | 4 ✅ | adopt (broad) | 0/298 carry it; **the one clean reviewed gap-fill** — all 4 are *Brucella* VirB5 |
 | NF042963 anti-phage DUF1156 | GO:0051607 defense response to virus | **151** | 0 | adopt NCBI | Anti-phage family; BP term is coarse (see ‡) but mechanism now resolved to a DNA amino-MTase → gains a real MF (see ‡‡) |
 
@@ -107,7 +107,7 @@ The round was productive in *both* altitude directions:
 | **NF042963** DUF1156 (anti-phage) | A0A3B7MFS0 | Intact SAM-dependent **DNA amino-methyltransferase** (DPPY), no nuclease; BREX/DISARM-like defense; DUF1156 accessory | **Adds an MF** the DUF name hid (GO:0009008; base UNDECIDED m6A/m4C) — seed *under*-specified |
 | **NF002326** dGTPase | Q92Q32 ("-like") | Active site **intact**, but SAMHD1-like **broad dNTPase**, strict dGTP not supported | **Over-refinement caught**: keep GO:0008832 for strict members, map "-like" clade to sibling GO:0106375 |
 | **NF033545** IS630 transposase | P16943 ("uncharacterized") | Bona fide **DDE transposase** (RNase-H fold, intact D181/D261/E297 triad) | **Confirms** GO:0004803; grounds the 18,874 headline (add an intact-triad filter for defective IS copies) |
-| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation |
+| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein (⚠️ *weakly blinded* — the prompt named the accession, so Foldseek could read `encap_f2a`/IPR049822 off the curated signature; the independent part is the AlphaFold no-TM evidence) | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation |
 
 The two enzyme rows are the payoff: DUF1156 shows the seed can **under**-specify (a
 "DUF" concealing a real MF) and dGTPase shows it can **over**-specify (a strict child
@@ -428,10 +428,19 @@ CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 
-The 250-row seed is hand-reviewed; the **EC bridge** lets us scale the *same evidence
-standard* to the whole collection with no per-row human judgement, because the
-agreement of two independent curated resources (NCBI's `go_terms` and GO's `ec2go`)
-*is* the verification. [`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)
+The 250-row seed has **two tiers of review**, and they should not be conflated: **~40
+fully hand-curated rows** (the original bespoke set + the hand-picked batch 2) with
+individually-written rationale, plus **210 EC-bridge rows bulk-promoted** from the
+candidate set (batches 3–5). The promoted rows are *not* individually hand-reasoned —
+their comments are uniform/generated and each was auto-verified against a fixed bar
+(live `ec2go` bridge, QuickGO non-obsolete + canonical label, live UniProtKB gain ≥ 100,
+non-catalytic-subunit screen). The **EC bridge** is what lets us apply that *same
+mechanical evidence standard* to the whole collection with no per-row human judgement,
+because the agreement of two independent curated resources (NCBI's `go_terms` and GO's
+`ec2go`) *is* the verification — but that standard is weaker than the altitude/over-
+annotation judgement applied to the ~40 hand-curated rows (the "high gain is a flag,
+not an instruction" discipline holds for the hand-set; the promoted rows rely on the
+EC-bridge agreement plus the subunit screen). [`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)
 walks every NCBIFAM model and emits each `(model, GO)` where `ec2go(model's EC)`
 confirms one of the model's own NCBI `go_terms`. The live funnel:
 
@@ -540,10 +549,12 @@ over-annotation.
   5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
   repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 250 verified SSSOM rows (247 exactMatch ready-to-add, incl. 5 proposing our own
-  specific term over NCBI's broad one and 1 — FtsX — declining a too-specific term;
-  2 narrowMatch, the dGTPase NF002326 clade split after structural verification;
-  1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with
+  — 250 SSSOM rows in **two tiers**: ~40 fully hand-curated (bespoke rationale, altitude
+  judgement) + 210 EC-bridge rows bulk-promoted from the candidate set (batches 3–5,
+  uniform generated comments, auto-verified to a fixed bar). Predicates: 247 exactMatch
+  (incl. 5 proposing our own specific term over NCBI's broad one and 1 — FtsX — declining
+  a too-specific term; 2 narrowMatch, the dGTPase NF002326 clade split after structural
+  verification; 1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with
   live propagation gain; **passes** `just validate-ncbifam-mappings`.
 - **Scaled candidates**: [`NCBIFam/ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv)
   — 2,503 generated EC-bridge-confirmed rows (2,455 models; `ncbifam2go_candidates.py`),
