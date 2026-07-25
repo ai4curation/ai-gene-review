@@ -92,6 +92,30 @@ the protein's core clients, one is screen noise — so the distinction is kept.
   is the one adaptor with a genuine gap. The AP-1 entries now use `GO:0035650` rather than the
   vague `GO:0044877`. **Lesson: an empty OLS keyword search is not evidence a term is absent —
   confirm by direct id lookup before proposing a new term.**
+- **Scope check on the proposed term's name (added after review round 2).** The proposal was
+  first drafted as *clathrin adaptor complex subunit binding*. That name would have excluded
+  one of AAGAB's own three clients: **AP-4 is not a clathrin adaptor**. Verified directly
+  against the local GO database rather than assumed —
+
+  | Term | is_a |
+  |---|---|
+  | `GO:0030121` AP-1 adaptor complex | `GO:0030131` clathrin adaptor complex |
+  | `GO:0030122` AP-2 adaptor complex | `GO:0030131` clathrin adaptor complex |
+  | **`GO:0030124` AP-4 adaptor complex** | **`GO:0030119` AP-type membrane coat adaptor complex** |
+
+  The term is therefore scoped to `GO:0030119`, and the same conflation was corrected in the
+  top-level `description` and in `core_functions.description` ("AP-type clathrin adaptor
+  complexes" → "AP-type membrane coat adaptor complexes").
+
+- **Term labels machine-verified.** After the `GO:0035650` episode, every id used or proposed
+  here was resolved against the local `go.db` via oaklib rather than trusted from memory:
+  `GO:0035650` = AP-1 adaptor complex binding, `GO:0035612` = AP-2 adaptor complex binding,
+  `GO:0051131` = chaperone-mediated protein complex assembly, `GO:0030119`/`GO:0030131`/
+  `GO:0030124` as tabulated above. Note `just fix-labels` skips `proposed_new_terms` and
+  `proposed_replacement_terms` by default (`--no-skip-proposed` opts in), so proposed-term
+  labels are *not* covered by the routine label check — worth knowing for the rest of this
+  campaign.
+
 - **The real gap is subunit-level binding.** All three existing terms denote binding the
   assembled heterotetramer, whereas AAGAB binds *free* subunits and is displaced before the
   tetramer exists — PMID:39145939 shows the AAGAB:α:σ2 intermediate "cannot recruit additional
