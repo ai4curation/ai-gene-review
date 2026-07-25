@@ -31,7 +31,9 @@ autolink_gene_symbols: false
 - [x] Reconcile generated reports with the manual curation.
 - [x] Validate gene and module YAML.
 - [x] Render the module and project page.
-- [ ] Open and shepherd one PR for this module.
+- [x] Open one non-draft PR for this module:
+  [#2235](https://github.com/ai4curation/ai-gene-review/pull/2235).
+- [ ] Shepherd the PR through review and CI.
 
 ## Curated Genes
 
