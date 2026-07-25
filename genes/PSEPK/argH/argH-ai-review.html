@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>argH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>argH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P59618" target="_blank" class="term-link">
+                        P59618
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "argH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P59618" data-a="DESCRIPTION: ArgH (PP_0184) is argininosuccinate lyase (EC 4.3...." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ArgH (PP_0184) is argininosuccinate lyase (EC 4.3.2.1), which cleaves argininosuccinate to L-arginine and fumarate. It catalyzes the terminal reaction of de novo L-arginine biosynthesis downstream of ArgG.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P59618" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This root-level catalytic term is redundant with the specific ArgH activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004056 captures the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004056" target="_blank" class="term-link">
+                                    GO:0004056
+                                </a>
+                            </span>
+                            <span class="term-label">argininosuccinate lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P59618" data-a="GO:0004056" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining ArgH molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt assigns EC 4.3.2.1, RHEA:24020, HAMAP MF_00006, and the ArgH family to P59618.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argH/argH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Argininosuccinate lyase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argH/argH-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **argH** (ordered locus **PP_0184**; UniProt **P59618**) of *Pseudomonas putida* KT2440 encodes **argininosuccinate lyase (ASL / ASAL; EC 4.3.2.1; arginosuccinase)**.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P59618" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgH is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported but is secondary to the reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P59618" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This duplicates the retained bacterial cytoplasm annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No distinct ArgH pool is established by the parent/child location pair.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P59618" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgH performs the terminal reaction of L-arginine biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt pathway assignment directly supports this process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P59618" data-a="GO:0016829" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic lyase term is redundant with argininosuccinate lyase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004056 captures the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cleaves argininosuccinate to L-arginine and fumarate in the terminal reaction of L-arginine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="P59618" data-a="FUNCTION: Cleaves argininosuccinate to L-arginine and fumara..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004056" target="_blank" class="term-link">
+                            argininosuccinate lyase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argH/argH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Argininosuccinate lyase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argH/argH-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">the **reversible cleavage of argininosuccinate into L-arginine and fumarate**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" target="_blank" class="term-link">
+                            PMID:31451546
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas putida as Part of the Mechanism of Adaptation to Oxidative Stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 study constructs a complete PP_0184/argH deletion and reports arginine auxotrophy rescued by exogenous arginine or the wild-type locus.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argH/argH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK ArgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns P59618 to the terminal argininosuccinate-cleavage reaction.</div>
+
+                        <div class="finding-text">"Full=Argininosuccinate lyase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argH/argH-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK ArgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the six existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argH/argH-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK ArgH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the exact accession as argininosuccinate lyase and retrieves the terminal arginine-biosynthesis reaction.</div>
+
+                        <div class="finding-text">"The gene **argH** (ordered locus **PP_0184**; UniProt **P59618**) of *Pseudomonas putida* KT2440 encodes **argininosuccinate lyase (ASL / ASAL; EC 4.3.2.1; arginosuccinase)**."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(argH-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P59618" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *argH* (Argininosuccinate Lyase, P59618) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T17:06:14.349937</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="argH-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="argH-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-argh-argininosuccinate-lyase-p59618-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>argH</em> (Argininosuccinate Lyase, P59618) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="identity-verification-mandatory">Identity Verification (mandatory)</h2>
+<p>The target is unambiguous and fully consistent across all evidence:</p>
+<ul>
+<li><strong>Gene / locus:</strong> <code>argH</code> / <code>PP_0184</code>, <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein:</strong> Argininosuccinate lyase (ASAL; arginosuccinase), EC 4.3.2.1.</li>
+<li><strong>Family / domains:</strong> lyase 1 family (aspartase/fumarase superfamily); InterPro Arg_succ_lyase_C (IPR029419), Argininosuccinate_lyase (IPR009049), Fumarase/histidase_N (IPR024083), Fumarate_lyase_CS (IPR020557), Fumarate_lyase_fam (IPR000362).</li>
+</ul>
+<p>The gene symbol <code>argH</code> matches the protein description, and the family/domain assignment is confirmed <strong>directly from the P59618 sequence</strong> (see Key Findings 4 and 5). The <code>argH</code> symbol universally denotes argininosuccinate lyase in bacterial genetics, and every retrieved paper concerns the correct enzyme family (argininosuccinate lyase / δ-crystallin / aspartase–fumarase superfamily). <strong>No gene-symbol ambiguity was encountered.</strong> While there is limited literature on the <em>P. putida</em> protein specifically, its function is established with high confidence by (i) curated sequence annotation, (ii) near-identical conservation with experimentally characterized orthologs, and (iii) <em>P. putida</em>-specific pathway and regulatory studies.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>argH</strong> (ordered locus <strong>PP_0184</strong>; UniProt <strong>P59618</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>argininosuccinate lyase (ASL / ASAL; EC 4.3.2.1; arginosuccinase)</strong>. Its primary function is to catalyze the <strong>terminal, committed step of de novo L-arginine biosynthesis</strong>: the reversible β-elimination of <strong>2-(Nω-L-arginino)succinate (argininosuccinate)</strong> into <strong>L-arginine + fumarate</strong> (RHEA:24020). The enzyme is strictly specific for argininosuccinate, requires no cofactor or metal, and is a <strong>soluble cytoplasmic homotetramer</strong> of the aspartase/fumarase (lyase 1) superfamily. Each of its four active sites is a composite pocket built from three of the four subunits, making the tetramer obligatory for catalysis.</p>
+<p>Although P59618 itself has not been characterized biochemically, its function is established with high confidence by three convergent lines of evidence. First, orthologous ASL enzymes — the <em>Mycobacterium tuberculosis</em> enzyme (crystallized with substrate/product), human ASL, and the duck δ2-crystallin/ASL model (mutagenized and crystallized) — define the reaction, mechanism, quaternary structure, and catalytic residues. Second, direct sequence analysis shows P59618 is exactly co-linear (464 aa) with human ASL and conserves every diagnostic superfamily motif and validated catalytic residue, including the SS-loop signature <code>281-GSSIMPQKKN-290</code> and the fumarate-lyase motif RSRNDQ. Third, organism-specific studies place argH-driven arginine supply within an ArgR-regulated network coupled to c-di-GMP signaling that governs biofilm/lifestyle behavior in <em>P. putida</em> KT2440.</p>
+<p>Mechanistically, ASL uses the general base-catalyzed carbanion (aci-carboxylate/enediolate) strategy shared across the aspartase/fumarase superfamily, in which a flexible "SS loop" closes over the substrate, a general base abstracts the Cβ proton to generate a fumarate-stabilized carbanion, and the C–N bond then cleaves to release arginine. As the last enzyme of the pathway, ASL is essential for growth in the absence of exogenous arginine; its loss causes arginine auxotrophy. Its co-product fumarate feeds central carbon metabolism, economically coupling nitrogen/arginine anabolism to the TCA cycle.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-argh-encodes-argininosuccinate-lyase-catalyzing-argininosuccinate-l-arginine-fumarate">Finding 1 — argH encodes argininosuccinate lyase, catalyzing argininosuccinate ⇌ L-arginine + fumarate</h3>
+<p>UniProt P59618 annotates argH / PP_0184 of <em>P. putida</em> KT2440 as <strong>argininosuccinate lyase (ASAL), EC 4.3.2.1</strong>, a member of the <strong>lyase 1 family</strong>. The catalyzed reaction is among the best-established in intermediary metabolism: ASL catalyzes the <strong>reversible cleavage of argininosuccinate into L-arginine and fumarate</strong>. This chemistry is conserved across all characterized orthologs, and crystallographic studies of the <em>M. tuberculosis</em> enzyme captured with substrate/product ligands directly confirm both the reaction and the <strong>homotetrameric quaternary assembly</strong>.</p>
+<blockquote>
+<p>"Argininosuccinate lyase catalyses the reversible breakdown of argininosuccinate into arginine and fumarate and is known to form tetramers in its quaternary association." — <a href="https://pubmed.ncbi.nlm.nih.gov/30615268/">PMID: 30615268</a></p>
+</blockquote>
+<p>The reaction is a C–N bond lyase reaction (β-elimination), not a hydrolysis; no water is consumed, and the products are the guanidinium-bearing amino acid arginine plus the four-carbon dicarboxylate fumarate:</p>
+<div class="codehilite"><pre><span></span><code>   2-(Nω-L-arginino)succinate  ⇌  L-arginine  +  fumarate
+   (argininosuccinate)                     (EC 4.3.2.1, RHEA:24020)
+</code></pre></div>
+
+<h3 id="finding-2-asl-is-an-aspartasefumarase-superfamily-enzyme-using-a-general-base-catalyzed-aci-carboxylate-mechanism-at-composite-active-sites">Finding 2 — ASL is an aspartase/fumarase superfamily enzyme using a general base-catalyzed aci-carboxylate mechanism at composite active sites</h3>
+<p>Argininosuccinate lyase is a canonical member of the <strong>aspartase/fumarase (lyase 1) superfamily</strong>, which also includes aspartase, class-II fumarase (fumarase C), adenylosuccinate lyase, δ-crystallin, and 3-carboxy-cis,cis-muconate lactonizing enzyme. All members process succinyl-containing substrates and release <strong>fumarate</strong>, share a predominantly α-helical homotetrameric fold, and use a common catalytic strategy: <strong>general base-catalyzed formation of a stabilized aci-carboxylate (enediolate/carbanion) intermediate</strong>, with a highly flexible loop bearing the signature <strong>GSSxxPxKxN (the "SS loop")</strong> closing over the substrate during catalysis.</p>
+<blockquote>
+<p>"members of the aspartase/fumarase superfamily use a common catalytic strategy, which involves general base-catalyzed formation of a stabilized aci-carboxylate (or enediolate) intermediate and the participation of a highly flexible loop, containing the signature sequence GSSxxPxKxN (named the SS loop), in substrate binding and catalysis." — <a href="https://pubmed.ncbi.nlm.nih.gov/22551392/">PMID: 22551392</a></p>
+</blockquote>
+<p>A defining structural feature is that <strong>each of the four active sites is a composite formed from three of the four subunits</strong>, so the enzyme cannot function as a monomer — the tetramer is a catalytic necessity.</p>
+<blockquote>
+<p>"The molecule consists of four binding sites, each made up of peptide stretches from three subunits." — <a href="https://pubmed.ncbi.nlm.nih.gov/30615268/">PMID: 30615268</a></p>
+</blockquote>
+<p>Site-directed mutagenesis of the duck δ2-crystallin/ASL model identified <strong>R115, N116, T161, S283, and E296 as essential for catalytic activity</strong>, with <strong>His162</strong> implicated as the catalytic base and <strong>His91</strong> in substrate binding.</p>
+<h3 id="finding-3-in-p-putida-kt2440-argh-acts-in-cytoplasmic-de-novo-arginine-biosynthesis-under-argr-control-linked-to-c-di-gmp-signaling">Finding 3 — In <em>P. putida</em> KT2440, argH acts in cytoplasmic de novo arginine biosynthesis under ArgR control, linked to c-di-GMP signaling</h3>
+<p>ASL is a <strong>soluble cytoplasmic enzyme</strong>: P59618 contains no signal peptide and no transmembrane segment, and orthologs are studied as soluble tetramers. Functionally, argH supplies L-arginine as the last enzyme of the biosynthetic pathway. In <em>P. putida</em> KT2440, <strong>both arginine biosynthesis and arginine uptake are governed by the master transcriptional regulator ArgR</strong>, which additionally connects arginine metabolism to the second messenger <strong>cyclic diguanylate (c-di-GMP)</strong>, the central regulator of the biofilm/motility lifestyle switch.</p>
+<blockquote>
+<p>"the plant-beneficial bacterium Pseudomonas putida KT2440, both arginine biosynthesis and uptake influence second messenger contents and the associated phenotypes" — <a href="https://pubmed.ncbi.nlm.nih.gov/35254100/">PMID: 35254100</a></p>
+</blockquote>
+<p>The product of the argH reaction, L-arginine, is not merely a proteinogenic building block in this organism — it functions as both a metabolic indicator and an environmental signal:</p>
+<blockquote>
+<p>"arginine functions both as a metabolic indicator and as an environmental signal molecule, modulating processes such as chemotactic responses, siderophore-mediated iron uptake or the levels of the intracellular second messenger cyclic diguanylate (c-di-GMP)" — <a href="https://pubmed.ncbi.nlm.nih.gov/38429473/">PMID: 38429473</a></p>
+</blockquote>
+<p>argH's precise role is upstream and enzymatic — it sets the biosynthetic contribution to the arginine pool. The signaling consequences are downstream properties of arginine, not additional catalytic functions of the enzyme.</p>
+<h3 id="finding-4-the-p59618-sequence-directly-confirms-cytoplasmic-asl-exact-reaction-pathway-step-33-and-the-conserved-ss-loop-at-residues-281290">Finding 4 — The P59618 sequence directly confirms cytoplasmic ASL: exact reaction, pathway step 3/3, and the conserved SS loop at residues 281–290</h3>
+<p>Direct analysis of the P59618 primary sequence (464 aa, ~51.6 kDa monomer) corroborates every database annotation. The curated catalytic activity is <strong>"2-(Nω-L-arginino)succinate = fumarate + L-arginine"</strong> (RHEA:24020, EC 4.3.2.1). The pathway assignment is <strong>"L-arginine biosynthesis; L-arginine from L-ornithine and carbamoyl phosphate: step 3/3,"</strong> placing argH as the final of three steps (ornithine → citrulline → argininosuccinate → arginine). The curated subcellular location is <strong>Cytoplasm</strong>.</p>
+<p>The sequence carries the superfamily's diagnostic motifs in the expected positions:<br />
+- The <strong>SS-loop signature GSSxxPxKxN</strong> appears as <strong>281-GSSIMPQKKN-290</strong> (the pattern <code>GSS..P.K.N</code> matches at position 281).<br />
+- The conserved <strong>fumarate-lyase family motif GRSRNDQ</strong> occurs around residues 106–112.<br />
+- <strong>No signal peptide or transmembrane segment</strong> is present, consistent with a soluble cytoplasmic protein.</p>
+<p>This demonstrates the functional assignment is embedded in the actual sequence of the target protein, not merely transferred by name.</p>
+<h3 id="finding-5-p59618-conserves-all-known-asl-catalyticsubstrate-binding-residues-and-is-co-linear-464-aa-with-human-asl">Finding 5 — P59618 conserves all known ASL catalytic/substrate-binding residues and is co-linear (464 aa) with human ASL</h3>
+<p>A pairwise comparison of <em>P. putida</em> argH (P59618) with human ASL (P04424) shows both proteins are <strong>exactly 464 amino acids long and co-linear</strong>. The catalytic SS loop is virtually identical — human <strong>280-GSSLMPQKKN-289</strong> versus <em>P. putida</em> <strong>281-GSSIMPQKKN-290</strong>, differing only by a conservative Leu→Ile substitution — and the fumarate-lyase motif RSRNDQ occurs at human position 111 / <em>P. putida</em> position 112 (offset +1).</p>
+<p>Because of this co-linearity, the experimentally validated catalytic and substrate-binding residues defined in the duck δ2/ASL and human systems map <strong>directly onto conserved positions in P59618</strong>, including the SS-loop serines (S282/S283) and the invariant active-site lysine (K288) within the GSSxxPxKxN motif.</p>
+<blockquote>
+<p>"Kinetic studies reveal that five residues, R115, N116, T161, S283, and E296, are essential for catalytic activity." — <a href="https://pubmed.ncbi.nlm.nih.gov/10029537/">PMID: 10029537</a></p>
+<p>"the active site located in a cleft between three different monomers of the tetrameric protein" — <a href="https://pubmed.ncbi.nlm.nih.gov/9369472/">PMID: 9369472</a></p>
+</blockquote>
+<p>The near-perfect conservation of the SS loop and active-site residues between P59618 and the biochemically characterized human enzyme provides strong sequence-based evidence that P59618 catalyzes the identical reaction by the identical mechanism.</p>
+<h3 id="finding-6-argh-is-the-essential-committed-terminal-enzyme-loss-causes-arginine-auxotrophy-mechanism-is-a-shared-carbanion-elimination">Finding 6 — argH is the essential, committed terminal enzyme; loss causes arginine auxotrophy; mechanism is a shared carbanion/β-elimination</h3>
+<p>As the <strong>last enzyme of de novo arginine biosynthesis</strong>, argH catalyzes the committed conversion of argininosuccinate to arginine. In the absence of exogenous arginine, this makes the enzyme essential for growth — an argH deletion yields an arginine auxotroph. Essentiality is demonstrated directly in the <em>M. tuberculosis</em> ortholog.</p>
+<blockquote>
+<p>"the last enzyme in the pathway, catalyzes the production of arginine from argininosuccinic acid" — <a href="https://pubmed.ncbi.nlm.nih.gov/29044950/">PMID: 29044950</a></p>
+</blockquote>
+<p>Mechanistically, ASL's β-elimination uses the same <strong>carbanion (aci-carboxylate/enediolate) strategy</strong> as the rest of the aspartase/fumarase superfamily. The paradigm is L-aspartase:</p>
+<blockquote>
+<p>"catalyzes the reversible deamination of the amino acid L-aspartic acid, using a carbanion mechanism to produce fumaric acid and ammonium ion" — <a href="https://pubmed.ncbi.nlm.nih.gov/10800598/">PMID: 10800598</a></p>
+</blockquote>
+<p>In ASL, the leaving group is the amino/guanidino nitrogen of arginine rather than ammonia, but the essential chemistry — Cβ-proton abstraction generating a fumarate-stabilized carbanion, followed by C–N bond cleavage — is conserved. The His162 candidate catalytic base and His91 substrate-binding residue were validated by mutagenesis and structure in the duck δ2/ASL ortholog.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-metabolism">Position in metabolism</h3>
+<p>Argininosuccinate lyase catalyzes the third and final step of the conversion of ornithine to arginine:</p>
+<div class="codehilite"><pre><span></span><code>  L-ornithine + carbamoyl phosphate
+│  (argF/argI — ornithine carbamoyltransferase)          step 1/3
+▼
+     L-citrulline
+│  (argG — argininosuccinate synthase; + L-aspartate, ATP)  step 2/3
+▼
+  2-(Nω-L-arginino)succinate  (argininosuccinate)
+│  (argH — ARGININOSUCCINATE LYASE)                       step 3/3  ◄── P59618
+▼
+     L-arginine  +  fumarate
+</code></pre></div>
+
+<p>The reaction consumes the intermediate assembled at step 2 and delivers the finished amino acid. The co-product <strong>fumarate</strong> is a TCA-cycle intermediate: the aspartate nitrogen introduced at step 2 is retained in arginine, while the aspartate carbon skeleton is recovered as fumarate — an economical coupling of nitrogen assimilation to central carbon metabolism. In mammals the same reaction operates within the arginine–citrulline/urea cycle; in <em>P. putida</em> the context is purely biosynthetic.</p>
+<h3 id="enzyme-architecture-and-catalysis">Enzyme architecture and catalysis</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value / description</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction</td>
+<td>argininosuccinate ⇌ L-arginine + fumarate</td>
+<td>EC 4.3.2.1, RHEA:24020</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Strict for 2-(Nω-L-arginino)succinate</td>
+<td>Family enzymology; conserved active site</td>
+</tr>
+<tr>
+<td>Cofactors</td>
+<td>None (no metal, no coenzyme)</td>
+<td>Aspartase/fumarase superfamily</td>
+</tr>
+<tr>
+<td>Oligomeric state</td>
+<td>Homotetramer</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30615268/">PMID: 30615268</a></td>
+</tr>
+<tr>
+<td>Active site</td>
+<td>Composite, built from 3 of 4 subunits</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30615268/">PMID: 30615268</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9369472/">PMID: 9369472</a></td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>General base-catalyzed β-elimination via carbanion/aci-carboxylate</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22551392/">PMID: 22551392</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/10800598/">PMID: 10800598</a></td>
+</tr>
+<tr>
+<td>Catalytic/essential residues (duck δ2 numbering)</td>
+<td>R115, N116, T161, S283, E296; His162 (base); His91 (binding)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10029537/">PMID: 10029537</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9369472/">PMID: 9369472</a></td>
+</tr>
+<tr>
+<td>Signature motifs in P59618</td>
+<td>SS loop 281-GSSIMPQKKN-290; RSRNDQ ~112</td>
+<td>Direct sequence analysis</td>
+</tr>
+<tr>
+<td>Monomer size</td>
+<td>464 aa, ~51.6 kDa</td>
+<td>UniProt P59618</td>
+</tr>
+<tr>
+<td>Subcellular location</td>
+<td>Cytoplasm (no signal peptide / TM)</td>
+<td>UniProt P59618; sequence analysis</td>
+</tr>
+</tbody>
+</table>
+<p>The catalytic cycle: substrate binding closes the flexible SS loop over the active site, sequestering argininosuccinate from solvent; a general base (His162 or Thr161 in the duck model) abstracts the Cβ proton to generate a carbanion delocalized into the aci-carboxylate/enediolate of the incipient fumarate; the C–N bond then cleaves, releasing L-arginine, with a general acid (proposed to be a conserved serine such as Ser283/Ser281) reprotonating the leaving nitrogen. All of these residues are conserved in P59618, so the same cycle is expected to operate.</p>
+<h3 id="physiological-regulatory-context-in-p-putida-kt2440">Physiological / regulatory context in <em>P. putida</em> KT2440</h3>
+<p>The enzyme's biochemical job is simple — make arginine — but its product is a hub metabolite. The following schematic integrates the organism-specific findings:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">de</span><span class="w"> </span><span class="n">novo</span><span class="w"> </span><span class="n">synthesis</span><span class="w">                </span><span class="n">arginine</span><span class="w"> </span><span class="n">uptake</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">argH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ASL</span><span class="p">)</span><span class="w">                  </span><span class="err">│</span>
+<span class="w">      </span><span class="err">└──────────►</span><span class="w">  </span><span class="n">L</span><span class="o">-</span><span class="n">arginine</span><span class="w"> </span><span class="n">POOL</span><span class="w">  </span><span class="err">◄──┘</span>
+<span class="w">                        </span><span class="err">│</span>
+<span class="w">      </span><span class="err">┌─────────────────┼──────────────────────┐</span>
+<span class="w">      </span><span class="err">▼</span><span class="w">                 </span><span class="err">▼</span><span class="w">                      </span><span class="err">▼</span>
+<span class="n">ArgR</span><span class="w"> </span><span class="n">regulon</span><span class="w">      </span><span class="n">c</span><span class="o">-</span><span class="n">di</span><span class="o">-</span><span class="n">GMP</span><span class="w"> </span><span class="n">levels</span><span class="w">        </span><span class="n">chemotaxis</span><span class="w"> </span><span class="o">/</span>
+<span class="w">     </span><span class="p">(</span><span class="n">biosynthesis</span><span class="w"> </span><span class="o">&amp;</span><span class="w">     </span><span class="p">(</span><span class="n">via</span><span class="w"> </span><span class="n">RmcA</span><span class="p">,</span><span class="w"> </span><span class="n">etc</span><span class="p">.)</span><span class="w">      </span><span class="n">siderophore</span><span class="o">-</span><span class="n">Fe</span><span class="w"> </span><span class="n">uptake</span>
+<span class="w">      </span><span class="n">transport</span><span class="w"> </span><span class="n">genes</span><span class="p">)</span><span class="w">   </span><span class="n">biofilm</span><span class="w"> </span><span class="err">↔</span><span class="w"> </span><span class="n">motility</span>
+</code></pre></div>
+
+<p>L-arginine acts as "a metabolic indicator and an environmental signal molecule" (<a href="https://pubmed.ncbi.nlm.nih.gov/38429473/">PMID: 38429473</a>), and ArgR couples the arginine status of the cell to c-di-GMP-dependent phenotypes (<a href="https://pubmed.ncbi.nlm.nih.gov/35254100/">PMID: 35254100</a>). argH's role is upstream and enzymatic; the downstream signaling effects are properties of arginine, not catalytic functions of the enzyme.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<p>The functional assignment rests on ortholog enzymology/structure, direct sequence analysis of the target, and organism-specific physiology.</p>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30615268/">30615268</a></td>
+<td><em>Structural studies on M. tuberculosis argininosuccinate lyase and its liganded complex</em></td>
+<td>Confirms the reaction, homotetramer, and composite three-subunit active site in a bacterial ortholog.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22551392/">22551392</a></td>
+<td><em>Aspartase/fumarase superfamily: a common catalytic strategy…</em></td>
+<td>Establishes the shared mechanism (general base, aci-carboxylate intermediate) and the SS-loop signature P59618 carries.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10029537/">10029537</a></td>
+<td><em>Mutational analysis of ASL activity in duck delta II crystallin</em></td>
+<td>Identifies essential catalytic residues (R115, N116, T161, S283, E296) conserved in the co-linear P59618.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9369472/">9369472</a></td>
+<td><em>Structural comparison… role of histidine 91</em></td>
+<td>Confirms the three-monomer composite active site and substrate-binding His91.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11698398/">11698398</a></td>
+<td><em>Mutational analysis of duck delta 2 crystallin… ASL mechanism</em></td>
+<td>Detailed structure/mechanism with bound substrate; roles of His162/Thr161/Ser283 and SS-loop closure.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11258884/">11258884</a></td>
+<td><em>Structural studies of duck delta 1 and delta 2 crystallin</em></td>
+<td>Shows loop 280–290 closure sequesters substrate; conserved Ser281 as candidate catalytic acid.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17531264/">17531264</a></td>
+<td><em>Substrate/product complexes of E. coli adenylosuccinate lyase</em></td>
+<td>Sister-family enzyme confirming shared β-elimination-of-fumarate chemistry and flexible-loop closure.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10800598/">10800598</a></td>
+<td><em>L-aspartase: new tricks from an old enzyme</em></td>
+<td>Establishes the carbanion mechanism paradigm for the superfamily.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29044950/">29044950</a></td>
+<td><em>Biochemical characterization of ASL from M. tuberculosis</em></td>
+<td>Confirms ASL as the last, essential enzyme producing arginine from argininosuccinate.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35254100/">35254100</a></td>
+<td><em>Role of ArgR in arginine metabolism and c-di-GMP signaling in P. putida</em></td>
+<td>Organism-specific: places argH-driven arginine biosynthesis in KT2440's ArgR/c-di-GMP network.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38429473/">38429473</a></td>
+<td><em>Exploring the metabolic response of P. putida to L-arginine</em></td>
+<td>Documents signaling/physiological roles of arginine, the argH product, in KT2440.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37550221/">37550221</a></td>
+<td><em>The phosphodiesterase RmcA contributes to adaptation of P. putida to L-arginine</em></td>
+<td>Mechanistic link between arginine sensing and c-di-GMP in KT2440 (downstream of argH product).</td>
+</tr>
+</tbody>
+</table>
+<p>Together these provide <strong>experimental</strong> (crystallography, mutagenesis, kinetics on orthologs), <strong>evolutionary/bioinformatic</strong> (family membership, motif and residue conservation in the target sequence), and <strong>physiological</strong> (organism-specific regulation) evidence. Precise, low-throughput studies (crystal structures, site-directed mutants) dominate the mechanistic conclusions, consistent with prioritizing precise over high-throughput evidence.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> argH = argininosuccinate lyase (EC 4.3.2.1) performing the terminal step of arginine biosynthesis; strictly substrate-specific for argininosuccinate; cytoplasmic; obligate homotetramer with three-subunit composite active sites; carbanion β-elimination mechanism; validated catalytic residues conserved in the target sequence.</li>
+<li><strong>Refuted / ruled out:</strong> No evidence for a covalent or hydrolytic mechanism (it is a lyase, not a hydrolase); no membrane/periplasmic/secreted localization (no signal peptide or transmembrane segment); the gene is not a mis-annotated paralog — the SS-loop and RSRNDQ fingerprints plus 464-aa co-linearity with human ASL exclude confusion with other superfamily members (aspartase, adenylosuccinate lyase, fumarase).</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct study of P59618.</strong> No published crystal structure, purified-protein kinetics, or targeted mutagenesis exists for the <em>P. putida</em> KT2440 argH protein itself. The assignment is a high-confidence inference by orthology and sequence analysis; kinetic parameters (kcat, Km for argininosuccinate) for the <em>P. putida</em> enzyme are unmeasured.</li>
+<li><strong>Residue-numbering transfer.</strong> Catalytic residues are defined in duck δ2/human ASL numbering. Co-linearity with human ASL (both 464 aa) supports direct mapping, but the exact one-to-one alignment of every minor active-site residue was inferred from motif alignment rather than an experimental structure of the <em>P. putida</em> enzyme.</li>
+<li><strong>Catalytic base identity.</strong> The precise catalytic base (His162 vs. Thr161 vs. an alternative) remains debated within the family; ortholog-specific structural work would resolve this for the <em>P. putida</em> enzyme.</li>
+<li><strong>Regulation specifics.</strong> ArgR control of arginine biosynthesis in <em>P. putida</em> is documented at the pathway level, but the cis-regulatory architecture of the argH/PP_0184 promoter (ARG-box operators, operon structure) was not directly resolved here.</li>
+<li><strong>Essentiality in <em>P. putida</em> specifically.</strong> Essentiality is established for the pathway logic and demonstrated in <em>M. tuberculosis</em>; a <em>P. putida</em> KT2440 argH knockout phenotype was inferred rather than cited from a primary KT2440 study.</li>
+<li><strong>Signaling attribution.</strong> The c-di-GMP/biofilm connections are properties of the arginine pool and its sensors (RmcA, ArgR), not catalytic functions of argH; they should not be over-attributed to the enzyme itself.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant enzymology of P59618.</strong> Clone, express, and purify the <em>P. putida</em> KT2440 argH protein; confirm the homotetramer by SEC/native PAGE; measure steady-state kinetics (kcat, Km) for argininosuccinate in both directions.</li>
+<li><strong>Structure determination.</strong> Solve a crystal or cryo-EM structure of P59618, ideally with bound substrate/product or an analogue, to verify the composite three-subunit active site and the positions of the transferred catalytic residues.</li>
+<li><strong>Targeted mutagenesis.</strong> Mutate the P59618 residues corresponding to the essential set (SS-loop serine, invariant lysine K288, the His base) and confirm loss of activity, directly testing the residue-mapping inference.</li>
+<li><strong>Genetic essentiality and complementation in KT2440.</strong> Construct a clean argH (PP_0184) deletion; confirm arginine auxotrophy rescued by exogenous arginine and by plasmid-borne argH.</li>
+<li><strong>Promoter/regulon dissection.</strong> Define the argH transcription unit; search its promoter for ArgR ARG-box operators; use ArgR mutants and reporter fusions to test direct regulation, linking biosynthetic supply to the c-di-GMP network.</li>
+<li><strong>Flux and pool measurements.</strong> Use targeted metabolomics to quantify argininosuccinate and arginine pools in wild-type versus argH-perturbed strains, connecting enzyme activity to the downstream c-di-GMP/biofilm phenotypes.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <strong>argH (PP_0184, UniProt P59618)</strong> of <em>Pseudomonas putida</em> KT2440 encodes <strong>argininosuccinate lyase (EC 4.3.2.1)</strong>, a cytoplasmic homotetrameric enzyme of the aspartase/fumarase (lyase 1) superfamily. Its primary function is to catalyze the <strong>terminal, committed step of de novo L-arginine biosynthesis</strong> — the reversible β-elimination of <strong>2-(Nω-L-arginino)succinate into L-arginine and fumarate</strong> — with strict specificity for argininosuccinate, no cofactor requirement, and a general base-catalyzed carbanion/aci-carboxylate mechanism at composite active sites each built from three subunits. The identification is unambiguous: the target sequence conserves every diagnostic superfamily motif and validated catalytic residue and is co-linear with the biochemically characterized human enzyme. Physiologically, argH supplies the arginine pool that, in <em>P. putida</em> KT2440, is integrated into ArgR-dependent regulation and c-di-GMP signaling governing biofilm and lifestyle transitions.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="argH-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="argH-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:30615268</li>
+<li>PMID:22551392</li>
+<li>PMID:35254100</li>
+<li>PMID:38429473</li>
+<li>PMID:10029537</li>
+<li>PMID:9369472</li>
+<li>PMID:29044950</li>
+<li>PMID:10800598</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P59618
+gene_symbol: argH
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ArgH (PP_0184) is argininosuccinate lyase (EC 4.3.2.1), which cleaves
+  argininosuccinate to L-arginine and fumarate. It catalyzes the terminal
+  reaction of de novo L-arginine biosynthesis downstream of ArgG.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This root-level catalytic term is redundant with the specific ArgH activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0004056 captures the substrate-specific reaction.
+- term:
+    id: GO:0004056
+    label: argininosuccinate lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining ArgH molecular function.
+    action: ACCEPT
+    reason: Reviewed UniProt assigns EC 4.3.2.1, RHEA:24020, HAMAP MF_00006, and the ArgH family to P59618.
+    supported_by:
+    - reference_id: file:PSEPK/argH/argH-uniprot.txt
+      supporting_text: Full=Argininosuccinate lyase
+    - reference_id: file:PSEPK/argH/argH-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **argH** (ordered locus **PP_0184**; UniProt **P59618**) of
+        *Pseudomonas putida* KT2440 encodes **argininosuccinate lyase (ASL /
+        ASAL; EC 4.3.2.1; arginosuccinase)**.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: ArgH is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is supported but is secondary to the reaction.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: This duplicates the retained bacterial cytoplasm annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: No distinct ArgH pool is established by the parent/child location pair.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: ArgH performs the terminal reaction of L-arginine biosynthesis.
+    action: ACCEPT
+    reason: The reviewed UniProt pathway assignment directly supports this process.
+    additional_reference_ids:
+    - PMID:31451546
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: This generic lyase term is redundant with argininosuccinate lyase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0004056 captures the substrate-specific reaction.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31451546
+  title: Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas
+    putida as Part of the Mechanism of Adaptation to Oxidative Stress.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The KT2440 study constructs a complete PP_0184/argH deletion and reports
+      arginine auxotrophy rescued by exogenous arginine or the wild-type locus.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and accessible publisher/PMC full text were checked. The
+      local publication cache remains abstract-only, so the full-text statement
+      is recorded without a supporting-text excerpt.
+- id: file:PSEPK/argH/argH-uniprot.txt
+  title: UniProtKB entry for PSEPK ArgH
+  findings:
+  - statement: Assigns P59618 to the terminal argininosuccinate-cleavage reaction.
+    supporting_text: Full=Argininosuccinate lyase
+- id: file:PSEPK/argH/argH-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK ArgH
+  findings:
+  - statement: Contains the six existing annotations reviewed above.
+- id: file:PSEPK/argH/argH-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK ArgH
+  findings:
+  - statement: &gt;-
+      The report identifies the exact accession as argininosuccinate lyase and
+      retrieves the terminal arginine-biosynthesis reaction.
+    supporting_text: &gt;-
+      The gene **argH** (ordered locus **PP_0184**; UniProt **P59618**) of
+      *Pseudomonas putida* KT2440 encodes **argininosuccinate lyase (ASL /
+      ASAL; EC 4.3.2.1; arginosuccinase)**.
+core_functions:
+- description: &gt;-
+    Cleaves argininosuccinate to L-arginine and fumarate in the terminal
+    reaction of L-arginine biosynthesis.
+  molecular_function:
+    id: GO:0004056
+    label: argininosuccinate lyase activity
+  directly_involved_in:
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/argH/argH-uniprot.txt
+    supporting_text: Full=Argininosuccinate lyase
+  - reference_id: file:PSEPK/argH/argH-deep-research-openscientist.md
+    supporting_text: &gt;-
+      the **reversible cleavage of argininosuccinate into L-arginine and
+      fumarate**
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
