@@ -55,7 +55,7 @@ gene-review batch.
 - [x] Fetch and curate the seven selected gene reviews.
 - [x] Curate the reusable species-neutral module.
 - [x] Validate the gene reviews.
-- [ ] Validate and render the final module.
+- [x] Validate and render the final module.
 - [ ] Run module-level OpenScientist deep research.
 - [ ] Run module + pathway + PSEPK OpenScientist deep research.
 - [ ] Run OpenScientist deep research for selected genes.
