@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A140FWS4" target="_blank" class="term-link">
+                        A0A140FWS4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A140FWS4" data-a="DESCRIPTION: ubiB encodes an inner-membrane-anchored member of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ubiB encodes an inner-membrane-anchored member of the UbiB/ABC1 atypical protein-kinase-like family that is required for aerobic ubiquinone biosynthesis. Characterized UbiB-family homologs lack canonical protein kinase activity in trans and instead hydrolyze ATP and interact with lipid ubiquinone intermediates. For PP_5013, this ATP-dependent accessory role is inferred from conserved family architecture, orthology, and pathway context; the Pseudomonas putida protein itself has not been assayed.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004672" target="_blank" class="term-link">
+                                    GO:0004672
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A140FWS4" data-a="GO:0004672" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The UbiB protein-kinase-like fold does not establish canonical protein kinase activity. Characterized COQ8/Coq8 homologs lack trans protein kinase activity and instead show ATP hydrolysis activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is the experimentally supported family activity, whereas PP_5013 has no direct enzymatic characterization. The replacement is therefore a strong family-level inference rather than a target-specific assay result.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    ATP hydrolysis activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Although COQ8 was predicted to be a protein kinase, we demonstrate that it lacks canonical protein kinase activity in trans.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Instead, COQ8 has ATPase activity and interacts with lipid CoQ intermediates, functions that are likely conserved across all domains of life.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A140FWS4" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma-membrane localization is consistent with the predicted single-pass inner-membrane topology of PP_5013.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt/HAMAP places UbiB in the bacterial inner membrane and predicts a C-terminal transmembrane helix; this topology has not been measured in P. putida.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiB/ubiB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiB/ubiB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Single-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A140FWS4" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ubiquinone biosynthesis is the conserved core process of bacterial UbiB proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> E. coli ubiB disruption abolishes CoQ accumulation, and PP_5013 is a conserved UbiB-family ortholog in the P. putida ubiquinone pathway. This supports pathway requirement, not assignment of the blocked hydroxylase reaction to UbiB itself.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10960098" target="_blank" class="term-link">
+                                        PMID:10960098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both the P. stuartii aarF and E. coli ubiB (yigR) disruption mutant strains lack CoQ and accumulate octaprenylphenol.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">There is no published enzymatic assay, structure, knockout phenotype, or CoQ-profiling study specific to PP_5013/A0A140FWS4.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010795" target="_blank" class="term-link">
+                                    GO:0010795
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A140FWS4" data-a="GO:0010795" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A specific regulatory role, especially regulation of UbiI activity, is more precise than the available evidence supports.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UbiB is a required ATP-dependent pathway accessory factor, but neither a direct UbiI target nor the coupling between nucleotide turnover and pathway assembly has been established for PP_5013. GO:0006744 captures the defensible pathway role without asserting a regulatory mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiB/ubiB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Is probably a protein kinase regulator of UbiI activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The precise molecular &#34;output&#34; of UbiB remains debated even in model organisms.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Inner-membrane-anchored UbiB/ABC1 atypical kinase-like ATPase that supports aerobic ubiquinone biosynthesis. ATP hydrolysis is inferred from characterized homologs; its coupling to lipid-intermediate handling or pathway assembly remains unresolved for PP_5013.</h3>
+                <span class="vote-buttons" data-g="A0A140FWS4" data-a="FUNCTION: Inner-membrane-anchored UbiB/ABC1 atypical kinase-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                PMID:27499294
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Instead, COQ8 has ATPase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10960098" target="_blank" class="term-link">
+                                PMID:10960098
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both the P. stuartii aarF and E. coli ubiB (yigR) disruption mutant strains lack CoQ and accumulate octaprenylphenol.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">There is no published enzymatic assay, structure, knockout phenotype, or CoQ-profiling study specific to PP_5013/A0A140FWS4.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10960098" target="_blank" class="term-link">
+                            PMID:10960098
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of Escherichia coli ubiB, a gene required for the first monooxygenase step in ubiquinone biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli ubiB disruption eliminates CoQ and causes octaprenylphenol accumulation, establishing a conserved requirement for UbiB in the pathway without identifying UbiB as the hydroxylase.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                            PMID:27499294
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of Unorthodox Kinase Activity.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterized COQ8/Coq8 homologs lack canonical trans protein kinase activity and instead show ATPase activity and lipid CoQ-intermediate interactions that the authors infer are conserved across domains.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiB/ubiB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry A0A140FWS4 for ubiB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The record assigns the UbiB/ABC1 family, a single C-terminal transmembrane segment, inner-membrane localization, and an inferred role in ubiquinone biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiB/ubiB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for ubiB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK ubiB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Family biochemistry, sequence architecture, and conserved pathway context support an ATP-dependent UbiB accessory role, while the report explicitly records the absence of direct PP_5013 experiments.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_5013 primarily couple ATP hydrolysis to lipid-intermediate handling, pathway-complex assembly, or an unresolved small-molecule phosphotransfer reaction?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A0A140FWS4" data-a="Q: Does PP_5013 primarily couple ATP hydrolysis to li..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Delete and complement PP_5013 in P. putida, profile ubiquinone and pathway intermediates, and assay purified UbiB for membrane- or intermediate-stimulated ATP hydrolysis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="A0A140FWS4" data-a="EXPERIMENT: Delete and complement PP_5013 in P. putida, profil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A140FWS4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *ubiB* (PP_5013, UniProt A0A140FWS4) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">4 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T18:52:32.415097</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiB-deep-research-openscientist_artifacts/provenance_ubiB_hydropathy.json" class="term-link">OpenScientist ubiB hydropathy</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ubiB-deep-research-openscientist_artifacts/provenance_ubiB_hydropathy.png" class="term-link">OpenScientist ubiB hydropathy</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-ubib-pp_5013-uniprot-a0a140fws4-in-pseudomonas-putida-kt2440">Functional Annotation of <em>ubiB</em> (PP_5013, UniProt A0A140FWS4) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>UbiB (gene <em>ubiB</em>, ordered locus PP_5013, UniProt A0A140FWS4) of <em>Pseudomonas putida</em> KT2440 is a membrane-anchored, atypical protein‑kinase‑like enzyme of the UbiB/ADCK/COQ8 family that is required for the aerobic biosynthesis of ubiquinone (coenzyme Q8, CoQ8).</strong> Although it carries the structural hallmarks of a protein kinase, it does not behave as a canonical protein kinase. Instead, the family's characterized members bind ATP/ADP and hydrolyze ATP (Mg²⁺-dependent ATPase activity), bind hydrophobic CoQ-pathway intermediates, and act as ATP-dependent regulators/assembly factors that stabilize the CoQ-biosynthetic machinery. Genetic loss of <em>ubiB</em> in the well-studied <em>Escherichia coli</em> system abolishes CoQ and stalls the pathway at the intermediate octaprenylphenol, defining <em>ubiB</em> as essential for the first ring‑hydroxylation (monooxygenase) step of the pathway.</p>
+<p>The identification of the <em>P. putida</em> protein as a bona fide UbiB ortholog rests on multiple, mutually reinforcing lines of evidence. The UniProt/HAMAP annotation (rule MF_00414) assigns the protein to the UbiB family; direct sequence analysis of the 540‑amino‑acid protein confirms all diagnostic UbiB catalytic motifs (the KxGQ signature, the atypical HADMHPGN catalytic loop with an active-site aspartate, the metal-binding DCGIVG loop, and the invariant catalytic lysine), plus a single C‑terminal transmembrane anchor. A global pairwise alignment shows <strong>58.2% amino-acid identity to the experimentally characterized <em>E. coli</em> UbiB</strong> — far above the threshold for confident 1:1 orthology — and the gene sits within a conserved <em>ubiE–ubiJ–ubiB</em> operon that recapitulates the arrangement described in <em>E. coli</em>. There is <strong>no evidence of gene-symbol ambiguity</strong>; the symbol, description, domain complement, orthology, and operon context are all internally consistent.</p>
+<p>Functionally, UbiB operates at the <strong>cytoplasmic (inner) face of the plasma membrane</strong>, where its largely soluble catalytic domain can access the hydrophobic polyprenyl‑phenol intermediates that are anchored in the lipid bilayer. <em>P. putida</em> is an obligate aerobe that depends on ubiquinone‑8 as the mobile electron carrier of its aerobic respiratory chain, so UbiB activity is directly tied to cellular bioenergetics. The primary function of the gene product is therefore best described as an <strong>atypical kinase-like ATPase that licenses/organizes ubiquinone biosynthesis</strong>, rather than as a classical signal-transducing protein kinase.</p>
+<h3 id="identity-verification-not-ambiguous">Identity verification (not ambiguous)</h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>A0A140FWS4</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td><em>ubiB</em> / PP_5013</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>540 aa</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Protein kinase superfamily → UbiB/ADCK (ABC1) atypical kinase family</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>ABC1 (IPR004147); PK-like fold (IPR011009); UbiB (IPR010232); UbiB_bact (IPR045308); UbiB_kinase (IPR050154)</td>
+</tr>
+</tbody>
+</table>
+<p>The symbol <em>ubiB</em>, the "Ubiquinone biosynthesis protein UbiB / Probable protein kinase UbiB" description, and the UbiB/ABC1 domain set match the primary literature on bacterial UbiB, and quantitative orthology (58.2% identity to <em>E. coli</em> UbiB) confirms this is the true <em>ubiB</em> ortholog rather than a same-symbol gene from another context.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-ubib-pp_5013-encodes-a-ubib-family-protein-required-for-ubiquinone-coq-biosynthesis">Finding 1 — <em>ubiB</em> (PP_5013) encodes a UbiB-family protein required for ubiquinone (CoQ) biosynthesis</h3>
+<p>The gene symbol, the UniProt protein family assignment (protein kinase superfamily; ABC1/UbiB domain, InterPro IPR010232 and IPR045308), and the HAMAP rule MF_00414 all annotate A0A140FWS4 as "Probable protein kinase UbiB / Ubiquinone biosynthesis protein UbiB" in <em>P. putida</em> KT2440. The strongest experimental foundation for the family's function comes from <em>E. coli</em>, where genetic disruption of <em>ubiB</em> (originally <em>yigR</em>, the homolog of <em>Providencia stuartii aarF</em>) abolishes CoQ synthesis and causes accumulation of the pathway intermediate octaprenylphenol. This places UbiB at the first monooxygenase (C5-hydroxylation) step of CoQ biosynthesis <a href="https://pubmed.ncbi.nlm.nih.gov/10960098/">PMID: 10960098</a>: <em>"yigR, the Escherichia coli homologue of aarF, is ubiB, a gene required for the first monooxygenase step in CoQ biosynthesis. Both the P. stuartii aarF and E. coli ubiB (yigR) disruption mutant strains lack CoQ and accumulate octaprenylphenol."</em></p>
+<p>Because <em>P. putida</em> is an obligate aerobe that uses ubiquinone‑8 for aerobic respiration, the KT2440 ortholog is assigned the same essential biosynthetic role by orthology. Importantly, UbiB is not thought to be the hydroxylase enzyme itself; rather, its genetic loss blocks the pathway at the octaprenylphenol stage, indicating that UbiB is <em>required for</em> the hydroxylation step to occur — consistent with a regulatory/assembly role elucidated by later structural and biochemical studies (Findings 2–3).</p>
+<h3 id="finding-2-ubib-is-an-atypical-protein-kinase-like-enzyme-with-atpase-not-canonical-protein-kinase-activity">Finding 2 — UbiB is an atypical protein-kinase-like enzyme with ATPase (not canonical protein kinase) activity</h3>
+<p>The crystal structure of the eukaryotic UbiB homolog ADCK3/COQ8A revealed a protein-kinase-like (PKL) fold that is specifically modified to <em>inhibit</em> canonical protein kinase chemistry. An N-terminal extension occupies the region that would normally bind a protein substrate, and a unique alanine-rich loop confers unusual nucleotide selectivity for ADP over ATP <a href="https://pubmed.ncbi.nlm.nih.gov/25498144/">PMID: 25498144</a>: <em>"multiple UbiB-specific features are poised to inhibit protein kinase activity, including an N-terminal domain that occupies the typical substrate binding pocket and a unique A-rich loop that limits ATP binding by establishing an unusual selectivity for ADP."</em> Strikingly, a single Ala→Gly mutation in this loop flips coenzyme selectivity toward ATP and enables autophosphorylation, yet it abolishes CoQ biosynthesis in vivo — demonstrating that the "broken" canonical kinase activity, not gained phosphotransfer, is what the cell requires.</p>
+<p>Independent biochemical work confirms that the family instead behaves as a metal-dependent ATPase. Recombinant human ADCK3 displays Mg²⁺-dependent ATPase activity <a href="https://pubmed.ncbi.nlm.nih.gov/25540914/">PMID: 25540914</a>: <em>"our work reveals Mg(2+)-dependent ATPase activity of ADCK3, providing strong support for the theoretical prediction of this protein being a functional atypical kinase."</em> Loss-of-function studies further show the activity is functionally conserved across life <a href="https://pubmed.ncbi.nlm.nih.gov/27499294/">PMID: 27499294</a>: <em>"COQ8 has ATPase activity and interacts with lipid CoQ intermediates, functions that are likely conserved across all domains of life."</em> This cross-kingdom conservation is what licenses interpreting the bacterial UbiB — including the <em>P. putida</em> protein — as an atypical kinase/ATPase rather than a classical protein kinase.</p>
+<p>{{figure:ubiB_hydropathy.png|caption=Kyte–Doolittle hydropathy profile and motif map of P. putida UbiB (A0A140FWS4, 540 aa). The single strongly hydrophobic C-terminal segment (~518–538, peak ≈1.57) is the predicted transmembrane anchor; an additional amphipathic/aromatic N-terminal segment (~28–50) is highlighted. The central ABC1/atypical protein-kinase-like domain (~96–344) carries the diagnostic UbiB catalytic motifs, including the KxGQ signature (K73–F–G–Q76), the invariant catalytic Lys (K154), and the atypical HADMHPGN catalytic loop (287–294) bearing the active-site Asp289.}}</p>
+<h3 id="finding-3-ubib-atpase-activity-is-regulated-by-membrane-lipids-cardiolipin-and-coq-like-phenolic-intermediates-and-ubib-stabilizes-the-coq-biosynthetic-complex">Finding 3 — UbiB ATPase activity is regulated by membrane lipids (cardiolipin) and CoQ-like phenolic intermediates, and UbiB stabilizes the CoQ biosynthetic complex</h3>
+<p>The atypical ATPase activity of the family is not constitutive; it is switched on by physiologically relevant cues. COQ8 ATPase activity is activated by binding to membranes containing cardiolipin and by phenolic small molecules that resemble CoQ pathway intermediates <a href="https://pubmed.ncbi.nlm.nih.gov/29198567/">PMID: 29198567</a>: <em>"COQ8 possesses evolutionarily conserved ATPase activity that is activated by binding to membranes containing cardiolipin and by phenolic compounds that resemble CoQ pathway intermediates."</em> This coupling to membrane lipid composition and to the pathway's own substrates suggests a feed-forward regulatory logic: UbiB becomes catalytically engaged precisely where and when CoQ intermediates are present in the membrane.</p>
+<p>At the level of the pathway machinery, interspecies analyses assign the family a complex-stabilizing role <a href="https://pubmed.ncbi.nlm.nih.gov/27499294/">PMID: 27499294</a>: <em>"COQ8A and yeast Coq8p specifically stabilize a CoQ biosynthesis complex through unorthodox PKL functions."</em> The bacterial context in which UbiB operates is a soluble metabolon: in <em>E. coli</em>, the last six ubiquinone-pathway reactions are carried out by a stable, ~1‑MDa Ubi complex in which the SCP2 domain of UbiJ binds the hydrophobic UQ intermediates <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>: <em>"seven Ubi proteins form the Ubi complex, a stable metabolon that catalyzes the last six reactions of the UQ biosynthetic pathway in Escherichia coli. The SCP2 domain of UbiJ forms an extended hydrophobic cavity that binds UQ intermediates."</em> UbiB is therefore best understood as an ATP-dependent factor that helps organize and license this hydrophobic-intermediate-handling machinery.</p>
+<h3 id="finding-4-the-p-putida-ubib-sequence-contains-all-ubib-family-catalytic-motifs-plus-a-c-terminal-membrane-anchor">Finding 4 — The <em>P. putida</em> UbiB sequence contains all UbiB-family catalytic motifs plus a C-terminal membrane anchor</h3>
+<p>Direct analysis of the 540-amino-acid UniProt sequence positively identifies every element expected of a functional UbiB:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Residue(s)</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UbiB signature KxGQ motif</td>
+<td>K73–F–G–Q76</td>
+<td>Family-diagnostic signature</td>
+</tr>
+<tr>
+<td>ABC1/atypical PKL domain</td>
+<td>96–344</td>
+<td>Nucleotide-binding catalytic core</td>
+</tr>
+<tr>
+<td>Gly-rich / ATP-binding region</td>
+<td>132–140</td>
+<td>Nucleotide phosphate coordination</td>
+</tr>
+<tr>
+<td>Invariant catalytic lysine</td>
+<td>K154</td>
+<td>Canonical kinase-fold VAIK lysine</td>
+</tr>
+<tr>
+<td>Atypical catalytic loop HADMHPGN</td>
+<td>287–294 (Asp289)</td>
+<td>HRD-analog; active-site proton acceptor</td>
+</tr>
+<tr>
+<td>C-terminal transmembrane helix</td>
+<td>518–538 (Kyte–Doolittle peak ≈1.57)</td>
+<td>Membrane anchor</td>
+</tr>
+<tr>
+<td>N-terminal amphipathic segment</td>
+<td>~28–50</td>
+<td>Additional membrane-interacting region</td>
+</tr>
+</tbody>
+</table>
+<p>No internal TM segment other than the C-terminal helix exceeds the hydrophobicity threshold, indicating a <strong>membrane-anchored protein with a largely cytoplasm-facing catalytic domain</strong> — the topology required to reach polyprenyl-phenol intermediates presented at the inner membrane. The presence of the full catalytic apparatus (KxGQ, catalytic Lys, HADMHPGN loop, metal-binding loop) demonstrates that this is not a degenerate pseudo-enzyme but a protein with an intact atypical active site.</p>
+<h3 id="finding-5-pp_5013-is-a-clear-ortholog-of-experimentally-characterized-e-coli-ubib-58-identity">Finding 5 — PP_5013 is a clear ortholog of experimentally characterized <em>E. coli</em> UbiB (58% identity)</h3>
+<p>A Needleman–Wunsch global alignment (BLOSUM62) of the 540-aa <em>P. putida</em> UbiB against <em>E. coli</em> UbiB (P0A6A0, 546 aa) yields <strong>303/521 = 58.2% amino-acid identity</strong> over the aligned region, with conserved overall length and shared domain architecture (N-terminal membrane-interacting region → central ABC1/atypical kinase domain → C-terminal TM helix). For comparison, identity to the human paralog COQ8A/ADCK3 (Q8NI60) is 113/440 = 25.7%, placing all three proteins within the same UbiB/ADCK family but confirming that the <em>E. coli</em> protein is by far the closest experimentally characterized relative.</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>Identity</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. putida</em> UbiB vs <em>E. coli</em> UbiB (P0A6A0)</td>
+<td>58.2% (303/521)</td>
+<td>Confident 1:1 ortholog; functional transfer justified</td>
+</tr>
+<tr>
+<td><em>P. putida</em> UbiB vs human COQ8A/ADCK3 (Q8NI60)</td>
+<td>25.7% (113/440)</td>
+<td>Same family, distant paralog</td>
+</tr>
+</tbody>
+</table>
+<p>An identity of ~58% is well above the ~30–40% threshold generally used for confident functional transfer between prokaryotic orthologs, and it is reinforced by identical operonic and functional context (Finding 6). This is the single strongest justification for annotating the <em>P. putida</em> protein with the experimentally established <em>E. coli</em> UbiB function.</p>
+<h3 id="finding-6-pp_5013-lies-in-a-conserved-ubieubijubib-ubiquinone-biosynthesis-operon">Finding 6 — PP_5013 lies in a conserved <em>ubiE–ubiJ–ubiB</em> ubiquinone-biosynthesis operon</h3>
+<p>Genome annotation places PP_5013 (<em>ubiB</em>, KEGG orthology K03688) immediately downstream of, and translationally coupled to, two other ubiquinone-biosynthesis genes on the same strand:</p>
+<div class="codehilite"><pre><span></span><code>   PP_5011 (ubiE)          PP_5012 (ubiJ)          PP_5013 (ubiB)
+   K03183                  K03690                  K03688
+   C-methyltransferase     accessory factor        atypical kinase
+   5,711,162–5,711,932     5,711,932–5,712,555     5,712,552–5,714,174
+└── overlap ~0 bp ──┘        └── overlap ~3 bp ──┘
+   ────────────────────────────────────────────────────────────────►
+   (flanked by PP_5014/PP_5015 = hisI/hisE, unrelated → operon boundary)
+</code></pre></div>
+
+<p>Adjacent gene pairs overlap by only ~0–4 bp, the classic signature of translational coupling within a single co-transcribed operon. This exactly recapitulates the <em>E. coli</em> <em>ubiE–yigP(ubiJ)–ubiB</em> operon <a href="https://pubmed.ncbi.nlm.nih.gov/10960098/">PMID: 10960098</a>: <em>"it is the 5' gene in an operon containing ubiE, yigP, and ubiB."</em> The co-operonic UbiJ (PP_5012) is the metabolon scaffold that binds hydrophobic UQ intermediates <a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">PMID: 30686758</a>: <em>"The SCP2 domain of UbiJ forms an extended hydrophobic cavity that binds UQ intermediates."</em> The conservation of gene neighborhood, gene order, and translational coupling provides strong contextual (genomic) evidence that the <em>P. putida</em> operon performs the same ubiquinone-biosynthetic function as its <em>E. coli</em> counterpart. KEGG's legacy product name for PP_5013 ("2-octaprenylphenol hydroxylase") reflects the historical, likely imprecise, annotation of UbiB as the hydroxylase; the modern view (Findings 2–3) is that UbiB is an atypical kinase/ATPase required for that step rather than the hydroxylase enzyme itself.</p>
+<h3 id="finding-7-ubib-catalyticregulatory-motifs-are-identically-conserved-between-the-p-putida-and-e-coli-orthologs">Finding 7 — UbiB catalytic/regulatory motifs are identically conserved between the <em>P. putida</em> and <em>E. coli</em> orthologs</h3>
+<p>Beyond overall identity, the specific functionally critical residues align exactly between the two orthologs:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th><em>P. putida</em> position</th>
+<th><em>E. coli</em> position</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KxGQ signature (KFGQ)</td>
+<td>73</td>
+<td>70</td>
+<td>Family signature</td>
+</tr>
+<tr>
+<td>Atypical catalytic loop (HADMHPGN)</td>
+<td>287 (Asp)</td>
+<td>286 (Asp)</td>
+<td>Active-site aspartate</td>
+</tr>
+<tr>
+<td>Metal-binding loop (DCGIVG)</td>
+<td>311</td>
+<td>310</td>
+<td>Mg²⁺ coordination</td>
+</tr>
+</tbody>
+</table>
+<p>The exact conservation of these residues, on top of 58.2% global identity, confirms that the active site is fully preserved — the <em>P. putida</em> enzyme retains the machinery for ATP/ADP binding, metal coordination, and catalysis that defines the functional UbiB family.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Putting the findings together yields a coherent picture of UbiB (PP_5013) as an atypical, membrane-tethered kinase-fold ATPase that licenses ubiquinone biosynthesis in <em>P. putida</em>:</p>
+<div class="codehilite"><pre><span></span><code>CYTOPLASM
+                   ATP  ADP + Pi
+                     \   /
+                  ┌───────────┐
+   octaprenyl-  ──►  UbiB atypical│  UbiB      │  ── stabilizes / licenses ──►
+   phenol            kinase/ATPase│ (PP_5013)  │        Ubi metabolon
+   (intermediate)    (K154, D289) └─────┬─────┘        (UbiE, UbiJ, UbiG,
+          ▲             │ C-term TM      UbiH, UbiF ...)
+activated by:     │             │ anchor              │
+<span class="k">-</span> cardiolipin ────┘   ══════════╪══════════════════════╪═══════════
+<span class="k">-</span> CoQ-like phenols       INNER MEMBRANE (polyprenyl-phenol pool)
+                         │                      │
+                         ▼                      ▼
+              ring hydroxylation &amp; tailoring → Ubiquinone-8 (CoQ8)
+                                                │
+                                                ▼
+                        Aerobic respiratory chain (electron transport)
+</code></pre></div>
+
+<p><strong>Primary function.</strong> UbiB is an atypical protein-kinase-like enzyme whose active site is preserved for nucleotide (ATP/ADP) binding and Mg²⁺-dependent ATP hydrolysis, not for phosphorylating protein substrates. Its role in the ubiquinone pathway is to act as an ATP-dependent regulator/assembly factor: it is genetically required for the first ring-hydroxylation step (loss of UbiB stalls the pathway at octaprenylphenol), and biochemically it stabilizes the multi-enzyme CoQ-biosynthetic complex and engages the hydrophobic pathway intermediates. This "unorthodox kinase" function — rather than any classical phosphotransfer — is what the cell needs, as shown by the mutant that gains autophosphorylation but loses CoQ synthesis.</p>
+<p><strong>Substrate specificity / catalyzed reaction.</strong> The chemically defined activity of the family is ATP hydrolysis (ATP → ADP + Pᵢ), gated by binding to cardiolipin-containing membranes and to CoQ-like phenolic small molecules. UbiB also physically interacts with lipid CoQ intermediates. It is therefore not a substrate-specific metabolic transferase in the classical sense; its "substrate" is ATP (energy input) coupled to recognition of the membrane-embedded polyprenyl-phenol intermediate pool. The A-rich loop biases nucleotide selectivity toward ADP.</p>
+<p><strong>Localization.</strong> The catalytic ABC1/kinase domain faces the cytoplasm, while a single C-terminal transmembrane helix anchors the protein in the inner (plasma) membrane, positioning the active site at the cytoplasmic face where it can access hydrophobic ubiquinone intermediates lodged in the bilayer. UbiB is <em>not</em> one of the seven soluble Ubi-metabolon subunits; as a membrane protein it likely acts upstream/adjacent to the metabolon, consistent with a role in accessing and channeling membrane-embedded early intermediates.</p>
+<p><strong>Pathway.</strong> UbiB functions in aerobic ubiquinone (coenzyme Q8) biosynthesis. In <em>P. putida</em> — an obligate aerobe — CoQ8 is the mobile lipid electron carrier of the respiratory chain, so UbiB activity is directly upstream of cellular bioenergetics. Its co-operonic partners UbiE (a C-methyltransferase) and UbiJ (the SCP2-domain scaffold that binds hydrophobic intermediates) are components of the same biosynthetic machine, reinforcing that UbiB's precise role is within CoQ biosynthesis rather than a broad pleiotropic one.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10960098/">10960098</a></td>
+<td>Identification of <em>E. coli ubiB</em></td>
+<td>Genetic loss-of-function: <em>ubiB</em> disruption abolishes CoQ and accumulates octaprenylphenol; defines the pathway step and the <em>ubiE–yigP–ubiB</em> operon (Findings 1, 6).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25498144/">25498144</a></td>
+<td>ADCK3 atypical PKL fold</td>
+<td>Crystal structure showing UbiB-specific features that inhibit canonical kinase activity and impose ADP selectivity; Ala→Gly gain of autophosphorylation abolishes CoQ (Finding 2).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25540914/">25540914</a></td>
+<td>Human ADCK3 characterization</td>
+<td>Direct biochemical demonstration of Mg²⁺-dependent ATPase activity (Finding 2).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27499294/">27499294</a></td>
+<td>Cerebellar ataxia / COQ8</td>
+<td>Shows COQ8 has ATPase activity, interacts with lipid CoQ intermediates, and stabilizes the CoQ complex; conservation across all domains of life (Findings 2, 3).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29198567/">29198567</a></td>
+<td>Lipid/small-molecule modulation of COQ8</td>
+<td>Identifies physiological activators of the ATPase: cardiolipin membranes and CoQ-intermediate-like phenolics (Finding 3).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30686758/">30686758</a></td>
+<td>Soluble Ubi metabolon</td>
+<td>Describes the ~1-MDa bacterial Ubi complex and UbiJ's SCP2 hydrophobic cavity — the pathway context of UbiB (Findings 3, 6).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting/contextual literature (16 papers total).</strong> Additional reviewed work documents the COQ metabolon and substrate channeling in CoQ biosynthesis (PMIDs 42373663, 40501699, 38425362, 36306796), the accessory factors UbiJ–UbiK and Ubi metabolon structure (PMIDs 36142227, 38710096), and the function of ubiquinone-8 in bacterial respiration (PMID 8639563). These corroborate the pathway-level interpretation but are not the primary basis for the UbiB-specific claims, which rest on the six papers tabulated above.</p>
+<p><strong>Consistency of the evidence.</strong> All experimental characterizations of the UbiB/ADCK/COQ8 family converge on the same conclusion — an atypical kinase-fold ATPase, gated by lipids and CoQ intermediates, essential for CoQ synthesis. No reviewed study contradicts this model. The chief inferential leap is from characterized homologs (<em>E. coli</em> UbiB, yeast Coq8p, human ADCK3/COQ8A) to the <em>P. putida</em> protein, which is bridged by 58.2% identity to <em>E. coli</em> UbiB, identical catalytic residues, and conserved operon context.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental data on the <em>P. putida</em> protein itself.</strong> The functional annotation is entirely by orthology and sequence/genomic inference. There is no published enzymatic assay, structure, knockout phenotype, or CoQ-profiling study specific to PP_5013/A0A140FWS4. The confidence rests on the very high identity to <em>E. coli</em> UbiB and conserved motifs/operon, which is strong but not equivalent to direct evidence.</p>
+</li>
+<li>
+<p><strong>The precise molecular "output" of UbiB remains debated even in model organisms.</strong> The family clearly has ATPase activity and stabilizes the CoQ complex, but exactly how ATP hydrolysis is mechanistically coupled to substrate presentation, complex assembly, or intermediate transfer is not fully resolved. Whether UbiB acts catalytically on a small-molecule substrate or purely as an ATP-driven conformational/assembly switch is not definitively settled.</p>
+</li>
+<li>
+<p><strong>Legacy vs. modern annotation conflict.</strong> KEGG lists PP_5013 as "2-octaprenylphenol hydroxylase," implying UbiB is the hydroxylase enzyme. Current structural/biochemical evidence indicates UbiB is <em>required for</em> but is probably <em>not itself</em> the hydroxylase (the ring hydroxylations are attributed to flavin monooxygenases such as UbiI/UbiH/UbiF in bacteria). This discrepancy should be flagged in any downstream use of the annotation.</p>
+</li>
+<li>
+<p><strong>Membrane topology is predicted, not measured.</strong> The single C-terminal TM anchor and cytoplasm-facing catalytic domain are inferred from hydropathy analysis and homology; experimental topology mapping in <em>P. putida</em> has not been done.</p>
+</li>
+<li>
+<p><strong>Regulatory activators inferred from eukaryotic/other-bacterial systems.</strong> Cardiolipin and phenolic activation were demonstrated for COQ8/ADCK3; direct confirmation that <em>P. putida</em> UbiB is similarly regulated is lacking, although the conservation of the metal-binding and catalytic loops makes it plausible.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Targeted gene deletion / complementation in <em>P. putida</em> KT2440.</strong> Construct a clean PP_5013 knockout and profile ubiquinone-8 and pathway intermediates (LC-MS) to confirm the predicted CoQ8 deficiency and octaprenylphenol accumulation; complement with wild-type and with the Ala→Gly catalytic-switch mutant to test whether the atypical (non-autophosphorylating) activity is required, as in ADCK3.</p>
+</li>
+<li>
+<p><strong>Recombinant enzymology.</strong> Express and purify the soluble catalytic domain (residues ~50–500, excluding the C-terminal TM anchor) and measure Mg²⁺-dependent ATPase activity, ADP-vs-ATP selectivity, and activation by cardiolipin liposomes and by synthetic octaprenylphenol/CoQ-like phenolics — directly testing whether the <em>P. putida</em> protein reproduces the family's regulated ATPase behavior.</p>
+</li>
+<li>
+<p><strong>Complex/metabolon reconstitution.</strong> Co-express UbiB with the operonic partners UbiE (PP_5011) and UbiJ (PP_5012), plus other Ubi enzymes, and test whether UbiB stabilizes an assembled Ubi metabolon (size-exclusion/native-MS, thermal stability), mirroring the <em>E. coli</em> soluble metabolon.</p>
+</li>
+<li>
+<p><strong>Membrane topology mapping.</strong> Use reporter fusions (e.g., PhoA/GFP) or protease-protection assays to experimentally verify the single-pass topology with a cytoplasm-facing catalytic domain.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the structure (cryo-EM/X-ray or high-quality validated AlphaFold model) of <em>P. putida</em> UbiB to confirm the atypical PKL fold, the N-terminal substrate-pocket occlusion, and the A-rich loop that imposes ADP selectivity.</p>
+</li>
+<li>
+<p><strong>Respiratory phenotyping.</strong> Because <em>P. putida</em> is an obligate aerobe, quantify growth/respiration defects of the knockout under aerobic conditions to link UbiB function directly to bioenergetics, and test for suppression by exogenous CoQ analogs.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>UbiB (PP_5013, A0A140FWS4) is confidently annotated — by 58% identity to experimentally validated <em>E. coli</em> UbiB, fully conserved catalytic motifs, and a conserved <em>ubiE–ubiJ–ubiB</em> operon — as a <strong>membrane-anchored, atypical protein-kinase-like ATPase of the UbiB/ADCK/COQ8 family that is required for aerobic ubiquinone (coenzyme Q8) biosynthesis</strong> in <em>Pseudomonas putida</em> KT2440. It functions at the cytoplasmic face of the inner membrane, uses ATP/ADP and Mg²⁺-dependent ATPase activity (gated by cardiolipin and CoQ-like phenolic intermediates) rather than classical protein phosphorylation, stabilizes the CoQ-biosynthetic machinery, and is genetically required for the pathway to progress past the octaprenylphenol ring-hydroxylation step. The annotation is well-supported for the family but awaits direct experimental confirmation in <em>P. putida</em> itself.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ubiB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ubiB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="ubiB-deep-research-openscientist_artifacts/provenance_ubiB_hydropathy.json">OpenScientist ubiB hydropathy</a><br />
+<img alt="OpenScientist ubiB hydropathy" src="ubiB-deep-research-openscientist_artifacts/provenance_ubiB_hydropathy.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10960098</li>
+<li>PMID:25498144</li>
+<li>PMID:25540914</li>
+<li>PMID:27499294</li>
+<li>PMID:29198567</li>
+<li>PMID:30686758</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A140FWS4
+gene_symbol: ubiB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ubiB encodes an inner-membrane-anchored member of the UbiB/ABC1 atypical
+  protein-kinase-like family that is required for aerobic ubiquinone
+  biosynthesis. Characterized UbiB-family homologs lack canonical protein
+  kinase activity in trans and instead hydrolyze ATP and interact with lipid
+  ubiquinone intermediates. For PP_5013, this ATP-dependent accessory role is
+  inferred from conserved family architecture, orthology, and pathway context;
+  the Pseudomonas putida protein itself has not been assayed.
+existing_annotations:
+- term:
+    id: GO:0004672
+    label: protein kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The UbiB protein-kinase-like fold does not establish canonical protein
+      kinase activity. Characterized COQ8/Coq8 homologs lack trans protein
+      kinase activity and instead show ATP hydrolysis activity.
+    action: MODIFY
+    reason: &gt;-
+      ATP hydrolysis is the experimentally supported family activity, whereas
+      PP_5013 has no direct enzymatic characterization. The replacement is
+      therefore a strong family-level inference rather than a target-specific
+      assay result.
+    proposed_replacement_terms:
+    - id: GO:0016887
+      label: ATP hydrolysis activity
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: &gt;-
+        Although COQ8 was predicted to be a protein kinase, we demonstrate that
+        it lacks canonical protein kinase activity in trans.
+    - reference_id: PMID:27499294
+      supporting_text: &gt;-
+        Instead, COQ8 has ATPase activity and interacts with lipid CoQ
+        intermediates, functions that are likely conserved across all domains
+        of life.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Plasma-membrane localization is consistent with the predicted
+      single-pass inner-membrane topology of PP_5013.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt/HAMAP places UbiB in the bacterial inner membrane and predicts a
+      C-terminal transmembrane helix; this topology has not been measured in P.
+      putida.
+    supported_by:
+    - reference_id: file:PSEPK/ubiB/ubiB-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/ubiB/ubiB-uniprot.txt
+      supporting_text: Single-pass membrane protein
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ubiquinone biosynthesis is the conserved core process of bacterial UbiB
+      proteins.
+    action: ACCEPT
+    reason: &gt;-
+      E. coli ubiB disruption abolishes CoQ accumulation, and PP_5013 is a
+      conserved UbiB-family ortholog in the P. putida ubiquinone pathway. This
+      supports pathway requirement, not assignment of the blocked hydroxylase
+      reaction to UbiB itself.
+    supported_by:
+    - reference_id: PMID:10960098
+      supporting_text: &gt;-
+        Both the P. stuartii aarF and E. coli ubiB (yigR) disruption mutant
+        strains lack CoQ and accumulate octaprenylphenol.
+    - reference_id: file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+      supporting_text: &gt;-
+        There is no published enzymatic assay, structure, knockout phenotype,
+        or CoQ-profiling study specific to PP_5013/A0A140FWS4.
+- term:
+    id: GO:0010795
+    label: regulation of ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A specific regulatory role, especially regulation of UbiI activity, is
+      more precise than the available evidence supports.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      UbiB is a required ATP-dependent pathway accessory factor, but neither a
+      direct UbiI target nor the coupling between nucleotide turnover and
+      pathway assembly has been established for PP_5013. GO:0006744 captures
+      the defensible pathway role without asserting a regulatory mechanism.
+    supported_by:
+    - reference_id: file:PSEPK/ubiB/ubiB-uniprot.txt
+      supporting_text: Is probably a protein kinase regulator of UbiI activity
+    - reference_id: file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The precise molecular &#34;output&#34; of UbiB remains debated even in model
+        organisms.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10960098
+  title: Identification of Escherichia coli ubiB, a gene required for the first monooxygenase
+    step in ubiquinone biosynthesis.
+  findings:
+  - statement: &gt;-
+      E. coli ubiB disruption eliminates CoQ and causes octaprenylphenol
+      accumulation, establishing a conserved requirement for UbiB in the
+      pathway without identifying UbiB as the hydroxylase.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-cached abstract verified; evidence is from E. coli and is applied
+      to PP_5013 by orthology.
+- id: PMID:27499294
+  title: Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of Unorthodox Kinase
+    Activity.
+  findings:
+  - statement: &gt;-
+      Characterized COQ8/Coq8 homologs lack canonical trans protein kinase
+      activity and instead show ATPase activity and lipid CoQ-intermediate
+      interactions that the authors infer are conserved across domains.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text verified; the biochemical assays are on mammalian and yeast
+      homologs, so the PP_5013 ATPase assignment remains family-level transfer.
+- id: file:PSEPK/ubiB/ubiB-uniprot.txt
+  title: UniProt entry A0A140FWS4 for ubiB
+  findings:
+  - statement: &gt;-
+      The record assigns the UbiB/ABC1 family, a single C-terminal
+      transmembrane segment, inner-membrane localization, and an inferred role
+      in ubiquinone biosynthesis.
+- id: file:PSEPK/ubiB/ubiB-goa.tsv
+  title: QuickGO GOA annotations for ubiB
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed here.
+- id: file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+  title: OpenScientist functional review of PSEPK ubiB
+  findings:
+  - statement: &gt;-
+      Family biochemistry, sequence architecture, and conserved pathway context
+      support an ATP-dependent UbiB accessory role, while the report explicitly
+      records the absence of direct PP_5013 experiments.
+core_functions:
+- description: &gt;-
+    Inner-membrane-anchored UbiB/ABC1 atypical kinase-like ATPase that supports
+    aerobic ubiquinone biosynthesis. ATP hydrolysis is inferred from
+    characterized homologs; its coupling to lipid-intermediate handling or
+    pathway assembly remains unresolved for PP_5013.
+  molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:27499294
+    supporting_text: Instead, COQ8 has ATPase activity
+  - reference_id: PMID:10960098
+    supporting_text: &gt;-
+      Both the P. stuartii aarF and E. coli ubiB (yigR) disruption mutant
+      strains lack CoQ and accumulate octaprenylphenol.
+  - reference_id: file:PSEPK/ubiB/ubiB-deep-research-openscientist.md
+    supporting_text: &gt;-
+      There is no published enzymatic assay, structure, knockout phenotype, or
+      CoQ-profiling study specific to PP_5013/A0A140FWS4.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does PP_5013 primarily couple ATP hydrolysis to lipid-intermediate handling,
+    pathway-complex assembly, or an unresolved small-molecule phosphotransfer
+    reaction?
+suggested_experiments:
+- description: &gt;-
+    Delete and complement PP_5013 in P. putida, profile ubiquinone and pathway
+    intermediates, and assay purified UbiB for membrane- or
+    intermediate-stimulated ATP hydrolysis.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

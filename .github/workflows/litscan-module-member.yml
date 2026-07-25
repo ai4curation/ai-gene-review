@@ -1,0 +1,203 @@
+name: LitScan Module-Member Scan
+
+on:
+  schedule:
+    # Weekly Saturday scan. Dedup-by-PMID makes a wide re-scan window safe.
+    - cron: "0 12 * * 6"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days back to scan when no explicit date range is supplied"
+        required: false
+        default: "30"
+        type: string
+      date_from:
+        description: "Optional explicit FIRST_PDATE start date, YYYY-MM-DD"
+        required: false
+        default: ""
+        type: string
+      date_to:
+        description: "Optional explicit FIRST_PDATE end date, YYYY-MM-DD"
+        required: false
+        default: ""
+        type: string
+      max_records:
+        description: "Maximum Europe PMC records fetched per module"
+        required: false
+        default: "40"
+        type: string
+      max_issues:
+        description: "Maximum GitHub issues to create"
+        required: false
+        default: "8"
+        type: string
+      model:
+        description: "Claude model used to triage the packet and create issues"
+        required: false
+        default: claude-haiku-4-5-20251001
+        type: choice
+        options:
+          - claude-haiku-4-5-20251001
+          - claude-sonnet-4-6
+          - claude-opus-4-7
+      create_issues:
+        description: "Create GitHub handoff issues after generating the packet"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: litscan-module-member
+  cancel-in-progress: true
+
+jobs:
+  litscan-module-member:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    env:
+      SCAN_DAYS: ${{ inputs.days || '30' }}
+      DATE_FROM: ${{ inputs.date_from || '' }}
+      DATE_TO: ${{ inputs.date_to || '' }}
+      MAX_RECORDS: ${{ inputs.max_records || '40' }}
+      MAX_ISSUES: ${{ inputs.max_issues || '8' }}
+      ISSUE_HANDOFF_MODEL: ${{ inputs.model || 'claude-haiku-4-5-20251001' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install python tools
+        run: uv sync
+
+      - name: Generate deterministic module-member packet
+        run: |
+          set -euo pipefail
+          if [[ -n "$DATE_FROM" || -n "$DATE_TO" ]]; then
+            if [[ -z "$DATE_FROM" || -z "$DATE_TO" ]]; then
+              echo "date_from and date_to must be provided together" >&2
+              exit 2
+            fi
+            DATE_ARGS=(--date-from "$DATE_FROM" --date-to "$DATE_TO")
+          else
+            DATE_ARGS=(--days "$SCAN_DAYS")
+          fi
+
+          uv run ai-gene-review litscan module-member \
+            "${DATE_ARGS[@]}" \
+            --max-records "$MAX_RECORDS"
+
+      - name: Upload module-member packet
+        uses: actions/upload-artifact@v7
+        with:
+          name: litscan-module-member-packet
+          path: reports/litscan/module-member/
+
+      - name: Ensure handoff labels exist
+        if: ${{ github.event_name == 'schedule' || inputs.create_issues }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR }}
+        run: |
+          gh label create curation --color 0E8A16 \
+            --description "Curation task" --force
+          gh label create litscan --color FBCA04 \
+            --description "Literature-scan handoff lead" --force
+          gh label create module-member --color C5DEF5 \
+            --description "Candidate new member of a curated module" --force
+
+      - name: Create module-member handoff issues
+        if: ${{ github.event_name == 'schedule' || inputs.create_issues }}
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR }}
+          GITHUB_TOKEN: ${{ secrets.PAT_FOR_PR }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.PAT_FOR_PR }}
+          show_full_output: true
+          claude_args: |
+            --model ${{ env.ISSUE_HANDOFF_MODEL }}
+            --allowedTools "Bash(gh label list:*),Bash(gh issue list:*),Bash(gh issue create:*),Bash(cat:*),Bash(ls:*),Bash(sed:*),Bash(rg:*),Bash(head:*)"
+          prompt: |
+            REPO: ${{ github.repository }}
+            MAX ISSUES: ${{ env.MAX_ISSUES }}
+
+            You are running the litscan module-member handoff for ai-gene-review.
+
+            Read `CLAUDE.md` and the generated packet:
+            `cat reports/litscan/module-member/*-module-member.md`
+            You may inspect the `modules/*.yaml` files the packet names.
+
+            Your ONLY allowed write action is creating GitHub issues. Do not edit
+            files. Do not create pull requests.
+
+            ## What this packet is
+
+            For each curated biological MODULE (a pathway or complex), a deterministic
+            scan listed recent Europe PMC papers matching the module's distinctive
+            terms. Each record is flagged `[NEW]` (not yet cited in the module's
+            evidence) or `[cited]`, with a membership score and any extracted
+            membership-signal sentences. The deterministic matches are HIGH-RECALL
+            LEADS, not proof — most are false positives. Your job is to triage and
+            create an issue ONLY for genuine leads.
+
+            ## Dedup — do this for every candidate first
+
+            `gh issue list --repo "$REPO" --search "PMID:<ID> in:body is:open" --json number,title`
+
+            Skip any candidate that already has an open issue mentioning its PMID.
+
+            ## Create an issue only when ALL of these hold
+
+            - The paper plausibly identifies/characterizes a NEW component, subunit,
+              member, assembly factor, or direct interaction partner of THAT module's
+              complex/pathway, OR reports a structure/molecular mechanism that reveals
+              how a member of the module works, OR assigns a new molecular function to
+              a module member.
+            - The paper is `[NEW]` (not already cited), or if `[cited]` it clearly adds
+              a member/mechanism the module does not yet capture.
+            - The module association is central, not an incidental term match.
+
+            ## Skip (do NOT create an issue) when the paper is
+
+            - a clinical genotype-phenotype, variant, cohort, or case report
+            - a GWAS / Mendelian-randomization "we identified N genes" study
+            - an expression / biomarker / prognosis study
+            - drug formulation, pharmacology, or off-topic where the module term
+              appears only in passing (a metabolite mentioned incidentally, etc.)
+
+            Create at most MAX ISSUES total across all modules, choosing the strongest
+            leads. If none are strong enough, create no issues and finish quietly.
+
+            ## Issue format (one issue per kept lead)
+
+            - labels: `curation,litscan,module-member`
+            - title: `[litscan:module-member] <Module title>: <short paper title>`
+            - body must include, verbatim from the packet: PMID, title, journal/date,
+              DOI (if present), PubMed/Europe PMC link, and the abstract
+            - body must include a `Membership Signal` section with the relevant
+              signal sentence(s) from the packet
+            - body must include a `Handoff Objective` section naming the module YAML
+              file (e.g. `modules/bbsome.yaml`), the specific candidate member or
+              mechanism, and the question the next curator/agent should answer:
+              "Is this a genuine new member/component/mechanism of <module>, and if so
+              what descriptor should be added?"
+            - do NOT put your operating rules (e.g. "this is a lead", "verify
+              snippets") into the issue body
+
+      - name: Write step summary
+        if: always()
+        run: |
+          echo "## LitScan Module-Member Run" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Date window: ${DATE_FROM:-last $SCAN_DAYS days} ${DATE_TO}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Packet: reports/litscan/module-member/ (uploaded as artifact)" >> "$GITHUB_STEP_SUMMARY"

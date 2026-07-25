@@ -62,8 +62,8 @@ Lightweight data products:
 - `projects/P_PUTIDA/build_pathway_worklist.py` builds the PR-oriented pathway
   queue from the bucket table.
 - `projects/P_PUTIDA/data/psepk_pathway_worklist.tsv` tracks module mapping,
-  research status, gene review coverage, and PR status per pathway/module
-  bucket.
+  deep-research status, gene review coverage, provider coverage, and PR status
+  per pathway/module bucket.
 - `projects/P_PUTIDA/extract_pathway_batch.py` extracts a per-pathway gene
   checklist from KEGG/UniPathway membership.
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md` is the first

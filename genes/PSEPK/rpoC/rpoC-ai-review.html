@@ -1,0 +1,2809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QP1" target="_blank" class="term-link">
+                        Q88QP1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QP1" data-a="DESCRIPTION: rpoC (PP_0448) encodes the beta-prime subunit of t..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rpoC (PP_0448) encodes the beta-prime subunit of the bacterial DNA-directed RNA polymerase core enzyme. RpoC pairs with the beta subunit RpoB to form the catalytic cleft of the alpha2-beta-beta-prime-omega RNAP core, coordinating divalent metal ions and nucleic-acid contacts needed for DNA-templated RNA synthesis. Its core role is contribution to complex-level RNA polymerase activity, with magnesium and zinc binding as important subunit-specific features.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium ion binding is appropriate for the beta-prime subunit active center architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records Mg(2+) as a cofactor for the RpoC subunit, consistent with the conserved RNAP catalytic mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA binding is plausible for the beta-prime subunit within the RNAP cleft, but it is a broad supporting activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as non-core context. Complex-level DNA-directed RNA polymerase activity and metal-binding features better capture the main role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    GO:0003899
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0003899" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoC is an essential beta-prime subunit of the bacterial RNAP active-center cleft, but RNA synthesis is performed by the assembled core enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Interpret as contribution to complex-level polymerase activity rather than independent catalytic activity by isolated RpoC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0005829" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization is appropriate for a soluble bacterial RNA polymerase core subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RpoC functions in the bacterial cytosol/nucleoid as part of the transcription machinery.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0006351" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoC directly participates in DNA-templated transcription as an essential beta-prime subunit of bacterial RNA polymerase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process annotation for a core RNAP subunit.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0008270" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding is appropriate for the beta-prime subunit, which UniProt annotates as binding two Zn(2+) ions per subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as a subunit-specific cofactor/structural feature of RpoC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 2 Zn(2+) ions per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034062" target="_blank" class="term-link">
+                                    GO:0034062
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; RNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0034062" data-r="GO_REF:0000116" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The Rhea-derived polymerase activity reflects RNA-chain extension by the assembled RNAP core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RpoC contributes to the complex-level reaction but should not be interpreted as a standalone polymerase enzyme.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    DNA-directed RNA polymerase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                                    GO:0000428
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QP1" data-a="GO:0000428" data-r="file:PSEPK/rpoC/rpoC-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoC is part of the bacterial DNA-directed RNA polymerase core complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records Q88QP1 as the beta-prime subunit in the alpha2-beta- beta-prime-omega RNAP catalytic core, so explicit complex membership is useful for interpreting the complex-level polymerase MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The RNAP catalytic core consists of 2 alpha, 1 beta, 1 beta&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Beta-prime subunit of the bacterial RNA polymerase catalytic cleft, coordinating metal-binding determinants and contributing to complex-level DNA-directed RNA polymerase activity during transcription.</h3>
+                <span class="vote-buttons" data-g="Q88QP1" data-a="FUNCTION: Beta-prime subunit of the bacterial RNA polymerase..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                            magnesium ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                            DNA-directed RNA polymerase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The RNAP catalytic core consists of 2 alpha, 1 beta, 1 beta&#39;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-binding structural contribution of the beta-prime subunit to the bacterial RNA polymerase core enzyme.</h3>
+                <span class="vote-buttons" data-g="Q88QP1" data-a="FUNCTION: Zinc-binding structural contribution of the beta-p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                            DNA-directed RNA polymerase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 2 Zn(2+) ions per subunit.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Source for magnesium and zinc binding annotations; consistent with UniProt/HAMAP cofactor comments.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Rhea-derived polymerase reaction annotation reviewed as complex-level activity for an RNAP core subunit.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA cytosol annotation is consistent with bacterial RNAP biology.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA source for broad DNA binding, polymerase activity, and transcription process terms; reviewed against UniProt core-enzyme context.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpoC/rpoC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK rpoC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DNA-dependent RNA polymerase catalyzes the transcription of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Binds 1 Mg(2+) ion per subunit."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Binds 2 Zn(2+) ions per subunit."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The RNAP catalytic core consists of 2 alpha, 1 beta, 1 beta&#39;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should UniProt-derived DNA-directed RNA polymerase activity on bacterial core subunits be represented with contributes_to semantics in downstream GO curation, or retained as direct enables by current UniProt convention?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QP1" data-a="Q: Should UniProt-derived DNA-directed RNA polymerase..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QP1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">rpoC (β′ subunit of RNA polymerase) in *Pseudomonas putida* KT2440 — Functional Annotation Report</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">33 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-16T10:27:57.439253</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rpoC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="rpoC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="rpoc-subunit-of-rna-polymerase-in-pseudomonas-putida-kt2440-functional-annotation-report">rpoC (β′ subunit of RNA polymerase) in <em>Pseudomonas putida</em> KT2440 — Functional Annotation Report</h1>
+<p><strong>Gene:</strong> rpoC | <strong>Ordered locus:</strong> PP_0448 | <strong>UniProt:</strong> Q88QP1<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440), abbreviated PSEPK<br />
+<strong>Enzyme:</strong> DNA-directed RNA polymerase subunit β′ (RNAP β′) | <strong>EC 2.7.7.6</strong></p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>rpoC encodes the β′ subunit, the largest (1,399 aa; ~154.8 kDa) and catalytic subunit of the multisubunit DNA-dependent RNA polymerase (RNAP) of <em>Pseudomonas putida</em> KT2440.</strong> Its primary function is template-directed synthesis of RNA (EC 2.7.7.6): using a DNA template and the four ribonucleoside triphosphates (NTPs) as substrates, it catalyzes the reaction RNA(n) + NTP → RNA(n+1) + diphosphate (Rhea:21248). β′ carries the catalytic center of the enzyme: it chelates the essential catalytic Mg²⁺ ion through an absolutely conserved aspartate-triad motif (<strong>NADFDGD</strong>), which in the Q88QP1 sequence lies at residues 458–464, placing the metal-coordinating aspartates at positions 460, 462, and 464. The subunit also binds two structural Zn²⁺ ions. Because <em>P. putida</em> has a single bacterial RNAP, rpoC is essential and non-redundant: every mRNA, rRNA, and tRNA in the cell is made by an enzyme containing this subunit.</p>
+<p>Structurally, β′ is far more than a catalytic scaffold — it is the organizing and regulatory hub of the enzyme. It forms one pincer of the "crab-claw"-shaped RNAP and builds the mobile <strong>clamp</strong> that opens to load DNA and closes to confer the high stability of initiation complexes and the processivity of elongation complexes. The β′ <strong>switch regions</strong> couple clamp motion to promoter DNA opening; the β′ <strong>secondary channel</strong> is the conduit for incoming NTP substrates and the docking port for regulatory factors (GreA/GreB, DksA) and the stringent-response alarmone (p)ppGpp; and the β′ <strong>clamp-helices domain</strong> is the universal platform onto which σ factors dock during initiation and NusG/Spt5 dock during elongation. β′ is the last subunit recruited during core assembly, a step chaperoned by the ω subunit.</p>
+<p>The enzyme functions in the <strong>cytoplasm, associated with the nucleoid</strong>, and concentrates into RNAP condensates at sites of high ribosomal-RNA synthesis. In <em>P. putida</em> KT2440 specifically, the single β′-containing core partners with <strong>24 σ factors</strong> (19 of them extracytoplasmic-function, ECF, σ factors) to generate a large repertoire of promoter-specific holoenzymes that drive this metabolically versatile soil bacterium's adaptation to solvents, iron limitation, oxidative stress, and stationary-phase transitions. β′ is thus both the catalytic engine and the master regulatory node of gene expression in this organism, and its clamp, switch, and secondary-channel elements are validated antibiotic targets.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before reporting function, the target identity was rigorously confirmed. <strong>The gene symbol "rpoC" matches the UniProt protein description exactly</strong>, and all literature located is consistent with the correct gene, organism, and family:</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>UniProt reference</th>
+<th>Verification result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td>rpoC</td>
+<td>✅ Matches — rpoC universally denotes RNAP β′ across bacteria</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>DNA-directed RNA polymerase subunit β′ (EC 2.7.7.6)</td>
+<td>✅ Confirmed by sequence, family, and catalytic motif</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440 (PSEPK)</td>
+<td>✅ PP_0448 is the KT2440 ordered locus for rpoC</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>RNA polymerase β′ chain family</td>
+<td>✅ IPR000722, IPR012754 present</td>
+</tr>
+<tr>
+<td>Catalytic motif</td>
+<td>β′ aspartate triad</td>
+<td>✅ NADFDGD found at residues 458–464 in Q88QP1</td>
+</tr>
+<tr>
+<td>Operon context</td>
+<td>—</td>
+<td>✅ rpoB (Q88QP2, PP_0447) immediately upstream (rpoBC operon)</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol is <strong>not</strong> ambiguous in this case: rpoC is one of the most conserved and well-annotated genes in all of biology. Much of the deep mechanistic literature comes from model systems (<em>Escherichia coli</em>, <em>Thermus aquaticus</em>, <em>Bacillus subtilis</em>, <em>Salmonella</em>), but the extraordinary sequence and structural conservation of β′ — high enough that the <em>E. coli</em> core structure was interpreted directly from the <em>T. aquaticus</em> crystal model <a href="https://pubmed.ncbi.nlm.nih.gov/11904365/">PMID: 11904365</a> — makes these findings directly transferable to the <em>P. putida</em> orthologue. Organism-specific findings are drawn from KT2440 studies where available.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-f011-is-the-catalytic-subunit-carrying-the-mg2-active-site-encoded-in-the-rpobc-operon">F001 / F011 — β′ is the catalytic subunit carrying the Mg²⁺ active site, encoded in the rpoBC operon</h3>
+<p>Q88QP1 is a 1,399-amino-acid, ~154.8-kDa polypeptide catalyzing the core reaction of transcription (EC 2.7.7.6): <strong>RNA(n) + a ribonucleoside triphosphate → RNA(n+1) + diphosphate</strong> (Rhea:21248). The defining catalytic feature is the <strong>absolutely conserved aspartate-triad motif NADFDGD</strong>. Computational re-verification of the Q88QP1 sequence localized this motif to residues 458–464, positioning the three Mg²⁺-chelating aspartates at <strong>positions 460, 462, and 464</strong>. These aspartates coordinate the catalytic Mg²⁺ ion that performs the two-metal-ion nucleotidyl-transfer reaction. The subunit additionally binds two structural Zn²⁺ ions. Annotation is governed by HAMAP-Rule MF_01322, and the protein belongs to the RNA polymerase β′ chain family (IPR000722, IPR012754).</p>
+<p>The gene sits in the classic bacterial <strong>rpoBC operon</strong>: UniProt locus-tag adjacency confirms that rpoB (Q88QP2 = PP_0447, encoding the β subunit) lies immediately upstream of rpoC (Q88QP1 = PP_0448, β′). This gene arrangement — the two large catalytic subunits co-transcribed — is conserved across bacteria and ensures stoichiometric co-production of the β/β′ catalytic pair.</p>
+<h3 id="f002-forms-the-crab-claw-active-center-wall-and-houses-the-catalytic-mg2">F002 — β′ forms the "crab-claw" active-center wall and houses the catalytic Mg²⁺</h3>
+<p>The 3.3 Å crystal structure of <em>Thermus aquaticus</em> core RNAP (Zhang et al., <em>Cell</em> 1999) revealed a <strong>"crab claw"-shaped molecule with a 27 Å-wide internal channel</strong>; a catalytic Mg²⁺ ion sits on the back wall of the channel, chelated by an absolutely conserved motif — the β′ NADFDGD aspartate triad — that is conserved in <strong>all bacterial and eukaryotic cellular RNA polymerases</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/10499798/">PMID: 10499798</a>. β′, the largest subunit, forms one pincer of the claw and the mobile clamp. The conservation is so high that the <em>E. coli</em> core enzyme structure could be interpreted directly from the <em>T. aquaticus</em> model <a href="https://pubmed.ncbi.nlm.nih.gov/11904365/">PMID: 11904365</a>. This establishes that the <em>P. putida</em> β′ likewise builds the active-center wall and holds the catalytic metal.</p>
+<h3 id="f005-builds-the-secondary-channel-the-ntp-substrate-conduit-and-regulator-docking-site">F005 — β′ builds the secondary channel: the NTP-substrate conduit and regulator docking site</h3>
+<p>The RNAP <strong>secondary channel</strong> — a β′-lined pore — is the route by which incoming NTP substrates reach the catalytic center and through which the 3′ RNA end threads during backtracking. It also accepts the transcript-cleavage factors <strong>GreA/GreB</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/15200953/">PMID: 15200953</a>. In proteobacteria (which include <em>P. putida</em>), the stringent-response alarmones <strong>(p)ppGpp bind two RNAP sites</strong>: site 1 at the interface of the β′ and ω subunits, and site 2 at the interface of the β′ secondary channel and the transcription factor <strong>DksA</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/30200857/">PMID: 30200857</a>; this two-site architecture is corroborated in <em>Azotobacter</em> <a href="https://pubmed.ncbi.nlm.nih.gov/38574051/">PMID: 38574051</a>. Gre factors entering the β′ secondary channel improve elongation fidelity and resolve transcriptional pauses in metabolic-gene transcription during oxidative stress <a href="https://pubmed.ncbi.nlm.nih.gov/37014914/">PMID: 37014914</a>. Thus β′ is not only catalytic but the physical gateway through which substrate entry and the most important stress-signaling regulators act.</p>
+<h3 id="f003-the-mobile-clamp-confers-initiation-complex-stability-and-elongation-processivity">F003 — The β′ mobile clamp confers initiation-complex stability and elongation processivity</h3>
+<p>Single-molecule FRET studies show that the β′-formed <strong>clamp is open in free RNAP and early initiation intermediates, and closes upon formation of a catalytically competent initiation complex, remaining closed through initial transcription and elongation</strong>. Clamp closure "accounts for the high stability of initiation complexes and the high stability and processivity of elongation complexes," while clamp opening allows DNA loading and unwinding in the active-center cleft <a href="https://pubmed.ncbi.nlm.nih.gov/22859489/">PMID: 22859489</a>. The clamp interconverts dynamically among three conformational states on 0.1–1 s timescales, and the alarmone <strong>ppGpp selectively stabilizes a partly-closed-clamp state</strong>, thereby modulating promoter opening <a href="https://pubmed.ncbi.nlm.nih.gov/29878276/">PMID: 29878276</a>. Clamp dynamics are therefore a central regulatory lever on the transcription cycle.</p>
+<h3 id="f009-switch-regions-couple-clamp-motion-to-promoter-dna-opening-and-are-validated-antibiotic-targets">F009 — β′ switch regions couple clamp motion to promoter DNA opening and are validated antibiotic targets</h3>
+<p>The RNAP <strong>switch regions</strong> are the hinges connecting the mobile clamp to the enzyme body; they control the clamp conformational change required for open-promoter-complex formation and template-DNA loading. The natural-product antibiotic <strong>myxopyronin</strong> binds the switch regions to block these rearrangements <a href="https://pubmed.ncbi.nlm.nih.gov/22965125/">PMID: 22965125</a>. X-ray cocrystal structures of <em>E. coli</em> RNAP with <strong>squaramide</strong> inhibitors show displacement of switch 2, "predicted to interfere with the conformational change of the clamp domain and/or with binding of template DNA, a mechanism akin to that of natural product myxopyronin" <a href="https://pubmed.ncbi.nlm.nih.gov/25798859/">PMID: 25798859</a>. β′ additionally forms the secondary-channel target of the peptide antibiotic <strong>microcin J25</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/15200953/">PMID: 15200953</a>. These findings establish β′ conformational machinery as a druggable surface.</p>
+<h3 id="f010-the-clamp-helices-domain-is-the-universal-docking-hub-for-initiation-and-nusgspt5-elongation-factors">F010 — The β′ clamp-helices domain is the universal docking hub for σ (initiation) and NusG/Spt5 (elongation) factors</h3>
+<p>Among the core RNAP elements contacting downstream duplex DNA that stabilize initiation and persist into elongation, "<strong>the β′ clamp domain plays the most prominent role</strong>" <a href="https://pubmed.ncbi.nlm.nih.gov/27956639/">PMID: 27956639</a>. The universally conserved <strong>NusG/Spt5</strong> elongation factors "bind to the conserved clamp helices domain of RNA polymerase, which also interacts with non-homologous initiation factors in all domains of life, and reach across the DNA channel to form processivity clamps that enable uninterrupted RNA chain synthesis" <a href="https://pubmed.ncbi.nlm.nih.gov/25640595/">PMID: 25640595</a>. Cryo-EM shows the NusG N-terminal domain binding the β′ clamp helices (together with the β protrusion/lobe), constraining the clamp and enhancing processivity <a href="https://pubmed.ncbi.nlm.nih.gov/27899640/">PMID: 27899640</a>; key β′ clamp-helix residues R270/R278/R281 form the NusG interface, itself a validated antimicrobial target <a href="https://pubmed.ncbi.nlm.nih.gov/39196895/">PMID: 39196895</a>. Rho-dependent termination requires opening of the β′ clamp and engages the β′ Zn-binding domain/clamp helices <a href="https://pubmed.ncbi.nlm.nih.gov/33243850/">PMID: 33243850</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/39730149/">PMID: 39730149</a>. This mutually exclusive docking on a single β′ surface is what makes the clamp helices the master switchboard of the transcription cycle. A separate, earlier study mapping the σ⁷⁰-binding site to β′ residues 260–309 (a coiled-coil, equivalent to the clamp-helices region) reinforces this: point mutations there (R275Q, E295K, A302D) disrupt holoenzyme formation and are lethal <a href="https://pubmed.ncbi.nlm.nih.gov/10764785/">PMID: 10764785</a>.</p>
+<h3 id="f006-is-the-last-subunit-recruited-during-rnap-assembly-chaperones-its-folding">F006 — β′ is the last subunit recruited during RNAP assembly; ω chaperones its folding</h3>
+<p>The bacterial core enzyme is α₂ββ′ω. The smallest subunit, ω, "has a structural role in maintaining the conformation of the largest subunit, β′, and its recruitment in the enzyme assembly" <a href="https://pubmed.ncbi.nlm.nih.gov/33238579/">PMID: 33238579</a>. ω is universally conserved, with orthologues even in obligate intracellular bacteria <a href="https://pubmed.ncbi.nlm.nih.gov/36719197/">PMID: 36719197</a>. The canonical <em>E. coli</em> assembly order is α → α₂ → α₂β → α₂ββ′ → holoenzyme, with β′ added after the β subunit; a noncanonical branch in <em>B. subtilis</em> allows the α-dimer to associate with either β or β′ before core formation <a href="https://pubmed.ncbi.nlm.nih.gov/42001948/">PMID: 42001948</a>. β′ is therefore the capstone subunit whose correct incorporation completes the catalytically competent core.</p>
+<h3 id="f007-localization-cytoplasm-on-the-nucleoid-in-rrna-synthesis-condensates">F007 — Localization: cytoplasm, on the nucleoid, in rRNA-synthesis condensates</h3>
+<p>As the core transcription enzyme acting directly on chromosomal DNA, RNAP (and thus β′) is a <strong>cytoplasmic, nucleoid-associated enzyme</strong>. Bacterial RNAP condensates colocalize with pre-rRNA synthesis, assemble in proportion to high rRNA synthesis, and dissolve upon nutritional stress; the ω subunit (which contributes to (p)ppGpp binding site 1 with β′) is critical for condensate maintenance during acid stress, and condensate persistence correlates with survival during acid-stress recovery <a href="https://pubmed.ncbi.nlm.nih.gov/41959101/">PMID: 41959101</a>. This positions β′-containing RNAP conceptually close to the eukaryotic nucleolus in its spatial organization.</p>
+<h3 id="f008-in-p-putida-kt2440-the-single-containing-core-partners-with-24-factors-for-environmental-adaptation">F008 — In <em>P. putida</em> KT2440, the single β′-containing core partners with 24 σ factors for environmental adaptation</h3>
+<p>Genome analysis of KT2440 identified <strong>24 σ factors, 19 of them ECF σ factors, with 13 FecI-like (iron-acquisition) σ factors</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/12534467/">PMID: 12534467</a>. A genome-wide microarray study of the KT2440 transcriptional machinery examined the RNAP core-subunit genes and the 24 σ factors, showing that expression of the RNAP core and the vegetative σ decreased in stationary phase while σ^S (RpoS) increased <a href="https://pubmed.ncbi.nlm.nih.gov/16343331/">PMID: 16343331</a>. Specific ECF σ factors reprogram the β′-containing holoenzyme to control physiology: <strong>RpoT/ECF-Pp12</strong> governs solvent (toluene) tolerance and efflux-pump expression <a href="https://pubmed.ncbi.nlm.nih.gov/17071759/">PMID: 17071759</a>, and <strong>ECF-10</strong> controls stress resistance, multidrug efflux (TtgABC), and biofilm formation <a href="https://pubmed.ncbi.nlm.nih.gov/24907323/">PMID: 24907323</a>. The single, essential β′ subunit is the common core onto which all these regulatory σ factors dock (via the clamp-helices platform of F010) to steer this versatile soil bacterium's adaptation.</p>
+<h3 id="f004-organism-context-essential-housekeeping-subunit-of-an-industrial-chassis">F004 — Organism context: essential housekeeping subunit of an industrial chassis</h3>
+<p>PP_0448 = rpoC is the single-copy β′ subunit of the sole bacterial RNAP in <em>P. putida</em> KT2440, a "versatile soil bacterium" and emerging industrial cell factory that uses the Entner–Doudoroff pathway for glucose metabolism <a href="https://pubmed.ncbi.nlm.nih.gov/39837196/">PMID: 39837196</a>. As the catalytic subunit responsible for all mRNA/rRNA/tRNA synthesis, rpoC is essential; genome-scale omics and fitness studies treat the core transcription machinery as essential housekeeping genes <a href="https://pubmed.ncbi.nlm.nih.gov/36853682/">PMID: 36853682</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/32826213/">PMID: 32826213</a>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-dual-identity-of-catalytic-engine-regulatory-switchboard">The dual identity of β′: catalytic engine + regulatory switchboard</h3>
+<p>β′ can be understood as two integrated machines built into one polypeptide. First, it is the <strong>catalytic engine</strong>: its NADFDGD aspartate triad (residues 460/462/464 in Q88QP1) holds the Mg²⁺ that performs nucleotidyl transfer at the back wall of the crab-claw channel. Second, it is the <strong>regulatory switchboard</strong>: its clamp, switch regions, secondary channel, and clamp-helices are the moving parts and docking surfaces through which the entire transcription cycle is controlled.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">P</span><span class="o">.</span><span class="w"> </span><span class="n">putida</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">polymerase</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="p">(</span><span class="n">a2</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="sa">b</span><span class="s1">&#39; w)</span>
+<span class="w">    </span><span class="o">=============</span><span class="w"> </span><span class="s2">&quot;crab claw&quot;</span><span class="w"> </span><span class="o">=============</span>
+
+<span class="w">            </span><span class="sa">b</span><span class="s1">&#39; CLAMP  (mobile pincer)</span>
+<span class="w">          </span><span class="o">/</span><span class="w">  </span>\<span class="w">    </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">opens</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="nb">load</span><span class="w"> </span><span class="n">DNA</span>
+<span class="w">       </span><span class="n">s</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">NusG</span><span class="w"> </span><span class="n">dock</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">  </span><span class="n">CLAMP</span><span class="w"> </span><span class="n">HELICES</span><span class="w">   </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">closes</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">processivity</span>
+<span class="w">          </span>\<span class="w">  </span><span class="o">/</span>
+<span class="n">downstream</span><span class="w"> </span><span class="n">DNA</span><span class="w">  </span><span class="o">---+</span><span class="w">          </span><span class="n">SWITCH</span><span class="w"> </span><span class="n">REGIONS</span><span class="w"> </span><span class="p">(</span><span class="n">hinges</span><span class="p">)</span>
+<span class="n">contacts</span><span class="w"> </span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;)  ----|          &lt;- myxopyronin, squaramides bind</span>
+<span class="w">           </span><span class="o">|</span>
+<span class="w">     </span><span class="o">+-------------+-------------+</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="n">ACTIVE</span><span class="w"> </span><span class="n">CENTER</span><span class="w">           </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="n">Mg2</span><span class="o">+</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">NADFDGD</span><span class="w">         </span><span class="o">|</span><span class="w">  </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">catalysis</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="p">(</span><span class="n">D460</span><span class="o">/</span><span class="n">D462</span><span class="o">/</span><span class="n">D464</span><span class="p">)</span><span class="w">        </span><span class="o">|</span>
+<span class="w">     </span><span class="o">+-------------+-------------+</span>
+<span class="w">           </span><span class="o">|</span>
+<span class="w">    </span><span class="n">SECONDARY</span><span class="w"> </span><span class="n">CHANNEL</span><span class="w"> </span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;-lined)</span>
+<span class="w">    </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">NTP</span><span class="w"> </span><span class="n">substrate</span><span class="w"> </span><span class="n">entry</span>
+<span class="w">    </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">GreA</span><span class="o">/</span><span class="n">GreB</span><span class="w"> </span><span class="p">(</span><span class="n">cleavage</span><span class="o">/</span><span class="n">fidelity</span><span class="p">)</span>
+<span class="w">    </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">DksA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="n">ppGpp</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="n">stringent</span><span class="w"> </span><span class="n">response</span><span class="p">)</span>
+<span class="w">    </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">microcin</span><span class="w"> </span><span class="n">J25</span><span class="w"> </span><span class="p">(</span><span class="n">antibiotic</span><span class="p">)</span>
+
+<span class="w">      </span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="n">ppGpp</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="o">=</span><span class="w">  </span><span class="sa">b</span><span class="s1">&#39;-w interface</span>
+</code></pre></div>
+
+<h3 id="how-the-parts-work-together-across-the-transcription-cycle">How the parts work together across the transcription cycle</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>β′ element in action</th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Assembly</td>
+<td>β′ recruited last; ω chaperones its fold</td>
+<td>Completes catalytically competent core</td>
+</tr>
+<tr>
+<td>Holoenzyme formation</td>
+<td>Clamp-helices (~res 260–309) bind σ factor</td>
+<td>Promoter specificity conferred (24 σ options in KT2440)</td>
+</tr>
+<tr>
+<td>Promoter opening</td>
+<td>Switch regions transmit clamp closure</td>
+<td>Open complex forms; DNA loaded/melted</td>
+</tr>
+<tr>
+<td>Initiation → elongation</td>
+<td>Clamp closes and stays closed</td>
+<td>Stability + processivity</td>
+</tr>
+<tr>
+<td>Substrate loading</td>
+<td>NTPs enter via secondary channel</td>
+<td>Nucleotide addition at Mg²⁺ center</td>
+</tr>
+<tr>
+<td>Fidelity / pausing</td>
+<td>GreA/GreB enter secondary channel</td>
+<td>Proofreading, pause resolution</td>
+</tr>
+<tr>
+<td>Stress signaling</td>
+<td>(p)ppGpp at β′–ω (site 1) + DksA/β′ channel (site 2)</td>
+<td>Stringent response reprograms transcription</td>
+</tr>
+<tr>
+<td>Elongation control</td>
+<td>NusG/Spt5 bind clamp-helices</td>
+<td>Enhanced processivity, coupling</td>
+</tr>
+<tr>
+<td>Termination</td>
+<td>Rho opens β′ clamp; engages β′ Zn-domain</td>
+<td>Enzyme inactivation, transcript release</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-this-matters-for-p-putida-biology">Why this matters for <em>P. putida</em> biology</h3>
+<p>Because <em>P. putida</em> KT2440 possesses only one RNAP core but 24 σ factors, β′ is the physical convergence point of the organism's regulatory logic. Environmental cues — solvent stress (RpoT), iron limitation (13 FecI-like ECF σ factors), general stress/stationary phase (RpoS), oxidative stress (Gre/stringent response) — all ultimately act by loading a particular σ or regulator onto the same β′ clamp-helices/secondary-channel surfaces. This makes β′ simultaneously the most conserved housekeeping enzyme and the master integrator of adaptive gene expression in this industrially important chassis.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (system)</th>
+<th>Supports finding</th>
+<th>Key contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10499798/">10499798</a></td>
+<td><em>T. aquaticus</em> core RNAP crystal, 3.3 Å</td>
+<td>F002</td>
+<td>Crab-claw shape; catalytic Mg²⁺ chelated by conserved β′ motif</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11904365/">11904365</a></td>
+<td><em>E. coli</em> cryo-EM</td>
+<td>F002</td>
+<td>β′ conservation lets Taq model interpret <em>E. coli</em>; clamp flexibility</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22859489/">22859489</a></td>
+<td>smFRET clamp (<em>E. coli</em>)</td>
+<td>F003</td>
+<td>Clamp open→closed transition = stability + processivity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29878276/">29878276</a></td>
+<td>smFRET clamp</td>
+<td>F003</td>
+<td>Three clamp states; ppGpp stabilizes partly-closed clamp</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15200953/">15200953</a></td>
+<td>Microcin J25 mechanism</td>
+<td>F005, F009</td>
+<td>Secondary channel = NTP/Gre route; antibiotic target</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30200857/">30200857</a></td>
+<td>Review (ppGpp/DksA)</td>
+<td>F005</td>
+<td>Two (p)ppGpp sites: β′–ω and β′ channel/DksA</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38574051/">38574051</a></td>
+<td><em>Azotobacter</em> stringent response</td>
+<td>F005</td>
+<td>Corroborates two-site (p)ppGpp architecture</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37014914/">37014914</a></td>
+<td><em>Salmonella</em> Gre factors</td>
+<td>F005</td>
+<td>Gre in β′ channel improves metabolic-gene fidelity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22965125/">22965125</a></td>
+<td>Myxopyronin / switch regions</td>
+<td>F009</td>
+<td>Switch regions control clamp/open-complex; drug target</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25798859/">25798859</a></td>
+<td>Squaramide cocrystals (<em>E. coli</em>)</td>
+<td>F009</td>
+<td>Switch-2 displacement blocks clamp/DNA loading</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27956639/">27956639</a></td>
+<td>Gate loop / clamp study</td>
+<td>F010</td>
+<td>β′ clamp "most prominent" downstream-DNA contact</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25640595/">25640595</a></td>
+<td>NusG/Spt5 review</td>
+<td>F010</td>
+<td>Clamp-helices = universal σ + NusG docking hub</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27899640/">27899640</a></td>
+<td>NusG–RNAP cryo-EM</td>
+<td>F010</td>
+<td>NGN binds β′ clamp helices, constrains clamp</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39196895/">39196895</a></td>
+<td>NusG–CH inhibitors</td>
+<td>F010</td>
+<td>β′ R270/R278/R281 = NusG interface, drug target</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33243850/">33243850</a></td>
+<td>Rho termination cryo-EM</td>
+<td>F010</td>
+<td>Clamp opening + β′ Zn-domain in termination</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39730149/">39730149</a></td>
+<td>Rho genetic network</td>
+<td>F010</td>
+<td>β′ Zn-finger/clamp helices functionally in termination</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10764785/">10764785</a></td>
+<td>β′260–309 σ⁷⁰ mutants</td>
+<td>F010</td>
+<td>β′ coiled-coil is σ-binding site; mutations lethal</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33238579/">33238579</a></td>
+<td>ω subunit review</td>
+<td>F006</td>
+<td>ω maintains β′ conformation, aids β′ recruitment</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36719197/">36719197</a></td>
+<td>ω in intracellular bacteria</td>
+<td>F006</td>
+<td>ω universally conserved</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42001948/">42001948</a></td>
+<td><em>B. subtilis</em> assembly</td>
+<td>F006</td>
+<td>β′ added after β; noncanonical branch exists</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41959101/">41959101</a></td>
+<td>RNAP condensates</td>
+<td>F007</td>
+<td>RNAP condensates at rRNA sites; ω-dependent under acid stress</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12534467/">12534467</a></td>
+<td>KT2440 σ-factor genome analysis</td>
+<td>F008</td>
+<td>24 σ factors (19 ECF, 13 FecI-like)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16343331/">16343331</a></td>
+<td>KT2440 microarray</td>
+<td>F008</td>
+<td>RNAP core + σ expression across growth phases</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17071759/">17071759</a></td>
+<td>RpoT regulon (<em>P. putida</em>)</td>
+<td>F008</td>
+<td>ECF σ RpoT controls solvent tolerance/efflux</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24907323/">24907323</a></td>
+<td>ECF-10 knockout (KT2440)</td>
+<td>F008</td>
+<td>ECF σ controls efflux/biofilm/stress</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39837196/">39837196</a></td>
+<td>Industrial chassis review</td>
+<td>F004</td>
+<td>KT2440 as versatile industrial platform</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting mechanistic detail on the nucleotide-addition cycle and active-site dynamics (trigger loop, bridge helix, F loop) further underpins the catalytic model: <a href="https://pubmed.ncbi.nlm.nih.gov/19855007/">PMID: 19855007</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/17679091/">PMID: 17679091</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/19481445/">PMID: 19481445</a>, and <a href="https://pubmed.ncbi.nlm.nih.gov/23283976/">PMID: 23283976</a> (active-center "tuning" and the two-Mg²⁺ mechanism, with Gre-factor acceleration of intrinsic cleavage 3,000–4,000-fold).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>Species of experimental evidence.</strong> The deep structural and mechanistic data derive from model organisms (<em>T. aquaticus</em>, <em>E. coli</em>, <em>B. subtilis</em>, <em>Salmonella</em>, <em>Azotobacter</em>), not from <em>P. putida</em> β′ directly. The inference to Q88QP1 rests on the extreme conservation of β′ (the catalytic motif and clamp/switch/secondary-channel architecture are universal), which is very strong but remains inference for the KT2440 orthologue specifically.</p>
+</li>
+<li>
+<p><strong>No <em>P. putida</em> β′ structure.</strong> There is no experimentally determined structure of the <em>P. putida</em> KT2440 RNAP reported here; residue-level annotations (e.g., D460/462/464, clamp-helix residues) are mapped by homology/sequence to Q88QP1 rather than solved crystallographically for this protein.</p>
+</li>
+<li>
+<p><strong>σ-factor pairing specifics.</strong> While 24 σ factors are documented for KT2440, the precise β′ contact residues for each ECF σ and the quantitative promoter repertoires are not fully resolved for most of the 19 ECF σ factors.</p>
+</li>
+<li>
+<p><strong>Essentiality is inferred, not directly demonstrated here.</strong> rpoC essentiality is treated as established housekeeping biology and is consistent with genome-scale fitness data, but a clean conditional-knockout demonstration in KT2440 was not located in this investigation.</p>
+</li>
+<li>
+<p><strong>Stringent-response nuances.</strong> The (p)ppGpp/DksA two-site model is well established in proteobacteria generally; some downstream effects (e.g., polyphosphate, PHB synthesis) show that DksA and (p)ppGpp can act via distinct routes <a href="https://pubmed.ncbi.nlm.nih.gov/30745375/">PMID: 30745375</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38574051/">PMID: 38574051</a>, so the precise regulon in <em>P. putida</em> would need dedicated study.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Cryo-EM structure of <em>P. putida</em> KT2440 RNAP</strong> (core and representative ECF-σ holoenzymes) to confirm the β′ active-center geometry, clamp-helix docking residues, and any <em>Pseudomonas</em>-specific insertions.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of D460/D462/D464</strong> (or conditional depletion) to experimentally validate the catalytic aspartate triad and quantify the effect on RNA synthesis in KT2440.</p>
+</li>
+<li>
+<p><strong>ChIP-seq / genome-wide occupancy of β′-containing holoenzymes</strong> paired with each of the 24 σ factors to map the promoter repertoires and directly link β′ to the adaptive regulons (solvent tolerance, iron acquisition, biofilm).</p>
+</li>
+<li>
+<p><strong>Stringent-response profiling</strong> (relA/spoT and dksA mutants) with transcriptomics to define the <em>P. putida</em> (p)ppGpp/DksA regulon acting through the β′ secondary channel and β′–ω interface.</p>
+</li>
+<li>
+<p><strong>Antibiotic susceptibility mapping</strong> targeting the β′ switch regions (myxopyronin/squaramide class), secondary channel (microcin J25), and clamp-helix–NusG interface, given the intrinsic multidrug-efflux phenotypes of <em>P. putida</em> — to assess whether transcription inhibitors bypass efflux-based resistance.</p>
+</li>
+<li>
+<p><strong>In vivo imaging of RNAP condensates in KT2440</strong> under nutrient shift and acid/solvent stress to test whether the ω/β′-dependent condensate behavior observed in other bacteria governs stress survival in this chassis.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>rpoC (PP_0448; Q88QP1) encodes the <strong>β′ subunit</strong> — the largest, catalytic subunit of the single essential DNA-dependent RNA polymerase of <em>Pseudomonas putida</em> KT2440. It catalyzes template-directed RNA synthesis (EC 2.7.7.6) through a Mg²⁺-dependent, two-metal-ion mechanism anchored by the absolutely conserved NADFDGD aspartate triad (D460/462/464). Beyond catalysis, β′ forms the crab-claw active-center wall, the mobile clamp and switch regions that load DNA and confer processivity, the secondary channel that admits NTP substrates and stringent-response regulators, and the clamp-helices platform that universally docks σ factors (initiation) and NusG/Spt5 (elongation). It functions in the cytoplasm on the nucleoid, concentrating in rRNA-synthesis condensates, and in KT2440 it is the common core for 24 σ factors that reprogram transcription for environmental adaptation. β′ is thus both the catalytic engine and the master regulatory hub of gene expression in this organism, and a validated antibiotic target.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rpoC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="rpoC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11904365</li>
+<li>PMID:10499798</li>
+<li>PMID:15200953</li>
+<li>PMID:30200857</li>
+<li>PMID:38574051</li>
+<li>PMID:37014914</li>
+<li>PMID:22859489</li>
+<li>PMID:29878276</li>
+<li>PMID:22965125</li>
+<li>PMID:25798859</li>
+<li>PMID:27956639</li>
+<li>PMID:25640595</li>
+<li>PMID:27899640</li>
+<li>PMID:39196895</li>
+<li>PMID:33243850</li>
+<li>PMID:39730149</li>
+<li>PMID:10764785</li>
+<li>PMID:33238579</li>
+<li>PMID:36719197</li>
+<li>PMID:42001948</li>
+<li>PMID:41959101</li>
+<li>PMID:12534467</li>
+<li>PMID:16343331</li>
+<li>PMID:17071759</li>
+<li>PMID:24907323</li>
+<li>PMID:39837196</li>
+<li>PMID:36853682</li>
+<li>PMID:32826213</li>
+<li>PMID:19855007</li>
+<li>PMID:17679091</li>
+<li>PMID:19481445</li>
+<li>PMID:23283976</li>
+<li>PMID:30745375</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QP1
+gene_symbol: rpoC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  rpoC (PP_0448) encodes the beta-prime subunit of the bacterial DNA-directed
+  RNA polymerase core enzyme. RpoC pairs with the beta subunit RpoB to form the
+  catalytic cleft of the alpha2-beta-beta-prime-omega RNAP core, coordinating
+  divalent metal ions and nucleic-acid contacts needed for DNA-templated RNA
+  synthesis. Its core role is contribution to complex-level RNA polymerase
+  activity, with magnesium and zinc binding as important subunit-specific
+  features.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Magnesium ion binding is appropriate for the beta-prime subunit active
+      center architecture.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records Mg(2+) as a cofactor for the RpoC subunit, consistent with
+      the conserved RNAP catalytic mechanism.
+    supported_by:
+    - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+      supporting_text: Binds 1 Mg(2+) ion per subunit.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      DNA binding is plausible for the beta-prime subunit within the RNAP cleft,
+      but it is a broad supporting activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as non-core context. Complex-level DNA-directed RNA polymerase
+      activity and metal-binding features better capture the main role.
+- term:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      RpoC is an essential beta-prime subunit of the bacterial RNAP active-center
+      cleft, but RNA synthesis is performed by the assembled core enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Interpret as contribution to complex-level polymerase activity rather than
+      independent catalytic activity by isolated RpoC.
+    supported_by:
+    - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+      supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization is appropriate for a soluble bacterial RNA
+      polymerase core subunit.
+    action: ACCEPT
+    reason: &gt;-
+      RpoC functions in the bacterial cytosol/nucleoid as part of the
+      transcription machinery.
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      RpoC directly participates in DNA-templated transcription as an essential
+      beta-prime subunit of bacterial RNA polymerase.
+    action: ACCEPT
+    reason: &gt;-
+      Correct process annotation for a core RNAP subunit.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Zinc ion binding is appropriate for the beta-prime subunit, which UniProt
+      annotates as binding two Zn(2+) ions per subunit.
+    action: ACCEPT
+    reason: &gt;-
+      Retain as a subunit-specific cofactor/structural feature of RpoC.
+    supported_by:
+    - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+      supporting_text: Binds 2 Zn(2+) ions per subunit.
+- term:
+    id: GO:0034062
+    label: 5&#39;-3&#39; RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The Rhea-derived polymerase activity reflects RNA-chain extension by the
+      assembled RNAP core.
+    action: MODIFY
+    reason: &gt;-
+      RpoC contributes to the complex-level reaction but should not be
+      interpreted as a standalone polymerase enzyme.
+    proposed_replacement_terms:
+    - id: GO:0003899
+      label: DNA-directed RNA polymerase activity
+    supported_by:
+    - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+      supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+- term:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      RpoC is part of the bacterial DNA-directed RNA polymerase core complex.
+    action: NEW
+    reason: &gt;-
+      UniProt records Q88QP1 as the beta-prime subunit in the alpha2-beta-
+      beta-prime-omega RNAP catalytic core, so explicit complex membership is
+      useful for interpreting the complex-level polymerase MF.
+    supported_by:
+    - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+      supporting_text: The RNAP catalytic core consists of 2 alpha, 1 beta, 1 beta&#39;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings:
+  - statement: &gt;-
+      Source for magnesium and zinc binding annotations; consistent with
+      UniProt/HAMAP cofactor comments.
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings:
+  - statement: &gt;-
+      Rhea-derived polymerase reaction annotation reviewed as complex-level
+      activity for an RNAP core subunit.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA cytosol annotation is consistent with bacterial RNAP biology.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: &gt;-
+      Combined IEA source for broad DNA binding, polymerase activity, and
+      transcription process terms; reviewed against UniProt core-enzyme context.
+- id: file:PSEPK/rpoC/rpoC-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK rpoC
+  findings:
+  - supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+  - supporting_text: Binds 1 Mg(2+) ion per subunit.
+  - supporting_text: Binds 2 Zn(2+) ions per subunit.
+  - supporting_text: The RNAP catalytic core consists of 2 alpha, 1 beta, 1 beta&#39;
+core_functions:
+- description: &gt;-
+    Beta-prime subunit of the bacterial RNA polymerase catalytic cleft,
+    coordinating metal-binding determinants and contributing to complex-level
+    DNA-directed RNA polymerase activity during transcription.
+  molecular_function:
+    id: GO:0000287
+    label: magnesium ion binding
+  contributes_to_molecular_function:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  directly_involved_in:
+  - id: GO:0006351
+    label: DNA-templated transcription
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  in_complex:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  supported_by:
+  - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+    supporting_text: DNA-dependent RNA polymerase catalyzes the transcription of
+  - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+    supporting_text: Binds 1 Mg(2+) ion per subunit.
+  - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+    supporting_text: The RNAP catalytic core consists of 2 alpha, 1 beta, 1 beta&#39;
+- description: &gt;-
+    Zinc-binding structural contribution of the beta-prime subunit to the
+    bacterial RNA polymerase core enzyme.
+  molecular_function:
+    id: GO:0008270
+    label: zinc ion binding
+  contributes_to_molecular_function:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  directly_involved_in:
+  - id: GO:0006351
+    label: DNA-templated transcription
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  in_complex:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  supported_by:
+  - reference_id: file:PSEPK/rpoC/rpoC-uniprot.txt
+    supporting_text: Binds 2 Zn(2+) ions per subunit.
+suggested_questions:
+- question: &gt;-
+    Should UniProt-derived DNA-directed RNA polymerase activity on bacterial
+    core subunits be represented with contributes_to semantics in downstream GO
+    curation, or retained as direct enables by current UniProt convention?
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
