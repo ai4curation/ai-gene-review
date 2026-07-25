@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>moaD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>moaD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NB9" target="_blank" class="term-link">
+                        Q88NB9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "moaD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NB9" data-a="DESCRIPTION: moaD encodes the small sulfur-carrier subunit of m..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>moaD encodes the small sulfur-carrier subunit of molybdopterin synthase. Its C-terminal glycine is adenylated by MoeB and converted to a thiocarboxylate; two sulfur-loaded MoaD molecules then donate the dithiolene sulfurs incorporated into cyclic pyranopterin monophosphate by the MoaD-MoaE synthase complex.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NB9" data-a="GO:0006777" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MoaD is the sulfur carrier required for molybdopterin formation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt family assignment, operon context with moaC/moaE, and the conserved MoaD carrier mechanism support this pathway annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaD/moaD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **moaD** (UniProt **Q88NB9**; ordered locus **PP_1293**) of *Pseudomonas putida* strain KT2440 encodes the **small sulfur-carrier subunit of molybdopterin (MPT) synthase**, the enzyme that catalyzes the **second of the four conserved steps of molybdenum cofactor (Moco) biosynthesis**.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990133" target="_blank" class="term-link">
+                                    GO:1990133
+                                </a>
+                            </span>
+                            <span class="term-label">molybdopterin adenylyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NB9" data-a="GO:1990133" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MoaD participates in the transient MoeB-MoaD adenylyltransferase complex during carrier activation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MoeB-family proteins form a 2:2 complex with MoaD while adenylating its C-terminal glycine.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990140" target="_blank" class="term-link">
+                                    GO:1990140
+                                </a>
+                            </span>
+                            <span class="term-label">molybdopterin synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:interpro/panther/PTHR33359/PTHR33359-entries.csv
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NB9" data-a="GO:1990140" data-r="file:interpro/panther/PTHR33359/PTHR33359-entries.csv" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Q88NB9 is proposed as a component of the MoaD-MoaE molybdopterin synthase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88NB9 and Escherichia coli MoaD P30748 occupy the same PTHR33359:SF1 sulfur-carrier subfamily, and Q88NB9 is encoded directly beside its MoaE partner. The conserved MoaD-MoaE heterotetramer therefore supports GO:1990140 by sequence similarity rather than direct KT2440 complex measurement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaD/moaD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Mechanistically, MoaD operates within a **MoaD₂–MoaE₂ heterotetramer**. Each MoaD subunit inserts its reactive C-terminus deep into a MoaE catalytic subunit, positioning the C-terminal Gly-thiocarboxylate adjacent to the substrate **cyclic pyranopterin monophosphate (cPMP / precursor Z)**.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR33359/PTHR33359-entries.csv
+
+                                </span>
+
+                                <div class="support-text">P30748,Molybdopterin synthase sulfur carrier subunit,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),moaD,81,PTHR33359:SF1,MOLYBDOPTERIN SYNTHASE SULFUR CARRIER SUBUNIT,True</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Sulfur-carrier subunit whose thiocarboxylated C terminus supplies the two sulfurs incorporated into molybdopterin by the MoaD-MoaE synthase.</h3>
+                <span class="vote-buttons" data-g="Q88NB9" data-a="FUNCTION: Sulfur-carrier subunit whose thiocarboxylated C te..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                Mo-molybdopterin cofactor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990140" target="_blank" class="term-link">
+                            molybdopterin synthase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/moaD/moaD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Mechanistically, MoaD operates within a **MoaD₂–MoaE₂ heterotetramer**. Each MoaD subunit inserts its reactive C-terminus deep into a MoaE catalytic subunit, positioning the C-terminal Gly-thiocarboxylate adjacent to the substrate **cyclic pyranopterin monophosphate (cPMP / precursor Z)**.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaD/moaD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for moaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88NB9 as an 82-residue MoaD-family molybdopterin synthase sulfur-carrier subunit.</div>
+
+                        <div class="finding-text">"DE   RecName: Full=Molybdopterin synthase sulfur carrier subunit {ECO:0000256|ARBA:ARBA00024247};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaD/moaD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for moaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains the MoaD pathway annotation reviewed here.</div>
+
+                        <div class="finding-text">"UniProtKB	Q88NB9	moaD	involved_in	GO:0006777	Mo-molybdopterin cofactor biosynthetic process	biological_process	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR044672|PANTHER:PTN002433321	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Molybdopterin synthase sulfur carrier subunit	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR33359/PTHR33359-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER representative entries for the molybdopterin synthase sulfur-carrier family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PTHR33359:SF1 contains the Escherichia coli MoaD ortholog used for the ISS complex proposal.</div>
+
+                        <div class="finding-text">"P30748,Molybdopterin synthase sulfur carrier subunit,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),moaD,81,PTHR33359:SF1,MOLYBDOPTERIN SYNTHASE SULFUR CARRIER SUBUNIT,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaD/moaD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for moaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report reviews MoaD activation and sulfur donation in molybdopterin synthesis.</div>
+
+                        <div class="finding-text">"The gene **moaD** (UniProt **Q88NB9**; ordered locus **PP_1293**) of *Pseudomonas putida* strain KT2440 encodes the **small sulfur-carrier subunit of molybdopterin (MPT) synthase**, the enzyme that catalyzes the **second of the four conserved steps of molybdenum cofactor (Moco) biosynthesis**."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 sulfur-donor system converts adenylated MoaD to the active thiocarboxylate under physiological conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88NB9" data-a="Q: Which KT2440 sulfur-donor system converts adenylat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute Q88NB9 activation and thiocarboxylation with MoeB and candidate sulfur-donor proteins, then assay molybdopterin formation with MoaE.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical pathway reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88NB9" data-a="EXPERIMENT: Reconstitute Q88NB9 activation and thiocarboxylati..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(moaD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NB9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *moaD* (Q88NB9, PP_1293) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T14:38:45.845585</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="moaD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="moaD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-moad-q88nb9-pp_1293-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>moaD</em> (Q88NB9, PP_1293) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="identity-verification-mandatory">Identity Verification (mandatory)</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88NB9</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Molybdopterin synthase sulfur carrier subunit</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td><em>moaD</em> / PP_1293</td>
+<td>EMBL AAN66917.1</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>82 aa</td>
+<td>UniProtKB</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>MoaD family (ThiS/MoaD-like, β-grasp/ubiquitin-like fold)</td>
+<td>InterPro IPR003749, IPR012675, IPR010038</td>
+</tr>
+<tr>
+<td>C-terminus</td>
+<td>…DEVAFFPPV<strong>TGG</strong> (reactive Gly-Gly)</td>
+<td>UniProtKB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification outcome — CONFIRMED, unambiguous.</strong> The gene symbol <em>moaD</em>, the "molybdopterin synthase sulfur carrier subunit" description, the MoaD-family/β-grasp domain assignments, and the diagnostic C-terminal <strong>Gly-Gly motif</strong> are all mutually consistent. No gene-symbol ambiguity was encountered, and Q88NB9 is the single molybdopterin-type MoaD sulfur carrier in the <em>P. putida</em> KT2440 genome. Because Q88NB9 itself has not been the subject of dedicated primary studies, its function is assigned by strong family membership plus the well-characterized biochemistry of near-identical <em>E. coli</em>/<em>S. aureus</em> MoaD orthologs (the pathway is highly conserved across all domains of life) and by <em>P. putida</em>-specific genomic evidence.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>moaD</strong> (UniProt <strong>Q88NB9</strong>; ordered locus <strong>PP_1293</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes the <strong>small sulfur-carrier subunit of molybdopterin (MPT) synthase</strong>, the enzyme that catalyzes the <strong>second of the four conserved steps of molybdenum cofactor (Moco) biosynthesis</strong>. The 82-residue protein belongs to the <strong>MoaD family</strong> of the ubiquitin/ThiS β-grasp fold superfamily and terminates in the diagnostic C-terminal <strong>double-glycine (Gly-Gly) motif</strong> (…FFPPVTGG). This terminal glycine is chemically activated as a <strong>thiocarboxylate (–COSH)</strong> and serves as the immediate sulfur donor for installing the <em>cis</em>-dithiolene group of molybdopterin. MoaD's role is not classical catalysis but <strong>sulfur delivery</strong> into a composite active site formed with its catalytic partner MoaE.</p>
+<p>Mechanistically, MoaD operates within a <strong>MoaD₂–MoaE₂ heterotetramer</strong>. Each MoaD subunit inserts its reactive C-terminus deep into a MoaE catalytic subunit, positioning the C-terminal Gly-thiocarboxylate adjacent to the substrate <strong>cyclic pyranopterin monophosphate (cPMP / precursor Z)</strong>. Sulfur is transferred from the MoaD thiocarboxylate to the C1′ and C2′ positions of precursor Z, converting it to molybdopterin (EC 2.8.1.12; Rhea:26333). Because each thiocarboxylate carries a single sulfur, <strong>two loading/transfer cycles</strong> are required to build the dithiolene. After each transfer, spent MoaD (now carboxylated, ending in Gly-Gly) is regenerated by the <strong>MoeB adenylyltransferase</strong> (PP_0735; EC 2.7.7.80), which adenylates the C-terminal carboxylate to form an acyl-adenylate that is then resolved to the thiocarboxylate using sulfur from cysteine-desulfurase/persulfide systems.</p>
+<p>Functionally, MoaD acts as a <strong>soluble cytoplasmic protein</strong> and is a <strong>non-redundant gatekeeper</strong> of the entire molybdoenzyme repertoire of <em>P. putida</em>. The molybdopterin it helps synthesize is the scaffold that, after molybdenum insertion (MoeA) and nucleotide attachment (MobA), becomes Moco — the essential cofactor of assimilatory nitrate reductase, xanthine and nicotinate dehydrogenases, formate dehydrogenase, periplasmic methionine-sulfoxide reductase MsrP, and other oxidoreductases spanning carbon, nitrogen, and sulfur metabolism. In the genome, <em>moaD</em> lies within a tightly coupled <strong>moaC–moaD–moaE operon</strong>, is 49% identical to the biochemically characterized <em>E. coli</em> MoaD with a perfectly conserved reactive C-terminus, and its cognate recharge enzyme MoeB is present. This report consolidates eight confirmed findings supported by primary enzymology, crystallography, comparative genomics, and curated reaction databases.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-q88nb9-is-the-sulfur-carrier-small-subunit-of-molybdopterin-synthase">F001 — Q88NB9 is the sulfur-carrier small subunit of molybdopterin synthase</h3>
+<p>Q88NB9 is an 82-residue protein annotated as the "Molybdopterin synthase sulfur carrier subunit" and assigned to the MoaD family. Its sequence terminates in a <strong>Gly-Gly motif</strong> (…FFPPVTGG), the diagnostic C-terminal double-glycine shared across MoaD/ThiS/ubiquitin-superfamily sulfur carriers. This terminal glycine is the residue that becomes <strong>thiocarboxylated</strong> and carries the sulfur atom destined for the cofactor. The functional assignment rests on classical biochemical reconstitution work performed on the <em>E. coli</em> ortholog: only when MoaD carries a <strong>C-terminal thiocarboxylate</strong> and is combined with MoaE does the resulting MPT synthase complex convert precursor Z to molybdopterin in vitro; the carboxylated (spent) form is catalytically inactive.</p>
+<p>As stated in the primary study, <em>"Only the thiocarboxylated MPT synthase complex was found to be able to convert precursor Z in vitro to MPT"</em> and <em>"a thiocarboxylation of the C terminus of MoaD is proposed that would serve as the source of sulfur that is transferred to precursor Z"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11459846/">PMID: 11459846</a>). The Gly-Gly terminus of Q88NB9 exactly matches the chemically reactive motif characterized in that work, establishing MoaD's role as the sulfur donor of MPT synthesis.</p>
+<h3 id="f002-sulfur-is-transferred-from-the-moad-c-terminal-thiocarboxylate-to-c1c2-of-precursor-z-at-the-moae-active-site">F002 — Sulfur is transferred from the MoaD C-terminal thiocarboxylate to C1′/C2′ of precursor Z at the MoaE active site</h3>
+<p>Crystallographic studies of MPT synthase reveal a <strong>heterotetramer</strong> in which each MoaD C-terminus is deeply inserted into a MoaE subunit, forming a composite active site. Precursor Z (cPMP) binds in a pocket at the MoaE dimer interface, positioned in close proximity to the C-terminal glycine of MoaD. Anomalous-signal experiments localized the thiocarboxylate sulfur and captured the enzyme–precursor complex with the first dithiolene sulfur added at C2′. Because molybdopterin's dithiolene requires <strong>two</strong> sulfur atoms, two MoaD thiocarboxylates from a single tetramer are consumed in a two-step reaction.</p>
+<p>The structural study reports <em>"the transfer of sulfur atoms from a C-terminal MoaD thiocarboxylate to the C-1′ and C-2′ positions of precursor Z"</em> and that <em>"precursor Z is bound by strictly conserved residues in a pocket at the MoaE dimer interface in close proximity of the C-terminal glycine of MoaD"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18092812/">PMID: 18092812</a>). An earlier structure established that <em>"the C terminus of each MoaD subunit is deeply inserted into a MoaE subunit to form the active site"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12571227/">PMID: 12571227</a>). Together these define the precise atoms of the substrate that receive sulfur and the structural basis for MoaD–MoaE cooperation.</p>
+<h3 id="f003-moad-is-a-ubiquitinthis-fold-sulfur-carrier-reactivated-by-moeb-catalyzed-c-terminal-adenylation">F003 — MoaD is a ubiquitin/ThiS-fold sulfur carrier reactivated by MoeB-catalyzed C-terminal adenylation</h3>
+<p>MoaD adopts the <strong>β-grasp (ubiquitin) fold</strong> (InterPro IPR012675) and shares its 3D architecture, surface features, and C-terminal Gly-Gly with ubiquitin, ThiS, and Urm1. This structural kinship is not coincidental: the <strong>MoaD–MoeB pair is the prokaryotic evolutionary antecedent</strong> of the eukaryotic Urm1–Uba4 system and, more broadly, the ubiquitin–E1 conjugation machinery. MoeB is an <strong>E1-like activating enzyme</strong> that adenylates the MoaD C-terminal carboxylate to form an acyl-adenylate; this intermediate is then converted to the thiocarboxylate, with sulfur supplied by cysteine-desulfurase/persulfide systems (e.g., IscS). This ATP-dependent activation <strong>regenerates active MoaD</strong> after each sulfur-transfer cycle.</p>
+<p>The Urm1 structural study documents that <em>"similarities between Urm1-Uba4 and MoaD-MoeB establish an evolutionary link between ATP-dependent protein conjugation in eukaryotes and ATP-dependent cofactor sulfuration"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16864801/">PMID: 16864801</a>). A complementary review notes that <em>"the pathways for FeS cluster assembly and thio-modifications of tRNA are connected to Moco biosynthesis by sharing the same protein components"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/28284029/">PMID: 28284029</a>), showing MoaD-mediated sulfur chemistry is integrated with shared cellular sulfur-trafficking machinery. Consistent with an adenylation step, UniProt annotates Q88NB9 with a <strong>nucleotide-binding</strong> keyword.</p>
+<h3 id="f004-moad-acts-in-the-cytoplasm-at-step-2-of-the-conserved-moco-biosynthetic-pathway">F004 — MoaD acts in the cytoplasm at step 2 of the conserved Moco biosynthetic pathway</h3>
+<p>Moco biosynthesis is a <strong>highly conserved cytoplasmic pathway</strong> in bacteria, archaea, and eukaryotes, comprising three universal steps plus a bacterial/archaeal fourth: (1) formation of cyclic pyranopterin monophosphate (cPMP/precursor Z) from GTP; (2) formation of molybdopterin (MPT) by MPT synthase; (3) insertion of molybdenum into MPT to form Mo-MPT (Moco); and (4) attachment of a nucleotide (GMP or CMP) to form dinucleotide Moco variants. <strong>MoaD/MoaE (MPT synthase) execute step 2.</strong> The molybdopterin product ultimately becomes Moco, the essential cofactor of more than 50 molybdoenzymes (nitrate reductase, DMSO reductase, formate dehydrogenase, sulfite oxidase, xanthine-type oxidoreductases) that catalyze redox reactions in carbon, nitrogen, and sulfur metabolism.</p>
+<p>The authoritative review describes the pathway as <em>"formation of the cyclic pyranopterin monophosphate, (2) formation of MPT, (3) insertion of molybdenum into molybdopterin to form Moco"</em> and states that <em>"Moco is the essential component of a group of redox enzymes"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/24980677/">PMID: 24980677</a>). The broader metabolic context is captured by the observation that <em>"Bacterial molybdoenzymes are key enzymes involved in the global sulphur, nitrogen and carbon cycles"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/31517366/">PMID: 31517366</a>).</p>
+<h3 id="f005-moad-lies-in-an-overlapping-moacmoadmoae-operon-steps-12-of-moco-biosynthesis">F005 — <em>moaD</em> lies in an overlapping <em>moaC–moaD–moaE</em> operon (steps 1–2 of Moco biosynthesis)</h3>
+<p>Genome coordinates for <em>P. putida</em> KT2440 place three co-oriented (+ strand) genes contiguously, indicating an operon:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>KEGG orthology</th>
+<th>Function (EC)</th>
+<th>Coordinates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_1292</td>
+<td><em>moaC</em></td>
+<td>K03637</td>
+<td>cyclic pyranopterin monophosphate synthase (EC 4.6.1.17)</td>
+<td>1,478,937–1,479,407</td>
+</tr>
+<tr>
+<td>PP_1293</td>
+<td><em>moaD</em></td>
+<td>K03636</td>
+<td>molybdopterin-synthase sulfur-carrier protein</td>
+<td>1,479,404–1,479,652</td>
+</tr>
+<tr>
+<td>PP_1294</td>
+<td><em>moaE</em></td>
+<td>K03635</td>
+<td>molybdopterin synthase catalytic subunit (EC 2.8.1.12)</td>
+<td>1,479,655–1,480,101</td>
+</tr>
+</tbody>
+</table>
+<p><em>moaC</em> and <em>moaD</em> <strong>overlap by 4 bp</strong> (…1479407 / 1479404…) and <em>moaD</em>–<em>moaE</em> are separated by only <strong>2 bp</strong> — hallmarks of translational coupling within a single operon. This synteny is decisive organism-specific evidence: MoaD is co-encoded with (i) its obligate catalytic partner <strong>MoaE</strong> (which carries the EC 2.8.1.12 activity) and (ii) <strong>MoaC</strong>, which produces the precursor Z substrate that MoaD/MoaE act upon. The <em>moaD</em> ORF encodes exactly 82 amino acids ending in the C-terminal Gly-Gly (…VTGG), and KEGG maps it to the <strong>Sulfur relay system</strong> (ppu04122), reflecting its ThiS/MoaD-type sulfur-transfer chemistry rather than classical catalysis.</p>
+<h3 id="f006-q88nb9-is-49-identical-to-characterized-e-coli-moad-with-a-perfectly-conserved-reactive-c-terminus-and-its-moeb-activator-is-present">F006 — Q88NB9 is 49% identical to characterized <em>E. coli</em> MoaD with a perfectly conserved reactive C-terminus, and its MoeB activator is present</h3>
+<p>Global pairwise alignment of <em>P. putida</em> MoaD (Q88NB9, 82 aa) against the experimentally characterized <em>E. coli</em> K-12 MoaD (P30748, 81 aa) yields <strong>49.4% identity</strong> (39/79 aligned columns). Critically, the functionally essential C-terminal segment is <strong>essentially invariant</strong>: both proteins end in "…DEVAFFPPVTGG," including the reactive C-terminal Gly-Gly. This conservation of the catalytically decisive motif justifies transferring the detailed <em>E. coli</em>/<em>S. aureus</em> enzymology to the <em>P. putida</em> ortholog with high confidence.</p>
+<p>A UniProt survey of <em>P. putida</em> KT2440 (taxid 160488) confirms the complete cognate machinery is present: <strong>MoaC</strong> (Q88NC0/PP_1292, EC 4.6.1.17), <strong>MoaE</strong> (Q88NB8/PP_1294, EC 2.8.1.12), and the MoaD-activating enzyme <strong>MoeB</strong> (Q88PW3/PP_0735, annotated "Molybdopterin-synthase adenylyltransferase, EC 2.7.7.80 / MoaD protein adenylase / Sulfur carrier protein MoaD adenylyltransferase"). Importantly, MoaD (Q88NB9) is the <strong>only molybdopterin-type MoaD sulfur carrier</strong> in the genome; the other β-grasp sulfur carriers present (ThiS Q88CS5, TusA Q88L21, ThiI, FdhD) belong to distinct families serving thiamine biosynthesis and tRNA-thiolation, not molybdopterin. This rules out functional redundancy and confirms a single, unambiguous gene identity.</p>
+<h3 id="f007-moad-derived-molybdopterin-feeds-a-complete-moco-pathway-and-a-diverse-molybdoenzyme-repertoire">F007 — MoaD-derived molybdopterin feeds a complete Moco pathway and a diverse molybdoenzyme repertoire</h3>
+<p>A UniProt survey (keyword Molybdenum/Molybdopterin) shows the full downstream pathway that consumes MoaD's product, plus the molybdate-uptake system that supplies molybdenum:</p>
+<table>
+<thead>
+<tr>
+<th>Step / role</th>
+<th>Gene(s) / locus</th>
+<th>Enzyme (EC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GTP 3′,8-cyclase (step 1)</td>
+<td><em>moaA</em> PP_4597 (+ paralogs PP_2482, PP_1969)</td>
+<td>EC 4.1.99.22</td>
+</tr>
+<tr>
+<td>cPMP synthase (step 1)</td>
+<td><em>moaC</em> PP_1292</td>
+<td>EC 4.6.1.17</td>
+</tr>
+<tr>
+<td><strong>MPT synthase (step 2)</strong></td>
+<td><strong><em>moaD</em>/<em>moaE</em> PP_1293/PP_1294</strong></td>
+<td><strong>EC 2.8.1.12</strong></td>
+</tr>
+<tr>
+<td>Mo insertion (step 3)</td>
+<td><em>moeA</em> PP_2123</td>
+<td>EC 2.10.1.1</td>
+</tr>
+<tr>
+<td>Mo-MPT guanylyltransferase (step 4, bis-MGD)</td>
+<td><em>mobA</em> PP_3457</td>
+<td>EC 2.7.7.77</td>
+</tr>
+<tr>
+<td>MogA-type paralogs</td>
+<td>PP_2122, PP_4600</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Molybdate uptake (ABC transporter)</td>
+<td><em>modA</em> PP_3828, <em>modB</em> PP_3829, <em>modC</em> PP_3830</td>
+<td>EC 7.3.2.5</td>
+</tr>
+<tr>
+<td>Uptake regulator</td>
+<td><em>modR</em> PP_0360</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Moco-dependent molybdoenzymes present in <em>P. putida</em> KT2440 include: assimilatory <strong>nitrate reductase / sulfite reductase</strong> (PP_1703, EC 1.7.99.4), <strong>xanthine dehydrogenase</strong> (<em>xdhB</em> PP_4279, EC 1.17.1.4), <strong>nicotinate dehydrogenase</strong> (<em>nicB</em> PP_3948, EC 1.17.2.1), <strong>formate dehydrogenase-O</strong> (<em>fdoG</em> PP_0489, EC 1.2.1.2), periplasmic <strong>methionine-sulfoxide reductase MsrP</strong> (PP_4676), aromatic aldehyde dehydrogenase <strong>PaoC</strong> (PP_3310, EC 1.2.99.7), and additional molybdopterin oxidoreductases (PP_0256, PP_4596, PP_1080). Because MoaD is the sole molybdopterin sulfur carrier, its activity is an <strong>obligatory, non-redundant upstream node</strong> for all of these enzymes — spanning nitrogen assimilation, purine/nicotinate catabolism, C1 metabolism, periplasmic oxidative-stress repair, and aromatic aldehyde oxidation, consistent with <em>P. putida</em>'s versatile catabolic lifestyle.</p>
+<h3 id="f008-the-precise-mpt-synthase-reaction-defines-moads-gly-thiocarboxylate-gly-gly-catalytic-cycle">F008 — The precise MPT synthase reaction defines MoaD's Gly-thiocarboxylate → Gly-Gly catalytic cycle</h3>
+<p>The balanced reaction catalyzed by MPT synthase (MoaD/MoaE), curated as EC 2.8.1.12 and Rhea:26333, is:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">2</span><span class="w"> </span><span class="err">[</span><span class="n">MPT</span><span class="o">-</span><span class="n">synthase</span><span class="w"> </span><span class="n">sulfur</span><span class="o">-</span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span><span class="err">]</span><span class="o">-</span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="o">-</span><span class="n">Gly</span><span class="o">-</span><span class="n">aminoethanethioate</span>
+<span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">cyclic</span><span class="w"> </span><span class="n">pyranopterin</span><span class="w"> </span><span class="n">phosphate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span>
+<span class="w">      </span><span class="err">→</span><span class="w">  </span><span class="n">molybdopterin</span>
+<span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="err">[</span><span class="n">MPT</span><span class="o">-</span><span class="n">synthase</span><span class="w"> </span><span class="n">sulfur</span><span class="o">-</span><span class="n">carrier</span><span class="w"> </span><span class="n">protein</span><span class="err">]</span><span class="o">-</span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="o">-</span><span class="n">Gly</span><span class="o">-</span><span class="n">Gly</span>
+<span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="n">H</span><span class="p">(</span><span class="o">+</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The systematic name is <em>thiocarboxylated molybdopterin synthase:cyclic pyranopterin phosphate sulfurtransferase</em> (KEGG R09395). The EC subclass <strong>2.8.1 designates sulfurtransferases</strong>. This stoichiometry makes explicit that <strong>two</strong> MoaD thiocarboxylate equivalents are consumed per molybdopterin, each converted from the active "C-terminal-Gly-aminoethanethioate" (thiocarboxylate) form to the spent "C-terminal-Gly-Gly" (carboxylate) form — precisely the cycle that MoeB then reverses via adenylation (F003).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings assemble into a coherent, well-supported model of MoaD as a <strong>regenerable molecular sulfur shuttle</strong> at the heart of Moco biosynthesis.</p>
+<h3 id="the-catalytic-cycle">The catalytic cycle</h3>
+<div class="codehilite"><pre><span></span><code>         ┌─────────────────────────────────────────┐
+         │        MPT SYNTHASE (MoaD2–MoaE2)        │
+         │                                          │
+  precursor Z (cPMP) ───►│  MoaD–C(=O)–S⁻  ──sulfur──► C2′ of cPMP  │
+   (from MoaA + MoaC)    │  (thiocarboxylate)                       │
+         │  MoaD–C(=O)–S⁻  ──sulfur──► C1′          │──► MOLYBDOPTERIN
+         │      (2 sulfurs = cis-dithiolene)        │        (MPT)
+         │                                          │
+         │  MoaD–C(=O)–O⁻  (spent, Gly-Gly)         │
+         └───────────────┬─────────────────────────┘
+                         │
+                         ▼
+         ┌─────────────────────────────────────────┐
+         │   RECHARGE:  MoeB (E1-like, ATP)         │
+         │   MoaD–COO⁻ + ATP → MoaD–CO–AMP          │
+         │   + persulfide sulfur (IscS/L-Cys)       │
+         │        → MoaD–C(=O)–S⁻  (recharged)      │
+         └─────────────────────────────────────────┘
+</code></pre></div>
+
+<p><strong>Step 2 in context.</strong> Upstream, MoaA (a radical-SAM GTP 3′,8-cyclase) and MoaC convert GTP into cyclic pyranopterin monophosphate (precursor Z), which already contains all the carbon and nitrogen atoms of the eventual pterin but <strong>lacks the sulfur-bearing dithiolene</strong>. MoaD's task is to install those two sulfur atoms. Working as a <strong>MoaD₂–MoaE₂ heterotetramer</strong>, each MoaD threads its C-terminus into a MoaE catalytic pocket where precursor Z is bound (F002). Sulfur is delivered from the MoaD C-terminal thiocarboxylate to C2′ first, then C1′, generating the <strong>cis-dithiolene</strong> that will chelate molybdenum. Two thiocarboxylate equivalents are consumed per molybdopterin (F008).</p>
+<p><strong>Regeneration.</strong> Each transfer leaves MoaD carboxylated (C-terminal Gly-Gly). MoeB (PP_0735) then adenylates this carboxylate in an ATP-dependent reaction, and persulfide sulfur (from cysteine-desulfurase systems such as IscS) resolves the acyl-adenylate to the thiocarboxylate, recharging MoaD (F003). This E1-like activation chemistry is evolutionarily continuous with ubiquitin/Urm1 activation, underscoring that MoaD is a bona fide ubiquitin-superfamily protein used for <strong>cofactor sulfuration rather than protein conjugation</strong>.</p>
+<p><strong>Downstream fate and physiology.</strong> Molybdopterin is handed to MoeA (Mo insertion → Moco) and, in bacteria, MobA (nucleotide attachment → bis-MGD/MCD variants). The mature cofactor is inserted into the apo-forms of the organism's molybdoenzymes (F007). Because MoaD is the <strong>only</strong> molybdopterin-type sulfur carrier in the genome (F006), loss of MoaD would abolish molybdopterin synthesis and thereby inactivate the entire downstream molybdoenzyme repertoire. In this sense MoaD is a <strong>low-flux but non-redundant bottleneck</strong>: it is required only in catalytic/stoichiometric amounts relative to precursor Z, yet its function gates a broad slice of redox metabolism.</p>
+<h3 id="localization">Localization</h3>
+<p>All evidence places MoaD's activity in the <strong>cytoplasm</strong>. Moco biosynthesis is a conserved cytoplasmic pathway (F004), MoaD lacks any signal peptide, transmembrane segment, or export signal, and its partners (MoaE, MoaC, MoeB) are soluble cytoplasmic enzymes. Notably, several <em>downstream</em> molybdoenzymes it ultimately serves are periplasmic or membrane-associated (e.g., MsrP, respiratory formate dehydrogenases), but those enzymes acquire mature Moco after cytoplasmic synthesis; MoaD itself does not leave the cytosol.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11459846/">11459846</a></td>
+<td><em>Thiocarboxylation of molybdopterin synthase…</em></td>
+<td>Direct biochemical proof that only thiocarboxylated MoaD converts precursor Z to MPT; identifies the C-terminal thiocarboxylate as the sulfur source (F001).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18092812/">18092812</a></td>
+<td><em>Crystal structure of a molybdopterin synthase–precursor Z complex…</em></td>
+<td>Localizes sulfur transfer to C1′/C2′ of precursor Z at the MoaE dimer interface adjacent to MoaD's C-terminal glycine (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12571227/">12571227</a></td>
+<td><em>Structural studies of molybdopterin synthase…</em></td>
+<td>Shows MoaD's C-terminus inserts into MoaE to form the composite active site (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16864801/">16864801</a></td>
+<td><em>Solution structure of Urm1 and origin of protein modifiers</em></td>
+<td>Establishes MoaD's ubiquitin-superfamily fold and MoeB-dependent ATP activation underpinning thiocarboxylate regeneration (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28284029/">28284029</a></td>
+<td><em>Shared function and moonlighting proteins in Moco biosynthesis</em></td>
+<td>Connects MoaD sulfur chemistry to shared FeS/tRNA-thiolation sulfur-trafficking machinery (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24980677/">24980677</a></td>
+<td><em>The biosynthesis of the molybdenum cofactors</em></td>
+<td>Defines the four-step Moco pathway and places MPT synthase at step 2; establishes downstream importance of the product (F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31517366/">31517366</a></td>
+<td><em>Regulation of Moco biosynthesis…in bacteria</em></td>
+<td>Contextualizes molybdoenzymes in global S/N/C cycles (F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25514355/">25514355</a></td>
+<td><em>Assembly and catalysis of Mo/W formate dehydrogenases</em></td>
+<td>Illustrates a specific Moco-dependent enzyme class ultimately served by MoaD (context for F007).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23317461/">23317461</a></td>
+<td><em>Molybdenum cofactor…in M. tuberculosis pathogenesis</em></td>
+<td>Independent confirmation that Moco enables redox reactions in C/N/S metabolism (context for F004/F007).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42253079/">42253079</a></td>
+<td><em>Emerging roles of pterins as signaling molecules in bacteria</em></td>
+<td>Broader pterin biology; molybdopterin/Moco as a redox-active pterin cofactor (context for F004).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on evidence provenance.</strong> The detailed enzymology and crystallography (F001–F003) derive from studies of the <em>E. coli</em> and <em>S. aureus</em> orthologs, not from direct experiments on the <em>P. putida</em> protein. Their transfer to Q88NB9 is justified by high sequence identity (49.4%) and, decisively, by the <strong>perfect conservation of the reactive C-terminal motif</strong> (…PVTGG) and the presence of the complete cognate machinery (MoaC, MoaE, MoeB) in <em>P. putida</em> KT2440 (F005, F006). The genomic and reaction-database evidence (F005–F008) is specific to <em>P. putida</em> and its curated pathways.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- Q88NB9 is the MoaD sulfur-carrier subunit of MPT synthase — supported by family assignment, the diagnostic C-terminal Gly-Gly, and ortholog biochemistry/structures (PMID 11459846, 18092812, 12571227).<br />
+- MoaD donates sulfur via a C-terminal thiocarboxylate to precursor Z to form MPT's dithiolene — supported (PMID 11459846, 18092812).<br />
+- MoaD is a recyclable ubiquitin-like carrier reactivated by MoeB adenylation — supported (PMID 16864801); MoeB (PP_0735) present in <em>P. putida</em>; nucleotide-binding annotation on Q88NB9 consistent.<br />
+- MoaD acts in the cytoplasm at step 2 of the conserved Moco pathway, upstream of all molybdoenzymes — supported (PMID 24980677, 31517366).</p>
+<p><strong>Refuted / ruled out</strong><br />
+- Not a classical metabolic enzyme acting on small-molecule substrates (it is a protein-based sulfur carrier/adapter contributing to a composite active site).<br />
+- Not a transporter, membrane protein, or secreted/structural protein.<br />
+- Symbol ambiguity ruled out: sequence, family, and reactive C-terminal Gly-Gly all converge on MoaD, the sole molybdopterin sulfur carrier in the genome.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> protein.</strong> The assignment for Q88NB9 rests on <strong>homology transfer and genomic/bioinformatic evidence</strong>, not on purified-protein enzymology, structure, or knockout phenotyping of the KT2440 ortholog specifically. While the inference is strong (invariant catalytic C-terminus, complete cognate operon and machinery), it remains an inference.</p>
+</li>
+<li>
+<p><strong>Sulfur-source details are model-derived.</strong> The identity of the immediate sulfur donor(s) that convert MoeB-adenylated MoaD to the thiocarboxylate in <em>P. putida</em> (e.g., which cysteine desulfurase — IscS vs. others — and whether a rhodanese/relay is used) has not been experimentally mapped in this organism.</p>
+</li>
+<li>
+<p><strong>Operon regulation and expression conditions.</strong> Operon synteny (<em>moaC–moaD–moaE</em>) is established, but transcriptional regulation, induction conditions (molybdate/anaerobiosis responsiveness), and promoter architecture in <em>P. putida</em> remain uncharacterized.</p>
+</li>
+<li>
+<p><strong>Quantitative kinetics unknown.</strong> No <em>P. putida</em>-specific kinetic parameters (turnover, MoaD–MoaE affinity, MoeB recharge rate) are available, so flux control through this step cannot be quantified.</p>
+</li>
+<li>
+<p><strong>Possible moonlighting/cross-talk.</strong> Given documented sharing of sulfur-relay components across Moco, FeS, and tRNA-thiolation pathways (F003), the degree to which <em>P. putida</em> MoaD or its sulfur supply competes with other pathways is unresolved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Genetic validation.</strong> Construct a clean <em>moaD</em> (PP_1293) deletion in KT2440 and test loss of all Moco-dependent activities (nitrate reductase, xanthine dehydrogenase, formate dehydrogenase); complement with wild-type <em>moaD</em> and with a C-terminal Gly→Ala/ΔGly mutant. Predicted: null mutant loses molybdoenzyme activities; C-terminal mutant fails to complement.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution with native proteins.</strong> Co-express and purify <em>P. putida</em> MoaD (Q88NB9) and MoaE (Q88NB8); thiocarboxylate MoaD (chemically or via MoeB/IscS) and assay conversion of precursor Z to molybdopterin using the established Form-A fluorescent derivative assay — the first organism-specific enzymological confirmation.</p>
+</li>
+<li>
+<p><strong>MoeB partnership assay.</strong> Verify that PP_0735 (MoeB) adenylates <em>P. putida</em> MoaD in an ATP-dependent manner (AMP release, mass shift on the MoaD C-terminus) and identify the physiological sulfur donor.</p>
+</li>
+<li>
+<p><strong>Structural confirmation.</strong> Solve the crystal/cryo-EM structure (or generate an AlphaFold model) of the <em>P. putida</em> MoaD₂–MoaE₂ complex, ideally with bound precursor Z, to confirm the C-terminal insertion geometry and C1′/C2′ sulfur-transfer arrangement.</p>
+</li>
+<li>
+<p><strong>Expression/regulation profiling.</strong> Use RT-qPCR or RNA-seq under varied molybdate, nitrogen, and oxygen conditions to define <em>moaCDE</em> operon regulation and confirm the translational coupling implied by the overlapping ORFs.</p>
+</li>
+<li>
+<p><strong>Sulfur-pathway cross-talk.</strong> Test whether depletion of shared sulfur-relay components (e.g., IscS) simultaneously impairs Moco, FeS, and tRNA-thiolation outputs, quantifying MoaD's dependence on shared machinery.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>moaD</em> (Q88NB9, PP_1293) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>sulfur-carrier subunit of molybdopterin synthase</strong>, a soluble cytoplasmic enzyme executing step 2 of molybdenum-cofactor biosynthesis. Its C-terminal glycine, activated as a thiocarboxylate, donates the two sulfur atoms of molybdopterin's <em>cis</em>-dithiolene to cyclic pyranopterin monophosphate at the MoaE active site (EC 2.8.1.12), and the spent carboxylated protein is recharged by the E1-like MoeB adenylyltransferase. The assignment is unambiguous and non-redundant: MoaD is the sole molybdopterin-type sulfur carrier in the genome, is encoded in a coupled <em>moaC–moaD–moaE</em> operon, is 49% identical to the biochemically characterized <em>E. coli</em> MoaD with a perfectly conserved reactive C-terminus, and gates the maturation of the organism's entire molybdoenzyme repertoire — spanning nitrogen assimilation, purine and nicotinate catabolism, formate oxidation, and periplasmic methionine-sulfoxide repair.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="moaD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="moaD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11459846</li>
+<li>PMID:18092812</li>
+<li>PMID:12571227</li>
+<li>PMID:16864801</li>
+<li>PMID:28284029</li>
+<li>PMID:24980677</li>
+<li>PMID:31517366</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NB9
+gene_symbol: moaD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  moaD encodes the small sulfur-carrier subunit of molybdopterin synthase. Its
+  C-terminal glycine is adenylated by MoeB and converted to a thiocarboxylate;
+  two sulfur-loaded MoaD molecules then donate the dithiolene sulfurs incorporated
+  into cyclic pyranopterin monophosphate by the MoaD-MoaE synthase complex.
+existing_annotations:
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: MoaD is the sulfur carrier required for molybdopterin formation.
+    action: ACCEPT
+    reason: UniProt family assignment, operon context with moaC/moaE, and the conserved MoaD carrier mechanism support this pathway annotation.
+    supported_by:
+    - reference_id: file:PSEPK/moaD/moaD-deep-research-openscientist.md
+      supporting_text: |-
+        The gene **moaD** (UniProt **Q88NB9**; ordered locus **PP_1293**) of *Pseudomonas putida* strain KT2440 encodes the **small sulfur-carrier subunit of molybdopterin (MPT) synthase**, the enzyme that catalyzes the **second of the four conserved steps of molybdenum cofactor (Moco) biosynthesis**.
+- term:
+    id: GO:1990133
+    label: molybdopterin adenylyltransferase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: MoaD participates in the transient MoeB-MoaD adenylyltransferase complex during carrier activation.
+    action: ACCEPT
+    reason: MoeB-family proteins form a 2:2 complex with MoaD while adenylating its C-terminal glycine.
+- term:
+    id: GO:1990140
+    label: molybdopterin synthase complex
+  evidence_type: ISS
+  original_reference_id: file:interpro/panther/PTHR33359/PTHR33359-entries.csv
+  qualifier: part_of
+  supporting_entities:
+  - UniProtKB:P30748
+  review:
+    summary: Q88NB9 is proposed as a component of the MoaD-MoaE molybdopterin synthase complex.
+    action: NEW
+    reason: &gt;-
+      Q88NB9 and Escherichia coli MoaD P30748 occupy the same
+      PTHR33359:SF1 sulfur-carrier subfamily, and Q88NB9 is encoded directly
+      beside its MoaE partner. The conserved MoaD-MoaE heterotetramer therefore
+      supports GO:1990140 by sequence similarity rather than direct KT2440
+      complex measurement.
+    supported_by:
+    - reference_id: file:PSEPK/moaD/moaD-deep-research-openscientist.md
+      supporting_text: |-
+        Mechanistically, MoaD operates within a **MoaD₂–MoaE₂ heterotetramer**. Each MoaD subunit inserts its reactive C-terminus deep into a MoaE catalytic subunit, positioning the C-terminal Gly-thiocarboxylate adjacent to the substrate **cyclic pyranopterin monophosphate (cPMP / precursor Z)**.
+    - reference_id: file:interpro/panther/PTHR33359/PTHR33359-entries.csv
+      supporting_text: P30748,Molybdopterin synthase sulfur carrier subunit,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),moaD,81,PTHR33359:SF1,MOLYBDOPTERIN SYNTHASE SULFUR CARRIER SUBUNIT,True
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/moaD/moaD-uniprot.txt
+  title: UniProtKB entry for moaD
+  findings:
+  - statement: UniProt identifies Q88NB9 as an 82-residue MoaD-family molybdopterin synthase sulfur-carrier subunit.
+    supporting_text: &#34;DE   RecName: Full=Molybdopterin synthase sulfur carrier subunit {ECO:0000256|ARBA:ARBA00024247};&#34;
+- id: file:PSEPK/moaD/moaD-goa.tsv
+  title: QuickGO GOA annotations for moaD
+  findings:
+  - statement: The fetched table contains the MoaD pathway annotation reviewed here.
+    supporting_text: &#34;UniProtKB\tQ88NB9\tmoaD\tinvolved_in\tGO:0006777\tMo-molybdopterin cofactor biosynthetic process\tbiological_process\tECO:0000501\tIEA\tGO_REF:0000120\tInterPro:IPR044672|PANTHER:PTN002433321\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tMolybdopterin synthase sulfur carrier subunit\t20260706&#34;
+- id: file:interpro/panther/PTHR33359/PTHR33359-entries.csv
+  title: PANTHER representative entries for the molybdopterin synthase sulfur-carrier family
+  findings:
+  - statement: PTHR33359:SF1 contains the Escherichia coli MoaD ortholog used for the ISS complex proposal.
+    supporting_text: P30748,Molybdopterin synthase sulfur carrier subunit,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),moaD,81,PTHR33359:SF1,MOLYBDOPTERIN SYNTHASE SULFUR CARRIER SUBUNIT,True
+- id: file:PSEPK/moaD/moaD-deep-research-openscientist.md
+  title: OpenScientist gene research for moaD
+  reference_review:
+    relevance: HIGH
+    correctness: LOW_QUALITY
+    review_notes: Conserved carrier chemistry and complex membership were cross-checked against the UniProt/PANTHER family assignment. The report overstates target-specific operon, uniqueness, non-redundancy, and downstream-client conclusions; no direct KT2440 biochemical assay was located, so those claims are not used as established evidence.
+  findings:
+  - statement: The report reviews MoaD activation and sulfur donation in molybdopterin synthesis.
+    supporting_text: |-
+      The gene **moaD** (UniProt **Q88NB9**; ordered locus **PP_1293**) of *Pseudomonas putida* strain KT2440 encodes the **small sulfur-carrier subunit of molybdopterin (MPT) synthase**, the enzyme that catalyzes the **second of the four conserved steps of molybdenum cofactor (Moco) biosynthesis**.
+core_functions:
+- description: &gt;-
+    Sulfur-carrier subunit whose thiocarboxylated C terminus supplies the two
+    sulfurs incorporated into molybdopterin by the MoaD-MoaE synthase.
+  directly_involved_in:
+  - id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  in_complex:
+    id: GO:1990140
+    label: molybdopterin synthase complex
+  supported_by:
+  - reference_id: file:PSEPK/moaD/moaD-deep-research-openscientist.md
+    supporting_text: |-
+      Mechanistically, MoaD operates within a **MoaD₂–MoaE₂ heterotetramer**. Each MoaD subunit inserts its reactive C-terminus deep into a MoaE catalytic subunit, positioning the C-terminal Gly-thiocarboxylate adjacent to the substrate **cyclic pyranopterin monophosphate (cPMP / precursor Z)**.
+proposed_new_terms: []
+suggested_questions:
+- question: Which KT2440 sulfur-donor system converts adenylated MoaD to the active thiocarboxylate under physiological conditions?
+suggested_experiments:
+- description: Reconstitute Q88NB9 activation and thiocarboxylation with MoeB and candidate sulfur-donor proteins, then assay molybdopterin formation with MoaE.
+  experiment_type: biochemical pathway reconstitution
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
