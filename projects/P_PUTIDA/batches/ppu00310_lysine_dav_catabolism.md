@@ -34,7 +34,7 @@ the broad TSV for later pathway batches.
 - [x] Create a species-neutral four-part module.
 - [ ] Complete OpenScientist gene-level research.
 - [ ] Complete generic module OpenScientist research.
-- [ ] Complete module + `ppu00310` + PSEPK OpenScientist research.
+- [x] Complete module + `ppu00310` + PSEPK OpenScientist research.
 - [ ] Integrate useful research findings without treating provider output as authority.
 - [ ] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
