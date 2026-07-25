@@ -20,6 +20,20 @@ architecture, the assay explains the set better than any function does.
 | **With an annotated coiled-coil region** | **9** |
 | Proportion coiled-coil | **60%** |
 
+### Is that rate actually unusual? (null model)
+
+Background, fetched from UniProt: **2059 of 20431** reviewed human
+proteins carry a coiled-coil feature = **10.1%**.
+
+- Observed in this partner set: **60%**
+- Enrichment: **6.0-fold**
+- Binomial P(X >= 9 | n=15, p=0.101) = **3.04e-06**
+
+The enrichment is therefore real rather than assumed, though with n=15 this is
+a descriptive statistic and not a controlled test: the relevant comparison would
+be against other single-publication prey sets from the same screen, which this
+analysis does not attempt.
+
 ## Partners
 
 | Accession | Gene | Coiled-coil segments | Subcellular location |
@@ -42,26 +56,51 @@ architecture, the assay explains the set better than any function does.
 
 ## Compartment spread
 
-A genuine partner set usually concentrates in one or two compartments. Observed:
+A genuine partner set usually concentrates in one or two compartments. UniProt
+location strings are hierarchical, so they are collapsed here to their leading
+compartment - 20 raw strings reduce to
+**14 top-level compartments**:
 
-- Cytoplasm: 5
+- Cytoplasm: 11
 - Nucleus: 4
-- Cytoplasm, cytoskeleton, microtubule organizing center, centrosome, centriole: 2
-- Cytoplasm, cytoskeleton, microtubule organizing center, centrosome: 2
+- Synapse: 2
+- Cell projection: 2
 - Late endosome membrane: 1
 - Membrane: 1
 - Endoplasmic reticulum-Golgi intermediate compartment membrane: 1
 - Golgi apparatus membrane: 1
-- Cytoplasmic vesicle, secretory vesicle, synaptic vesicle membrane: 1
-- Synapse, synaptosome: 1
+- Cytoplasmic vesicle: 1
 - Cell membrane: 1
 - Secreted: 1
-- Cytoplasm, cytoskeleton, microtubule organizing center, centrosome, centriolar satellite: 1
 - Early endosome membrane: 1
 - Recycling endosome membrane: 1
-- Cell projection, axon: 1
-- Cell projection, dendrite: 1
-- Synapse: 1
-- Chromosome, centromere: 1
-- Cytoplasm, cytosol: 1
+- Chromosome: 1
+
+## The family offers no help either
+
+AARD belongs to PANTHER **PTHR32289** (FAM167 family; InterPro IPR051771).
+For a gene this dark, paralogs are the most tractable remaining inference route,
+so the family was enumerated:
+
+- **10** reviewed members
+- **0** of them carry a UniProt FUNCTION statement
+
+| Accession | Entry | Organism | FUNCTION |
+|---|---|---|---|
+| Q0V7M8 | F167A_BOVIN | Bos taurus | — |
+| Q5RFZ7 | F167A_DANRE | Danio rerio | — |
+| Q9BTA0 | F167B_HUMAN | Homo sapiens | — |
+| Q4LEZ3 | AARD_HUMAN | Homo sapiens | — |
+| Q96KS9 | F167A_HUMAN | Homo sapiens | — |
+| A1L168 | CT202_HUMAN | Homo sapiens | — |
+| Q811W1 | AARD_MOUSE | Mus musculus | — |
+| P17257 | F167B_MOUSE | Mus musculus | — |
+| Q6P1G6 | F167A_MOUSE | Mus musculus | — |
+| Q91ZF7 | AARD_RAT | Rattus norvegicus | — |
+
+**No member of the FAM167 family has a described function in any organism.**
+Guilt-by-association across paralogs is therefore unavailable for AARD - not
+because it lacks a family, but because the whole family is uncharacterised.
+This is consistent with UniProt's PAN-GO line for AARD, which records
+`0 GO annotations based on evolutionary models`.
 

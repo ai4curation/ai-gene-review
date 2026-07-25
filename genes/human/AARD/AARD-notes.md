@@ -29,8 +29,14 @@ preys in yeast two-hybrid are enriched for coiled-coil proteins, which associate
 through heptad-repeat surfaces. `AARD-bioinformatics/analyze_partners.py` reads the accessions
 straight out of `AARD-goa.tsv` and fetches UniProt features at run time.
 
-**Result: 9 of 15 partners (60%) carry an annotated coiled-coil region**, and the set spans
-**20 distinct subcellular locations**:
+**Result: 9 of 15 partners (60%) carry an annotated coiled-coil region.** Against a background
+of **2059 / 20431 reviewed human proteins (10.1%)**, fetched from UniProt for the purpose, that
+is a **6.0-fold enrichment**, binomial P(X≥9 | n=15, p=0.101) = **3×10⁻⁶**. With n=15 this is a
+descriptive statistic rather than a controlled test — the ideal comparison would be against
+other single-publication prey sets from the same screen — but the enrichment is now *measured*
+rather than asserted.
+
+The partners also span **14 top-level subcellular compartments**:
 
 | Partner | Coiled-coil segments | Where it lives |
 |---|---|---|
@@ -49,6 +55,41 @@ could plausibly meet, and the shared feature across them is architecture, not bi
 That is the artefact signature, and it is a much stronger argument than "no follow-up". Action:
 `MARK_AS_OVER_ANNOTATED` rather than `REMOVE` — the physical interactions may well have occurred
 in the assay, and I have no positive evidence that any individual pair is false.
+
+## The family route is closed too — but it exists
+
+I originally wrote that AARD has "no recognisable domain beyond the compositional
+alanine/arginine-rich description". **That was wrong**, and contradicted by the gene's own
+UniProt file, which I had already read:
+
+```
+DR   InterPro; IPR051771; FAM167_domain.
+DR   PANTHER; PTHR32289:SF2; ALANINE AND ARGININE-RICH DOMAIN-CONTAINING PROTEIN; 1.
+DR   PANTHER; PTHR32289; PROTEIN FAM167A; 1.
+```
+
+AARD is a **FAM167-family** protein, sharing PANTHER `PTHR32289` with FAM167A and FAM167B. For
+a gene this dark, paralogs are the most tractable remaining inference route, so it mattered.
+
+Enumerating the family (now part of the analysis script): **10 reviewed members across 5
+species, and not one carries a UniProt FUNCTION statement.**
+
+| Entry | Organism | FUNCTION |
+|---|---|---|
+| AARD_HUMAN, AARD_MOUSE, AARD_RAT | human/mouse/rat | — |
+| F167A_HUMAN, F167A_MOUSE, F167A_BOVIN, F167A_DANRE | 4 species | — |
+| F167B_HUMAN, F167B_MOUSE | human/mouse | — |
+| CT202_HUMAN | human | — |
+
+So guilt-by-association is unavailable — **not because AARD lacks a family, but because the
+entire family is uncharacterised.** That is a far stronger statement than "no family", and it is
+independently corroborated by UniProt's own PAN-GO line:
+`PAN-GO; Q4LEZ3; 0 GO annotations based on evolutionary models`.
+
+It also raises a better question than any about AARD alone: this is a conserved vertebrate
+family, present in fish through mammals, in which *no member* has a described function. Solving
+any one of them would likely illuminate the rest, and no member is currently a better starting
+point than another.
 
 ## What is actually known about AARD
 
