@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dapD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dapD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MP1" target="_blank" class="term-link">
+                        Q88MP1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dapD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MP1" data-a="DESCRIPTION: dapD encodes tetrahydrodipicolinate N-succinyltran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>dapD encodes tetrahydrodipicolinate N-succinyltransferase (EC 2.3.1.117), which uses succinyl-CoA to mask tetrahydrodipicolinate in the succinylated diaminopimelate route of L-lysine biosynthesis. This reaction establishes the route-specific substrate used by DapC and DapE.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP1" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding is valid cofactor context for DapD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records magnesium for the reaction, but it is less informative than the transferase activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP1" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DapD is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is valid but secondary to catalysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008666" target="_blank" class="term-link">
+                                    GO:0008666
+                                </a>
+                            </span>
+                            <span class="term-label">2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP1" data-a="GO:0008666" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining DapD molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 2.3.1.117, HAMAP MF_02122, and NCBIfam:TIGR03536 support the same reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dapD/dapD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dapD/dapD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">annotated as **2,3,4,5‑tetrahydropyridine‑2,6‑dicarboxylate N‑succinyltransferase** (tetrahydrodipicolinate N‑succinyltransferase; THDP succinyltransferase), **EC 2.3.1.117**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009085" target="_blank" class="term-link">
+                                    GO:0009085
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/dapD/dapD-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MP1" data-a="GO:0009085" data-r="file:PSEPK/dapD/dapD-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DapD defines the succinylated branch of L-lysine biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88MP1 in L-lysine biosynthesis via the DAP pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Succinylates tetrahydrodipicolinate with succinyl-CoA in the succinylated DAP route of L-lysine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88MP1" data-a="FUNCTION: Succinylates tetrahydrodipicolinate with succinyl-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008666" target="_blank" class="term-link">
+                            2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009085" target="_blank" class="term-link">
+                                L-lysine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dapD/dapD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapD/dapD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK DapD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88MP1 to the route-specific DapD succinyltransferase reaction.</div>
+
+                        <div class="finding-text">"Full=2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapD/dapD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK DapD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the three existing GOA annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapD/dapD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist literature and database synthesis for PSEPK DapD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Resolves the requested target to Q88MP1/PP_1530 and corroborates its DapD family and succinylated-DAP pathway context.</div>
+
+                        <div class="finding-text">"The requested target is UniProt **Q88MP1**, gene **dapD** (ordered locus **PP_1530**) of *Pseudomonas putida* KT2440"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct Q88MP1 experiment was found; structural, mechanistic, oligomeric, essentiality, and regulatory details remain ortholog-based.</div>
+
+                        <div class="finding-text">"No study has, to my knowledge, biochemically characterized *P. putida* KT2440 DapD directly."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dapD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MP1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **dapD** (Q88MP1, PP_1530) — Tetrahydrodipicolinate N-succinyltransferase, *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T14:14:57.068176</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dapD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dapD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-dapd-q88mp1-pp_1530-tetrahydrodipicolinate-n-succinyltransferase-pseudomonas-putida-kt2440">Functional Annotation Report: <strong>dapD</strong> (Q88MP1, PP_1530) — Tetrahydrodipicolinate N-succinyltransferase, <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-identity-verification">0. Identity verification</h2>
+<p>The requested target is UniProt <strong>Q88MP1</strong>, gene <strong>dapD</strong> (ordered locus <strong>PP_1530</strong>) of <em>Pseudomonas putida</em> KT2440, annotated as <strong>2,3,4,5‑tetrahydropyridine‑2,6‑dicarboxylate N‑succinyltransferase</strong> (tetrahydrodipicolinate N‑succinyltransferase; THDP succinyltransferase), <strong>EC 2.3.1.117</strong>. The gene symbol, EC number, protein family ("type 2 tetrahydrodipicolinate N‑succinyltransferase"), and InterPro domains (DapD_gammaproteobac. IPR019876; Hexapep IPR001451; THDPS_M IPR032784/IPR038361; Trimer_LpxA‑like_sf IPR011004) are <strong>fully self‑consistent</strong> and match the biochemically and structurally characterized DapD enzymes described below. The symbol is <strong>not ambiguous</strong>: DapD is a conserved, well‑defined bacterial biosynthetic enzyme.</p>
+<p><strong>Evidentiary caveat.</strong> No study has, to my knowledge, biochemically characterized <em>P. putida</em> KT2440 DapD directly. Its function is assigned by (i) automated HAMAP rule MF_02122 and (ii) very strong homology to characterized orthologs. The <strong>closest characterized relative is <em>Pseudomonas aeruginosa</em> DapD</strong> (same genus; PMID 22359568), supplemented by structural/kinetic work on <em>E. coli</em>, <em>Mycobacterium tuberculosis</em>, <em>Corynebacterium glutamicum</em>, and <em>Serratia marcescens</em> DapD. All belong to the same family, and the gammaproteobacterial subtype (IPR019876) is shared with <em>E. coli</em>, <em>Serratia</em>, and <em>Pseudomonas</em>. Inferences below are therefore high‑confidence homology transfers, explicitly flagged where relevant.</p>
+<hr />
+<h2 id="1-summary">1. Summary</h2>
+<p>DapD is a <strong>cytoplasmic homotrimeric acyltransferase of the hexapeptide‑repeat (left‑handed β‑helix / LpxA‑like) superfamily</strong> that catalyzes the <strong>first committed step of the succinylase branch of the meso‑diaminopimelate (meso‑DAP)/L‑lysine biosynthetic pathway</strong>. It transfers a succinyl group from <strong>succinyl‑CoA</strong> onto the amino group of the acceptor derived from <strong>tetrahydrodipicolinate (THDP)</strong> — the ring‑opened form L‑2‑amino‑6‑oxopimelate — producing <strong>N‑succinyl‑L‑2‑amino‑6‑oxopimelate + CoA</strong> (EC 2.3.1.117). This step channels metabolic flux toward meso‑DAP, an essential cross‑linking residue of Gram‑negative peptidoglycan and the immediate precursor of L‑lysine.</p>
+<hr />
+<h2 id="2-primary-molecular-function-the-reaction-catalyzed">2. Primary molecular function: the reaction catalyzed</h2>
+<p>DapD catalyzes the succinyl‑CoA–dependent N‑succinylation of the open‑chain amino‑keto acid generated from THDP:</p>
+<blockquote>
+<p><strong>THDP (→ L‑2‑amino‑6‑oxopimelate) + succinyl‑CoA → N‑succinyl‑L‑2‑amino‑6‑oxopimelate + CoA</strong></p>
+</blockquote>
+<ul>
+<li>Beaman et al. (2002) define the reaction precisely: DapD "catalyzes the <strong>succinyl‑CoA‑dependent acylation of L‑2‑amino‑6‑oxopimelate to 2‑N‑succinyl‑6‑oxopimelate</strong> as part of the <strong>succinylase branch</strong> of the meso‑diaminopimelate/lysine biosynthetic pathway of bacteria, blue‑green algae, and plants" (PMID 11910040).</li>
+<li>A 2025 kinetic/spectroscopic study restates the substrates/products: "DapD catalyzes the reaction of <strong>tetrahydrodipicolinate (THDP) and succinyl‑CoA</strong> to form <strong>(S)‑2‑(3‑carboxypropanamido)‑6‑oxoheptanedioic acid and coenzyme A</strong>" (Hayes et al. 2025, PMID 40930446).</li>
+</ul>
+<p>Chemically, cyclic THDP is in equilibrium with its open‑chain amino‑keto acid form (2‑amino‑6‑oxopimelate/2‑amino‑6‑oxoheptanedioate); it is the free primary amine of this open form that is succinylated. The succinyl "handle" installed here is retained through the next two steps and later removed, serving as a protecting/activating group that permits regioselective transamination.</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<ul>
+<li><strong>Acyl donor:</strong> succinyl‑CoA (not acetyl‑CoA). The discrimination between succinyl‑ and acetyl‑CoA — i.e., between the <strong>succinylase</strong> and <strong>acetylase</strong> branches of DAP biosynthesis — is set by "<strong>at least three amino acids that interact with or give accessible active site volume to the cofactor succinyl group</strong>" (PMID 11910040). DapD's assignment to the succinylase branch (and IPR032784 "THDPS_M") is thus mechanistically grounded.</li>
+<li><strong>Amino acceptor — stereospecificity:</strong> In the closest characterized ortholog, <em>P. aeruginosa</em> DapD "<strong>is specific for the L‑stereoisomer of the amino substrate L‑2‑aminopimelate, and its D‑enantiomer acts as a weak inhibitor</strong>"; both enantiomers bind the same pocket, but the D‑amino group is <strong>misaligned for nucleophilic attack</strong>, explaining specificity and inhibition (PMID 22359568). (L‑2‑aminopimelate is used experimentally as a stable, non‑cyclizing analog of the true acceptor.)</li>
+</ul>
+<h3 id="catalytic-kinetic-mechanism">Catalytic / kinetic mechanism</h3>
+<ul>
+<li><strong>Ordered ternary‑complex ("direct attack") mechanism, not ping‑pong.</strong> Crystallographic ternary complexes place the succinyl thioester carbonyl carbon "<strong>in close proximity to the nucleophilic 2‑amino group of the acceptor, in support of a direct attack ternary complex mechanism</strong>" (PMID 11910040) — both substrates bind before chemistry; no covalent acyl‑enzyme intermediate.</li>
+<li><strong>Kinetics:</strong> For <em>S. marcescens</em> DapD, initial‑velocity patterns are "<strong>consistent with a rapid equilibrium ordered bi bi kinetic mechanism</strong>," and "conversion of the central enzyme complexes (chemistry) is thought to be the <strong>rate‑limiting step</strong>" (PMID 40930446).</li>
+<li><strong>Cooperativity:</strong> In <em>E. coli</em> DapD, "the <strong>C‑terminal helix undergoes a large rearrangement upon substrate binding, which contributes to cooperativity</strong> in substrate binding" (PMID 18242192).</li>
+</ul>
+<hr />
+<h2 id="2b-sequence-based-validation-of-the-homology-assignment-this-work">2b. Sequence-based validation of the homology assignment (this work)</h2>
+<p>To quantify the confidence of transferring function from characterized orthologs, I retrieved the UniProt sequences and computed pairwise alignments (BLOSUM62; global Needleman–Wunsch and local Smith–Waterman) between <em>P. putida</em> DapD (Q88MP1, 344 aa) and reviewed DapD orthologs:</p>
+<table>
+<thead>
+<tr>
+<th>Ortholog (UniProt)</th>
+<th>Length</th>
+<th>% identity to Q88MP1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. aeruginosa</em> PAO1 DapD (G3XD76)</td>
+<td>344 aa</td>
+<td><strong>88.4 %</strong> (304/344)</td>
+</tr>
+<tr>
+<td><em>C. glutamicum</em> DapD (Q8NRE3)</td>
+<td>297 aa</td>
+<td>48.6 %</td>
+</tr>
+<tr>
+<td><em>M. tuberculosis</em> DapD (P9WP21)</td>
+<td>317 aa</td>
+<td>47.7 %</td>
+</tr>
+<tr>
+<td><em>E. coli</em> K12 DapD (P0A9D8)</td>
+<td>274 aa</td>
+<td>~21 % global; ~28 % local core</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key conclusions:</strong><br />
+- <em>P. putida</em> DapD is <strong>88.4 % identical</strong> to <em>P. aeruginosa</em> DapD — the same-genus enzyme whose crystal structures, L-stereospecificity, and succinyl-CoA usage were experimentally established (PMID 22359568). This near-identity makes transfer of catalytic function, substrate specificity, and quaternary structure to Q88MP1 <strong>essentially definitive</strong>.<br />
+- Q88MP1 and G3XD76 have <strong>identical length (344 aa)</strong> and both carry the ~70-residue N-terminal domain characteristic of the <strong>gammaproteobacterial "type 2" DapD subtype</strong> (InterPro IPR019876), consistent with the UniProt "type 2 tetrahydrodipicolinate N-succinyltransferase" family assignment.<br />
+- The low global identity to <em>E. coli</em> DapD is an <strong>architectural difference, not lack of orthology</strong>: the <em>E. coli</em> enzyme is a shorter 274-aa form lacking the N-terminal extension; the conserved LβH catalytic core still aligns (~28 % local identity). <em>M. tuberculosis</em> and <em>C. glutamicum</em> DapD (~48 %) are clear, more distant orthologs.</p>
+<p><em>(Alignments computed in this investigation from UniProt REST-retrieved sequences.)</em></p>
+<h2 id="3-structure-and-molecular-architecture">3. Structure and molecular architecture</h2>
+<p>DapD is a <strong>homotrimer</strong> built on the <strong>hexapeptide‑repeat acyltransferase fold</strong>, exactly matching Q88MP1's InterPro annotations (Hexapep IPR001451; Trimer_LpxA‑like_sf IPR011004).</p>
+<ul>
+<li>Each subunit has three domains: "<strong>an N‑terminal α‑helical domain, a left‑handed β‑helix (LβH) domain, and a β C‑terminal domain</strong>" (C. glutamicum, PMID 26602189). The LβH is "<strong>the common structural motif of enzymes belonging to the hexapeptide repeat superfamily</strong>" (M. tuberculosis, PMID 19394346).</li>
+<li>Three active sites form at the <strong>subunit interfaces</strong> of the trimer; succinyl‑CoA binds there, and the mobile C‑terminal domain closes over the acceptor site (PMID 26602189; PMID 18242192).</li>
+<li>The trimer can be stabilized by metal ions on the molecular 3‑fold axis: in Mtb‑DapD, "<strong>the trimeric quaternary structure is stabilized by Mg²⁺ and Na⁺ located on the 3‑fold axis</strong>," and the N‑terminal domain contains "<strong>an interior water‑filled channel</strong>" leading to that axial Mg²⁺ (PMID 19394346).</li>
+<li>Multiple co‑crystal structures (with succinyl‑CoA, succinamide‑CoA cofactor analog, L‑ and D‑2‑aminopimelate, 2‑aminopimelate) across orthologs map the cofactor and acceptor subsites and were validated by site‑directed mutagenesis of catalytic/binding residues (PMID 26602189; PMID 11910040; PMID 22359568).</li>
+</ul>
+<p>The consistency of <em>P. putida</em> DapD's domain content with this fold provides strong structural support for the functional assignment.</p>
+<p><strong>Sequence-level confirmation of the LβH fold (this work).</strong> Inspection of the Q88MP1 sequence shows the diagnostic <strong>degenerate tandem hexapeptide repeats</strong> of a left-handed β-helix across roughly residues ~200–300 (e.g., …<strong>VSAGV</strong>‑<strong>FVGKGS</strong>‑<strong>DLGGGC</strong>‑<strong>STMGTL</strong>‑<strong>SGGGNI</strong>‑<strong>VIKVGE</strong>‑<strong>GCLIGA</strong>‑<strong>NAGIGI</strong>…), each imperfect [LIV]‑G‑x‑x‑x‑x coil adding one rung to the β‑helix. This independently corroborates the InterPro Hexapep (IPR001451) / Trimer_LpxA‑like (IPR011004) assignment and the trimeric acyltransferase architecture.</p>
+<hr />
+<h2 id="4-pathway-context-and-biological-process">4. Pathway context and biological process</h2>
+<p>DapD initiates the <strong>succinylase (acyl‑DAP) branch</strong> — the route used by most Gram‑negative bacteria including <em>Pseudomonas</em> — of the meso‑DAP/L‑lysine pathway:</p>
+<ol>
+<li>Aspartate → … → <strong>L‑2,3,4,5‑tetrahydrodipicolinate (THDP)</strong> (via DapA/DapB from the common upstream pathway)</li>
+<li><strong>THDP + succinyl‑CoA → N‑succinyl‑2‑amino‑6‑oxopimelate + CoA — <em>DapD (this enzyme)</em></strong></li>
+<li>N‑succinyl‑aminotransferase (DapC) → N‑succinyl‑L,L‑DAP</li>
+<li>N‑succinyl‑L,L‑DAP desuccinylase (DapE) → L,L‑DAP (+ succinate)</li>
+<li>DAP epimerase (DapF) → <strong>meso‑DAP</strong></li>
+<li><strong>meso‑DAP</strong> → incorporated into peptidoglycan <strong>and/or</strong> decarboxylated by DAP decarboxylase (LysA) → <strong>L‑lysine</strong></li>
+</ol>
+<p><strong>Organism‑specific pathway complement (this work).</strong> A UniProt survey of <em>P. putida</em> KT2440 (taxid 160488) confirms the <strong>complete succinylase branch is encoded</strong>: dapA (PP_2639, PP_1237; EC 4.3.3.7) → dapB (PP_4725; EC 1.17.1.8) → <strong>dapD (PP_1530; EC 2.3.1.117 — target)</strong> → dapC N‑succinyl‑LL‑DAP aminotransferase (PP_1588; EC 2.6.1.17) → dapE succinyl‑DAP desuccinylase (PP_1525; EC 3.5.1.18) → dapF DAP epimerase (PP_5228, PP_3790; EC 5.1.1.7) → lysA DAP decarboxylase (PP_5227, PP_2077; EC 4.1.1.20). Crucially, <strong>no acetylase‑branch gene (dapH/dapX) and no meso‑DAP dehydrogenase (ddh, EC 1.4.1.16) were detected</strong> — <em>P. putida</em> has neither the acetylase alternative nor the single‑step dehydrogenase bypass. DapD is therefore the <strong>sole, obligatory committed entry</strong> from THDP into meso‑DAP/lysine synthesis and is functionally non‑redundant (and very likely essential). Notably, <strong>dapD (PP_1530) lies immediately adjacent to dapE (PP_1525)</strong> in the genome, clustering the succinylating and desuccinylating enzymes and suggesting possible co‑regulation.</p>
+<p><strong>Physiological outputs.</strong> The pathway "<strong>provides lysine for protein synthesis and both lysine and meso‑diaminopimelate for construction of the bacterial peptidoglycan cell wall</strong>" (Hutton et al. 2007, PMID 17579770; see also PMID 12570844; PMID 8919551; review PMID 23504110). In Gram‑negative bacteria such as <em>P. putida</em>, meso‑DAP is the residue that cross‑links adjacent peptidoglycan strands, so DapD activity is coupled to <strong>cell‑wall integrity, growth, and division</strong>.</p>
+<p><strong>Regulation.</strong> In <em>C. glutamicum</em>, <em>dapD</em> is a direct target of the nitrogen master regulator <strong>AmtR</strong>, "<strong>the dapD gene, encoding succinylase involved in m‑diaminopimelate synthesis</strong>," linking nitrogen status to lysine biosynthesis (PMID 19041910). This specific regulatory link is organism‑dependent and is not established for <em>P. putida</em>, but it illustrates that <em>dapD</em> expression can be integrated into nitrogen/amino‑acid regulatory networks.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular localization</h2>
+<p>DapD is a <strong>soluble cytoplasmic enzyme</strong>. It acts on small, soluble metabolic intermediates and cofactors (THDP‑derived amino acid, succinyl‑CoA, CoA); it carries no signal peptide, membrane‑spanning segment, or lipidation motif, and all characterized orthologs were purified as soluble cytosolic proteins for crystallography and kinetics (e.g., PMID 18242192; PMID 19394346; PMID 26602189). Its function — an early anabolic step of amino‑acid/cell‑wall‑precursor biosynthesis — is carried out in the <strong>cytoplasm</strong>, where the resulting meso‑DAP is later handed off to the membrane‑associated peptidoglycan‑assembly machinery.</p>
+<hr />
+<h2 id="6-physiological-therapeutic-significance">6. Physiological / therapeutic significance</h2>
+<p>Because the meso‑DAP/lysine pathway is <strong>present in bacteria (and plants) but absent in humans</strong>, and because it feeds both protein synthesis and the essential cell wall, its enzymes are attractive antibacterial targets. DapD specifically has been highlighted: "<strong>Since lysine is an essential amino acid to humans, DapD is a potentially safe target for antibiotic therapies</strong>" (PMID 40930446); the broader strategy is reviewed in PMID 17579770, 12570844, 8919551, and 23504110. The recent finding that DapD can be inactivated by Cu²⁺ (PMID 40930446) is also relevant to inhibitor/metal‑sensitivity considerations. (Note: the essentiality of the succinylase branch varies among species because some bacteria possess alternative branches — dehydrogenase or acetylase; <em>Pseudomonas</em> uses the succinylase route.)</p>
+<hr />
+<h2 id="7-supported-vs-refuted-hypotheses">7. Supported vs. refuted hypotheses</h2>
+<p><strong>Supported (high confidence):</strong><br />
+- H1 — dapD/Q88MP1 encodes tetrahydrodipicolinate N‑succinyltransferase (EC 2.3.1.117). ✔ (family/EC/domain concordance + ortholog biochemistry)<br />
+- H2 — Reaction: THDP‑derived amino acid + succinyl‑CoA → N‑succinyl product + CoA. ✔ (PMID 11910040, 40930446)<br />
+- H3 — Homotrimeric LβH/hexapeptide‑repeat (LpxA‑like) fold. ✔ (PMID 19394346, 26602189, 18242192; matches IPR011004/IPR001451)<br />
+- H4 — L‑stereospecific amino acceptor; succinyl‑CoA‑specific donor. ✔ (PMID 22359568, 11910040)<br />
+- H5 — Ordered ternary‑complex mechanism, cytoplasmic localization, feeds meso‑DAP/peptidoglycan + lysine. ✔ (PMID 11910040, 40930446, 17579770)</p>
+<p><strong>Refuted / disfavored:</strong><br />
+- A ping‑pong (covalent acyl‑enzyme) mechanism — disfavored by ternary‑complex structures and ordered bi‑bi kinetics (PMID 11910040, 40930446).<br />
+- Acetyl‑CoA as the physiological donor — DapD is committed to the succinylase branch; donor selectivity resides in a few active‑site residues (PMID 11910040).</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and future directions</h2>
+<ul>
+<li><strong>No direct experimental data on <em>P. putida</em> KT2440 DapD</strong>; all mechanistic/structural detail is transferred from orthologs. However, this transfer is exceptionally well-supported: the closest characterized relative, <em>P. aeruginosa</em> DapD, is <strong>88 % identical</strong> (identical length, same "type 2" architecture), so the residual uncertainty is small. Direct enzymology (kinetic constants, an experimental <em>P. putida</em> structure) would provide final confirmation.</li>
+<li>The downstream succinylase‑branch genes (dapC PP_1588, dapE PP_1525, dapF, lysA) are present and annotated in <em>P. putida</em> KT2440 (confirmed here), but <em>dapD</em> essentiality and regulation in <em>P. putida</em> have not been experimentally tested; targeted knockout, high‑density transposon fitness (RB‑TnSeq), and expression studies would establish them directly.</li>
+<li>Precise active‑site residues in Q88MP1 could be mapped by sequence/structure alignment to the mutagenesis‑validated positions in <em>E. coli</em>/<em>C. glutamicum</em>/<em>P. aeruginosa</em> DapD.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key references</h3>
+<ul>
+<li>PMID 11910040 — Beaman et al., acyl‑group specificity &amp; direct‑attack ternary‑complex mechanism.</li>
+<li>PMID 22359568 — Schnell et al., <em>P. aeruginosa</em> DapD structure &amp; L‑stereospecificity (closest relative).</li>
+<li>PMID 19394346 — Schuldt et al., <em>M. tuberculosis</em> DapD structure, trimer, LβH fold, axial metals.</li>
+<li>PMID 18242192 — Nguyen et al., <em>E. coli</em> DapD structure, C‑terminal helix rearrangement &amp; cooperativity.</li>
+<li>PMID 26602189 — Sagong &amp; Kim, <em>C. glutamicum</em> DapD structure with succinyl‑CoA and substrate analog.</li>
+<li>PMID 40930446 — Hayes et al. 2025, <em>S. marcescens</em> DapD kinetics (ordered bi‑bi) and Cu inactivation.</li>
+<li>PMID 19041910 — Buchinger et al., <em>dapD</em> as an AmtR (nitrogen) regulatory target.</li>
+<li>PMID 17579770 / 12570844 / 8919551 / 23504110 — reviews: DAP/lysine pathway as antibacterial target.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dapD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dapD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MP1
+gene_symbol: dapD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  dapD encodes tetrahydrodipicolinate N-succinyltransferase (EC 2.3.1.117),
+  which uses succinyl-CoA to mask tetrahydrodipicolinate in the succinylated
+  diaminopimelate route of L-lysine biosynthesis. This reaction establishes the
+  route-specific substrate used by DapC and DapE.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Magnesium binding is valid cofactor context for DapD.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt records magnesium for the reaction, but it is less informative than the transferase activity.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: DapD is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is valid but secondary to catalysis.
+- term:
+    id: GO:0008666
+    label: 2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining DapD molecular function.
+    action: ACCEPT
+    reason: EC 2.3.1.117, HAMAP MF_02122, and NCBIfam:TIGR03536 support the same reaction.
+    supported_by:
+    - reference_id: file:PSEPK/dapD/dapD-uniprot.txt
+      supporting_text: Full=2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase
+    - reference_id: file:PSEPK/dapD/dapD-deep-research-openscientist.md
+      supporting_text: &gt;-
+        annotated as **2,3,4,5‑tetrahydropyridine‑2,6‑dicarboxylate
+        N‑succinyltransferase** (tetrahydrodipicolinate N‑succinyltransferase;
+        THDP succinyltransferase), **EC 2.3.1.117**
+- term:
+    id: GO:0009085
+    label: L-lysine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/dapD/dapD-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: DapD defines the succinylated branch of L-lysine biosynthesis.
+    action: NEW
+    reason: UniProt places Q88MP1 in L-lysine biosynthesis via the DAP pathway.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/dapD/dapD-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK DapD
+  findings:
+  - statement: Assigns Q88MP1 to the route-specific DapD succinyltransferase reaction.
+    supporting_text: Full=2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase
+- id: file:PSEPK/dapD/dapD-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK DapD
+  findings:
+  - statement: Contains the three existing GOA annotations reviewed above.
+- id: file:PSEPK/dapD/dapD-deep-research-openscientist.md
+  title: OpenScientist literature and database synthesis for PSEPK DapD
+  findings:
+  - statement: &gt;-
+      Resolves the requested target to Q88MP1/PP_1530 and corroborates its DapD
+      family and succinylated-DAP pathway context.
+    supporting_text: &gt;-
+      The requested target is UniProt **Q88MP1**, gene **dapD** (ordered locus
+      **PP_1530**) of *Pseudomonas putida* KT2440
+  - statement: &gt;-
+      No direct Q88MP1 experiment was found; structural, mechanistic,
+      oligomeric, essentiality, and regulatory details remain ortholog-based.
+    supporting_text: &gt;-
+      No study has, to my knowledge, biochemically characterized *P. putida*
+      KT2440 DapD directly.
+core_functions:
+- description: &gt;-
+    Succinylates tetrahydrodipicolinate with succinyl-CoA in the succinylated
+    DAP route of L-lysine biosynthesis.
+  molecular_function:
+    id: GO:0008666
+    label: 2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase activity
+  directly_involved_in:
+  - id: GO:0009085
+    label: L-lysine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/dapD/dapD-uniprot.txt
+    supporting_text: Full=2,3,4,5-tetrahydropyridine-2,6-dicarboxylate N-succinyltransferase
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

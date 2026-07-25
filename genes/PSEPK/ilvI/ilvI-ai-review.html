@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ilvI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ilvI</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DY8" target="_blank" class="term-link">
+                        Q88DY8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ilvI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DY8" data-a="DESCRIPTION: IlvI is the thiamine-diphosphate-dependent catalyt..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>IlvI is the thiamine-diphosphate-dependent catalytic large subunit of acetohydroxy-acid synthase. Together with the IlvH regulatory small subunit, it condenses pyruvate either with pyruvate or with 2-oxobutanoate to initiate the shared valine and isoleucine biosynthetic trunk.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0000287" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding is valid cofactor information but not the core reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IlvI catalytic reaction requires divalent metal with thiamine diphosphate.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This generic term is redundant with acetolactate synthase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003984 identifies the actual IlvI reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003984" target="_blank" class="term-link">
+                                    GO:0003984
+                                </a>
+                            </span>
+                            <span class="term-label">acetolactate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0003984" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific catalytic function of the IlvI large subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 2.2.1.6, the acetolactate-synthase large-subunit family, and both UniProt pathway statements support the reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ilvI/ilvI-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Acetolactate synthase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ilvI/ilvI-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Q88DY8 (gene *ilvI*, locus PP_4680) is the large, catalytic subunit of acetohydroxyacid synthase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005948" target="_blank" class="term-link">
+                                    GO:0005948
+                                </a>
+                            </span>
+                            <span class="term-label">acetolactate synthase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0005948" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IlvI is the catalytic subunit of the IlvI-IlvH complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Complex membership is correct but secondary to the enzyme activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009082" target="_blank" class="term-link">
+                                    GO:0009082
+                                </a>
+                            </span>
+                            <span class="term-label">branched-chain amino acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0009082" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad process is redundant with the valine and isoleucine branch calls.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IlvI has explicit pathway assignments to both product-specific branches.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030976" target="_blank" class="term-link">
+                                    GO:0030976
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine pyrophosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0030976" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Thiamine diphosphate binding is valid mechanistic information.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The TPP-enzyme domains and catalytic record support this cofactor interaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0050660" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAD binding is valid mechanistic information for bacterial AHAS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> It is a cofactor property rather than the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009099" target="_blank" class="term-link">
+                                    GO:0009099
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:0009099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IlvI initiates the pyruvate-derived valine branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns IlvI to step 1 of 4 in valine biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901705" target="_blank" class="term-link">
+                                    GO:1901705
+                                </a>
+                            </span>
+                            <span class="term-label">L-isoleucine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ilvI/ilvI-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DY8" data-a="GO:1901705" data-r="file:PSEPK/ilvI/ilvI-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IlvI also initiates the 2-oxobutanoate-derived isoleucine branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88DY8 to step 1 of 4 in isoleucine biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalytic large subunit of the IlvI-IlvH acetohydroxy-acid synthase that initiates valine and isoleucine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88DY8" data-a="FUNCTION: Catalytic large subunit of the IlvI-IlvH acetohydr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003984" target="_blank" class="term-link">
+                            acetolactate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009099" target="_blank" class="term-link">
+                                L-valine biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901705" target="_blank" class="term-link">
+                                L-isoleucine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ilvI/ilvI-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Acetolactate synthase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ilvI/ilvI-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Q88DY8 (gene *ilvI*, locus PP_4680) is the large, catalytic subunit of acetohydroxyacid synthase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ilvI/ilvI-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK IlvI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88DY8 to EC 2.2.1.6 and both valine and isoleucine biosynthesis.</div>
+
+                        <div class="finding-text">"Full=Acetolactate synthase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ilvI/ilvI-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK IlvI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the eight existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ilvI/ilvI-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist literature and database synthesis for PSEPK IlvI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88DY8 as the catalytic large subunit of acetohydroxy-acid synthase.</div>
+
+                        <div class="finding-text">"Q88DY8 (gene *ilvI*, locus PP_4680) is the large, catalytic subunit of acetohydroxyacid synthase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct biochemical characterization of the KT2440 protein was found; substrate preferences, feedback effects, and holoenzyme stoichiometry in the report are transferred from other bacterial AHAS systems.</div>
+
+                        <div class="finding-text">"Direct biochemical characterization of the *P. putida* KT2440 enzyme specifically was not located"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ilvI-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DY8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *ilvI* (Q88DY8, PP_4680) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T08:18:04.387455</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ilvI-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ilvI-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-ilvi-q88dy8-pp_4680-in-pseudomonas-putida-kt2440">Functional Annotation of <em>ilvI</em> (Q88DY8, PP_4680) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer">1. Summary / Answer</h2>
+<p><strong>Q88DY8 (gene <em>ilvI</em>, locus PP_4680) is the large, catalytic subunit of acetohydroxyacid synthase (AHAS; also called acetolactate synthase, EC 2.2.1.6)</strong> — a thiamine-diphosphate (ThDP)-dependent enzyme that catalyzes the <strong>first and committed step of branched-chain amino acid (BCAA) biosynthesis</strong> (valine, leucine, isoleucine). Acting in the <strong>cytoplasm</strong> as part of an A₂B₂ holoenzyme with a small regulatory subunit (PP_4679/<em>ilvH</em>), it condenses two molecules of pyruvate into (2<em>S</em>)-2-acetolactate (the Val/Leu precursor), or condenses pyruvate with 2-ketobutyrate into 2-aceto-2-hydroxybutyrate (the Ile precursor), releasing CO₂. The reaction requires ThDP, a divalent metal (Mg²⁺), and FAD.</p>
+<p>Gene-identity verification confirms this is the correct protein: UniProt, KEGG, GO, and InterPro all independently annotate Q88DY8/PP_4680 as the AHAS large subunit, and the surrounding literature on the AHAS enzyme family is fully consistent with the provided protein description, domains, and organism.</p>
+<hr />
+<h2 id="2-gene-protein-identity-verification-mandatory-check">2. Gene / Protein Identity Verification (mandatory check)</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Provided (UniProt)</th>
+<th>Independently confirmed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accession</td>
+<td>Q88DY8</td>
+<td>UniProt REST ✔</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Acetolactate synthase, EC 2.2.1.6</td>
+<td>UniProt recommended name; KEGG "acetohydroxybutanoate synthase / acetolactate synthase" ✔</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td><em>ilvI</em> / PP_4680</td>
+<td>KEGG ppu:PP_4680 ✔</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Family / domains</td>
+<td>TPP enzyme family; AHAS_TPP, ThDP-binding, DHS-like NAD/FAD-binding</td>
+<td>UniProt SIMILARITY + KEGG orthology K01652 ✔</td>
+</tr>
+<tr>
+<td>KEGG ortholog</td>
+<td>—</td>
+<td><strong>K01652</strong> = "acetolactate synthase I/II/III <strong>large subunit</strong> [EC:2.2.1.6]" ✔</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>—</td>
+<td>574 aa</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on nomenclature:</strong> In enterobacteria (<em>E. coli</em>), there are three AHAS isozymes whose large catalytic subunits are named <em>ilvB</em> (AHAS I), <em>ilvG</em> (AHAS II), and <em>ilvI</em> (AHAS III); each pairs with a small regulatory subunit (<em>ilvN</em>, <em>ilvM</em>, <em>ilvH</em>, respectively) (Vyazmensky et al., 2009, PMID 19653643). The <em>P. putida</em> gene retains the <em>ilvI</em> name for its single AHAS large subunit. <strong>The symbol is therefore unambiguous here and the literature on AHAS applies directly.</strong> This is <em>not</em> the same as, e.g., unrelated genes that share the "ilvI" text in other contexts.</p>
+<hr />
+<h2 id="3-primary-function-reaction-and-substrate-specificity">3. Primary Function: Reaction and Substrate Specificity</h2>
+<p>AHAS catalyzes a ThDP-dependent carboligation. UniProt records the canonical reaction (RHEA:25249):</p>
+<blockquote>
+<p><strong>2 pyruvate + H⁺ → (2S)-2-acetolactate + CO₂</strong>  (EC 2.2.1.6)</p>
+</blockquote>
+<p>The enzyme has two physiological condensations that partition flux between the BCAA branches (Liu, Li &amp; Wang, 2016, PMID 27576495):</p>
+<ul>
+<li><strong>Pyruvate + pyruvate → (2S)-2-acetolactate</strong> → downstream to <strong>L-valine</strong> and <strong>L-leucine</strong>.</li>
+<li><strong>Pyruvate + 2-ketobutyrate → 2-aceto-2-hydroxybutyrate</strong> → downstream to <strong>L-isoleucine</strong>.</li>
+</ul>
+<p><strong>Catalytic mechanism.</strong> ThDP (activated by the divalent metal ion, Mg²⁺) is deprotonated at C2 to a reactive ylide; it attacks the first pyruvate and, after decarboxylation (loss of CO₂), forms a hydroxyethyl-ThDP (enamine/carbanion) intermediate. This carbanion then attacks the carbonyl of a second 2-oxoacid (pyruvate or 2-ketobutyrate), and product release regenerates the ylide (Gokhale &amp; Tilak, 2015, PMID 25882218; Liu et al., 2016, PMID 27576495).</p>
+<p><strong>Cofactors</strong> (UniProt COFACTOR; GO): <strong>ThDP</strong> (1 per subunit), <strong>Mg²⁺</strong> (1 per subunit), and <strong>FAD</strong>. FAD is a non-catalytic, structurally required cofactor — a vestige of AHAS's evolutionary descent from the FAD/redox-dependent pyruvate oxidase family (Gokhale &amp; Tilak, 2015, PMID 25882218; Liu et al., 2016, PMID 27576495).</p>
+<p><strong>Substrate specificity (from a close bacterial homolog).</strong> Kinetic characterization of the orthologous <em>Ralstonia eutropha</em> AHAS (ilvBH) shows the enzyme has weak affinity for the first substrate pyruvate (Kₘ ≈ 10.5 µM) but strong selectivity toward <strong>2-ketobutyrate as the second substrate (specificity ratio R ≈ 140)</strong>, explaining efficient isoleucine synthesis when 2-ketobutyrate is available (Lu et al., 2015, PMID 25081555). While measured in <em>R. eutropha</em>, this behavior is characteristic of the conserved bacterial AHAS catalytic subunit to which PP_4680 belongs.</p>
+<p><strong>Substrate specificity inferred from conserved active-site residues.</strong> A more ortholog-specific inference comes from the active site itself. <em>E. coli</em> AHAS isozyme I (IlvB) is unusual in being <strong>non-specific</strong> for 2-ketobutyrate versus pyruvate as the acceptor substrate; this is caused by two residues (Gln480 and Met476) that replace a <strong>Trp and Leu conserved in the other AHAS isozymes</strong>, accelerating the ligation/product-release steps (Belenky et al., 2012, PMID 22443469). Aligning Q88DY8 to these positions shows that <strong>P. putida IlvI retains the conserved Trp (Trp486)</strong> — exactly as in <em>E. coli</em> AHAS III (Trp484) — rather than the AHAS I Gln. It therefore mirrors the AHAS III active site and is predicted to be <strong>specific for 2-ketobutyrate over pyruvate as the second substrate</strong>, i.e., an efficient producer of the isoleucine precursor. This structure/evolution-based prediction is more reliable than generic family-level transfer because it is anchored on the specific catalytic residues of the 67%-identical AHAS III ortholog.</p>
+<hr />
+<h2 id="4-quaternary-structure-regulatory-subunit-and-localization">4. Quaternary Structure, Regulatory Subunit, and Localization</h2>
+<p><strong>Holoenzyme architecture.</strong> Active AHAS is a <strong>holoenzyme of a catalytic (large) subunit + a regulatory (small) subunit</strong>. The crystal structure of the AHAS holoenzyme shows a <strong>A₂B₂ arrangement</strong> (two catalytic + two regulatory subunits), with the regulatory-subunit dimer clamping the catalytic dimer; a conserved salt bridge acts as a trigger that opens the catalytic activation loop, boosting catalytic-subunit activity (Zhang et al., 2020, PMID 32538427). The isolated large subunit has only a small fraction of full activity, and holoenzyme activity is fully restored upon reconstitution with the small subunit (Vyazmensky et al., 2009, PMID 19653643).</p>
+<p><strong>The partner small subunit in <em>P. putida</em>.</strong> Chromosomal context strongly corroborates this: PP_4680 (<em>ilvI</em>, K01652, large subunit) is immediately adjacent to <strong>PP_4679 (K01653, "acetolactate synthase small subunit" = <em>ilvH</em>/regulatory subunit)</strong>, and directly upstream lies <strong>PP_4678 (K00053, ketol-acid reductoisomerase / <em>ilvC</em>)</strong>, the enzyme catalyzing the <em>next</em> step of the pathway. This <strong>ilvC–ilvH–ilvI clustering</strong> is typical of co-regulated BCAA-biosynthesis genes and confirms the functional pairing of PP_4680 with PP_4679 (KEGG genome positions: PP_4680 5317649–5319373; PP_4679 5317156–5317647, same strand).</p>
+<p><strong>Allosteric feedback inhibition.</strong> The regulatory subunit carries paired <strong>ACT domains</strong>; the end-product amino acid(s) <strong>valine (and/or leucine) bind at the interface between two ACT domains</strong>, transmitting inhibition to the catalytic subunit (Barak &amp; Chipman, 2012, PMID 22198286). This makes AHAS the <strong>rate-controlling gatekeeper</strong> of the pathway: BCAA end-products shut down their own synthesis at the first committed step. Homolog kinetics quantify the effect (R. eutropha AHAS: L-valine IC₅₀ ≈ 1.2 mM, L-isoleucine ≈ 2.3 mM, L-leucine ≈ 5.4 mM; Lu et al., 2015, PMID 25081555). Barak &amp; Chipman also note that the regulatory subunits of "typical" single AHAS enzymes in non-enterobacteria resemble <em>E. coli</em> AHAS III (ilvIH) — consistent with the <em>P. putida</em> ilvIH-type system.</p>
+<p><strong>Subcellular localization.</strong> AHAS is a <strong>soluble cytoplasmic enzyme</strong> (GO:0005948, "acetolactate synthase complex"; no signal peptide or transmembrane region). Its function — a biosynthetic condensation feeding downstream cytoplasmic enzymes (ilvC, ilvD, and the transaminases/leucine-branch enzymes) — is carried out entirely within the cytoplasm.</p>
+<p><strong>PP_4680 is the dedicated <em>biosynthetic</em> AHAS.</strong> <em>P. putida</em> KT2440 encodes four TPP-family proteins that KEGG maps to the AHAS-large-subunit ortholog K01652 (PP_1157, PP_1394, PP_3365, PP_4680). However, several lines of evidence single out <strong>PP_4680</strong> as the true anabolic BCAA enzyme: (i) the genome contains <strong>only one small regulatory-subunit gene, PP_4679 (K01653)</strong>, and it sits <strong>immediately adjacent to PP_4680</strong> in the ilvC–ilvH–ilvI cluster; (ii) PP_4680 is uniquely annotated "<strong>acetohydroxybutanoate synthase</strong> / acetolactate synthase," i.e., competent for the 2-ketobutyrate→isoleucine branch that defines the biosynthetic enzyme; and (iii) the other three loci are standalone TPP enzymes with no cognate small subunit or <em>ilv</em>-operon context (likely catabolic acetolactate/2-oxoacid-decarboxylase-type activities). At the sequence level, Q88DY8 carries the canonical ThDP-binding fingerprint <strong>GDG…N</strong> (…YDK<strong>GDG</strong>NVIKP…, GDG at residue 369), the hallmark motif that coordinates the ThDP–Mg²⁺ cofactor in this enzyme family. Together these confirm PP_4680/<em>ilvI</em> as the correct, dedicated biosynthetic AHAS catalytic subunit.</p>
+<p><strong>Orthology confirmed by sequence identity.</strong> Global (Needleman–Wunsch) alignment shows Q88DY8 (574 aa) is <strong>67.0% identical to the <em>E. coli</em> AHAS isozyme III large subunit (IlvI, P00893; also 574 aa)</strong> — versus only <strong>44.8% to the AHAS I large subunit (IlvB, P08142)</strong>. This markedly higher identity to <em>E. coli</em> AHAS III, plus the identical chain length, establishes Q88DY8 as a <strong>specific ortholog of the AHAS III (ilvIH) lineage</strong> rather than a generic AHAS. This is fully consistent with the observation that "typical" single bacterial AHAS enzymes resemble <em>E. coli</em> AHAS III (Barak &amp; Chipman, 2012, PMID 22198286), and it independently validates the <em>ilvI</em> gene name from evolutionary evidence.</p>
+<hr />
+<h2 id="5-pathway-context">5. Pathway Context</h2>
+<p>AHAS catalyzes <strong>step 1 of 4</strong> in two parallel routes (UniProt PATHWAY; KEGG ppu00290 "Valine, leucine and isoleucine biosynthesis"):</p>
+<ul>
+<li><strong>L-valine from pyruvate:</strong> step 1/4 → acetolactate → (ilvC) → (ilvD) → 2-ketoisovalerate → (ilvE/transaminase) → valine. 2-Ketoisovalerate also branches to <strong>leucine</strong> (leuABCD) and is a precursor for <strong>pantothenate/CoA</strong>.</li>
+<li><strong>L-isoleucine from 2-oxobutanoate (2-ketobutyrate):</strong> step 1/4 → 2-aceto-2-hydroxybutyrate → (ilvC) → (ilvD) → 2-keto-3-methylvalerate → (ilvE) → isoleucine. (2-Ketobutyrate itself derives from threonine via threonine dehydratase, <em>ilvA</em>.)</li>
+</ul>
+<p>Because it initiates all three BCAAs and their derived cofactor precursors, and because the pathway is <strong>absent in animals</strong>, AHAS is the well-known molecular target of &gt;50 commercial herbicides (sulfonylureas, imidazolinones, triazolopyrimidines) and an antimicrobial/anti-tuberculosis drug target (Liu et al., 2016, PMID 27576495; Gokhale &amp; Tilak, 2015, PMID 25882218; Lonhienne et al., 2018, PMID 29440497).</p>
+<hr />
+<h2 id="6-hypotheses-supported-and-refuted">6. Hypotheses: Supported and Refuted</h2>
+<p><strong>Supported</strong><br />
+1. <em>ilvI</em>/PP_4680 encodes the AHAS <strong>large catalytic subunit</strong> — supported by UniProt, KEGG K01652, GO, InterPro, and direct concordance with AHAS literature.<br />
+2. It catalyzes ThDP/Mg²⁺/FAD-dependent condensation of pyruvate (±2-ketobutyrate) as the committed step of BCAA biosynthesis — supported (UniProt reaction, PMID 27576495, 25882218).<br />
+3. It functions as a <strong>cytoplasmic holoenzyme</strong> with the adjacent small subunit PP_4679 (<em>ilvH</em>) and is feedback-inhibited by valine via ACT-domain sites — supported by structural/kinetic literature (PMID 32538427, 22198286, 19653643) and by the P. putida ilvC–ilvH–ilvI gene cluster.</p>
+<p><strong>Refuted / ruled out</strong><br />
+- That the <em>ilvI</em> symbol refers to an unrelated non-AHAS gene — refuted; all databases and family/domain evidence converge on AHAS.<br />
+- That the large subunit alone constitutes the physiologically regulated enzyme — refuted; full activity and valine sensitivity require the small subunit (PMID 19653643, 22198286).</p>
+<hr />
+<h2 id="7-evidence-quality-and-limitations">7. Evidence Quality and Limitations</h2>
+<ul>
+<li><strong>Enzyme identity, reaction, cofactors, pathway, and localization</strong> rest on strong, convergent database annotation (UniProt/KEGG/GO/InterPro) plus authoritative reviews and primary structural studies of the AHAS family — high confidence.</li>
+<li><strong>Direct biochemical characterization of the <em>P. putida</em> KT2440 enzyme specifically was not located</strong> in the searchable literature; the quantitative substrate-specificity and feedback-inhibition parameters cited (Kₘ, IC₅₀, selectivity R) come from a <strong>close bacterial homolog</strong> (<em>R. eutropha</em> ilvBH, PMID 25081555) and from <em>E. coli</em> isozyme studies. These are transferable by strong homology but are inferences, not measurements on Q88DY8.</li>
+<li><strong>Future directions:</strong> heterologous expression and kinetic assay of PP_4680 + PP_4679 to measure its own Kₘ/kcat and valine IC₅₀; verification that PP_4679 is the cognate regulatory subunit by co-purification; and testing whether <em>P. putida</em> encodes any second AHAS large subunit (an <em>ilvBN</em>-type paralog) elsewhere on the chromosome.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>Vyazmensky et al., 2009 — Interactions between large and small AHAS subunits (PMID 19653643)</li>
+<li>Liu, Li &amp; Wang, 2016 — AHAS evolution, structure, and function (review) (PMID 27576495)</li>
+<li>Gokhale &amp; Tilak, 2015 — Mechanisms of bacterial AHAS; drug target (PMID 25882218)</li>
+<li>Zhang et al., 2020 — Molecular architecture of the AHAS holoenzyme (A₂B₂) (PMID 32538427)</li>
+<li>Barak &amp; Chipman, 2012 — Allosteric regulation / ACT-domain feedback sites (PMID 22198286)</li>
+<li>Lu et al., 2015 — Kinetics of <em>R. eutropha</em> AHAS (substrate specificity, feedback) (PMID 25081555)</li>
+<li>Belenky et al., 2012 — Active-site residues controlling AHAS I vs III specificity/kinetics (PMID 22443469)</li>
+<li>Lonhienne et al., 2018 — Structural basis of AHAS herbicide inhibition (PMID 29440497)</li>
+<li>Platko, Willins &amp; Calvo, 1990 — <em>ilvIH</em> operon regulation in <em>E. coli</em> (PMID 2115869)</li>
+<li>Database sources: UniProt Q88DY8; KEGG ppu:PP_4680 / K01652 / ppu00290; InterPro IPR012846, IPR039368, IPR029035, IPR029061, IPR012000.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ilvI-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ilvI-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DY8
+gene_symbol: ilvI
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  IlvI is the thiamine-diphosphate-dependent catalytic large subunit of
+  acetohydroxy-acid synthase. Together with the IlvH regulatory small subunit,
+  it condenses pyruvate either with pyruvate or with 2-oxobutanoate to initiate
+  the shared valine and isoleucine biosynthetic trunk.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Magnesium binding is valid cofactor information but not the core reaction.
+    action: KEEP_AS_NON_CORE
+    reason: The IlvI catalytic reaction requires divalent metal with thiamine diphosphate.
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This generic term is redundant with acetolactate synthase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003984 identifies the actual IlvI reaction.
+- term:
+    id: GO:0003984
+    label: acetolactate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the specific catalytic function of the IlvI large subunit.
+    action: ACCEPT
+    reason: &gt;-
+      EC 2.2.1.6, the acetolactate-synthase large-subunit family, and both
+      UniProt pathway statements support the reaction.
+    supported_by:
+    - reference_id: file:PSEPK/ilvI/ilvI-uniprot.txt
+      supporting_text: Full=Acetolactate synthase
+    - reference_id: file:PSEPK/ilvI/ilvI-deep-research-openscientist.md
+      supporting_text: &gt;-
+        Q88DY8 (gene *ilvI*, locus PP_4680) is the large, catalytic subunit of
+        acetohydroxyacid synthase
+- term:
+    id: GO:0005948
+    label: acetolactate synthase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: IlvI is the catalytic subunit of the IlvI-IlvH complex.
+    action: KEEP_AS_NON_CORE
+    reason: Complex membership is correct but secondary to the enzyme activity.
+- term:
+    id: GO:0009082
+    label: branched-chain amino acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: This broad process is redundant with the valine and isoleucine branch calls.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: IlvI has explicit pathway assignments to both product-specific branches.
+- term:
+    id: GO:0030976
+    label: thiamine pyrophosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Thiamine diphosphate binding is valid mechanistic information.
+    action: KEEP_AS_NON_CORE
+    reason: The TPP-enzyme domains and catalytic record support this cofactor interaction.
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: FAD binding is valid mechanistic information for bacterial AHAS.
+    action: KEEP_AS_NON_CORE
+    reason: It is a cofactor property rather than the substrate-specific reaction.
+- term:
+    id: GO:0009099
+    label: L-valine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: IlvI initiates the pyruvate-derived valine branch.
+    action: ACCEPT
+    reason: UniProt assigns IlvI to step 1 of 4 in valine biosynthesis.
+- term:
+    id: GO:1901705
+    label: L-isoleucine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/ilvI/ilvI-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: IlvI also initiates the 2-oxobutanoate-derived isoleucine branch.
+    action: NEW
+    reason: UniProt explicitly assigns Q88DY8 to step 1 of 4 in isoleucine biosynthesis.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ilvI/ilvI-uniprot.txt
+  title: UniProtKB entry for PSEPK IlvI
+  findings:
+  - statement: Assigns Q88DY8 to EC 2.2.1.6 and both valine and isoleucine biosynthesis.
+    supporting_text: Full=Acetolactate synthase
+- id: file:PSEPK/ilvI/ilvI-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK IlvI
+  findings:
+  - statement: Contains the eight existing annotations reviewed above.
+- id: file:PSEPK/ilvI/ilvI-deep-research-openscientist.md
+  title: OpenScientist literature and database synthesis for PSEPK IlvI
+  findings:
+  - statement: &gt;-
+      Identifies Q88DY8 as the catalytic large subunit of acetohydroxy-acid
+      synthase.
+    supporting_text: &gt;-
+      Q88DY8 (gene *ilvI*, locus PP_4680) is the large, catalytic subunit of
+      acetohydroxyacid synthase
+  - statement: &gt;-
+      No direct biochemical characterization of the KT2440 protein was found;
+      substrate preferences, feedback effects, and holoenzyme stoichiometry in
+      the report are transferred from other bacterial AHAS systems.
+    supporting_text: &gt;-
+      Direct biochemical characterization of the *P. putida* KT2440 enzyme
+      specifically was not located
+core_functions:
+- description: &gt;-
+    Catalytic large subunit of the IlvI-IlvH acetohydroxy-acid synthase that
+    initiates valine and isoleucine biosynthesis.
+  molecular_function:
+    id: GO:0003984
+    label: acetolactate synthase activity
+  directly_involved_in:
+  - id: GO:0009099
+    label: L-valine biosynthetic process
+  - id: GO:1901705
+    label: L-isoleucine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/ilvI/ilvI-uniprot.txt
+    supporting_text: Full=Acetolactate synthase
+  - reference_id: file:PSEPK/ilvI/ilvI-deep-research-openscientist.md
+    supporting_text: &gt;-
+      Q88DY8 (gene *ilvI*, locus PP_4680) is the large, catalytic subunit of
+      acetohydroxyacid synthase
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

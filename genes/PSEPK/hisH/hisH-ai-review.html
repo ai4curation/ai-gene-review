@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hisH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hisH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R44" target="_blank" class="term-link">
+                        Q88R44
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hisH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R44" data-a="DESCRIPTION: hisH encodes the class-I glutamine amidotransferas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>hisH encodes the class-I glutamine amidotransferase subunit of imidazole-glycerol-phosphate synthase (IGPS). HisH hydrolyzes L-glutamine and channels the resulting ammonia to the HisF cyclase subunit, which converts PRFAR to imidazole-glycerol phosphate and AICAR. The coupled HisF-HisH reaction is the fifth step of L-histidine biosynthesis. HisH is not a pentosyltransferase; that annotation reflects an overly broad InterPro2GO mapping of this amidotransferase family.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                    GO:0000105
+                                </a>
+                            </span>
+                            <span class="term-label">L-histidine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R44" data-a="GO:0000105" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisH is an obligate component of the fifth histidine-biosynthesis reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt, UniPathway, and HisH-specific family assignments place the HisF-HisH IGPS reaction at step 5 of 9 in L-histidine biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000107" target="_blank" class="term-link">
+                                    GO:0000107
+                                </a>
+                            </span>
+                            <span class="term-label">imidazoleglycerol-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R44" data-a="GO:0000107" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisH contributes the ammonia-generating subunit of IGPS activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0000107 and RHEA:24793 describe the coupled HisF-HisH reaction. HisH supplies channelled ammonia while HisF performs the cyclization chemistry.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hisH/hisH-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">is the glutamine-hydrolyzing (glutaminase) subunit of imidazole glycerol phosphate synthase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R44" data-a="GO:0004359" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisH catalyzes glutamine hydrolysis as its subunit-level activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt entry assigns EC 3.5.1.2 and RHEA:15889 and describes glutamine hydrolysis as the source of ammonia channelled to HisF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hisH/hisH-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">catalyzes the hydrolysis of L-glutamine to L-glutamate plus ammonia (EC 3.5.1.2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R44" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisH is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported by UniProt but is contextual rather than the core biochemical role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016763" target="_blank" class="term-link">
+                                    GO:0016763
+                                </a>
+                            </span>
+                            <span class="term-label">pentosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R44" data-a="GO:0016763" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisH does not catalyze pentosyl-group transfer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro2GO assignment conflicts with the HisH-specific family, EC 3.5.1.2 glutaminase chemistry, and the composite IGPS reaction. HisH hydrolyzes glutamine to supply ammonia; no pentosyl donor or transfer reaction is involved.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glutaminase subunit of the HisF-HisH imidazole-glycerol-phosphate synthase; hydrolyzes glutamine and channels ammonia to HisF for IGP and AICAR formation.</h3>
+                <span class="vote-buttons" data-g="Q88R44" data-a="FUNCTION: Glutaminase subunit of the HisF-HisH imidazole-gly..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                            glutaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                L-histidine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hisH/hisH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The HisH subunit catalyzes the hydrolysis of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hisH/hisH-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">is the glutamine-hydrolyzing (glutaminase) subunit of imidazole glycerol phosphate synthase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisH/hisH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK hisH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88R44 as the IGPS glutaminase subunit that hydrolyzes glutamine and channels ammonia to HisF.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisH/hisH-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK hisH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the five existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisH/hisH-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional report for PSEPK HisH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Corroborates the HisH glutaminase-subunit identity and its contribution to the coupled HisF-HisH IGPS reaction. The report finds no direct biochemical characterization of Q88R44; mechanistic detail is inferred from orthologs.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hisH-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R44" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: HisH (Q88R44) — Imidazole Glycerol Phosphate Synthase Glutaminase Subunit in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T05:40:05.281492</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hisH-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hisH-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-hish-q88r44-imidazole-glycerol-phosphate-synthase-glutaminase-subunit-in-pseudomonas-putida-kt2440">Functional Annotation Report: HisH (Q88R44) — Imidazole Glycerol Phosphate Synthase Glutaminase Subunit in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>HisH (UniProt Q88R44; locus PP_0290) in <em>Pseudomonas putida</em> KT2440 is the glutamine-hydrolyzing (glutaminase) subunit of imidazole glycerol phosphate synthase (IGPS/ImGPS), a bienzyme complex of the histidine-biosynthesis pathway.</strong> It is a 212-residue, class-I glutamine amidotransferase (GATase type-1) that catalyzes the hydrolysis of L-glutamine to L-glutamate plus ammonia (EC 3.5.1.2). The nascent ammonia is not released into solution; instead it is channeled intramolecularly to the partner cyclase subunit HisF, where it is incorporated into the acceptor substrate PRFAR (N′-[(5′-phosphoribulosyl)formimino]-5-aminoimidazole-4-carboxamide ribonucleotide) to yield imidazole glycerol phosphate (IGP) and 5-aminoimidazole-4-carboxamide ribotide (AICAR). This defines the overall IGPS reaction (EC 4.3.2.10) and step 5 of the nine-step L-histidine biosynthetic pathway from PRPP.</p>
+<p>The functional unit of HisH is not the isolated protein but an <strong>obligate HisH:HisF heterodimer</strong>. Isolated HisH has essentially no glutaminase activity; the reaction is switched on only when HisH is bound to HisF, and further amplified — roughly 1000-fold — when HisF carries its acceptor substrate or a substrate analogue. This inter-subunit allosteric coupling ensures that glutamine is not wastefully hydrolyzed when the downstream acceptor is absent. The enzyme is a soluble, cytoplasmic protein, and its ammonia product travels ~25 Å through an internal channel in the HisF (βα)₈-barrel to reach the second active site. Because the co-product AICAR re-enters de novo purine biosynthesis, HisH sits at a metabolic branch point linking histidine and purine biosynthesis.</p>
+<p>The functional assignment for the <em>P. putida</em> protein is made by homology (HAMAP-Rule MF_00278) and is strongly corroborated by multiple convergent lines of evidence generated in this investigation: (i) sequence homology of 39–45% identity to experimentally characterized HisH orthologs from <em>E. coli</em>, <em>Salmonella typhimurium</em>, and <em>Thermotoga maritima</em>, with exact conservation of the catalytic triad; (ii) an AlphaFold structural model (global pLDDT 97.5) showing a textbook, pre-organized Cys81-His190-Glu192 catalytic triad with physiologically appropriate inter-residue distances; (iii) genomic co-clustering of <em>hisH</em> (PP_0290) with its obligate partner <em>hisF</em> (PP_0293) and other <em>his</em> genes; and (iv) a body of biochemical and biophysical literature establishing the mechanism in orthologs. No experimental characterization of the <em>P. putida</em> protein specifically was found, but the annotation is exceptionally well supported by inference from these sources.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before proceeding, the target identity was verified against the UniProt record and against the primary literature:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88R44</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>Gene symbol</td>
+<td><em>hisH</em></td>
+<td>Consistent with protein description</td>
+</tr>
+<tr>
+<td>Locus tag</td>
+<td>PP_0290</td>
+<td>Confirmed (<em>P. putida</em> KT2440)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>Protein length</td>
+<td>212 aa</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>EC numbers</td>
+<td>4.3.2.10 (overall IGPS); 3.5.1.2 (glutaminase)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td>Class-I GATase-like (IPR029062); GATASE (IPR017926); Imidazole-glycPsynth_HisH (IPR010139); GATase (PF00117)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>Assignment basis</td>
+<td>HAMAP-Rule MF_00278</td>
+<td>Confirmed</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol "hisH", the domain architecture (a single class-I glutamine amidotransferase / GATase type-1 domain), and the organism all align consistently with the biochemical literature on HisH glutaminase subunits. <strong>The literature retrieved describes the correct protein family and reaction; there was no evidence of confusion with a same-symbol gene from an unrelated family.</strong> The one caveat is that all direct biochemical characterization comes from orthologs (<em>T. maritima</em>, yeast, <em>E. coli</em>/<em>Salmonella</em>, <em>Zymomonas mobilis</em>), not from the <em>P. putida</em> protein itself — a standard and acceptable basis for functional annotation given the high homology and universal conservation of this pathway.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hish-is-the-glutaminase-subunit-of-imidazole-glycerol-phosphate-synthase">Finding 1 — HisH is the glutaminase subunit of imidazole glycerol phosphate synthase</h3>
+<p>The UniProt record for Q88R44 annotates the 212-residue <em>P. putida</em> protein as a single glutamine amidotransferase type-1 (class-I GATase) domain spanning essentially the entire chain (residues 3–212), carrying both EC 4.3.2.10 (the overall IGPS reaction) and EC 3.5.1.2 (the glutaminase half-reaction). The catalytic activities are formally: <strong>L-glutamine + H₂O → L-glutamate + NH₄⁺</strong> (Rhea:15889), coupled to <strong>PRFAR + L-glutamine → IGP + AICAR + L-glutamate</strong> (Rhea:24793). This assignment derives from HAMAP-Rule MF_00278, the curated family rule for HisH.</p>
+<p>The primary literature establishes the mechanism unambiguously. In the <em>Thermotoga maritima</em> system, IGPS "constitutes a bienzyme complex of the glutaminase subunit HisH and the synthase subunit HisF" (<a href="https://pubmed.ncbi.nlm.nih.gov/11264293/">PMID: 11264293</a>). The same study defines the labor division: "Nascent ammonia produced by HisH reacts at the active site of HisF with N′-((5′-phosphoribulosyl)formimino)-5-aminoimidazole-4-carboxamide-ribonucleotide to yield the products imidazole glycerol phosphate and 5-aminoimidazole-4-carboxamide ribotide" (<a href="https://pubmed.ncbi.nlm.nih.gov/11264293/">PMID: 11264293</a>). Thus HisH is the ammonia-generating half of the enzyme, and its glutamine-derived ammonia is the substrate consumed by HisF's cyclase chemistry.</p>
+<h3 id="finding-2-hish-glutaminase-activity-is-allosterically-activated-by-hisf-and-its-substrate">Finding 2 — HisH glutaminase activity is allosterically activated by HisF and its substrate</h3>
+<p>A defining property of HisH is that it is catalytically silent on its own. In the <em>T. maritima</em> system, "isolated tHisH showed no detectable glutaminase activity but was stimulated by complex formation with tHisF to which either the product imidazole glycerol phosphate or a substrate analogue were bound" (<a href="https://pubmed.ncbi.nlm.nih.gov/11264293/">PMID: 11264293</a>). The bifunctional yeast enzyme provides a quantitative measure of the effect: it "shows a low basal level glutaminase activity that can be enhanced 1000-fold in the presence of a nucleotide substrate or analog" (<a href="https://pubmed.ncbi.nlm.nih.gov/10733892/">PMID: 10733892</a>).</p>
+<p>This ~1000-fold, substrate-gated allosteric activation is biologically important: it prevents futile hydrolysis of glutamine (a nitrogen-costly metabolite) when the downstream acceptor PRFAR is not present. HisH therefore behaves as a demand-driven ammonia generator, activated only when HisF is loaded and ready to consume the product. This allosteric coupling operates across the ~25–30 Å distance separating the two active sites and is a textbook example of long-range communication in a glutamine amidotransferase. Additional structural and computational studies reinforce that active-site conformational change underlies this allosteric activation (<a href="https://pubmed.ncbi.nlm.nih.gov/38125975/">PMID: 38125975</a>) and that the subunit interface configuration is central to it (<a href="https://pubmed.ncbi.nlm.nih.gov/32633500/">PMID: 32633500</a>).</p>
+<h3 id="finding-3-cys-his-glu-catalytic-triad-and-cytoplasmic-channel-coupled-localization">Finding 3 — Cys-His-Glu catalytic triad and cytoplasmic, channel-coupled localization</h3>
+<p>HisH uses the canonical class-I GATase catalytic machinery: a <strong>Cys-His-Glu triad</strong>. In Q88R44 this is Cys81 (the nucleophile), His190, and Glu192. The nucleophilic cysteine attacks the amide carbon of glutamine to form a covalent thioester intermediate, releasing ammonia; the histidine acts as the general base that deprotonates and activates the cysteine thiol; and the glutamate orients and polarizes the histidine. This triad is conserved across the amidotransferase family, including the related anthranilate synthase glutaminase TrpG/TrpE, where the active site is "located between the catalytic Cys-His-Glu triad and the synthase subunit TrpE" (<a href="https://pubmed.ncbi.nlm.nih.gov/22432907/">PMID: 22432907</a>).</p>
+<p>The ammonia generated at the HisH triad does not diffuse through bulk solvent. Instead it passes through an internal molecular channel into the HisF barrel. NMR evidence in <em>T. maritima</em> shows that "the amino acid residue Thr 78 — which is located in the central channel — shows a large chemical shift change upon titration with ammonium chloride" (<a href="https://pubmed.ncbi.nlm.nih.gov/20665694/">PMID: 20665694</a>), consistent with intramolecular ammonia channeling. The UniProt subunit annotation is a heterodimer of HisH and HisF, and the subcellular location is the <strong>cytoplasm</strong> — appropriate for a soluble biosynthetic enzyme with no membrane-targeting or secretion signals.</p>
+<h3 id="finding-4-hish-functions-at-the-histidinepurine-metabolic-branch-point-step-5-of-9">Finding 4 — HisH functions at the histidine/purine metabolic branch point (step 5 of 9)</h3>
+<p>UniProt places HisH at step 5 of 9 in L-histidine biosynthesis from PRPP (HAMAP MF_00278). The IGPS reaction has two products with two fates: IGP continues down the histidine pathway (the next step being imidazoleglycerol-phosphate dehydratase, HisB), while AICAR is a purine-pathway intermediate that re-enters de novo purine biosynthesis. IGPS is therefore explicitly described as the enzyme "which links histidine and de novo purine biosynthesis" and "is a member of the glutamine amidotransferase family" (<a href="https://pubmed.ncbi.nlm.nih.gov/11264293/">PMID: 11264293</a>). The yeast study independently confirms that "this enzyme represents a junction between histidine biosynthesis and de novo purine biosynthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/10733892/">PMID: 10733892</a>). By recycling AICAR into the purine pool, HisH/HisF activity couples the nitrogen and carbon economy of two central biosynthetic routes.</p>
+<h3 id="finding-5-sequence-homology-quantitatively-supports-the-annotation-with-perfect-triad-conservation">Finding 5 — Sequence homology quantitatively supports the annotation with perfect triad conservation</h3>
+<p>Global pairwise alignment (Needleman–Wunsch, identity scoring) of <em>P. putida</em> HisH against experimentally characterized orthologs gives high, unambiguous identity:</p>
+<table>
+<thead>
+<tr>
+<th>Ortholog</th>
+<th>UniProt</th>
+<th>% identity to Q88R44</th>
+<th>Aligned columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>E. coli</em> HisH</td>
+<td>P60595</td>
+<td>43.3%</td>
+<td>~193</td>
+</tr>
+<tr>
+<td><em>Salmonella typhimurium</em> HisH</td>
+<td>P0A1R4</td>
+<td>44.6%</td>
+<td>~194</td>
+</tr>
+<tr>
+<td><em>Thermotoga maritima</em> HisH</td>
+<td>Q9X0C8</td>
+<td>38.9%</td>
+<td>~193</td>
+</tr>
+</tbody>
+</table>
+<p>Critically, the predicted catalytic triad Cys81/His190/Glu192 aligns exactly onto the conserved Cys/His/Glu of all three orthologs. Local sequence motifs are also conserved: the nucleophile sits in the class-I GATase glutaminase motif <code>...LGIC(81)VGMQ...</code>, and His190/Glu192 lie in the conserved amidotransferase motif <code>QFH(190)PE(192)K</code>. At 39–45% identity with perfect active-site conservation, the functional transfer from characterized orthologs to the <em>P. putida</em> protein is on very firm ground.</p>
+<h3 id="finding-6-hish-pp_0290-is-co-clustered-with-its-obligate-partner-hisf-and-other-his-genes">Finding 6 — <em>hisH</em> (PP_0290) is co-clustered with its obligate partner <em>hisF</em> and other <em>his</em> genes</h3>
+<p>The genomic neighborhood of <em>hisH</em> in <em>P. putida</em> KT2440 is informative:</p>
+<div class="codehilite"><pre><span></span><code>PP_0289  hisB   imidazoleglycerol-phosphate dehydratase (next pathway step)
+PP_0290  hisH   IGP synthase glutaminase subunit    &lt;-- this gene
+PP_0291  ----   DUF2164 protein (function unclear)
+PP_0292  hisA   ProFAR isomerase
+PP_0293  hisF   IGP synthase cyclase subunit (Q88R41)  &lt;-- obligate partner
+</code></pre></div>
+
+<p><em>hisH</em> and its obligate physical partner <em>hisF</em> lie just three genes apart within the same local cluster, with additional <em>his</em> genes (<em>hisB</em>, <em>hisA</em>) interspersed. The remaining histidine genes are dispersed across other loci (<em>hisG</em> PP_0965, <em>hisD</em> PP_0966, <em>hisC</em> PP_0967; <em>hisI</em> PP_5014, <em>hisE</em> PP_5015), so <em>P. putida</em> organizes its <em>his</em> genes in a few clusters rather than a single <em>Salmonella</em>-style operon. The tight physical linkage of <em>hisH</em> and <em>hisF</em> is consistent with their obligate functional partnership and reinforces the annotation.</p>
+<h3 id="finding-7-alphafold-structure-confirms-a-canonical-pre-organized-cys-his-glu-triad">Finding 7 — AlphaFold structure confirms a canonical, pre-organized Cys-His-Glu triad</h3>
+<p>The AlphaFold model AF-Q88R44-F1 (v6) is of very high quality: global pLDDT 97.5, with 98.1% of residues at very-high confidence. The three predicted catalytic residues are each modeled with very high confidence (Cys81 pLDDT 98.4, His190 98.6, Glu192 98.1) and adopt a textbook class-I GATase triad geometry:</p>
+<table>
+<thead>
+<tr>
+<th>Interaction</th>
+<th>Distance</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cys81(SG)–His190(NE2)</td>
+<td>3.29 Å</td>
+<td>Thiol-activating hydrogen bond (His deprotonates Cys)</td>
+</tr>
+<tr>
+<td>His190(ND1)–Glu192(OE1)</td>
+<td>2.78 Å</td>
+<td>His-orienting / polarizing hydrogen bond (Glu charges His)</td>
+</tr>
+</tbody>
+</table>
+<p>These distances are exactly what is expected for a functional glutaminase in which the histidine serves as the general base that activates the cysteine nucleophile and the glutamate orients and stabilizes the protonated histidine. The pre-organization of the triad in the unbound model further supports a catalytically competent active site.</p>
+<h3 id="finding-8-hish-acts-strictly-within-an-obligate-hishhisf-complex-whose-interface-mediates-allostery">Finding 8 — HisH acts strictly within an obligate HisH:HisF complex whose interface mediates allostery</h3>
+<p>HisH performs its chemistry only within the two-subunit ImGPS complex, and the HisH:HisF interface is the physical conduit for the allosteric signal that activates glutaminase chemistry. An authoritative restatement from ancestral-reconstruction/protein-design work confirms that "ImGPS is a key metabolic enzyme complex, which links histidine and de novo purine biosynthesis and consists of the cyclase subunit HisF and the glutaminase subunit HisH" (<a href="https://pubmed.ncbi.nlm.nih.gov/27936490/">PMID: 27936490</a>). That study pinpointed interface hotspots — down to a single decisive HisF residue — controlling high-affinity HisH binding: "we were able to pinpoint a single amino acid residue in HisF that is decisive for high-affinity binding of zmHisH" (<a href="https://pubmed.ncbi.nlm.nih.gov/27936490/">PMID: 27936490</a>). Combined with the AlphaFold triad geometry (Finding 7) and the ~1000-fold substrate-dependent activation (Finding 2), this defines HisH's functional unit as the HisH:HisF heterodimer rather than the isolated protein. The deep antiquity and robustness of this partnership are underscored by ancestral reconstruction: a reconstructed LUCA-era HisF "forms a stable and functional complex with the glutaminase subunit (HisH) of an extant ImGP-S," implying that substrate channeling and allosteric communication in this complex were already established ~3.5 billion years ago (<a href="https://pubmed.ncbi.nlm.nih.gov/24364418/">PMID: 24364418</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings converge into a single, coherent mechanistic picture of HisH as one half of a substrate-channeling, allosterically-regulated bienzyme.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">         </span><span class="n">IMIDAZOLE</span><span class="w"> </span><span class="n">GLYCEROL</span><span class="w"> </span><span class="n">PHOSPHATE</span><span class="w"> </span><span class="n">SYNTHASE</span><span class="w"> </span><span class="p">(</span><span class="n">IGPS</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">ImGPS</span><span class="p">)</span>
+<span class="w">         </span><span class="o">=====================================================</span>
+
+<span class="n">HisH</span><span class="w"> </span><span class="p">(</span><span class="n">Q88R44</span><span class="p">,</span><span class="w"> </span><span class="n">PP_0290</span><span class="p">)</span><span class="w">                 </span><span class="n">HisF</span><span class="w"> </span><span class="p">(</span><span class="n">Q88R41</span><span class="p">,</span><span class="w"> </span><span class="n">PP_0293</span><span class="p">)</span>
+<span class="k">class</span><span class="o">-</span><span class="n">I</span><span class="w"> </span><span class="n">GATase</span><span class="w"> </span><span class="n">glutaminase</span><span class="w">             </span><span class="p">(</span><span class="err">βα</span><span class="p">)</span><span class="mi">8</span><span class="w"> </span><span class="n">TIM</span><span class="o">-</span><span class="n">barrel</span><span class="w"> </span><span class="n">cyclase</span>
+<span class="w">    </span><span class="err">┌───────────────────────────┐</span><span class="w">          </span><span class="err">┌──────────────────────────────┐</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">Cys81</span><span class="w"> </span><span class="err">─</span><span class="w"> </span><span class="n">His190</span><span class="w"> </span><span class="err">─</span><span class="w"> </span><span class="n">Glu192</span><span class="w">   </span><span class="err">│</span><span class="w">          </span><span class="err">│</span><span class="w">  </span><span class="n">PRFAR</span><span class="w"> </span><span class="p">(</span><span class="n">acceptor</span><span class="w"> </span><span class="n">substrate</span><span class="p">)</span><span class="w">  </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">nucleophile</span><span class="p">)(</span><span class="n">base</span><span class="p">)(</span><span class="n">orient</span><span class="p">)</span><span class="err">│</span><span class="w">          </span><span class="err">│</span><span class="w">            </span><span class="o">+</span><span class="w">                 </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">                           </span><span class="err">│</span><span class="w">          </span><span class="err">│</span><span class="w">           </span><span class="n">NH3</span><span class="w">                </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">L</span><span class="o">-</span><span class="n">Gln</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span><span class="w">              </span><span class="err">│</span><span class="w">          </span><span class="err">│</span><span class="w">            </span><span class="o">|</span><span class="w">                 </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="err">│</span><span class="w">                    </span><span class="err">│</span><span class="w">   </span><span class="o">~</span><span class="mi">25</span><span class="w"> </span><span class="n">A</span><span class="w">  </span><span class="err">│</span><span class="w">            </span><span class="n">v</span><span class="w">                 </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="n">v</span><span class="w">                    </span><span class="err">│</span><span class="w">  </span><span class="n">ammonia</span><span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="n">IGP</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">AICAR</span><span class="w">              </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">L</span><span class="o">-</span><span class="n">Glu</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">NH3</span><span class="w">  </span><span class="err">────────────┼─</span><span class="n">channel</span><span class="err">──┼──►</span><span class="w">                          </span><span class="err">│</span>
+<span class="w">    </span><span class="err">└───────────────────────────┘</span><span class="w">          </span><span class="err">└──────────────────────────────┘</span>
+<span class="w">      </span><span class="n">EC</span><span class="w"> </span><span class="mf">3.5</span><span class="o">.</span><span class="mf">1.2</span><span class="w">                            </span><span class="p">(</span><span class="n">overall</span><span class="w"> </span><span class="n">EC</span><span class="w"> </span><span class="mf">4.3</span><span class="o">.</span><span class="mf">2.10</span><span class="p">)</span>
+
+<span class="w">    </span><span class="n">Allosteric</span><span class="w"> </span><span class="n">gating</span><span class="p">:</span><span class="w"> </span><span class="n">HisH</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">OFF</span><span class="w"> </span><span class="n">when</span><span class="w"> </span><span class="n">isolated</span><span class="o">.</span><span class="w"> </span><span class="n">Binding</span><span class="w"> </span><span class="n">HisF</span><span class="w"> </span><span class="n">turns</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">ON</span><span class="p">;</span>
+<span class="w">    </span><span class="n">HisF</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">PRFAR</span><span class="o">/</span><span class="n">analogue</span><span class="w"> </span><span class="n">boosts</span><span class="w"> </span><span class="n">glutaminase</span><span class="w"> </span><span class="o">~</span><span class="mi">1000</span><span class="o">-</span><span class="n">fold</span><span class="o">.</span>
+
+<span class="w">    </span><span class="n">Downstream</span><span class="w"> </span><span class="n">fates</span><span class="p">:</span>
+<span class="n">IGP</span><span class="w">   </span><span class="err">──►</span><span class="w"> </span><span class="n">HisB</span><span class="w"> </span><span class="p">(</span><span class="n">PP_0289</span><span class="p">)</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">histidine</span><span class="w">   </span><span class="p">(</span><span class="n">step</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span>
+<span class="n">AICAR</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">de</span><span class="w"> </span><span class="n">novo</span><span class="w"> </span><span class="n">PURINE</span><span class="w"> </span><span class="n">biosynthesis</span><span class="w">   </span><span class="p">(</span><span class="n">metabolic</span><span class="w"> </span><span class="n">branch</span><span class="w"> </span><span class="n">point</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Reaction logic.</strong> HisH binds L-glutamine and, using its Cys81-His190-Glu192 triad, cleaves the glutamine side-chain amide to release ammonia and leave L-glutamate. The AlphaFold-confirmed geometry (Cys–His 3.29 Å, His–Glu 2.78 Å) is precisely arranged for the histidine to deprotonate the cysteine thiol, which then attacks the amide carbon to form a covalent thioester and expel NH₃.</p>
+<p><strong>Substrate channeling.</strong> The liberated ammonia is sequestered from bulk solvent and conducted ~25 Å through an internal channel spanning the interface and the HisF barrel (NMR-detected sensitivity of channel residue Thr78 to ammonium supports this). At the HisF active site, ammonia attacks PRFAR to produce IGP and AICAR.</p>
+<p><strong>Allosteric control.</strong> The two active sites are functionally interlocked. HisH is essentially inactive alone; it is activated by complex formation with HisF and further stimulated ~1000-fold by acceptor-substrate binding at the HisF site. This ensures glutamine is only hydrolyzed on demand, coupling nitrogen expenditure to genuine flux through the histidine/purine junction. The HisH:HisF interface (with identified single-residue hotspots) is both the assembly determinant and the allosteric relay.</p>
+<p><strong>Pathway context.</strong> IGPS catalyzes step 5 of 9 in histidine biosynthesis. Because AICAR feeds back into purine biosynthesis, HisH activity sits at a node that couples two of the cell's core nitrogen-demanding biosynthetic routes. In <em>P. putida</em> KT2440, the tight genomic linkage of <em>hisH</em> (PP_0290) to <em>hisF</em> (PP_0293) mirrors their obligate physical partnership.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>System</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11264293/">11264293</a></td>
+<td><em>IGPS from T. maritima: quaternary structure, kinetics, mechanism</em></td>
+<td><em>T. maritima</em></td>
+<td>Establishes HisH as glutaminase subunit; defines ammonia product and HisF acceptor; shows HisH inactive alone, activated by HisF+substrate; names histidine/purine link (F1, F2, F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10733892/">10733892</a></td>
+<td><em>Expression/purification of IGPS from S. cerevisiae</em></td>
+<td>Yeast (bifunctional)</td>
+<td>Quantifies ~1000-fold substrate-dependent activation; confirms histidine/purine junction (F2, F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20665694/">20665694</a></td>
+<td><em>Ammonia and xenon interaction with T. maritima IGPS by NMR</em></td>
+<td><em>T. maritima</em></td>
+<td>Detects ammonia in the internal channel (Thr78 chemical-shift change), supporting intramolecular channeling (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22432907/">22432907</a></td>
+<td><em>Constitutively active glutaminase variants of anthranilate synthase</em></td>
+<td>TrpG/TrpE</td>
+<td>Confirms the class-I GATase Cys-His-Glu triad shared by HisH (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27936490/">27936490</a></td>
+<td><em>Ancestral reconstruction + protein design: interface hotspot in ImGPS</em></td>
+<td><em>Z. mobilis</em> / ancestral</td>
+<td>Authoritative restatement of HisH as glutaminase subunit; identifies single HisF interface residue decisive for HisH binding (F8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24364418/">24364418</a></td>
+<td><em>Elaborate enzyme complexes in the Paleoarchean era (LUCA-HisF)</em></td>
+<td>LUCA reconstruction</td>
+<td>Shows LUCA-HisF forms stable, functional complex with extant HisH — deep conservation of the obligate HisH:HisF partnership, channeling, and allostery (F8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38125975/">38125975</a></td>
+<td><em>Catalytic effects of active-site conformational change in IGPS allostery</em></td>
+<td>IGPS</td>
+<td>Reinforces the allosteric activation mechanism linking the two active sites (F2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32633500/">32633500</a></td>
+<td><em>Protein interface configuration for allostery in ImGPS</em></td>
+<td>ImGPS</td>
+<td>Reinforces the role of the HisH:HisF interface in allosteric communication (F2, F8)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Homology and structure evidence generated in this investigation:</strong> global alignments to <em>E. coli</em>/<em>Salmonella</em>/<em>T. maritima</em> HisH (39–45% identity, exact triad conservation; F5); AlphaFold model AF-Q88R44-F1 (pLDDT 97.5) confirming a pre-organized Cys81-His190-Glu192 triad with catalytically appropriate distances (F7); and genomic neighborhood analysis placing <em>hisH</em> (PP_0290) three genes from <em>hisF</em> (PP_0293) (F6).</p>
+<p>The evidence lines are mutually consistent: no retrieved paper contradicts the assignment. The one "mismatch"-flagged citation snippet (<a href="https://pubmed.ncbi.nlm.nih.gov/27936490/">PMID: 27936490</a>, on the single-residue HisF hotspot) refers to a HisF-side interface residue that governs HisH binding — fully consistent with, and indeed illuminating, the obligate HisH:HisF partnership rather than contradicting it.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of the <em>P. putida</em> protein.</strong> All kinetic, mechanistic, and structural evidence comes from orthologs (<em>T. maritima</em>, <em>S. cerevisiae</em>, <em>E. coli</em>/<em>Salmonella</em>, <em>Z. mobilis</em>, and ancestral reconstructions). The functional assignment for Q88R44 rests on homology transfer (HAMAP MF_00278), sequence alignment, an AlphaFold model, and genomic context — strong but inferential evidence. No enzyme assays, crystal structure, or knockout phenotype specific to PP_0290 were located.</p>
+</li>
+<li>
+<p><strong>Catalytic residues are predicted, not experimentally mutated in <em>P. putida</em>.</strong> Cys81/His190/Glu192 are assigned by homology and AlphaFold geometry. Site-directed mutagenesis in the <em>P. putida</em> background has not been reported.</p>
+</li>
+<li>
+<p><strong>AlphaFold model is monomeric.</strong> The structural analysis used a single-chain model. The HisH:HisF complex interface, ammonia channel geometry, and allosteric conformational changes were inferred from ortholog structures/literature rather than a <em>P. putida</em> complex model.</p>
+</li>
+<li>
+<p><strong>Regulation and expression in <em>P. putida</em> untested here.</strong> Whether <em>P. putida</em> histidine biosynthesis is regulated as in enterobacteria (attenuation, feedback), and the transcriptional organization of the dispersed <em>his</em> loci, were not experimentally examined.</p>
+</li>
+<li>
+<p><strong>The DUF2164 protein (PP_0291)</strong> between <em>hisH</em> and <em>hisA</em> is of unknown function and was not investigated; its co-location is intriguing but uninterpreted.</p>
+</li>
+<li>
+<p><strong>Quantitative kinetics for the <em>P. putida</em> enzyme (Km for glutamine, kcat, activation fold) are unknown</strong> and could differ from thermophilic or eukaryotic orthologs.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and glutaminase assay.</strong> Clone and express PP_0290 (HisH) and PP_0293 (HisF) from <em>P. putida</em> KT2440; measure glutaminase activity of HisH alone versus the HisH:HisF complex ± PRFAR/analogue to confirm the ~1000-fold substrate-gated activation in this organism.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of the triad.</strong> Generate C81A, H190A, and E192A variants and confirm loss of glutaminase activity, directly validating the AlphaFold/homology-predicted catalytic triad.</p>
+</li>
+<li>
+<p><strong>Coupled IGPS assay.</strong> Reconstitute the full IGPS reaction (PRFAR + L-glutamine → IGP + AICAR + L-glutamate) with the <em>P. putida</em> subunits to verify ammonia channeling and overall EC 4.3.2.10 turnover.</p>
+</li>
+<li>
+<p><strong>Structure of the complex.</strong> Determine a cryo-EM or crystal structure of the <em>P. putida</em> HisH:HisF complex (or build an AlphaFold-Multimer model) to visualize the interface, the ammonia channel, and Thr-equivalent channel residues.</p>
+</li>
+<li>
+<p><strong>Genetic complementation / knockout.</strong> Delete PP_0290 and test for histidine auxotrophy; complement with wild-type and triad mutants to link the predicted biochemistry to the histidine-requirement phenotype in vivo.</p>
+</li>
+<li>
+<p><strong>Characterize PP_0291 (DUF2164).</strong> Investigate whether the intervening DUF2164 protein has any role in histidine metabolism or IGPS complex assembly, given its position between <em>hisH</em> and <em>hisA</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>HisH (Q88R44, PP_0290) in <em>Pseudomonas putida</em> KT2440 is confidently annotated as the <strong>class-I glutamine amidotransferase (glutaminase) subunit of imidazole glycerol phosphate synthase</strong>. Using a Cys81-His190-Glu192 catalytic triad it hydrolyzes L-glutamine to L-glutamate and ammonia (EC 3.5.1.2); the ammonia is channeled to the cyclase subunit HisF, where it is incorporated into PRFAR to form imidazole glycerol phosphate and AICAR (overall EC 4.3.2.10). It is a soluble cytoplasmic enzyme that functions only as an obligate HisH:HisF heterodimer, whose glutaminase activity is allosterically switched on (~1000-fold) by acceptor-substrate binding at the partner subunit. It operates at step 5 of L-histidine biosynthesis and, via the AICAR co-product, at the metabolic branch point linking histidine and de novo purine biosynthesis. The annotation is supported by five convergent evidence lines — curated homology (HAMAP MF_00278), high ortholog identity with exact triad conservation, an AlphaFold-confirmed pre-organized triad, genomic co-clustering with <em>hisF</em>, and an extensive ortholog literature — while direct experimental characterization of the <em>P. putida</em> protein itself remains an open opportunity.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hisH-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hisH-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11264293</li>
+<li>PMID:10733892</li>
+<li>PMID:38125975</li>
+<li>PMID:32633500</li>
+<li>PMID:22432907</li>
+<li>PMID:20665694</li>
+<li>PMID:27936490</li>
+<li>PMID:24364418</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R44
+gene_symbol: hisH
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  hisH encodes the class-I glutamine amidotransferase subunit of
+  imidazole-glycerol-phosphate synthase (IGPS). HisH hydrolyzes L-glutamine and
+  channels the resulting ammonia to the HisF cyclase subunit, which converts
+  PRFAR to imidazole-glycerol phosphate and AICAR. The coupled HisF-HisH reaction
+  is the fifth step of L-histidine biosynthesis. HisH is not a
+  pentosyltransferase; that annotation reflects an overly broad InterPro2GO
+  mapping of this amidotransferase family.
+existing_annotations:
+- term:
+    id: GO:0000105
+    label: L-histidine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: HisH is an obligate component of the fifth histidine-biosynthesis reaction.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt, UniPathway, and HisH-specific family assignments place the
+      HisF-HisH IGPS reaction at step 5 of 9 in L-histidine biosynthesis.
+- term:
+    id: GO:0000107
+    label: imidazoleglycerol-phosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: HisH contributes the ammonia-generating subunit of IGPS activity.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0000107 and RHEA:24793 describe the coupled HisF-HisH reaction. HisH
+      supplies channelled ammonia while HisF performs the cyclization chemistry.
+    supported_by:
+    - reference_id: file:PSEPK/hisH/hisH-deep-research-openscientist.md
+      supporting_text: &gt;-
+        is the glutamine-hydrolyzing (glutaminase) subunit of imidazole glycerol
+        phosphate synthase
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: HisH catalyzes glutamine hydrolysis as its subunit-level activity.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed UniProt entry assigns EC 3.5.1.2 and RHEA:15889 and describes
+      glutamine hydrolysis as the source of ammonia channelled to HisF.
+    supported_by:
+    - reference_id: file:PSEPK/hisH/hisH-deep-research-openscientist.md
+      supporting_text: &gt;-
+        catalyzes the hydrolysis of L-glutamine to L-glutamate plus ammonia (EC
+        3.5.1.2)
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: HisH is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The location is supported by UniProt but is contextual rather than the
+      core biochemical role.
+- term:
+    id: GO:0016763
+    label: pentosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: HisH does not catalyze pentosyl-group transfer.
+    action: REMOVE
+    reason: &gt;-
+      The InterPro2GO assignment conflicts with the HisH-specific family,
+      EC 3.5.1.2 glutaminase chemistry, and the composite IGPS reaction. HisH
+      hydrolyzes glutamine to supply ammonia; no pentosyl donor or transfer
+      reaction is involved.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/hisH/hisH-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK hisH
+  findings:
+  - statement: &gt;-
+      Identifies Q88R44 as the IGPS glutaminase subunit that hydrolyzes glutamine
+      and channels ammonia to HisF.
+- id: file:PSEPK/hisH/hisH-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK hisH
+  findings:
+  - statement: Contains the five existing annotations reviewed above.
+- id: file:PSEPK/hisH/hisH-deep-research-openscientist.md
+  title: OpenScientist functional report for PSEPK HisH
+  findings:
+  - statement: &gt;-
+      Corroborates the HisH glutaminase-subunit identity and its contribution to
+      the coupled HisF-HisH IGPS reaction. The report finds no direct biochemical
+      characterization of Q88R44; mechanistic detail is inferred from orthologs.
+core_functions:
+- description: &gt;-
+    Glutaminase subunit of the HisF-HisH imidazole-glycerol-phosphate synthase;
+    hydrolyzes glutamine and channels ammonia to HisF for IGP and AICAR
+    formation.
+  molecular_function:
+    id: GO:0004359
+    label: glutaminase activity
+  contributes_to_molecular_function:
+    id: GO:0000107
+    label: imidazoleglycerol-phosphate synthase activity
+  directly_involved_in:
+  - id: GO:0000105
+    label: L-histidine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/hisH/hisH-uniprot.txt
+    supporting_text: The HisH subunit catalyzes the hydrolysis of
+  - reference_id: file:PSEPK/hisH/hisH-deep-research-openscientist.md
+    supporting_text: &gt;-
+      is the glutamine-hydrolyzing (glutaminase) subunit of imidazole glycerol
+      phosphate synthase
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hemC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hemC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RE5" target="_blank" class="term-link">
+                        Q88RE5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_0186</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hemC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RE5" data-a="DESCRIPTION: HemC is the cytoplasmic hydroxymethylbilane syntha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HemC is the cytoplasmic hydroxymethylbilane synthase, also called porphobilinogen deaminase. It uses a covalently bound dipyrromethane cofactor to polymerize four porphobilinogen molecules into the linear tetrapyrrole hydroxymethylbilane, which HemD cyclizes to uroporphyrinogen III.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004418" target="_blank" class="term-link">
+                                    GO:0004418
+                                </a>
+                            </span>
+                            <span class="term-label">hydroxymethylbilane synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RE5" data-a="GO:0004418" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific core catalytic function of HemC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 2.5.1.61 and describes tetrapolymerization of porphobilinogen into hydroxymethylbilane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemC/hemC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Tetrapolymerization of the monopyrrole PBG into the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RE5" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with this soluble bacterial enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemC lacks membrane or export features, and the current UniProt cross-reference retains a cytoplasmic assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemC/hemC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO; GO:0005737; C:cytoplasm;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RE5" data-a="GO:0006783" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HemC is an obligatory middle enzyme in the protoporphyrin route to heme b.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The HemC reaction generates the linear tetrapyrrole precursor required for uroporphyrinogen III and all downstream heme-b intermediates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemC/hemC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033014" target="_blank" class="term-link">
+                                    GO:0033014
+                                </a>
+                            </span>
+                            <span class="term-label">tetrapyrrole biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RE5" data-a="GO:0033014" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The annotation is true but can be made more specific to the immediate product route.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HemC directly builds hydroxymethylbilane for conversion to uroporphyrinogen III, so GO:0006780 is more informative than the broad tetrapyrrole parent.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006780" target="_blank" class="term-link">
+                                    uroporphyrinogen III biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hemC/hemC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Tetrapolymerization of the monopyrrole PBG into the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Polymerizes four porphobilinogen molecules into hydroxymethylbilane for uroporphyrinogen III and downstream heme-b synthesis.</h3>
+                <span class="vote-buttons" data-g="Q88RE5" data-a="FUNCTION: Polymerizes four porphobilinogen molecules into hy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004418" target="_blank" class="term-link">
+                            hydroxymethylbilane synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006780" target="_blank" class="term-link">
+                                uroporphyrinogen III biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hemC/hemC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Tetrapolymerization of the monopyrrole PBG into the</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemC/hemC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK hemC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemC polymerizes porphobilinogen into hydroxymethylbilane.</div>
+
+                        <div class="finding-text">"Tetrapolymerization of the monopyrrole PBG into the"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HemC belongs to the HMBS family.</div>
+
+                        <div class="finding-text">"Belongs to the HMBS family."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hemC/hemC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK hemC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers the HMBS reaction and acknowledges that direct experimental evidence for the KT2440 protein is sparse.</div>
+
+                        <div class="finding-text">"Direct experimental data for the *P. putida* KT2440 protein specifically are sparse;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is HemC abundance coordinated with the adjacent hemD locus in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RE5" data-a="Q: Is HemC abundance coordinated with the adjacent he..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify porphobilinogen and downstream tetrapyrroles after conditional hemC depletion and complementation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HemC supplies hydroxymethylbilane for the principal heme-b pathway.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RE5" data-a="EXPERIMENT: Quantify porphobilinogen and downstream tetrapyrro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RE5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *hemC* (Q88RE5) — Porphobilinogen Deaminase / Hydroxymethylbilane Synthase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T17:59:21.232258</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hemC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-hemc-q88re5-porphobilinogen-deaminase-hydroxymethylbilane-synthase-in-pseudomonas-putida-kt2440">Functional Annotation of <em>hemC</em> (Q88RE5) — Porphobilinogen Deaminase / Hydroxymethylbilane Synthase in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>hemC</strong> (UniProt <strong>Q88RE5</strong>; ordered locus <strong>PP_0186</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>porphobilinogen deaminase (PBGD)</strong>, also called <strong>hydroxymethylbilane synthase (HMBS)</strong> or <strong>pre‑uroporphyrinogen synthase</strong> (<strong>EC 2.5.1.61</strong>). It is the <strong>third enzyme of the tetrapyrrole (heme) biosynthetic pathway</strong>. The enzyme catalyzes the ordered, head‑to‑tail condensation of <strong>four molecules of the monopyrrole porphobilinogen (PBG)</strong> into the <strong>linear tetrapyrrole 1‑hydroxymethylbilane (pre‑uroporphyrinogen)</strong>, releasing four molecules of ammonia. Catalysis occurs on a <strong>covalently bound dipyrromethane (DPM) cofactor</strong> attached through a thioether bond to an invariant active‑site cysteine. It is a <strong>soluble, cytoplasmic</strong> enzyme, and <em>hemC</em> is an <strong>essential gene</strong> whose product supplies the linear tetrapyrrole precursor for heme (and siroheme) biosynthesis.</p>
+<h3 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h3>
+<ul>
+<li><strong>Symbol vs. description:</strong> The symbol <em>hemC</em> matches the UniProt description ("Porphobilinogen deaminase … Hydroxymethylbilane synthase … EC 2.5.1.61"). ✔</li>
+<li><strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (PSEPK); locus PP_0186. ✔</li>
+<li><strong>Family/domains:</strong> InterPro annotations — HemC (IPR000860), Porphobilinogen_deaminase_N (IPR022417), Porphobilinogen_deaminase_C (IPR022418/IPR036803), Porphobilin_deaminase_cofac_BS (IPR022419) — are precisely the signatures of the <strong>HMBS family</strong> described in the structural and mechanistic literature below. ✔</li>
+<li>No ambiguity: <em>hemC</em> is a universally conserved heme‑pathway gene; the literature cited concerns exactly this enzyme family. Because <em>P. putida</em> PBGD is highly conserved with the crystallographically characterized <em>E. coli</em>, human and <em>Arabidopsis</em> enzymes, mechanistic and structural inferences transfer directly.</li>
+</ul>
+<hr />
+<h2 id="2-primary-function-reaction-and-substrate-specificity">2. Primary Function: Reaction and Substrate Specificity</h2>
+<p><strong>Reaction (EC 2.5.1.61):</strong></p>
+<blockquote>
+<p>4 porphobilinogen + H₂O → hydroxymethylbilane (pre‑uroporphyrinogen) + 4 NH₃</p>
+</blockquote>
+<p>PBGD "catalyses the polymerization of four molecules of porphobilinogen to form the 1‑hydroxymethylbilane, preuroporphyrinogen, a key intermediate in the biosynthesis of tetrapyrroles" (Louie <em>et al.</em>, 1996, PMID 8727319). HMBS "combines four porphobilinogen (PBG) molecules to form a linear tetrapyrrole, hydroxymethylbilane" (Sato <em>et al.</em>, 2021, PMID 33600566).</p>
+<ul>
+<li><strong>Substrate:</strong> the monopyrrole <strong>porphobilinogen (PBG)</strong>, itself produced by the preceding enzyme PBG synthase / ALA dehydratase (HemB). Each PBG bears an acetate, a propionate, and an aminomethyl group.</li>
+<li><strong>Product:</strong> <strong>1‑hydroxymethylbilane (pre‑uroporphyrinogen)</strong>, an unstable linear tetrapyrrole.</li>
+<li><strong>Chemistry:</strong> deamination coupled to C–C bond formation. During each of the four condensations an aminomethyl group is lost as ammonia and a methylene bridge links successive pyrrole units, extending the chain in a strictly ordered A‑B‑C‑D fashion.</li>
+<li><strong>Substrate recognition:</strong> a single binding pocket recognizes the PBG side chains. In the human enzyme these contacts involve Arg26/Ser28 (acetate), Arg173 (propionate), Gln34 (aminomethyl) and Asp99 (pyrrole nitrogen) (Sato <em>et al.</em>, 2021, PMID 33600566); the equivalent residues are conserved in bacterial orthologs including <em>P. putida</em>.</li>
+</ul>
+<hr />
+<h2 id="3-catalytic-mechanism">3. Catalytic Mechanism</h2>
+<p><strong>The dipyrromethane (DPM) cofactor.</strong> Uniquely among enzymes, PBGD builds its product on its <strong>own covalently attached DPM cofactor</strong>, which acts as a <strong>primer</strong>. The cofactor "is linked covalently to the enzyme through a thioether bridge to the invariant Cys254" (<em>Arabidopsis</em> numbering; Roberts <em>et al.</em>, 2013, PMID 23519422) and "is covalently attached to a cysteine side‑chain borne on a flexible loop of domain 3 … [and] serves as a primer for the assembly of the tetrapyrrole product" (Louie <em>et al.</em>, 1996, PMID 8727319). The invariant catalytic cysteine corresponds to Cys242 in <em>E. coli</em> and Cys261 in human PBGD, with the equivalent conserved cysteine present in the <em>P. putida</em> sequence. Bacterial HemC directly carries this cofactor: in <em>Desulfovibrio vulgaris</em>, "PBG deaminase (HemC) was shown to contain the dipyrromethane cofactor" (Lobo <em>et al.</em>, 2009, PMID 19267692).</p>
+<p><strong>Single site, four steps.</strong> High‑resolution complexes of holo‑HMBS with the reaction intermediate carrying two bound PBG (the "ES2" state) show that "each of the four PBG molecules covalently binds to the cofactor (or oligopyrrole chain) consecutively, ultimately forming a hexapyrrole chain" at <strong>a single substrate‑binding site</strong> (Sato <em>et al.</em>, 2021, PMID 33600566). Thus one active site sequentially elongates the chain from the DPM primer (2 pyrroles) up to a covalently tethered <strong>hexapyrrole</strong>, after which the four newly added pyrroles are released as the tetrapyrrole product, regenerating the DPM cofactor.</p>
+<p><strong>Key catalytic residues (mutagenesis evidence).</strong><br />
+- <strong>Asp99</strong> is catalytically essential: the D99G mutant is "an inactive holo‑protein that exists as a complex with two substrate molecules covalently bound to the dipyrromethane cofactor" (Shoolingin‑Jordan <em>et al.</em>, 2003, PMID 12773194).<br />
+- <strong>Arg149 and Arg173</strong> are required for <strong>DPM cofactor assembly</strong>; R149Q and R173Q cannot reconstitute the holo‑enzyme (PMID 12773194).<br />
+- <strong>Arg167</strong> is required for the catalytic cycle; R167Q accumulates stable enzyme–substrate intermediates (PMID 12773194).</p>
+<p><strong>Cofactor self‑assembly.</strong> The DPM cofactor is generated by the apo‑enzyme itself from pre‑uroporphyrinogen; binding of the cofactor increases the thermal stability of the enzyme, and the structure "loosens" as the pyrrole chain elongates, priming product release (Bustad <em>et al.</em>, 2013, PMID 23815679).</p>
+<hr />
+<h2 id="4-structure-and-structural-role">4. Structure and Structural Role</h2>
+<p>PBGD is a <strong>monomeric, three‑domain α/β protein</strong>. In <em>E. coli</em>, "the polypeptide chain of PBGD is folded into three alpha/beta domains" (Louie <em>et al.</em>, 1996, PMID 8727319): domains 1 and 2 share a five‑stranded mixed β‑sheet topology and form an extensive <strong>active‑site cleft</strong> at their interface, connected by two hinge segments; domain 3 (a three‑stranded antiparallel sheet) carries the flexible cofactor loop. Inter‑domain <strong>hinge motion</strong> accommodates the growing tetrapyrrole chain — mutation of the hinge residue His120 (human) to proline abolishes activity (Song <em>et al.</em>, 2009, PMID 18936296). The fold is conserved across the <em>E. coli</em> (1.76 Å), human (2.2 Å) and <em>Arabidopsis</em> (1.45 Å) structures, providing a reliable template for the <em>P. putida</em> enzyme.</p>
+<h3 id="sequence-level-confirmation-for-the-p-putida-protein-this-study">Sequence-level confirmation for the <em>P. putida</em> protein (this study)</h3>
+<p>A pairwise alignment of <strong>Q88RE5 (313 aa)</strong> with the crystallographically defined <em>E. coli</em> PBGD (<strong>P06983</strong>, 313 aa) gives <strong>66.6 % identity over the full length</strong> — the two proteins are the same size and clearly orthologous. Critically, <strong>every catalytically important residue is conserved at the identical aligned position</strong> in the <em>P. putida</em> enzyme:</p>
+<table>
+<thead>
+<tr>
+<th>Residue (E. coli)</th>
+<th><em>P. putida</em> (Q88RE5)</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cys242</strong></td>
+<td><strong>Cys242</strong></td>
+<td>Thioether anchor of the dipyrromethane cofactor</td>
+</tr>
+<tr>
+<td><strong>Asp84</strong> (= human Asp99)</td>
+<td><strong>Asp84</strong></td>
+<td>Key catalytic aspartate for deamination/condensation</td>
+</tr>
+<tr>
+<td><strong>Arg11, Arg131, Arg132, Arg149, Arg155</strong></td>
+<td>conserved (all Arg)</td>
+<td>Substrate side‑chain / cofactor binding, cofactor assembly</td>
+</tr>
+<tr>
+<td>SSLRRQ cofactor‑binding motif</td>
+<td>present</td>
+<td>Cofactor/oligopyrrole anchoring loop</td>
+</tr>
+</tbody>
+</table>
+<p>This is direct sequence evidence — beyond family inference — that Q88RE5 has an <strong>intact PBGD active site</strong> and operates by the same DPM‑cofactor mechanism as the structurally characterized enzymes.</p>
+<hr />
+<h2 id="5-localization">5. Localization</h2>
+<p>PBGD/HemC is a <strong>soluble cytoplasmic enzyme</strong>. It carries no signal peptide, transmembrane segment, or membrane‑anchor, consistent with the general biochemistry of the "common" (early) tetrapyrrole pathway, which operates in the cytosol up to the membrane‑associated terminal steps (e.g., ferrochelatase HemH, which is membrane‑associated — Guégan <em>et al.</em>, 2003, PMID 12864856). The reaction — a soluble small‑molecule polymerization producing a diffusible linear bilane — takes place in the cytoplasm, where its product is immediately channeled to the next (cytosolic) enzyme.</p>
+<hr />
+<h2 id="6-pathway-context">6. Pathway Context</h2>
+<p><em>hemC</em> functions in the <strong>common tetrapyrrole / heme biosynthesis pathway</strong>, the branch point that supplies heme, siroheme, and (in relevant organisms) cobalamin and chlorophyll:</p>
+<div class="codehilite"><pre><span></span><code>Glutamate →(C5 pathway: GltX/HemA/HemL)→ 5‑aminolevulinic acid (ALA)
+   → (HemB, ALA dehydratase) → porphobilinogen (PBG)
+      → (HemC, PBGD)  → 1‑hydroxymethylbilane      ← THIS ENZYME
+         → (HemD, uroporphyrinogen III synthase) → uroporphyrinogen III
+            → ... → protoporphyrin IX → (HemH) → heme
+</code></pre></div>
+
+<p>The product of HemC is normally passed to <strong>HemD (uroporphyrinogen III synthase)</strong>, which cyclizes and rearranges the D‑ring to form the physiological <strong>uroporphyrinogen III</strong> (Shoolingin‑Jordan, 1995, PMID 7592565). In <em>P. putida</em> KT2440 this partner enzyme is encoded by a <strong>dedicated, adjacent gene — <em>hemD</em> (Q88RE4, locus PP_0187, EC 4.2.1.75, 255 aa) — immediately downstream of <em>hemC</em> (PP_0186)</strong>, forming a <em>hemC–hemD</em> gene pair. The presence of a separate HemD establishes that <em>P. putida</em> HemC is the <strong>monofunctional</strong> deaminase (the bifunctional PBGD/UROS arrangement is found only in organisms lacking <em>hemD</em>, e.g., <em>Leptospira</em> — Guégan <em>et al.</em>, 2003, PMID 12864856), and the genomic adjacency is consistent with hand‑off/channeling of the labile bilane to HemD.</p>
+<p>UniProt/HAMAP (rule MF_00260) annotation of Q88RE5 independently corroborates every functional assignment in this report: the catalytic activity <strong>"4 porphobilinogen + H₂O = hydroxymethylbilane + 4 NH₄⁺"</strong> (Rhea RHEA:13185; EC 2.5.1.61), a covalently bound <strong>dipyrromethane cofactor</strong> (ChEBI:60342; "Binds 1 dipyrromethane group covalently"), and the pathway assignment <strong>"protoporphyrin-IX biosynthesis; coproporphyrinogen-III from 5‑aminolevulinate: step 2/4."</strong> Without HemD, the labile 1‑hydroxymethylbilane cyclizes non‑enzymatically to the useless uroporphyrinogen I isomer — underscoring that HemC's role is the ordered assembly of the linear precursor, while ring closure/isomer selection is HemD's job. In bacteria the reconstituted HemC+HemD system converts PBG to uroporphyrinogen III in vitro (Raux <em>et al.</em>, 2003, PMID 12408752), and HemC activity governs flux of porphyrin intermediates in engineered pathways (Kim <em>et al.</em>, 2009, PMID 19473249; Lee <em>et al.</em>, 2013, PMID 23648857).</p>
+<p><strong>Essentiality.</strong> <em>hemC</em> is essential for heme synthesis. A psychrophilic <em>hemC</em> was used to render <em>Francisella novicida</em> temperature‑sensitive by substituting the essential gene (Pankowski, 2016, PMID 27248501), and a <em>hemC</em> mutation in <em>Salmonella</em> produces a growth‑restricted small‑colony variant that is compensated by gene amplification/second‑site mutation (Pränting &amp; Andersson, 2011, PMID 21219453). This predicts that <em>P. putida</em> PP_0186 is required for normal aerobic growth, since heme is the cofactor of its respiratory cytochromes and catalases.</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q88RE5 = porphobilinogen deaminase (HMBS), EC 2.5.1.61</td>
+<td><strong>Supported</strong></td>
+<td>Domain architecture (IPR000860 etc.) + conserved HMBS family literature</td>
+</tr>
+<tr>
+<td>Substrate is porphobilinogen; product is 1‑hydroxymethylbilane</td>
+<td><strong>Supported</strong></td>
+<td>PMID 8727319, 33600566</td>
+</tr>
+<tr>
+<td>Catalysis uses a covalent DPM cofactor on an invariant Cys</td>
+<td><strong>Supported</strong></td>
+<td>PMID 23519422, 8727319, 19267692</td>
+</tr>
+<tr>
+<td>A single active site performs all four condensations</td>
+<td><strong>Supported</strong></td>
+<td>PMID 33600566</td>
+</tr>
+<tr>
+<td>Asp/Arg residues are catalytic / cofactor‑assembly determinants</td>
+<td><strong>Supported</strong></td>
+<td>PMID 12773194, 18936296</td>
+</tr>
+<tr>
+<td>Cytoplasmic localization</td>
+<td><strong>Supported (inference)</strong></td>
+<td>No targeting signals; soluble‑enzyme biochemistry</td>
+</tr>
+<tr>
+<td>Enzyme is essential for heme synthesis / growth</td>
+<td><strong>Supported</strong></td>
+<td>PMID 27248501, 21219453</td>
+</tr>
+<tr>
+<td><em>P. putida</em> HemC is bifunctional (also HemD activity)</td>
+<td><strong>Refuted</strong></td>
+<td><em>P. putida</em> KT2440 encodes a separate, adjacent HemD (Q88RE4/PP_0187, EC 4.2.1.75); bifunctionality reported only for organisms lacking HemD (e.g., <em>Leptospira</em>, PMID 12864856)</td>
+</tr>
+<tr>
+<td>Catalytic residues (Cys242, Asp84, Arg cluster) conserved in Q88RE5</td>
+<td><strong>Supported</strong></td>
+<td>Pairwise alignment vs. <em>E. coli</em> P06983 (66.6% id): all catalytic residues conserved (this study)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>Direct experimental data for the <em>P. putida</em> KT2440 protein specifically are sparse;</strong> functional and structural conclusions are inferred from its unambiguous membership in the highly conserved HMBS family and from crystallographic/mutagenesis work on the <em>E. coli</em>, human, <em>Arabidopsis</em> and other bacterial orthologs. The reaction, cofactor chemistry, and essentiality are so conserved that these inferences are robust.</li>
+<li>Localization is inferred from sequence features (no signal/TM segments) and general pathway biochemistry rather than a <em>P. putida</em>‑specific fractionation experiment.</li>
+<li><strong>Future work:</strong> (i) recombinant expression and kinetic characterization of PP_0186 (kcat/Km for PBG, DPM cofactor content); (ii) crystal/cryo‑EM structure to confirm the conserved catalytic Asp/Arg constellation; (iii) targeted knockout/complementation in <em>P. putida</em> to confirm essentiality and any conditional heme‑auxotrophy; (iv) test for possible HemC–HemD complex formation/substrate channeling.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>8727319 — Louie <em>et al.</em> 1996, <em>E. coli</em> PBGD structure at 1.76 Å.</li>
+<li>7592565 — Shoolingin‑Jordan 1995, PBGD &amp; UROS structure/mechanism review.</li>
+<li>33600566 — Sato <em>et al.</em> 2021, HMBS–substrate‑analog complexes, single binding site.</li>
+<li>23519422 — Roberts <em>et al.</em> 2013, <em>Arabidopsis</em> PBGD, DPM thioether to Cys254.</li>
+<li>18936296 — Song <em>et al.</em> 2009, human PBGD structure; hinge residue.</li>
+<li>12773194 — Shoolingin‑Jordan <em>et al.</em> 2003, catalytic Asp99/Arg mutagenesis.</li>
+<li>23815679 — Bustad <em>et al.</em> 2013, cofactor/stability during elongation.</li>
+<li>19267692 — Lobo <em>et al.</em> 2009, <em>Desulfovibrio</em> HemC contains DPM cofactor.</li>
+<li>27248501 — Pankowski 2016, <em>hemC</em> essential gene (temperature‑sensitivity).</li>
+<li>21219453 — Pränting &amp; Andersson 2011, <em>hemC</em> mutation growth restriction (<em>Salmonella</em>).</li>
+<li>12408752 — Raux <em>et al.</em> 2003, HemC+HemD in vitro uroporphyrinogen III synthesis.</li>
+<li>19473249 / 23648857 — HemC controls porphyrin flux in engineered <em>E. coli</em>.</li>
+<li>12864856 — Guégan <em>et al.</em> 2003, <em>Leptospira</em> heme genes; bifunctional HemC only where HemD absent.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hemC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hemC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hemC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RE5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hemc-assessment-notes">hemC assessment notes</h1>
+<h2 id="identity-and-core-reaction">Identity and core reaction</h2>
+<p>Q88RE5 (PP_0186) is a reviewed HemC/HMBS-family porphobilinogen deaminase<br />
+assigned EC 2.5.1.61. UniProt supports tetrapolymerization of four<br />
+porphobilinogen molecules to hydroxymethylbilane, a covalently bound<br />
+dipyrromethane cofactor, monomeric state, and the protoporphyrin precursor<br />
+pathway<br />
+[file:PSEPK/hemC/hemC-uniprot.txt "Tetrapolymerization of the monopyrrole PBG into the"]<br />
+[file:PSEPK/hemC/hemC-uniprot.txt "Binds 1 dipyrromethane group covalently"].</p>
+<h2 id="openscientist-assessment">OpenScientist assessment</h2>
+<p>The OpenScientist report correctly identifies Q88RE5/PP_0186 and recovers the<br />
+conserved HMBS reaction and cofactor mechanism. Direct KT2440 enzymology was not<br />
+found. The report nevertheless supplies an unsaved 66.6% pairwise alignment,<br />
+exact target-residue mapping, and target essentiality inferred from Francisella<br />
+and Salmonella. It also treats hemC-hemD adjacency as evidence for channeling and<br />
+uses a membrane-associated HemH generalization that does not match the curated<br />
+KT2440 HemH record. Its statement that the dipyrromethane cofactor is generated<br />
+from pre-uroporphyrinogen is unsupported and was not adopted. These claims were<br />
+not used as target evidence.</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<p>GO:0004418 is accepted as the core molecular function. The broad tetrapyrrole<br />
+row is refined to GO:0006780 because HemC builds the immediate substrate that<br />
+HemD cyclizes to uroporphyrinogen III. Cytoplasm is retained from the machine<br />
+annotation and soluble enzyme architecture. No essentiality, channeling, or<br />
+target active-site-residue annotation was added.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RE5
+gene_symbol: hemC
+product_type: PROTEIN
+aliases:
+  - PP_0186
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  HemC is the cytoplasmic hydroxymethylbilane synthase, also called
+  porphobilinogen deaminase. It uses a covalently bound dipyrromethane cofactor
+  to polymerize four porphobilinogen molecules into the linear tetrapyrrole
+  hydroxymethylbilane, which HemD cyclizes to uroporphyrinogen III.
+existing_annotations:
+  - term:
+      id: GO:0004418
+      label: hydroxymethylbilane synthase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This is the specific core catalytic function of HemC.
+      action: ACCEPT
+      reason: &gt;-
+        UniProt assigns EC 2.5.1.61 and describes tetrapolymerization of
+        porphobilinogen into hydroxymethylbilane.
+      supported_by:
+        - reference_id: file:PSEPK/hemC/hemC-uniprot.txt
+          supporting_text: Tetrapolymerization of the monopyrrole PBG into the
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Cytoplasmic localization is consistent with this soluble bacterial enzyme.
+      action: ACCEPT
+      reason: &gt;-
+        HemC lacks membrane or export features, and the current UniProt cross-reference
+        retains a cytoplasmic assignment.
+      supported_by:
+        - reference_id: file:PSEPK/hemC/hemC-uniprot.txt
+          supporting_text: &#34;GO; GO:0005737; C:cytoplasm;&#34;
+  - term:
+      id: GO:0006783
+      label: heme biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: HemC is an obligatory middle enzyme in the protoporphyrin route to heme b.
+      action: ACCEPT
+      reason: &gt;-
+        The HemC reaction generates the linear tetrapyrrole precursor required
+        for uroporphyrinogen III and all downstream heme-b intermediates.
+      supported_by:
+        - reference_id: file:PSEPK/hemC/hemC-uniprot.txt
+          supporting_text: &#34;PATHWAY: Porphyrin-containing compound metabolism; protoporphyrin-IX&#34;
+  - term:
+      id: GO:0033014
+      label: tetrapyrrole biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: The annotation is true but can be made more specific to the immediate product route.
+      action: MODIFY
+      reason: &gt;-
+        HemC directly builds hydroxymethylbilane for conversion to
+        uroporphyrinogen III, so GO:0006780 is more informative than the broad
+        tetrapyrrole parent.
+      proposed_replacement_terms:
+        - id: GO:0006780
+          label: uroporphyrinogen III biosynthetic process
+      supported_by:
+        - reference_id: file:PSEPK/hemC/hemC-uniprot.txt
+          supporting_text: Tetrapolymerization of the monopyrrole PBG into the
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/hemC/hemC-uniprot.txt
+    title: UniProtKB entry for PSEPK hemC
+    findings:
+      - statement: HemC polymerizes porphobilinogen into hydroxymethylbilane.
+        supporting_text: Tetrapolymerization of the monopyrrole PBG into the
+      - statement: HemC belongs to the HMBS family.
+        supporting_text: Belongs to the HMBS family.
+  - id: file:PSEPK/hemC/hemC-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK hemC
+    findings:
+      - statement: &gt;-
+          The report recovers the HMBS reaction and acknowledges that direct
+          experimental evidence for the KT2440 protein is sparse.
+        supporting_text: &#34;Direct experimental data for the *P. putida* KT2440 protein specifically are sparse;&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly identifies Q88RE5 and describes conserved HMBS
+        chemistry that is independently present in UniProt. It also presents an
+        unsaved 66.6% alignment and exact residue map, transfers essentiality from
+        Francisella and Salmonella, infers HemC-HemD channeling from adjacency,
+        generalizes membrane-associated HemH despite the KT2440 HemH record, and
+        gives an unsupported claim that the dipyrromethane cofactor is generated
+        from pre-uroporphyrinogen. Those conclusions were not retained.
+core_functions:
+  - description: &gt;-
+      Polymerizes four porphobilinogen molecules into hydroxymethylbilane for
+      uroporphyrinogen III and downstream heme-b synthesis.
+    molecular_function:
+      id: GO:0004418
+      label: hydroxymethylbilane synthase activity
+    directly_involved_in:
+      - id: GO:0006780
+        label: uroporphyrinogen III biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:PSEPK/hemC/hemC-uniprot.txt
+        supporting_text: Tetrapolymerization of the monopyrrole PBG into the
+suggested_questions:
+  - question: Is HemC abundance coordinated with the adjacent hemD locus in KT2440?
+suggested_experiments:
+  - hypothesis: HemC supplies hydroxymethylbilane for the principal heme-b pathway.
+    description: &gt;-
+      Quantify porphobilinogen and downstream tetrapyrroles after conditional
+      hemC depletion and complementation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
