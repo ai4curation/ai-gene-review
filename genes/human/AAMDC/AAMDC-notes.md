@@ -39,7 +39,7 @@ AAMDC is `ECO:0000250` (by similarity) for the same reason
 
 | Partner | Screen |
 |---|---|
-| ACY3 (Q96HD9), GORASP2 (Q9H8Y8) | PMID:25416956 HuRI Y2H |
+| ACY3 (Q96HD9), GORASP2 (Q9H8Y8) | PMID:25416956 (Rolland HI-II-14) Y2H |
 | VPS9D1 (Q9Y2B5) | PMID:32296183 HuRI |
 | **APP-2, HTT, ATXN3, DNM2-2, GDAP1** | **PMID:32814053** |
 
@@ -91,6 +91,67 @@ protein with a solved structure but no assigned activity, and affinage's `mechan
 reports `molecular_activity: (none)` — the provider agreeing there is nothing to ground. Every
 described effect (adipogenesis, AKT activation, ATF4/MYC translation) is a downstream cellular
 consequence, not a biochemical activity. I have deliberately **not** invented an MF term.
+
+### Tested, not just asserted
+
+A negative claim deserves evidence, so I ran a family-wide analysis
+(`AAMDC-bioinformatics/analyze_mth938.py` → `RESULTS.md`; fetched live from
+UniProt/InterPro/QuickGO, nothing hardcoded, re-runnable). Enumerating every reviewed
+Swiss-Prot member of AAMDC's Pfam family **PF04430 — aptly named DUF498, "domain of unknown
+function"**:
+
+| Reviewed family members | 13 |
+|---|---|
+| With any experimental MF term (excluding bare protein binding) | **0** |
+| With an explicit `GO:0003674` **ND** | 4 |
+| With a UniProt CATALYTIC ACTIVITY block | **0** |
+
+The missing molecular function is a property of the **entire family**, not an oversight on
+this gene.
+
+### And the family points somewhere specific
+
+The family is not wholly uncharacterised. Its other branch is **NDUFAF3**, with a consistent
+function in every organism studied — human, mouse, rat, bovine, zebrafish, Xenopus,
+Drosophila — an **assembly factor for mitochondrial complex I**, the Drosophila entry
+experimentally supported (PubMed:34386730).
+
+That is informative in a particular way. NDUFAF3 is an assembly factor, *not an enzyme*: it
+binds subunits, helps build a complex, has no catalytic activity, and is not part of the
+finished product. Consistent with that, no member of this family — NDUFAF3 included — has a
+catalytic activity block or an experimental MF term.
+
+So the family signal does **not** suggest a hidden enzymatic activity awaiting discovery. It
+suggests a protein-assembly or chaperone-like role — precisely the class of function GO
+cannot currently express as a molecular function (see the AAGAB review in this campaign,
+where the same gap was filed under `proposed_new_terms`). Two genes in, that is twice the
+same structural limitation in GO.
+
+The right experimental question is therefore probably not "what does AAMDC catalyse?" but
+"what does it help assemble?"
+
+## Where the localisation bar sits, and why
+
+PMID:33772001 reports three localisation observations; only one is annotated, so the
+asymmetry is worth stating.
+
+- **Endolysosome (annotated, non-core).** AAMDC, RABGAP1L and RAB7A colocalise there. Taken,
+  because it is tied to a specific named interaction the paper pursues mechanistically —
+  with the caveat now in the annotation that `GO:0036019` denotes the *transient hybrid
+  organelle* from late-endosome/lysosome fusion, which IF colocalisation with RAB7A (a broad
+  late-endosome/lysosome marker) cannot resolve.
+- **Nuclear and plasma-membrane staining (not annotated).** The same paper reports AAMDC "in
+  both cytoplasmic and nuclear compartments, accompanied by plasma membrane staining
+  depending on the cell line analyzed". Cell-line-dependent IHC with no functional experiment
+  attached, and not pursued by the paper.
+- **Endosomal trafficking (not annotated).** A knockdown lysosomal phenotype is said to
+  substantiate "a role of AAMDC in the regulation of endosomal trafficking". Left out: a
+  single-sentence interpretation of a phenotype, and a trafficking-regulation annotation on a
+  protein with no known molecular function would be exactly the over-reach this review
+  otherwise avoids.
+
+The bar: a compartment is annotated when a named, mechanistically pursued interaction puts it
+there — not on staining pattern, and not on a phenotype's interpretation alone.
 
 ## Actions
 
