@@ -61,6 +61,14 @@ That is the artefact signature, and it is a much stronger argument than "no foll
 `MARK_AS_OVER_ANNOTATED` rather than `REMOVE` — the physical interactions may well have occurred
 in the assay, and I have no positive evidence that any individual pair is false.
 
+**A general trap worth recording.** When a null model is built by querying the same database
+that supplies the numerator, the background query must use the **identical predicate**. Here the
+numerator counted coiled-coil on feature-OR-keyword while the background query was feature-only
+(`ft_coiled:*`) — and since UniProt applies the keyword more liberally than the positional
+feature, the mismatch inflated the enrichment (6.0× reported where like-for-like is 4.6×). The
+fix is not to pick one criterion but to compute each numerator against its own matching
+denominator, which also shows the conclusion is robust to the choice.
+
 ## The family route is closed too — but it exists
 
 I originally wrote that AARD has "no recognisable domain beyond the compositional

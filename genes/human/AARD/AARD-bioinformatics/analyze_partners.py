@@ -244,7 +244,7 @@ def main() -> None:
     L.append("| Accession | Gene | Coiled-coil segments | Subcellular location |")
     L.append("|---|---|---|---|")
     for r in sorted(rows, key=lambda x: (-x["n_coiled"], x["gene"])):
-        loc = "; ".join(r["locations"][:3]) or "—"
+        loc = "; ".join(r["locations"]) or "—"
         cc = str(r["n_coiled"]) if r["n_coiled"] else ("keyword only" if r["coiled_kw"] else "0")
         L.append(f"| {r['acc']} | {r['gene']} | {cc} | {loc} |")
     L.append("")

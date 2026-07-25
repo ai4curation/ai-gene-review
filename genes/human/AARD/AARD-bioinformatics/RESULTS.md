@@ -41,11 +41,11 @@ analysis does not attempt.
 
 | Accession | Gene | Coiled-coil segments | Subcellular location |
 |---|---|---|---|
-| Q4V328 | GRIPAP1 | 4 | Early endosome membrane; Recycling endosome membrane; Cell projection, axon |
+| Q4V328 | GRIPAP1 | 4 | Early endosome membrane; Recycling endosome membrane; Cell projection, axon; Cell projection, dendrite; Synapse |
 | Q86XR8-3 | CEP57 | 2 | Nucleus; Cytoplasm; Cytoplasm, cytoskeleton, microtubule organizing center, centrosome |
 | Q7L2Z9 | CENPQ | 1 | Nucleus; Chromosome, centromere |
 | Q2KHM9 | KIAA0753 | 1 | Cytoplasm, cytoskeleton, microtubule organizing center, centrosome, centriole; Cytoplasm, cytoskeleton, microtubule organizing center, centrosome, centriolar satellite; Cytoplasm, cytoskeleton, microtubule organizing center, centrosome |
-| Q16623 | STX1A | 1 | Cytoplasmic vesicle, secretory vesicle, synaptic vesicle membrane; Synapse, synaptosome; Cell membrane |
+| Q16623 | STX1A | 1 | Cytoplasmic vesicle, secretory vesicle, synaptic vesicle membrane; Synapse, synaptosome; Cell membrane; Secreted |
 | P32856-2 | STX2 | 1 | Membrane |
 | Q13190 | STX5 | 1 | Endoplasmic reticulum-Golgi intermediate compartment membrane; Golgi apparatus membrane |
 | Q2M2I5 | KRT24 | keyword only | — |
