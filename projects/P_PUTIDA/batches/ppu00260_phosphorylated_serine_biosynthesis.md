@@ -24,7 +24,7 @@ and phospholipid synthesis.
 - [x] Create and semantically validate the species-neutral module.
 - [x] Run generic module-level OpenScientist research.
 - [ ] Run module + pathway + PSEPK OpenScientist research.
-- [ ] Validate and render all changed reviews, the module, and project pages.
+- [x] Validate and render all changed reviews, the module, and project pages.
 - [ ] Open one PR for this module and resolve review and CI feedback.
 
 ## Selected Genes
