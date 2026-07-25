@@ -22,7 +22,9 @@ autolink_gene_symbols: false
 - [x] Curate all selected gene reviews.
 - [x] Add exact UniProt exemplars and checked PANTHER family identifiers.
 - [x] Record exact TreeGrafter PTNs without promoting them to PAINT ancestral nodes.
-- [ ] Run gene-level OpenScientist research.
+- [x] Attempt gene-level OpenScientist research; the FruK report completed,
+  while the corrected FruB and FruA requests each exhausted the 7,200-second
+  provider timeout without a report.
 - [x] Attempt generic module-level OpenScientist research; the corrected
   request exhausted its 7,200-second provider timeout without a report.
 - [x] Run module + pathway + PSEPK OpenScientist research.
@@ -69,4 +71,9 @@ The generic OpenScientist request was allowed to run for the full configured
 7,200 seconds with three iterations but timed out in the provider queue. No
 generic report is cited or represented as evidence. The completed
 module-plus-`ppu00051`-plus-PSEPK report was checked against the primary
-KT2440 evidence above.
+KT2440 evidence above. The completed FruK report independently recovered the
+exact 1-phosphofructokinase reaction, the `fruBKA` context, and the distinction
+from fructose 6-phosphate kinases; it did not require a change to the manually
+curated review. FruB and FruA were each allowed the same full provider timeout,
+so their missing reports are recorded as retrieval failures rather than
+unfinished curation.
