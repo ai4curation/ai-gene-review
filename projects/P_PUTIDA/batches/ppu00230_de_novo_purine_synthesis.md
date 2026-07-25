@@ -23,7 +23,9 @@ carboxylation.
 - [x] Curate every GOA row in the selected gene reviews.
 - [x] Revise and validate the species-neutral `de_novo_purine_synthesis` module.
 - [x] Run full OpenScientist module research.
-- [ ] Run full OpenScientist module + `ppu00230` + PSEPK research.
+- [x] Attempt full OpenScientist module + `ppu00230` + PSEPK research; the
+  corrected request exhausted the 7,200-second provider timeout without a
+  report.
 - [x] Render the module and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -67,3 +69,8 @@ phosphoribosyl-pyrophosphate supply, DNA precursor synthesis, urease, or broad
 adenylate-dependent metabolism. They remain in the immutable 65-gene source
 snapshot `ppu00230_de_novo_purine_synthesis.tsv` but are outside the
 PRPP-to-IMP module boundary.
+
+The species-aware OpenScientist request was allowed the full configured 7,200
+seconds with three iterations and returned no report. The module therefore
+cites the completed generic report and inspectable gene, exact-record, and
+ontology evidence, not a nonexistent taxon-specific source.
