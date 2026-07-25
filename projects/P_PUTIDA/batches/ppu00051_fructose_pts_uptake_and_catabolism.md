@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [x] Record exact TreeGrafter PTNs without promoting them to PAINT ancestral nodes.
 - [ ] Run gene-level OpenScientist research.
 - [ ] Run generic module-level OpenScientist research.
-- [ ] Run module + pathway + PSEPK OpenScientist research.
+- [x] Run module + pathway + PSEPK OpenScientist research.
 - [ ] Reconcile generated reports with the manual curation.
 - [ ] Validate gene and module YAML.
 - [ ] Render the module and project page.
