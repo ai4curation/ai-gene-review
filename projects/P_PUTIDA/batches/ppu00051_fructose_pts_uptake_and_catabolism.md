@@ -25,9 +25,9 @@ autolink_gene_symbols: false
 - [ ] Run gene-level OpenScientist research.
 - [ ] Run generic module-level OpenScientist research.
 - [x] Run module + pathway + PSEPK OpenScientist research.
-- [ ] Reconcile generated reports with the manual curation.
-- [ ] Validate gene and module YAML.
-- [ ] Render the module and project page.
+- [x] Reconcile generated reports with the manual curation.
+- [x] Validate gene and module YAML.
+- [x] Render the module and project page.
 - [ ] Open and shepherd one PR for this module.
 
 ## Curated Genes
