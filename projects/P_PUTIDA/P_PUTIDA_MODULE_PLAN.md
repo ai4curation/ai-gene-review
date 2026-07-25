@@ -137,20 +137,20 @@ Use the cheapest useful source first:
 just fetch-gene PSEPK <gene>
 ```
 
-3. Gene-level first-pass research with OpenScientist. Use a long timeout: a
-   normal run can take 20 minutes or more and should not be treated as a failed
-   smoke test after 180 seconds:
+3. Current gene-level research uses OpenScientist while the Edison-backed
+   Falcon route is unavailable. Use three iterations for batch throughput but
+   retain a two-hour provider allowance:
 
 ```bash
-just deep-research-openscientist PSEPK <gene> --timeout 7200
+just deep-research-openscientist PSEPK <gene> --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
-4. Module-level research with OpenScientist when a broader pathway synthesis is
-   needed. Falcon/Edison may be used again when that service is available, but
-   it is not the current batch provider:
+4. Use OpenScientist for the generic reusable-module synthesis as well:
 
 ```bash
-just module-deep-research-openscientist <module> --timeout 7200
+just module-deep-research-openscientist <module> --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
 5. For species-aware module/pathway research, use the module + pathway + taxon
@@ -159,31 +159,32 @@ just module-deep-research-openscientist <module> --timeout 7200
    partition table when available:
 
 ```bash
-just module-pathway-deep-research openscientist "central carbon metabolism" ppu00020 PSEPK --timeout 7200
+just module-pathway-deep-research openscientist "central carbon metabolism" \
+  ppu00020 PSEPK --project P_PUTIDA --timeout 8100 \
+  --extra-args --param timeout=7200 --param max_iterations=3
 ```
 
 The report is written under the project support folder by default, e.g.
 `projects/P_PUTIDA/deep-research/PSEPK__central-carbon-metabolism__ppu00020-deep-research-openscientist.md`.
-The wrappers pass this timeout through to OpenScientist as well as applying it
-to the local subprocess.
 
-6. Asta and PaperBLAST remain optional supplemental protein-specific retrieval
-   sources; they are not substitutes for the commissioned OpenScientist report:
-
-```bash
-just deep-research-asta PSEPK <gene>
-```
+6. Asta remains a lightweight gene-level fallback, and Falcon remains the
+   preferred module-level provider when its Edison route is available again.
+7. PaperBLAST remains an optional protein-specific lookup:
 
 ```bash
 uv run python scripts/fetch_paperblast.py <uniprot_accession>
 ```
 
-7. Use `perplexity-lite` only as a secondary fallback when OpenScientist is
-   unavailable or comparison across providers is useful.
-8. Falcon/Edison outputs in older batches are historical. Do not start new
-   Falcon runs while Edison is unavailable; use OpenScientist instead.
+8. Use `perplexity-lite` only as a secondary fallback when Asta is unavailable
+   or comparison across providers is useful.
 9. Escalate to OpenAI/perplexity/full manual literature only when the first-pass
    provider output leaves a curation-changing question unresolved.
+
+OpenScientist is a long-running research provider, not a short smoke test.
+Successful jobs commonly take more than 20 minutes and difficult jobs can use
+most or all of the two-hour provider allowance. Do not apply a 180-second
+timeout or treat a quiet wrapper as failure. If a five-iteration run exhausts
+the allowance, rerun with `max_iterations=3` and the same full timeout.
 
 Operational caveat: the repository has a PaperBLAST wrapper, but it depends on
 Playwright and the PaperBLAST website can present a Cloudflare challenge. If the
