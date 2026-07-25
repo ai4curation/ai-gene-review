@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>argC1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>argC1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QQ6" target="_blank" class="term-link">
+                        Q88QQ6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "argC1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QQ6" data-a="DESCRIPTION: ArgC1 (PP_0432) is a type 1 N-acetyl-gamma-glutamy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ArgC1 (PP_0432) is a type 1 N-acetyl-gamma-glutamyl-phosphate reductase (EC 1.2.1.38). It uses NADPH to reduce N-acetyl-L-glutamyl 5-phosphate to N-acetyl-L-glutamate 5-semialdehyde in the acetylated-ornithine route to L-arginine. KT2440 also encodes the type 2 isoenzyme ArgC2.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003942" target="_blank" class="term-link">
+                                    GO:0003942
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetyl-gamma-glutamyl-phosphate reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QQ6" data-a="GO:0003942" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining ArgC1 molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record assigns EC 1.2.1.38, RHEA:21588, and the type 1 ArgC family to Q88QQ6.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argC1/argC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=N-acetyl-gamma-glutamyl-phosphate reductase 1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argC1/argC1-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ → N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QQ6" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgC1 is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported but is secondary to the reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QQ6" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgC1 performs the third acetylated-ornithine reaction during L-arginine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt pathway assignment directly supports this process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016620" target="_blank" class="term-link">
+                                    GO:0016620
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QQ6" data-a="GO:0016620" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad oxidoreductase term is redundant with the specific ArgC reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003942 captures the substrate-specific NADPH-dependent reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QQ6" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The curated ArgC1 reaction uses NADP(H), not NAD(H).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt and HAMAP specify NADPH-dependent reduction; this broad-domain InterPro mapping assigns the wrong nicotinamide cofactor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070401" target="_blank" class="term-link">
+                                    GO:0070401
+                                </a>
+                            </span>
+                            <span class="term-label">NADP+ binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QQ6" data-a="GO:0070401" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADP(H) is the redox cofactor for the ArgC1 reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct supporting chemistry, but the specific reductase activity is more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses NADPH to reduce N-acetyl-L-glutamyl 5-phosphate to N-acetyl-L-glutamate 5-semialdehyde in L-arginine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88QQ6" data-a="FUNCTION: Uses NADPH to reduce N-acetyl-L-glutamyl 5-phospha..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003942" target="_blank" class="term-link">
+                            N-acetyl-gamma-glutamyl-phosphate reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argC1/argC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=N-acetyl-gamma-glutamyl-phosphate reductase 1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argC1/argC1-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ → N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argC1/argC1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK ArgC1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88QQ6 to the NADPH-dependent type 1 ArgC reaction.</div>
+
+                        <div class="finding-text">"Full=N-acetyl-gamma-glutamyl-phosphate reductase 1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argC1/argC1-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK ArgC1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the six existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argC1/argC1-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK ArgC1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the exact accession as a type 1 ArgC protein and retrieves the NADPH-dependent AGPR reaction. Its claims that KT2440 lacks ArgA, that ArgC1 is the dominant isoenzyme, and that ArgC2 lacks intact catalytic motifs are contradicted or unsupported and are not used here.</div>
+
+                        <div class="finding-text">"N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ → N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(argC1-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QQ6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *argC1* (Q88QQ6, PP_0432) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T18:21:47.130926</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="argC1-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="argC1-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-argc1-q88qq6-pp_0432-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>argC1</em> (Q88QQ6, PP_0432) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <code>argC1</code> (OrderedLocusName <strong>PP_0432</strong>)<br />
+<strong>Protein:</strong> N-acetyl-γ-glutamyl-phosphate reductase 1 (AGPR 1 / NAGSA dehydrogenase 1)<br />
+<strong>UniProt:</strong> Q88QQ6 (ARGC1_PSEPK)<br />
+<strong>EC:</strong> 1.2.1.38<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), taxid 160488</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><code>argC1</code> (PP_0432) of <em>Pseudomonas putida</em> KT2440 encodes <strong>N-acetyl-γ-glutamyl-phosphate reductase (AGPR)</strong>, also called N-acetylglutamate-5-semialdehyde dehydrogenase (NAGSA dehydrogenase), the enzyme (EC 1.2.1.38) that carries out the <strong>third step of the de novo L-arginine biosynthesis pathway</strong>. The enzyme is a soluble, cytoplasmic, homodimeric NADPH-dependent oxidoreductase. In the biosynthetic (reductive) direction it catalyzes the reversible reaction <em>N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ → N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate</em> — a reductive dephosphorylation in which a hydride from NADPH replaces the acyl-phosphate, releasing inorganic phosphate. It acts downstream of the N-acetylglutamate kinase (ArgB, PP_5289) and upstream of the acetylornithine aminotransferase (ArgD, PP_0372).</p>
+<p>The identification rests on strong convergent evidence. The UniProt/HAMAP assignment (rule MF_00150) places argC1 in the <strong>NAGSA dehydrogenase family, Type 1</strong>, supported by the diagnostic InterPro domains AGPR_type-1 (IPR000706), AGPR active-site (IPR023013), AGPR dimerisation domain (IPR058924) and the NAD(P)-binding superfamily fold (IPR036291). Direct inspection of the Q88QQ6 sequence confirms both catalytic hallmarks are intact: the N-terminal Rossmann dinucleotide-binding glycine fingerprint (<code>GIVGGTG</code>, residues 5–11) and the family-defining active-site motif <code>PGCYPT</code> (residues 148–153) containing the catalytic cysteine (Cys150). Functional characterization of orthologs — including complementation of <em>E. coli</em> argC auxotrophs by cloned argC from <em>Corynebacterium glutamicum</em> [PMID: 9818083] and <em>Streptomyces clavuligerus</em> [PMID: 1339424], and the crystal structure of the <em>Mycobacterium tuberculosis</em> enzyme in complex with NADP⁺ [PMID: 17316682] — establish the reaction, cofactor, fold and catalytic residues that argC1's sequence conserves.</p>
+<p>Within <em>P. putida</em>, argC1 feeds the economical <strong>cyclic (ArgJ-dependent) ornithine pathway</strong>: the genome encodes a bifunctional ornithine acetyltransferase (ArgJ, PP_1346) but no stand-alone N-acetylglutamate synthase (ArgA), meaning the acetyl group is recycled from N-acetylornithine to glutamate rather than being hydrolyzed and re-synthesized. The arg genes are dispersed across the genome (not operonic), and pathway expression is repressed by arginine, though only weakly (~5-fold) in <em>P. putida</em> [PMID: 176312]. Notably, KT2440 carries <strong>two AGPR paralogs</strong>: argC1 (the canonical Type-1 isozyme, this report's target) and a deeply divergent (~36% identity) paralog <strong>argC2</strong> (P59308, PP_3633). De novo arginine synthesis is conditionally essential on minimal medium [PMID: 20158506], consistent with argC1's biosynthetic role, though the presence of two paralogs may partially buffer a single knockout.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-argc1-is-n-acetyl-glutamyl-phosphate-reductase-agpr-the-third-enzyme-of-arginine-biosynthesis">Finding 1 — argC1 is N-acetyl-γ-glutamyl-phosphate reductase (AGPR), the third enzyme of arginine biosynthesis</h3>
+<p>UniProt Q88QQ6 assigns argC1 (PP_0432) to the <strong>NAGSA dehydrogenase family, Type 1</strong> via HAMAP rule MF_00150, with the domain complement expected of an authentic AGPR: AGPR_type-1 (IPR000706), AGPR active-site (IPR023013), AGPR dimerisation domain (IPR058924), and NAD(P)-binding domain superfamily (IPR036291). The enzyme's EC number, 1.2.1.38, defines an oxidoreductase acting on the aldehyde/oxo group of a donor with NAD(P)⁺ as acceptor.</p>
+<p>This annotation is anchored in experimental work on orthologs. In <em>Corynebacterium glutamicum</em>, the cloned argC gene expressed in an <em>E. coli</em> auxotroph produced a protein of the expected size and enzyme activity, confirming it encodes N-acetylglutamate-5-semialdehyde dehydrogenase [PMID: 9818083]:</p>
+<blockquote>
+<p>"Enzyme activity and size of the expressed protein in the E. coli auxotroph carrying the recombinant argC gene revealed that the cloned gene indeed codes for N-acetylglutamate 5-semialdehyde dehydrogenase."</p>
+</blockquote>
+<p>In <em>Streptomyces clavuligerus</em>, the 340-aa (35.2 kDa) ArgC complements argC mutants and produces AGPR activity, and the authors identified a conserved active-center motif shared across all AGPRs [PMID: 1339424]. In <em>Sinorhizobium meliloti</em>, argC is explicitly defined as the enzyme catalyzing "the high-energy-consuming third step in the arginine synthesis pathway" [PMID: 29121239]:</p>
+<blockquote>
+<p>"argC encodes N-acetyl-gamma-glutamyl phosphate reductase, the enzyme that catalyzes the high-energy-consuming third step in the arginine synthesis pathway."</p>
+</blockquote>
+<p>Crucially, the reaction itself has been measured in <em>P. putida</em>: N-acetylglutamate-γ-semialdehyde dehydrogenase activity is present and repressible by arginine in this very organism [PMID: 176312]. Together these lines of evidence make the functional assignment of argC1 secure rather than inferential.</p>
+<h3 id="finding-2-argc1-acts-in-the-cytoplasm-and-its-expression-is-repressed-by-arginine">Finding 2 — argC1 acts in the cytoplasm and its expression is repressed by arginine</h3>
+<p>AGPR is a soluble cytoplasmic enzyme of the amino-acid biosynthetic machinery. The NAGSA dehydrogenase family carries no signal peptide or transmembrane segments (UniProt Q88QQ6), placing the reaction in the cytosol where the upstream (ArgB) and downstream (ArgD) substrates are generated and consumed. This is the expected localization for a small-molecule biosynthetic dehydrogenase.</p>
+<p>Functionally, the pathway argC1 serves is under feedback control by the end product. In <em>P. putida</em>, the coupled N-acetyl-α-glutamokinase / N-acetylglutamate-γ-semialdehyde dehydrogenase activities are repressible and derepressible by arginine, although repression is incomplete — the maximum difference between repressed and derepressed states for any pathway enzyme was only ~5-fold [PMID: 176312]:</p>
+<blockquote>
+<p>"The synthesis of four of the enzymes of the arginine biosynthetic pathway (N-acetyl-alpha-glutamokinase/N-acetylglutamate-gamma-semialdehyde dehydrogenase, ornithine carbamoyltransferase and acetylornithine-delta-transaminase) could be repressed and derepressed, but the maximum difference observed between repressed and derepressed levels for any enzyme of the pathway was only 5-fold."</p>
+</blockquote>
+<p>Arginine-dependent repression of argC is conserved: in <em>S. clavuligerus</em>, "Formation of AGPR is repressed by addition of arginine to the culture medium" [PMID: 1339424], and in <em>Saccharomyces cerevisiae</em> the argB–argC gene cluster shows an ~85-fold repression range [PMID: 220508]. These observations are consistent with regulation of the arg regulon by an ArgR-type repressor, with <em>P. putida</em> exhibiting comparatively weak (relaxed) control.</p>
+<h3 id="finding-3-kt2440-encodes-two-agpr-paralogs-argc1-is-the-type-1-isozyme-distinct-from-argc2">Finding 3 — KT2440 encodes two AGPR paralogs; argC1 is the Type-1 isozyme, distinct from argC2</h3>
+<p>A UniProt search of <em>P. putida</em> KT2440 (taxid 160488) returns two proteins annotated as N-acetyl-γ-glutamyl-phosphate reductase (EC 1.2.1.38):</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>argC1</th>
+<th>argC2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88QQ6 (ARGC1_PSEPK)</td>
+<td>P59308 (ARGC2_PSEPK)</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_0432</td>
+<td>PP_3633</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>344 aa (~36.3 kDa)</td>
+<td>313 aa</td>
+</tr>
+<tr>
+<td>Family assignment</td>
+<td>NAGSA dehydrogenase <strong>Type 1</strong> (HAMAP MF_00150)</td>
+<td>"putative ArgC-like"</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>IPR000706 + IPR058924 + IPR036291; Pfam PF01118 + PF22698; COG0002</td>
+<td>partial / putative</td>
+</tr>
+</tbody>
+</table>
+<p>The two genes map to widely separated loci (PP_0432 vs PP_3633), indicating they are paralogous isozymes rather than two halves of one split gene. argC1 carries the complete Type-1 HAMAP signature and is therefore the canonical AGPR; the "1" suffix in the gene name reflects the existence of this second paralog.</p>
+<h3 id="finding-4-agpr-is-a-two-domain-nadph-oxidoreductase-the-catalytic-mechanism-is-defined-structurally">Finding 4 — AGPR is a two-domain NADP(H) oxidoreductase; the catalytic mechanism is defined structurally</h3>
+<p>UniProt Q88QQ6 assigns argC1 the reversible reaction (Rhea 21588):</p>
+<div class="codehilite"><pre><span></span><code>N-acetyl-L-glutamate 5-semialdehyde + phosphate + NADP⁺
+⇌  N-acetyl-L-glutamyl 5-phosphate + NADPH + H⁺
+</code></pre></div>
+
+<p>run in the reductive (biosynthetic) direction, and places it as step 3 of the L-glutamate → N²-acetyl-L-ornithine segment of arginine biosynthesis. The enzymatic mechanism is defined by the crystal structure of the <em>M. tuberculosis</em> ortholog in complex with NADP⁺ [PMID: 17316682]. Each subunit comprises an <strong>α/β (Rossmann-like NADP-binding) domain</strong> and an <strong>α+β domain</strong>, with NADP⁺ bound in the interdomain cleft:</p>
+<blockquote>
+<p>"The enzyme N-acetyl-gamma-glutamyl-phosphate reductase (AGPR) catalyzes the nicotinamide adenine dinucleotide phosphate (NADPH)-dependent reductive dephosphorylation of N-acetyl-gamma-glutamyl-phosphate to N-acetylglutamate-gamma-semialdehyde."</p>
+<p>"Each MtbAGPR subunit consists of alpha/beta and alpha+beta domains; NADP(+) is bound in the cleft between them."</p>
+</blockquote>
+<p>A loop (Leu88–His92) closes ~5 Å over the cofactor adenine upon binding, and substrate docking implicates His217/His219 in hydrogen-bonding the substrate, with Arg114 forming an ion pair with the substrate's phosphate group to position it for chemistry [PMID: 17316682]:</p>
+<blockquote>
+<p>"residues His217 and His219 could form hydrogen bonds with the docked substrate. In addition, an ion pair could form between the substrate phosphate group and the guanidinium group of Arg114."</p>
+</blockquote>
+<p>argC1's domain architecture (IPR000706, IPR036291, IPR058924; Pfam PF01118/PF22698) matches this fold, and it functions as a homodimer typical of the family — establishing both the substrate specificity (the phosphorylated, N-acetylated glutamate semialdehyde) and the hydride-transfer mechanism by structural homology.</p>
+<h3 id="finding-5-argc1-feeds-the-cyclic-argj-dependent-ornithine-pathway-encoded-by-a-dispersed-arg-regulon">Finding 5 — argC1 feeds the cyclic (ArgJ-dependent) ornithine pathway, encoded by a dispersed arg regulon</h3>
+<p>KEGG KO-to-gene mapping for <em>P. putida</em> KT2440 places the complete arginine pathway across scattered genomic loci:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Enzyme</th>
+<th>KO</th>
+<th><em>P. putida</em> gene(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>N-acetylglutamate synthase (ArgA)</td>
+<td>K00619</td>
+<td><strong>none found</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>N-acetylglutamate kinase (ArgB)</td>
+<td>K00930</td>
+<td>PP_5289</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><strong>AGPR (ArgC)</strong></td>
+<td><strong>K00145</strong></td>
+<td><strong>PP_0432 (argC1)</strong>, PP_3633 (argC2)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Acetylornithine aminotransferase (ArgD)</td>
+<td>K00821</td>
+<td>PP_0372</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Ornithine acetyltransferase (ArgJ)</td>
+<td>K00620</td>
+<td>PP_1346</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Ornithine carbamoyltransferase (ArgF)</td>
+<td>K00611</td>
+<td>PP_1000, PP_1079</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Argininosuccinate synthase (ArgG)</td>
+<td>K01940</td>
+<td>PP_1088</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Argininosuccinate lyase (ArgH)</td>
+<td>K01755</td>
+<td>PP_0184</td>
+</tr>
+</tbody>
+</table>
+<p>The presence of a bifunctional <strong>ArgJ</strong> (PP_1346) together with the <strong>absence of a stand-alone ArgA</strong> indicates <em>P. putida</em> uses the economical <strong>cyclic pathway</strong>: ArgJ transfers the acetyl group from N-acetyl-L-ornithine back onto L-glutamate to regenerate N-acetyl-L-glutamate, rather than hydrolytically removing it (ArgE) and re-acetylating de novo (ArgA). This recycles the acetyl group and conserves acetyl-CoA. The arg genes are dispersed genome-wide rather than clustered in a single operon, and gene-neighborhood inspection confirms PP_0432 sits among functionally unrelated genes (PP_0431 membrane protein, PP_0433 ErpA Fe-S insertion factor, PP_0434 AnmK), i.e., it is not co-transcribed with other arg genes.</p>
+<div class="codehilite"><pre><span></span><code>     L-glutamate
+ │  ArgA (ABSENT — replaced by ArgJ recycling)
+ ▼
+   N-acetyl-L-glutamate
+ │  ArgB / N-acetylglutamate kinase (PP_5289)  + ATP
+ ▼
+   N-acetyl-L-glutamyl-5-phosphate
+ │  ◀── argC1 / AGPR (PP_0432) + NADPH  ◀── THIS ENZYME
+ ▼        (releases Pi)
+   N-acetyl-L-glutamate-5-semialdehyde
+ │  ArgD / acetylornithine aminotransferase (PP_0372)
+ ▼
+   N-acetyl-L-ornithine
+ │  ArgJ (PP_1346) ── transfers acetyl back to glutamate ─┐
+ ▼                                                        │
+     L-ornithine ───────────────────────────────────────────────┘ (cyclic)
+ │  ArgF → ArgG → ArgH
+ ▼
+     L-arginine
+</code></pre></div>
+
+<h3 id="finding-6-argc1-and-argc2-are-deeply-divergent-paralogs-36-identity-in-unrelated-genomic-contexts">Finding 6 — argC1 and argC2 are deeply divergent paralogs (~36% identity) in unrelated genomic contexts</h3>
+<p>A global Needleman–Wunsch alignment of the two <em>P. putida</em> AGPRs gives only <strong>142/391 = 36.3% identity</strong> between argC1 (344 aa) and argC2 (313 aa), indicating ancient paralogs rather than a recent duplication. Their genomic neighborhoods differ completely: PP_0432 (argC1) sits beside unrelated genes (unknown-function/membrane proteins, ErpA, AnmK), whereas PP_3633 (argC2) is annotated "putative ArgC-like" and is flanked by a LysR-family regulator (PP_3632), a GNAT acetyltransferase (PP_3634), and a sulfonate ABC transporter (PP_3635–6). argC1 carries the full HAMAP MF_00150 Type-1 signature; argC2 is only "putative." This strongly supports argC1 as the housekeeping AGPR of arginine biosynthesis, with argC2 a divergent paralog whose precise role (possibly a specialized or acquired function, given its transporter/acetyltransferase gene context) remains to be established.</p>
+<h3 id="finding-7-argc1s-sequence-retains-the-intact-nadp-binding-and-agpr-active-site-motifs">Finding 7 — argC1's sequence retains the intact NADP-binding and AGPR active-site motifs</h3>
+<p>Direct inspection of the 344-aa Q88QQ6 sequence locates the two catalytic hallmarks of a competent Type-1 AGPR:</p>
+<ol>
+<li><strong>NADP-binding Rossmann fingerprint</strong> <code>GIVGGTG</code> at residues 5–11 (<code>MIKV-GIVGGTG-YTG</code>), matching the IPR036291 NAD(P)-binding superfamily assignment.</li>
+<li><strong>AGPR active-site signature</strong> <code>PGCYPT</code> at residues 148–153 (<code>…IAV-PGCYPT-ATQ…</code>), containing the strictly conserved catalytic <strong>cysteine, Cys150</strong>.</li>
+</ol>
+<p>The PGCYPT motif was identified as the conserved active center across all AGPRs [PMID: 1339424]:</p>
+<blockquote>
+<p>"A conserved PGCYPT domain present in all the AGPR sequences suggests that this may be the active center of the protein."</p>
+</blockquote>
+<p>The presence of both motifs in argC1 (and their absence/degeneration in argC2) confirms that argC1 retains the intact catalytic apparatus and is the enzymatically competent isozyme.</p>
+<h3 id="finding-8-de-novo-arginine-synthesis-is-conditionally-essential-on-minimal-medium">Finding 8 — De novo arginine synthesis is conditionally essential on minimal medium</h3>
+<p>A genome-wide mini-Tn5 knockout screen of <em>P. putida</em> KT2440 on glucose minimal medium recovered conditionally essential genes including amino-acid biosynthetic genes, and reported that "Auxotrophs for all amino acids predicted by the in silico models were found" [PMID: 20158506]:</p>
+<blockquote>
+<p>"Auxotrophs for all amino acids predicted by the in silico models were found"</p>
+</blockquote>
+<p>This establishes that de novo arginine synthesis — the pathway argC1 serves — is required for growth in the absence of exogenous arginine, and that an arginine auxotroph phenotype is obtainable when the pathway is disrupted. Because KT2440 carries two AGPR paralogs, a single argC1 knockout may be partially buffered by argC2; the auxotrophy is fundamentally a property of the pathway/regulon rather than necessarily of the single gene.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The convergent evidence produces a clear and coherent model. <code>argC1</code> (PP_0432) is a <strong>cytoplasmic, homodimeric, NADPH-dependent oxidoreductase</strong> that performs the committed reductive step at the heart of arginine biosynthesis. Its substrate is the acyl-phosphate intermediate <strong>N-acetyl-L-glutamyl-5-phosphate</strong> produced by ArgB; its product is the aldehyde <strong>N-acetyl-L-glutamate-5-semialdehyde</strong> consumed by ArgD. Mechanistically, the enzyme couples oxidation of NADPH to reductive dephosphorylation of a high-energy acyl-phosphate — the "high-energy-consuming third step" [PMID: 29121239] — with a Rossmann domain binding the NADP(H) cofactor in an interdomain cleft, His217/His219 recognizing the substrate, and Arg114 clamping the phosphate leaving group [PMID: 17316682]. The catalytic Cys150 within the PGCYPT motif is the nucleophile/active-site residue conserved across all AGPRs [PMID: 1339424].</p>
+<p>Physiologically, argC1 sits within <em>P. putida</em>'s <strong>cyclic, acetyl-recycling ornithine pathway</strong>, distinguished by a bifunctional ArgJ and the absence of ArgA. This design conserves acetyl-CoA and reflects the metabolic economy typical of soil/rhizosphere pseudomonads. The pathway is transcriptionally responsive to arginine availability (weak ~5-fold repression in <em>P. putida</em>), consistent with ArgR-type feedback control, and is conditionally essential — cells require it whenever arginine is not supplied exogenously. Ornithine, the product of the acetylated segment, further feeds into citrulline/arginine and the polyamine precursor pool, so argC1 sits upstream of a metabolic node with broad importance.</p>
+<p>A distinctive feature of KT2440 is the <strong>duplication of AGPR</strong> into argC1 and the divergent argC2 (~36% identity). The intact catalytic motifs, complete HAMAP Type-1 signature, and canonical arg-pathway assignment mark argC1 as the housekeeping biosynthetic enzyme. argC2's specialized genomic context (LysR regulator, GNAT acetyltransferase, sulfonate transporter) hints at a possibly neofunctionalized or condition-specific role, but this remains unresolved and outside argC1's core function.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>Relevance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17316682/">PMID: 17316682</a></td>
+<td><em>Crystal structure of AGPR from M. tuberculosis with NADP(+)</em></td>
+<td><strong>Primary structural evidence</strong>: defines the two-domain fold, NADP-binding cleft, and catalytic residues (His217/His219, Arg114) that argC1's domains conserve.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9818083/">PMID: 9818083</a></td>
+<td><em>Molecular cloning and analysis of argC from C. glutamicum</em></td>
+<td><strong>Functional complementation</strong>: cloned argC complements an <em>E. coli</em> argC auxotroph and expresses N-acetylglutamate-5-semialdehyde dehydrogenase, proving gene→enzyme identity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1339424/">PMID: 1339424</a></td>
+<td><em>Characterization of S. clavuligerus argC (NAGSA-phosphate reductase)</em></td>
+<td>Defines the 340-aa AGPR, its complementation, arginine repression, and the conserved <strong>PGCYPT active-center motif</strong> (present at residues 148–153 of argC1).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29121239/">PMID: 29121239</a></td>
+<td><em>Overproduction of S. meliloti ArgC</em></td>
+<td>States the exact enzyme name, reaction position (third step), and "high-energy-consuming" nature of the AGPR reaction.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/176312/">PMID: 176312</a></td>
+<td><em>Regulation of arginine and pyrimidine biosynthesis in P. putida</em></td>
+<td><strong>Direct organism evidence</strong>: NAGSA dehydrogenase activity is present and arginine-repressible (~5-fold) in <em>P. putida</em> itself.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">PMID: 20158506</a></td>
+<td><em>Conditionally essential genes for P. putida KT2440 on minimal medium</em></td>
+<td>Genome-wide knockout screen recovering amino-acid auxotrophs, showing the arginine pathway is conditionally essential.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/220508/">PMID: 220508</a></td>
+<td><em>argB-argC two-gene cluster in S. cerevisiae</em></td>
+<td>Comparative regulation: coordinate arginine repression of AGPR (~85-fold range) and separability of ArgB/ArgC activities.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8180696/">PMID: 8180696</a></td>
+<td><em>S. coelicolor argCJB gene cluster</em></td>
+<td>Comparative genetics: argC complements auxotrophs; ArgC homology with <em>E. coli</em>/<em>B. subtilis</em> ArgC; arginine operator upstream.</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence is unusually strong for a functional annotation: it combines (i) direct enzyme-activity measurement in <em>P. putida</em> [PMID: 176312], (ii) complementation-proven gene identity in multiple orthologs [PMID: 9818083, 1339424], (iii) an atomic-resolution mechanism [PMID: 17316682], and (iv) sequence-level confirmation that argC1 retains all catalytic motifs. No evidence contradicts the AGPR assignment.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on argC1 itself.</strong> The reaction, kinetics, and cofactor preference are established for orthologs and inferred for argC1 from sequence/domain conservation. Purified-protein kinetic parameters (Km for N-acetyl-glutamyl-phosphate and NADPH, kcat, NADPH vs NADH preference) for the <em>P. putida</em> enzyme have not been measured.</p>
+</li>
+<li>
+<p><strong>No argC1-specific structure.</strong> Localization (cytoplasmic), fold, and mechanism are inferred by homology to the <em>M. tuberculosis</em> structure [PMID: 17316682]; no experimental structure of Q88QQ6 exists.</p>
+</li>
+<li>
+<p><strong>The argC1/argC2 division of labor is unresolved.</strong> Whether argC2 contributes to arginine biosynthesis, is silent, or serves a specialized function is unknown. A single argC1 knockout phenotype (and any complementation by argC2) has not been reported directly; the auxotrophy evidence is at the pathway level [PMID: 20158506].</p>
+</li>
+<li>
+<p><strong>Regulation is characterized only at the activity level.</strong> The specific transcription factor(s) (e.g., an ArgR ortholog), operator sites, and the promoter of PP_0432 have not been mapped in <em>P. putida</em>; the ~5-fold repression figure aggregates several enzymes [PMID: 176312].</p>
+</li>
+<li>
+<p><strong>Localization is inferential.</strong> Cytoplasmic localization is deduced from the absence of signal/transmembrane features and family behavior, not from experimental fractionation of the <em>P. putida</em> protein.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Express and purify Q88QQ6, and determine steady-state kinetics (Km, kcat) for N-acetyl-L-glutamyl-5-phosphate and NADPH, and confirm NADPH-over-NADH preference, to convert the homology-based assignment into direct evidence.</p>
+</li>
+<li>
+<p><strong>Genetic dissection of paralogs.</strong> Construct single (ΔargC1, ΔargC2) and double knockouts and test arginine auxotrophy on minimal medium ± arginine. This would establish whether argC1 alone is sufficient/necessary and whether argC2 provides any backup AGPR activity.</p>
+</li>
+<li>
+<p><strong>Cross-complementation.</strong> Test whether cloned argC1 (and separately argC2) complements an <em>E. coli</em> or <em>P. putida</em> argC auxotroph, mirroring the ortholog experiments [PMID: 9818083, 1339424].</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the crystal or cryo-EM structure of argC1 (± NADP⁺/substrate analog) to confirm the two-domain fold, homodimer, and the roles of the residues corresponding to His217/His219/Arg114/Cys150.</p>
+</li>
+<li>
+<p><strong>Regulatory mapping.</strong> Identify the argC1 promoter and any ArgR-type operator; use reporter fusions or RNA-seq under arginine-replete vs -limited conditions to quantify PP_0432-specific repression.</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Cell fractionation or fluorescent-fusion imaging to verify cytoplasmic localization of the enzyme in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><code>argC1</code> (Q88QQ6, PP_0432) of <em>Pseudomonas putida</em> KT2440 is the gene encoding <strong>N-acetyl-γ-glutamyl-phosphate reductase (AGPR / NAGSA dehydrogenase 1, EC 1.2.1.38)</strong>, a soluble cytoplasmic, homodimeric, NADPH-dependent oxidoreductase that catalyzes the <strong>third step of L-arginine biosynthesis</strong> — the reductive dephosphorylation of N-acetyl-L-glutamyl-5-phosphate to N-acetyl-L-glutamate-5-semialdehyde. It operates between ArgB and ArgD within <em>P. putida</em>'s economical <strong>cyclic, ArgJ-dependent ornithine pathway</strong> (bifunctional ArgJ present, ArgA absent), a pathway that is conditionally essential on minimal medium and subject to weak arginine feedback repression. argC1 is the canonical Type-1 isozyme, retaining the intact NADP-binding fingerprint (GIVGGTG) and catalytic PGCYPT/Cys150 motif, and is distinct from a deeply divergent (~36% identity) paralog, argC2 (PP_3633).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="argC1-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="argC1-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:9818083</li>
+<li>PMID:1339424</li>
+<li>PMID:17316682</li>
+<li>PMID:20158506</li>
+<li>PMID:29121239</li>
+<li>PMID:8180696</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QQ6
+gene_symbol: argC1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ArgC1 (PP_0432) is a type 1 N-acetyl-gamma-glutamyl-phosphate reductase
+  (EC 1.2.1.38). It uses NADPH to reduce N-acetyl-L-glutamyl 5-phosphate to
+  N-acetyl-L-glutamate 5-semialdehyde in the acetylated-ornithine route to
+  L-arginine. KT2440 also encodes the type 2 isoenzyme ArgC2.
+existing_annotations:
+- term:
+    id: GO:0003942
+    label: N-acetyl-gamma-glutamyl-phosphate reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining ArgC1 molecular function.
+    action: ACCEPT
+    reason: The reviewed UniProt record assigns EC 1.2.1.38, RHEA:21588, and the type 1 ArgC family to Q88QQ6.
+    supported_by:
+    - reference_id: file:PSEPK/argC1/argC1-uniprot.txt
+      supporting_text: Full=N-acetyl-gamma-glutamyl-phosphate reductase 1
+    - reference_id: file:PSEPK/argC1/argC1-deep-research-openscientist.md
+      supporting_text: &gt;-
+        N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ →
+        N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: ArgC1 is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is supported but is secondary to the reaction.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: ArgC1 performs the third acetylated-ornithine reaction during L-arginine synthesis.
+    action: ACCEPT
+    reason: The reviewed UniProt pathway assignment directly supports this process.
+- term:
+    id: GO:0016620
+    label: oxidoreductase activity, acting on the aldehyde or oxo group of donors,
+      NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This broad oxidoreductase term is redundant with the specific ArgC reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003942 captures the substrate-specific NADPH-dependent reaction.
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The curated ArgC1 reaction uses NADP(H), not NAD(H).
+    action: REMOVE
+    reason: Reviewed UniProt and HAMAP specify NADPH-dependent reduction; this broad-domain InterPro mapping assigns the wrong nicotinamide cofactor.
+- term:
+    id: GO:0070401
+    label: NADP+ binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NADP(H) is the redox cofactor for the ArgC1 reaction.
+    action: KEEP_AS_NON_CORE
+    reason: Correct supporting chemistry, but the specific reductase activity is more informative.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/argC1/argC1-uniprot.txt
+  title: UniProtKB entry for PSEPK ArgC1
+  findings:
+  - statement: Assigns Q88QQ6 to the NADPH-dependent type 1 ArgC reaction.
+    supporting_text: Full=N-acetyl-gamma-glutamyl-phosphate reductase 1
+- id: file:PSEPK/argC1/argC1-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK ArgC1
+  findings:
+  - statement: Contains the six existing annotations reviewed above.
+- id: file:PSEPK/argC1/argC1-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK ArgC1
+  findings:
+  - statement: &gt;-
+      The report identifies the exact accession as a type 1 ArgC protein and
+      retrieves the NADPH-dependent AGPR reaction. Its claims that KT2440 lacks
+      ArgA, that ArgC1 is the dominant isoenzyme, and that ArgC2 lacks intact
+      catalytic motifs are contradicted or unsupported and are not used here.
+    supporting_text: &gt;-
+      N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ →
+      N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate
+core_functions:
+- description: &gt;-
+    Uses NADPH to reduce N-acetyl-L-glutamyl 5-phosphate to
+    N-acetyl-L-glutamate 5-semialdehyde in L-arginine biosynthesis.
+  molecular_function:
+    id: GO:0003942
+    label: N-acetyl-gamma-glutamyl-phosphate reductase activity
+  directly_involved_in:
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/argC1/argC1-uniprot.txt
+    supporting_text: Full=N-acetyl-gamma-glutamyl-phosphate reductase 1
+  - reference_id: file:PSEPK/argC1/argC1-deep-research-openscientist.md
+    supporting_text: &gt;-
+      N-acetyl-L-glutamyl-5-phosphate + NADPH + H⁺ →
+      N-acetyl-L-glutamate-5-semialdehyde + NADP⁺ + phosphate
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
