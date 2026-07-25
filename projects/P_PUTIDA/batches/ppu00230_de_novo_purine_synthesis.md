@@ -22,7 +22,7 @@ carboxylation.
 - [ ] Run full OpenScientist research for every selected gene.
 - [x] Curate every GOA row in the selected gene reviews.
 - [x] Revise and validate the species-neutral `de_novo_purine_synthesis` module.
-- [ ] Run full OpenScientist module research.
+- [x] Run full OpenScientist module research.
 - [ ] Run full OpenScientist module + `ppu00230` + PSEPK research.
 - [ ] Render the module and project page.
 - [ ] Open one non-draft PR and clear review and CI.
