@@ -72,8 +72,11 @@ mechanistic literature identifies as AAGAB's clients. These are real, reproducib
 mechanistically meaningful interactions recorded under an uninformative term. The right action
 is `MODIFY` to something informative, not `MARK_AS_OVER_ANNOTATED`.
 
-**HEATR1 is the exception**: a single hit, no follow-up, and a nucleolar ribosome-biogenesis
-protein with no mechanistic connection to adaptor assembly. That one is marked over-annotated.
+**HEATR1 is the exception**: recovered in only one study, unreplicated by any other screen,
+and a nucleolar ribosome-biogenesis protein with no mechanistic connection to adaptor assembly.
+(`AAGAB-uniprot.txt:171` records `NbExp=3` IntAct experiments for the pair, but all three come
+from that single report, so it is one study rather than one experiment.) That one is marked
+over-annotated.
 
 This produces a deliberate `⚠ WARN` about inconsistent actions on `GO:0005515` (14 MODIFY,
 1 MARK_AS_OVER_ANNOTATED). The inconsistency is real biology — most of these interactions are
