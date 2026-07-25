@@ -1,0 +1,2834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mobA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mobA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HA3" target="_blank" class="term-link">
+                        Q88HA3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mobA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HA3" data-a="DESCRIPTION: mobA encodes the cytoplasmic molybdenum-cofactor g..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>mobA encodes the cytoplasmic molybdenum-cofactor guanylyltransferase that transfers GMP from GTP to Mo-molybdopterin, producing the MGD cofactor variant used by a subset of molybdoenzymes. This is an optional nucleotide-maturation branch downstream of conserved Mo-MPT formation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic catalytic activity should be replaced by the exact MobA reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt/HAMAP assigns EC 2.7.7.77 Mo-MPT guanylyltransferase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061603" target="_blank" class="term-link">
+                                    molybdenum cofactor guanylyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0005525" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTP binding is valid substrate binding but less informative than the catalytic term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GTP donates GMP in the reviewed MobA reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is appropriate for this soluble cofactor-maturation enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88HA3 lacks membrane/export features and acts on soluble Mo-MPT.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0006777" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MobA participates in the optional nucleotide-maturation branch of Mo-molybdopterin cofactor biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact MobA reaction produces the Mo-MGD cofactor variant, so this broad biosynthetic-process term is accurate without asserting downstream bis-MGD assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016779" target="_blank" class="term-link">
+                                    GO:0016779
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotidyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0016779" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic nucleotidyltransferase term should be replaced by the exact MobA activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt specifies GMP transfer from GTP to Mo-MPT.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061603" target="_blank" class="term-link">
+                                    molybdenum cofactor guanylyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- CATALYTIC ACTIVITY:
+CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+CC         Rule:MF_00316};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019720" target="_blank" class="term-link">
+                                    GO:0019720
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0019720" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad metabolic-process parent is less precise than the retained Mo-molybdopterin cofactor biosynthetic-process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006777 more specifically captures the biosynthetic context of MobA-catalyzed Mo-MGD formation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061603" target="_blank" class="term-link">
+                                    GO:0061603
+                                </a>
+                            </span>
+                            <span class="term-label">molybdenum cofactor guanylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0061603" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the exact core molecular function of MobA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed entry provides Rhea:34243 and EC 2.7.7.77 for Mo-MPT guanylylation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- CATALYTIC ACTIVITY:
+CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+CC         Rule:MF_00316};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">GTP  +  Mo-MPT   --(MobA, Mg2+)--&gt;   MGD  +  PPi</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070568" target="_blank" class="term-link">
+                                    GO:0070568
+                                </a>
+                            </span>
+                            <span class="term-label">guanylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:0070568" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad guanylyltransferase term should be replaced by the Mo-cofactor-specific child term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The acceptor is specifically Mo-molybdopterin.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061603" target="_blank" class="term-link">
+                                    molybdenum cofactor guanylyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902758" target="_blank" class="term-link">
+                                    GO:1902758
+                                </a>
+                            </span>
+                            <span class="term-label">bis(molybdopterin guanine dinucleotide)molybdenum biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HA3" data-a="GO:1902758" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The bis-MGD-specific process extends beyond the one-MGD product of the MobA reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed target UniProt supports Mo-MGD formation but does not establish downstream bis-MGD assembly by MobA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mobA/mobA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- CATALYTIC ACTIVITY:
+CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+CC         Rule:MF_00316};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transfer of GMP from GTP to Mo-MPT to form the MGD cofactor variant.</h3>
+                <span class="vote-buttons" data-g="Q88HA3" data-a="FUNCTION: Transfer of GMP from GTP to Mo-MPT to form the MGD..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061603" target="_blank" class="term-link">
+                            molybdenum cofactor guanylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                Mo-molybdopterin cofactor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mobA/mobA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FUNCTION: Transfers a GMP moiety from GTP</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mobA/mobA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">GTP  +  Mo-MPT   --(MobA, Mg2+)--&gt;   MGD  +  PPi</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mobA/mobA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for mobA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reviewed UniProt/HAMAP assigns Q88HA3 Mo-MPT guanylylation, EC 2.7.7.77, producing Mo-MGD.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.
+CC   -!- CATALYTIC ACTIVITY:
+CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+CC         Rule:MF_00316};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mobA/mobA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for mobA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains the exact MobA activity annotation reviewed here.</div>
+
+                        <div class="finding-text">"UniProtKB	Q88HA3	mobA	enables	GO:0061603	molybdenum cofactor guanylyltransferase activity	molecular_function	ECO:0000501	IEA	GO_REF:0000120	RHEA:34243|EC:2.7.7.77	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Molybdenum cofactor guanylyltransferase	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mobA/mobA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for mobA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report gives the conserved one-MGD guanylyltransferase reaction that is independently supported by reviewed target UniProt.</div>
+
+                        <div class="finding-text">"GTP  +  Mo-MPT   --(MobA, Mg2+)--&gt;   MGD  +  PPi"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report contains concrete KT2440 locus errors for two upstream genes.</div>
+
+                        <div class="finding-text">"whereas the core upstream Moco machinery is present: *moaA* (K03750, PP_2123), a *moeA*-family gene (PP_1294), and *mobA* itself (K03752, PP_3457, EC 2.7.7.77)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report presents an unsaved target-specific pairwise alignment as evidence.</div>
+
+                        <div class="finding-text">"A global BLOSUM62 (Needleman–Wunsch) alignment of *P. putida* MobA (Q88HA3, 191 aa) against the experimentally characterized *E. coli* MobA (P32173, 194 aa) gives **29.6 % identity and 52.4 % similarity over 189 aligned positions** (alignment score 199)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report explicitly states that no direct Q88HA3 biochemical or structural measurements were found.</div>
+
+                        <div class="finding-text">"**No *P. putida*-specific experimental data.** Q88HA3 is annotated PE = 3 (inferred from homology). Its catalytic activity, kinetics, substrate specificity, and structure have not been measured directly; all functional claims are transferred from orthologs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR19136/PTHR19136-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER representative entries for the molybdenum cofactor guanylyltransferase family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The local PANTHER export places KT2440 Q88HA3 in MobA subfamily PTHR19136:SF81.</div>
+
+                        <div class="finding-text">"Q88HA3,Molybdenum cofactor guanylyltransferase,protein,160488,Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440),Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440),mobA,191,PTHR19136:SF81,MOLYBDENUM COFACTOR GUANYLYLTRANSFERASE,True"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The same local subfamily export contains reviewed E. coli MobA P32173.</div>
+
+                        <div class="finding-text">"P32173,Molybdenum cofactor guanylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mobA,194,PTHR19136:SF81,MOLYBDENUM COFACTOR GUANYLYLTRANSFERASE,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify Mo-MGD formation by purified Q88HA3 and test complementation of an MGD-dependent molybdoenzyme phenotype in a mobA deletion strain.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme assay and genetic complementation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HA3" data-a="EXPERIMENT: Quantify Mo-MGD formation by purified Q88HA3 and t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mobA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HA3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: MobA (Q88HA3 / PP_3457) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T18:42:03.471620</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="mobA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="mobA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-moba-q88ha3-pp_3457-in-pseudomonas-putida-kt2440">Functional Annotation Report: MobA (Q88HA3 / PP_3457) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>mobA</em> (OrderedLocusName PP_3457)<br />
+<strong>UniProt:</strong> Q88HA3<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440), taxon code PSEPK<br />
+<strong>EC:</strong> 2.7.7.77 · <strong>KEGG Orthology:</strong> K03752 · <strong>Protein family:</strong> MobA family (HAMAP MF_00316)<br />
+<strong>Domains:</strong> MobA-like_NTP_Trfase (IPR025877); Molybde_CF_guanTrfase (IPR013482); Nucleotide-diphospho-sugar transferase fold (IPR029044); NTP_transf_3 (PF12804)<br />
+<strong>Protein-existence level:</strong> PE = 3 (inferred from homology)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>MobA (Q88HA3, locus PP_3457) of <em>Pseudomonas putida</em> KT2440 is a <strong>molybdenum cofactor (Moco) guanylyltransferase</strong> (EC 2.7.7.77; also GTP:molybdopterin guanylyltransferase / Mo-MPT guanylyltransferase / MGD synthase). Its primary biochemical function is to catalyze the Mg²⁺-dependent transfer of a GMP moiety from <strong>GTP</strong> onto the terminal phosphate of <strong>molybdopterin (Mo-MPT)</strong>, producing <strong>molybdopterin guanine dinucleotide (MGD)</strong> and ultimately the <strong>bis-MGD</strong> form of the cofactor, with release of pyrophosphate. This is the fourth, bacteria/archaea-specific step of molybdenum cofactor biosynthesis, converting the base Mo-MPT into the dinucleotide form.</p>
+<p>The bis-MGD product built by MobA is the obligatory cofactor of the <strong>DMSO reductase family</strong> of molybdoenzymes — nitrate reductases, DMSO/TMAO reductases, formate dehydrogenases, and related molybdopterin oxidoreductases — which drive anaerobic respiration and nitrogen/carbon/sulfur cycling. MobA therefore gates the maturation and catalytic activation of a broad set of respiratory enzymes. In <em>P. putida</em> KT2440 the plausible downstream "client" enzymes encoded in the genome are a molybdopterin oxidoreductase (PP_4676) and two formate dehydrogenase catalytic subunits (PP_0489, PP_2185). MobA acts in the <strong>cytoplasm</strong>, assembling bis-MGD on its own surface via a bis-Mo-MPT intermediate and then delivering the finished cofactor to folded apo-molybdoenzymes.</p>
+<p>The functional assignment for the <em>P. putida</em> protein is made by strong orthology and conserved-motif analysis rather than by direct experiment: no <em>P. putida</em>-specific biochemical study of this protein exists (hence PE = 3). Q88HA3 shares <strong>29.6 % sequence identity / 52.4 % similarity</strong> with the extensively characterized <em>E. coli</em> MobA (P32173, PE = 1), and retains the diagnostic glycine-rich N-terminal nucleotidyltransferase (GTP-binding) motif, the MPT-binding region, and the conserved C-terminal motif. Genomic-context analysis adds organism-specific nuance: unlike <em>E. coli</em>, <em>P. putida</em> KT2440 encodes <em>mobA</em> as a <strong>stand-alone (monocistronic) gene and lacks a MobB accessory homolog</strong>, while retaining upstream Moco machinery and two MocA-family cytidylyltransferase paralogs. The conclusions below rest on <em>E. coli</em> / <em>R. sphaeroides</em> / <em>M. tuberculosis</em> biochemistry combined with bioinformatic verification that Q88HA3 is a bona fide MobA. The gene symbol <em>mobA</em> unambiguously matches the protein description, family and domain content — there is no gene-identity ambiguity.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-moba-is-a-molybdenum-cofactor-guanylyltransferase-ec-27777">F001 — MobA is a molybdenum cofactor guanylyltransferase (EC 2.7.7.77)</h3>
+<p>The core function of MobA is to link a <strong>guanosine monophosphate (GMP)</strong> group, donated by <strong>GTP</strong>, onto the terminal phosphate of <strong>molybdopterin (MPT)</strong>, forming <strong>molybdopterin guanine dinucleotide (MGD)</strong>. This was established in <em>E. coli</em>, whose MobA is the direct ortholog of <em>P. putida</em> Q88HA3/PP_3457. In a defined in vitro system, purified MobA "links a guanosine 5′-phosphate to MPT forming molybdopterin guanine dinucleotide. This reaction requires GTP, MgCl₂, and the MPT form of the cofactor and can efficiently reconstitute <em>Rhodobacter sphaeroides</em> apo-DMSOR" (<a href="https://pubmed.ncbi.nlm.nih.gov/10978347/">PMID: 10978347</a>). Near-atomic-resolution structural work defined the catalytic mechanism as a "nucleophilic attack by MPT on the GMP donor, most likely GTP, to produce MGD and pyrophosphate" (<a href="https://pubmed.ncbi.nlm.nih.gov/11080634/">PMID: 11080634</a>).</p>
+<p>The reaction can be summarized as:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">GTP</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">Mo</span><span class="o">-</span><span class="n">MPT</span><span class="w">   </span><span class="o">--</span><span class="p">(</span><span class="n">MobA</span><span class="p">,</span><span class="w"> </span><span class="n">Mg2</span><span class="o">+</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">   </span><span class="n">MGD</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">PPi</span>
+<span class="w">   </span><span class="p">(</span><span class="n">repeated</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="kr">build</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">bis</span><span class="o">-</span><span class="n">MGD</span><span class="w"> </span><span class="n">cofactor</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The strict Mg²⁺ and GTP requirement, plus the specific use of the MPT (not the fully mature dinucleotide) substrate, defines the enzyme's substrate specificity. This is the reaction that EC 2.7.7.77 encodes, and it is the primary function assigned to Q88HA3.</p>
+<h3 id="f002-the-moba-product-bis-mgd-is-required-by-the-dmso-reductase-family-of-molybdoenzymes">F002 — The MobA product (bis-MGD) is required by the DMSO reductase family of molybdoenzymes</h3>
+<p>The physiological importance of MobA lies in the enzymes that depend on its product. The MGD/bis-MGD modification "is required for the functioning of many bacterial molybdoenzymes, including the nitrate reductases, dimethylsulfoxide (DMSO) and trimethylamine-N-oxide (TMAO) reductases, and formate dehydrogenases" (<a href="https://pubmed.ncbi.nlm.nih.gov/10978347/">PMID: 10978347</a>). Genetic evidence from <em>Mycobacterium tuberculosis</em> confirms the causal link: MobA "converts MoCo to bis-molybdopterin guanine dinucleotide (bis-MGD), a form of the cofactor that is required by the dimethylsulfoxide (DMSO) reductase family of enzymes, which includes the nitrate reductase NarGHI," and a <em>mobA</em> deletion mutant lost both assimilatory and respiratory nitrate reductase activity (<a href="https://pubmed.ncbi.nlm.nih.gov/25404027/">PMID: 25404027</a>). MobA is therefore a <strong>maturation factor</strong> whose loss silences a whole class of downstream respiratory enzymes — through the precise removal of an essential cofactor modification, not a broad pleiotropic effect.</p>
+<h3 id="f003-moba-is-a-two-domain-rossmann-fold-enzyme-with-a-division-of-labor-between-its-domains">F003 — MobA is a two-domain Rossmann-fold enzyme with a division of labor between its domains</h3>
+<p>MobA (~191–194 aa, ~22 kDa) has an α/β architecture in which "the N-terminal half of the molecule adopts a Rossman fold. The structure of MobA has striking similarity to <em>Bacillus subtilis</em> SpsA," a nucleotide-diphospho-sugar transferase (<a href="https://pubmed.ncbi.nlm.nih.gov/10978347/">PMID: 10978347</a>). This homology is the structural basis of the InterPro/Pfam domain annotations for Q88HA3 (MobA-like_NTP_Trfase IPR025877; nucleotide-diphospho-sugar transferase fold IPR029044; PF12804 NTP_transf_3). A MobA:GTP cocrystal localizes the GTP-binding site to the N-terminal domain via three signature sequence motifs, with the MPT-binding site adjacent.</p>
+<p>Domain-swap and site-directed mutagenesis experiments in <em>E. coli</em> dissected the two domains' roles: "Exchange of the complete N-terminal domain of each protein resulted in the total inversion of nucleotide specificity activity, showing that the N-terminal domain determines nucleotide recognition and binding. Analysis of protein-protein interactions showed that the C-terminal domain of either MocA or MobA determines the specific binding to the respective acceptor protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">PMID: 21081498</a>). Thus MobA reads <strong>GTP with its N-terminus</strong> and reads the <strong>destination molybdoenzyme with its C-terminus</strong> — a modular design that explains how closely related transferases (MobA/GMP vs MocA/CMP) achieve distinct specificities.</p>
+<h3 id="f004-bis-mgd-is-assembled-on-moba-via-a-bis-mo-mpt-intermediate-then-transferred-to-apoenzymes">F004 — bis-MGD is assembled on MobA via a bis-Mo-MPT intermediate, then transferred to apoenzymes</h3>
+<p>MobA does more than a single guanylyl transfer: it acts as an assembly platform. In vitro reconstitution with purified components identified a novel <strong>bis-Mo-MPT intermediate bound on MobA prior to nucleotide attachment</strong>. "The addition of Mg-GTP to MobA loaded with bis-Mo-MPT resulted in formation and release of the final bis-MGD product. This cofactor was fully functional and reconstituted the catalytic activity of apo-TMAO reductase (TorA)" (<a href="https://pubmed.ncbi.nlm.nih.gov/24003231/">PMID: 24003231</a>). The proposed sequence is: (1) formation of bis-Mo-MPT on MobA, (2) addition of two GMP units to form bis-MGD, and (3) release and transfer of the completed cofactor to the target molybdoenzyme. This establishes MobA's mechanistic role as both catalyst and delivery scaffold.</p>
+<h3 id="f005-moba-works-in-the-cytoplasm-as-the-fourth-step-of-moco-biosynthesis-mobb-is-an-accessory-modulator">F005 — MobA works in the cytoplasm as the fourth step of Moco biosynthesis; MobB is an accessory modulator</h3>
+<p>Moco biosynthesis proceeds in four conserved steps, the fourth (present only in bacteria and archaea) being that "an additional modification of Moco is possible with the attachment of a nucleotide (CMP or GMP) to the phosphate group of MPT, forming the dinucleotide variants of Moco" (<a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">PMID: 32239579</a>). Moco is inserted into apoenzymes after folding: "these enzymes require complex molybdenum-containing cofactors, which are inserted into the apoenzymes after folding. For almost all the bacterial molybdoenzymes, molybdenum cofactor insertion requires the involvement of specific chaperones" (<a href="https://pubmed.ncbi.nlm.nih.gov/26468212/">PMID: 26468212</a>), locating MobA's activity firmly in the cytoplasm. In <em>E. coli</em>, the accessory protein <strong>MobB</strong> is co-transcribed with MobA and, although not essential, "the dimeric MobB increases the activation of molybdoenzymes, incorporating this cofactor by a mechanism that is not understood," and a MobA:MobB complex is structurally feasible (<a href="https://pubmed.ncbi.nlm.nih.gov/12682065/">PMID: 12682065</a>). This context is important for interpreting the <em>P. putida</em> genome, which — as shown below — lacks MobB.</p>
+<h3 id="f006-sequence-analysis-confirms-q88ha3-is-a-bona-fide-moba-ortholog">F006 — Sequence analysis confirms Q88HA3 is a bona fide MobA ortholog</h3>
+<p>A global BLOSUM62 (Needleman–Wunsch) alignment of <em>P. putida</em> MobA (Q88HA3, 191 aa) against the experimentally characterized <em>E. coli</em> MobA (P32173, 194 aa) gives <strong>29.6 % identity and 52.4 % similarity over 189 aligned positions</strong> (alignment score 199). Critically, the diagnostic N-terminal glycine-rich nucleotidyltransferase motif is strictly conserved:</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th><em>P. putida</em> Q88HA3</th>
+<th><em>E. coli</em> P32173</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N-terminal GTP-binding motif</td>
+<td>L-A-G-G-R-G-Q-R-M-G-G</td>
+<td>L-A-G-G-K-A-R-R-M-G-G</td>
+</tr>
+<tr>
+<td>MPT-binding region</td>
+<td>…PGPLAG…</td>
+<td>…PGPLAG… (conserved)</td>
+</tr>
+<tr>
+<td>C-terminal motif</td>
+<td>…N-x-P-E-E-L</td>
+<td>…N-x-P-E-E-L</td>
+</tr>
+</tbody>
+</table>
+<p>The conservation of the GTP-binding, MPT-binding, and C-terminal motifs across a moderately divergent sequence (typical for orthologous bacterial Moco enzymes) confirms that Q88HA3 possesses the intact catalytic apparatus of a functional MoCo guanylyltransferase. Q88HA3 is annotated PE = 3 (inferred from homology), while <em>E. coli</em> MobA is PE = 1 (evidence at protein level) — underscoring that the <em>P. putida</em> assignment is a well-supported homology inference rather than direct measurement.</p>
+<h3 id="f007-in-p-putida-kt2440-moba-is-monocistronic-and-the-genome-lacks-mobb">F007 — In <em>P. putida</em> KT2440, <em>mobA</em> is monocistronic and the genome lacks MobB</h3>
+<p>KEGG genomic context places PP_3457 (<em>mobA</em>, chromosome 3,919,409–3,919,984, + strand) between the multidrug efflux gene <em>mexB</em>/PP_3456 and <em>acs</em>/PP_3458, with <strong>no adjacent Moco-biosynthesis genes</strong> — i.e., it is <em>not</em> organized in a <em>mob</em> operon as in <em>E. coli</em>. A KEGG orthology search of the KT2440 genome for <strong>MobB (K03753) returns no hits</strong>, whereas the core upstream Moco machinery is present: <em>moaA</em> (K03750, PP_2123), a <em>moeA</em>-family gene (PP_1294), and <em>mobA</em> itself (K03752, PP_3457, EC 2.7.7.77). This is an organism-specific finding: <em>P. putida</em> MobA must function without the MobB accessory protein that modulates cofactor insertion in <em>E. coli</em> — suggesting either that MobB is dispensable in this organism or that another factor substitutes.</p>
+<h3 id="f008-candidate-bis-mgd-client-molybdoenzymes-are-encoded-in-p-putida-kt2440">F008 — Candidate bis-MGD client molybdoenzymes are encoded in <em>P. putida</em> KT2440</h3>
+<p>KEGG orthology mapping identifies the plausible downstream enzymes that would consume MobA's bis-MGD product: a <strong>molybdopterin oxidoreductase (K07147, PP_4676)</strong> and <strong>formate dehydrogenase catalytic subunits (K00123, PP_0489 and PP_2185)</strong> — all members of the DMSO-reductase / Moco-dependent family (formate dehydrogenase assembly and catalysis reviewed in <a href="https://pubmed.ncbi.nlm.nih.gov/25514355/">PMID: 25514355</a>). The genome also encodes two <strong>MocA-family paralogs (K07141, PP_2483 and PP_4230)</strong>, the CTP:molybdopterin cytidylyltransferases that make the alternative MCD cofactor for a distinct set of molybdoenzymes — consistent with the general pattern that MobA (GMP) and MocA (CMP) provide parallel dinucleotide-cofactor branches. Notably, <strong>no respiratory nitrate reductase <em>narG</em> (K00370) was detected</strong>; the gene PP_2092 annotated "nitrate reductase" is in fact an NNP-family nitrate/nitrite MFS transporter (K02575), so the <em>P. putida</em> client set differs from the classic <em>E. coli</em> NarGHI paradigm.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the findings yields a coherent picture of where MobA sits in <em>P. putida</em> metabolism and how it works.</p>
+<h3 id="pathway-position">Pathway position</h3>
+<div class="codehilite"><pre><span></span><code> Step 1        Step 2        Step 3            Step 4 (bacteria/archaea)         Client enzymes
+ GTP ─► cPMP ─► MPT  ─► Mo-MPT (Moco) ─────► MobA: + GMP (from GTP) ──► bis-MGD ─► apo-molybdoenzyme
+(MoaA…) (MPT synth.) (MoeA/MogA)      ↑ Mg2+, via bis-Mo-MPT              (holoenzyme, active)
+                              │ N-domain binds GTP                 in P. putida KT2440:
+                              │ C-domain binds MPT + target        • Mo-oxidoreductase PP_4676
+                              └───────────────────────────────►    • FDH PP_0489 / PP_2185
+</code></pre></div>
+
+<p>MobA catalyzes the <strong>terminal maturation step</strong> that converts base Moco (Mo-MPT) into the dinucleotide form. Mechanistically (F003, F004): the <strong>N-terminal Rossmann-fold domain</strong> binds Mg-GTP and enforces guanine specificity; the enzyme assembles a <strong>bis-Mo-MPT intermediate</strong> on its surface; two successive guanylyl transfers add GMP groups (each releasing pyrophosphate) to form <strong>bis-MGD</strong>; and the <strong>C-terminal domain</strong> recognizes the specific apo-molybdoenzyme to which the finished cofactor is handed off. This makes MobA simultaneously a catalyst and a chaperone-like delivery platform, operating in the <strong>cytoplasm</strong> on already-folded apoenzymes (F005).</p>
+<h3 id="functional-consequence">Functional consequence</h3>
+<p>Because bis-MGD is obligatory for the DMSO reductase family (F002), MobA gates the activation of <em>P. putida</em>'s formate dehydrogenases and molybdopterin oxidoreductase (F008). In organisms where this has been tested genetically, <em>mobA</em> loss abolishes downstream molybdoenzyme activity (nitrate reductase in <em>M. tuberculosis</em>, F002). MobA's role is therefore precise and upstream: it does not itself catalyze respiration but is a prerequisite for it.</p>
+<h3 id="organism-specific-tailoring">Organism-specific tailoring</h3>
+<p>The <em>P. putida</em> system is <strong>streamlined</strong> relative to <em>E. coli</em>: <em>mobA</em> is monocistronic and there is <strong>no MobB</strong> (F007). Combined with the substitution of NarGHI (absent) by formate dehydrogenases and a generic molybdopterin oxidoreductase as the client set (F008), this indicates that <em>P. putida</em> uses its single MobA to feed a smaller, distinct panel of bis-MGD enzymes, alongside a parallel MocA/MCD branch for other molybdoenzymes.</p>
+<h3 id="comparison-table-e-coli-reference-vs-p-putida-kt2440">Comparison table: <em>E. coli</em> (reference) vs <em>P. putida</em> KT2440</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>E. coli</em> MobA (P32173)</th>
+<th><em>P. putida</em> MobA (Q88HA3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Evidence level</td>
+<td>PE = 1 (protein-level, biochemistry + structure)</td>
+<td>PE = 3 (inferred from homology)</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>GTP + Mo-MPT → MGD + PPi (→ bis-MGD)</td>
+<td>Same (by orthology; conserved motifs)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>194 aa</td>
+<td>191 aa</td>
+</tr>
+<tr>
+<td>Gene organization</td>
+<td><em>mob</em> operon with <em>mobB</em></td>
+<td>monocistronic; <strong>no <em>mobB</em></strong></td>
+</tr>
+<tr>
+<td>MobB accessory</td>
+<td>Present (K03753)</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Key clients</td>
+<td>NarGHI, DMSO/TMAO reductases, FDHs</td>
+<td>Mo-oxidoreductase PP_4676; FDHs PP_0489/PP_2185 (no <em>narG</em>)</td>
+</tr>
+<tr>
+<td>Paralog</td>
+<td>MocA (CMP transferase)</td>
+<td>Two MocA paralogs (PP_2483, PP_4230)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="localization">Localization</h2>
+<p>MobA is a <strong>soluble cytoplasmic enzyme</strong>. Moco and its dinucleotide variants are synthesized in the cytoplasm, and the mature cofactor is inserted into apoenzymes after they fold, with insertion "for almost all the bacterial molybdoenzymes" requiring specific chaperones (<a href="https://pubmed.ncbi.nlm.nih.gov/26468212/">PMID: 26468212</a>). MobA therefore operates in the cytoplasm together with system-specific chaperones (and, in organisms that have it, MobB) to mature apo-molybdoenzymes. Periplasmic molybdoenzymes receive their fully assembled, cofactor-loaded holoenzyme via Tat-dependent export after cytoplasmic maturation, consistent with MobA acting entirely on the cytoplasmic side.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10978347/">10978347</a></td>
+<td><em>Crystal structure of E. coli MobA / MGD biosynthesis</em></td>
+<td>Defines catalyzed reaction, substrates (GTP, Mg²⁺, MPT), product (MGD); Rossmann fold, SpsA homology; lists downstream molybdoenzymes requiring MGD</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11080634/">11080634</a></td>
+<td><em>E. coli MobA at near-atomic resolution</em></td>
+<td>States catalytic mechanism: nucleophilic attack by MPT on GMP donor → MGD + pyrophosphate</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24003231/">24003231</a></td>
+<td><em>bis-molybdopterin intermediate in Moco biosynthesis</em></td>
+<td>Identifies bis-Mo-MPT intermediate; shows bis-MGD built on MobA and transferred to reconstitute apo-TorA</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">21081498</a></td>
+<td><em>Specificity of MPT dinucleotide transferases</em></td>
+<td>Domain-swap: N-terminal domain sets nucleotide specificity, C-terminal domain sets acceptor-protein binding</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25404027/">25404027</a></td>
+<td><em>bis-MGD required for M. tuberculosis persistence</em></td>
+<td>Genetic proof: MobA makes bis-MGD required by DMSO reductase family (incl. NarGHI); <em>mobA</em> deletion abolishes nitrate reductase activity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12682065/">12682065</a></td>
+<td><em>E. coli MobB crystal structure</em></td>
+<td>MobB accessory role — dimeric MobB increases molybdoenzyme activation; MobA:MobB interaction</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">32239579</a></td>
+<td><em>Moco biosynthesis in E. coli (review)</em></td>
+<td>Places guanylylation as the fourth, bacteria-specific step</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26468212/">26468212</a></td>
+<td><em>Bacterial molybdoenzymes (review)</em></td>
+<td>Cofactor inserted into folded apoenzymes with cytoplasmic chaperones</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25514355/">25514355</a></td>
+<td><em>Formate dehydrogenase assembly/catalysis (review)</em></td>
+<td>Background on candidate <em>P. putida</em> client FDHs</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28284029/">28284029</a></td>
+<td><em>Shared function / moonlighting in Moco biosynthesis</em></td>
+<td>Confirms four-step conserved pathway and shared components</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting reviews on regulation and sulfur delivery (<a href="https://pubmed.ncbi.nlm.nih.gov/31517366/">PMID: 31517366</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38631442/">PMID: 38631442</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/31655739/">PMID: 31655739</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/28098827/">PMID: 28098827</a>) place MobA within the broader Moco / Fe-S / sulfur-transfer network but do not directly characterize the <em>P. putida</em> protein.</p>
+<p><strong>How the evidence maps onto Q88HA3:</strong> all mechanistic and structural evidence derives from orthologs (<em>E. coli</em>, <em>R. sphaeroides</em>, <em>M. tuberculosis</em>). The bridge to the <em>P. putida</em> protein is the sequence/motif conservation in F006 and the genomic context in F007–F008. This is a well-supported homology inference, not a direct measurement.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Statement</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MobA (Q88HA3) is a GTP:molybdopterin guanylyltransferase making MGD</td>
+<td><strong>Supported</strong></td>
+<td>Orthology + biochemical reconstitution (PMID 10978347, 11080634; F001, F006)</td>
+</tr>
+<tr>
+<td>Reaction consumes GTP + Mo-MPT (+Mg²⁺) → MGD + PPi</td>
+<td><strong>Supported</strong></td>
+<td>PMID 10978347, 11080634 (F001)</td>
+</tr>
+<tr>
+<td>Enzyme is specific for guanine (GTP), distinct from CTP-using MocA</td>
+<td><strong>Supported</strong></td>
+<td>PMID 21081498 (F003)</td>
+</tr>
+<tr>
+<td>Product (bis-MGD) supplies DMSO reductase family enzymes</td>
+<td><strong>Supported</strong></td>
+<td>PMID 10978347, 25404027 (F002)</td>
+</tr>
+<tr>
+<td>MobA is cytoplasmic and works with chaperones (± MobB)</td>
+<td><strong>Supported</strong></td>
+<td>PMID 26468212, 12682065 (F005)</td>
+</tr>
+<tr>
+<td><em>P. putida</em> encodes <em>mobA</em> monocistronically and lacks MobB</td>
+<td><strong>Supported</strong></td>
+<td>KEGG genome analysis (F007)</td>
+</tr>
+<tr>
+<td>PP_3457 has direct experimental characterization in <em>P. putida</em></td>
+<td><strong>Not found</strong></td>
+<td>No organism-specific study located; annotation is by orthology (PE = 3)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific experimental data.</strong> Q88HA3 is annotated PE = 3 (inferred from homology). Its catalytic activity, kinetics, substrate specificity, and structure have not been measured directly; all functional claims are transferred from orthologs. Given the near-universal conservation of MobA and the HAMAP MF_00316 rule, the inference is strong but not experimentally confirmed for PP_3457.</p>
+</li>
+<li>
+<p><strong>Moderate sequence identity to the reference.</strong> The 29.6 % identity to <em>E. coli</em> MobA, while typical for orthologous Moco enzymes and accompanied by strictly conserved catalytic motifs, leaves residual uncertainty about fine details (e.g., exact kinetic parameters, acceptor-protein specificity).</p>
+</li>
+<li>
+<p><strong>Client enzyme assignments are predictions.</strong> PP_4676, PP_0489, and PP_2185 are candidate bis-MGD-dependent enzymes identified by KEGG orthology, not by demonstrated MobA→enzyme cofactor transfer in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Absence of MobB is inferred from KEGG.</strong> The lack of a K03753 hit strongly suggests no MobB, but the functional consequence — how <em>P. putida</em> achieves efficient molybdoenzyme activation without MobB — is unknown.</p>
+</li>
+<li>
+<p><strong>MobA vs MocA branch partitioning.</strong> <em>P. putida</em> encodes two MocA paralogs; which molybdoenzymes receive MGD (from MobA) vs MCD (from MocA) has not been experimentally delineated in this organism.</p>
+</li>
+<li>
+<p><strong>Physiological/regulatory conditions.</strong> The conditions under which <em>P. putida</em> upregulates <em>mobA</em> and its client molybdoenzymes (e.g., anaerobiosis, formate metabolism) were not investigated here; regulation by FNR/Fur/ArcA is documented only in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/31517366/">PMID: 31517366</a>).</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct biochemical assay.</strong> Recombinantly express and purify Q88HA3; measure MoCo guanylyltransferase activity (GTP + Mo-MPT → MGD + PPi) in vitro, and determine kinetic constants and Mg²⁺/GTP dependence — the single most valuable experiment to lift the protein from PE = 3 to PE = 1.</p>
+</li>
+<li>
+<p><strong>Cofactor reconstitution.</strong> Test whether purified Q88HA3-generated bis-MGD reconstitutes the activity of purified <em>P. putida</em> apo-formate dehydrogenase (PP_0489/PP_2185) and the molybdopterin oxidoreductase (PP_4676), confirming the predicted client relationships.</p>
+</li>
+<li>
+<p><strong>Gene knockout phenotyping.</strong> Construct a Δ<em>PP_3457</em> mutant and assay formate dehydrogenase and molybdopterin-oxidoreductase activities; loss of activity would establish MobA's in vivo requirement, paralleling the <em>M. tuberculosis</em> nitrate-reductase result.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal or cryo-EM structure of Q88HA3 (± GTP, ± Mo-MPT), or validate an AlphaFold model against the <em>E. coli</em> MobA structures (PDB 1FR9/1E5K family), to confirm the two-domain Rossmann-fold architecture and the three GTP-binding motifs plus the acceptor-binding C-terminal surface.</p>
+</li>
+<li>
+<p><strong>MobB-independence test.</strong> Determine whether <em>P. putida</em> molybdoenzyme maturation proceeds efficiently without MobB, and search for a functional substitute; complement with heterologous <em>E. coli</em> MobB to see if activation improves.</p>
+</li>
+<li>
+<p><strong>MobA/MocA branch mapping.</strong> Use targeted mutants (Δ<em>PP_3457</em>, Δ<em>PP_2483</em>, Δ<em>PP_4230</em>) plus cofactor extraction/LC-MS (MGD vs MCD) to assign which molybdoenzymes depend on the guanylyl (MobA) vs cytidylyl (MocA) branch.</p>
+</li>
+<li>
+<p><strong>Expression/regulation profiling.</strong> Measure <em>PP_3457</em> transcription under aerobic vs anaerobic and formate-rich conditions to connect MobA cofactor supply with client-enzyme demand.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>MobA (Q88HA3 / PP_3457) is the <em>Pseudomonas putida</em> KT2440 <strong>molybdenum cofactor guanylyltransferase</strong> that performs the fourth, bacteria-specific step of Moco biosynthesis — transferring GMP from GTP onto molybdopterin to build the <strong>bis-MGD</strong> cofactor in the cytoplasm and deliver it to DMSO-reductase-family molybdoenzymes (in this organism, formate dehydrogenases and a molybdopterin oxidoreductase). The assignment is a robust homology inference anchored on the biochemically and structurally characterized <em>E. coli</em> MobA, reinforced by conserved catalytic motifs and organism-specific genomic evidence showing a streamlined, MobB-less, monocistronic arrangement. Direct biochemical and genetic validation in <em>P. putida</em> remains the key outstanding work.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mobA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="mobA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10978347</li>
+<li>PMID:11080634</li>
+<li>PMID:25404027</li>
+<li>PMID:21081498</li>
+<li>PMID:24003231</li>
+<li>PMID:32239579</li>
+<li>PMID:26468212</li>
+<li>PMID:12682065</li>
+<li>PMID:25514355</li>
+<li>PMID:31517366</li>
+<li>PMID:38631442</li>
+<li>PMID:31655739</li>
+<li>PMID:28098827</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mobA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HA3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="moba-curation-notes">mobA curation notes</h1>
+<h2 id="2026-07-20-openscientist-report-assessment">2026-07-20 OpenScientist report assessment</h2>
+<p>The generated OpenScientist report is retained unchanged as provider output but is<br />
+assessed as <code>MISCITED</code> for target-level curation. Its one-MGD reaction agrees with<br />
+reviewed Q88HA3 UniProt, and it correctly states that no direct target-specific<br />
+experiment was found. However, it assigns <code>moaA</code> to PP_2123 (actually <code>moeA</code>) and<br />
+a <code>moeA</code>-family gene to PP_1294 (actually <code>moaE</code>). It also conflates the single<br />
+MobA guanylyltransferase reaction with bis-MGD assembly, delivery, and predicted<br />
+client-enzyme roles, while presenting unsaved alignment, motif, neighborhood,<br />
+MobB-absence, and client analyses as target evidence. Those claims are not<br />
+propagated.</p>
+<p>The curated core function remains the optional downstream transfer of one GMP from<br />
+GTP to Mo-MPT to produce MGD. It is grounded in the reviewed target UniProt record<br />
+and the local PANTHER subfamily export; insertion, client-enzyme maturation, and<br />
+terminal cofactor assembly remain outside this review's direct-function claim.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HA3
+gene_symbol: mobA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  mobA encodes the cytoplasmic molybdenum-cofactor guanylyltransferase that
+  transfers GMP from GTP to Mo-molybdopterin, producing the MGD cofactor variant
+  used by a subset of molybdoenzymes. This is an optional nucleotide-maturation
+  branch downstream of conserved Mo-MPT formation.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic catalytic activity should be replaced by the exact MobA reaction.
+    action: MODIFY
+    reason: Reviewed UniProt/HAMAP assigns EC 2.7.7.77 Mo-MPT guanylyltransferase activity.
+    proposed_replacement_terms:
+    - id: GO:0061603
+      label: molybdenum cofactor guanylyltransferase activity
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+        CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+        CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: GTP binding is valid substrate binding but less informative than the catalytic term.
+    action: KEEP_AS_NON_CORE
+    reason: GTP donates GMP in the reviewed MobA reaction.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is appropriate for this soluble cofactor-maturation enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: Q88HA3 lacks membrane/export features and acts on soluble Mo-MPT.
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: MobA participates in the optional nucleotide-maturation branch of Mo-molybdopterin cofactor biosynthesis.
+    action: ACCEPT
+    reason: The exact MobA reaction produces the Mo-MGD cofactor variant, so this broad biosynthetic-process term is accurate without asserting downstream bis-MGD assembly.
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+        CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+        CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.
+- term:
+    id: GO:0016779
+    label: nucleotidyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The generic nucleotidyltransferase term should be replaced by the exact MobA activity.
+    action: MODIFY
+    reason: UniProt specifies GMP transfer from GTP to Mo-MPT.
+    proposed_replacement_terms:
+    - id: GO:0061603
+      label: molybdenum cofactor guanylyltransferase activity
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- CATALYTIC ACTIVITY:
+        CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+        CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+        CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+        CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+        CC         Rule:MF_00316};
+- term:
+    id: GO:0019720
+    label: Mo-molybdopterin cofactor metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: This broad metabolic-process parent is less precise than the retained Mo-molybdopterin cofactor biosynthetic-process annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0006777 more specifically captures the biosynthetic context of MobA-catalyzed Mo-MGD formation.
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+        CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+        CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.
+- term:
+    id: GO:0061603
+    label: molybdenum cofactor guanylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the exact core molecular function of MobA.
+    action: ACCEPT
+    reason: The reviewed entry provides Rhea:34243 and EC 2.7.7.77 for Mo-MPT guanylylation.
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- CATALYTIC ACTIVITY:
+        CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+        CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+        CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+        CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+        CC         Rule:MF_00316};
+    - reference_id: file:PSEPK/mobA/mobA-deep-research-openscientist.md
+      supporting_text: GTP  +  Mo-MPT   --(MobA, Mg2+)--&gt;   MGD  +  PPi
+- term:
+    id: GO:0070568
+    label: guanylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: The broad guanylyltransferase term should be replaced by the Mo-cofactor-specific child term.
+    action: MODIFY
+    reason: The acceptor is specifically Mo-molybdopterin.
+    proposed_replacement_terms:
+    - id: GO:0061603
+      label: molybdenum cofactor guanylyltransferase activity
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+        CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+        CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.
+- term:
+    id: GO:1902758
+    label: bis(molybdopterin guanine dinucleotide)molybdenum biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: The bis-MGD-specific process extends beyond the one-MGD product of the MobA reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Reviewed target UniProt supports Mo-MGD formation but does not establish downstream bis-MGD assembly by MobA.
+    supported_by:
+    - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+      supporting_text: |-
+        CC   -!- CATALYTIC ACTIVITY:
+        CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+        CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+        CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+        CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+        CC         Rule:MF_00316};
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/mobA/mobA-uniprot.txt
+  title: UniProtKB reviewed entry for mobA
+  findings:
+  - statement: Reviewed UniProt/HAMAP assigns Q88HA3 Mo-MPT guanylylation, EC 2.7.7.77, producing Mo-MGD.
+    supporting_text: |-
+      CC   -!- FUNCTION: Transfers a GMP moiety from GTP to Mo-molybdopterin (Mo-MPT)
+      CC       cofactor (Moco or molybdenum cofactor) to form Mo-molybdopterin guanine
+      CC       dinucleotide (Mo-MGD) cofactor. {ECO:0000255|HAMAP-Rule:MF_00316}.
+      CC   -!- CATALYTIC ACTIVITY:
+      CC       Reaction=Mo-molybdopterin + GTP + H(+) = Mo-molybdopterin guanine
+      CC         dinucleotide + diphosphate; Xref=Rhea:RHEA:34243, ChEBI:CHEBI:15378,
+      CC         ChEBI:CHEBI:33019, ChEBI:CHEBI:37565, ChEBI:CHEBI:71302,
+      CC         ChEBI:CHEBI:71310; EC=2.7.7.77; Evidence={ECO:0000255|HAMAP-
+      CC         Rule:MF_00316};
+- id: file:PSEPK/mobA/mobA-goa.tsv
+  title: QuickGO GOA annotations for mobA
+  findings:
+  - statement: The fetched table contains the exact MobA activity annotation reviewed here.
+    supporting_text: &#34;UniProtKB\tQ88HA3\tmobA\tenables\tGO:0061603\tmolybdenum cofactor guanylyltransferase activity\tmolecular_function\tECO:0000501\tIEA\tGO_REF:0000120\tRHEA:34243|EC:2.7.7.77\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tMolybdenum cofactor guanylyltransferase\t20260706&#34;
+- id: file:PSEPK/mobA/mobA-deep-research-openscientist.md
+  title: OpenScientist gene research for mobA
+  reference_review:
+    relevance: HIGH
+    correctness: MISCITED
+    review_notes: &gt;-
+      The one-MGD reaction agrees with reviewed target UniProt, and the report
+      explicitly acknowledges that Q88HA3 lacks direct target-specific study.
+      However, it assigns moaA to PP_2123 (actually moeA) and a moeA-family gene
+      to PP_1294 (actually moaE), conflates MobA-catalyzed Mo-MPT guanylylation
+      with target-specific bis-MGD assembly and delivery, and presents unsaved
+      target alignment, motif, neighborhood, MobB-absence, and client analyses.
+      Those claims are not propagated.
+  findings:
+  - statement: The report gives the conserved one-MGD guanylyltransferase reaction that is independently supported by reviewed target UniProt.
+    supporting_text: GTP  +  Mo-MPT   --(MobA, Mg2+)--&gt;   MGD  +  PPi
+  - statement: The report contains concrete KT2440 locus errors for two upstream genes.
+    supporting_text: &gt;-
+      whereas the core upstream Moco machinery is present: *moaA* (K03750, PP_2123), a *moeA*-family gene (PP_1294), and *mobA* itself (K03752, PP_3457, EC 2.7.7.77).
+  - statement: The report presents an unsaved target-specific pairwise alignment as evidence.
+    supporting_text: &gt;-
+      A global BLOSUM62 (Needleman–Wunsch) alignment of *P. putida* MobA (Q88HA3, 191 aa) against the experimentally characterized *E. coli* MobA (P32173, 194 aa) gives **29.6 % identity and 52.4 % similarity over 189 aligned positions** (alignment score 199).
+  - statement: The report explicitly states that no direct Q88HA3 biochemical or structural measurements were found.
+    supporting_text: &gt;-
+      **No *P. putida*-specific experimental data.** Q88HA3 is annotated PE = 3 (inferred from homology). Its catalytic activity, kinetics, substrate specificity, and structure have not been measured directly; all functional claims are transferred from orthologs.
+- id: file:interpro/panther/PTHR19136/PTHR19136-entries.csv
+  title: PANTHER representative entries for the molybdenum cofactor guanylyltransferase family
+  findings:
+  - statement: The local PANTHER export places KT2440 Q88HA3 in MobA subfamily PTHR19136:SF81.
+    supporting_text: Q88HA3,Molybdenum cofactor guanylyltransferase,protein,160488,Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440),Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440),mobA,191,PTHR19136:SF81,MOLYBDENUM COFACTOR GUANYLYLTRANSFERASE,True
+  - statement: The same local subfamily export contains reviewed E. coli MobA P32173.
+    supporting_text: P32173,Molybdenum cofactor guanylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mobA,194,PTHR19136:SF81,MOLYBDENUM COFACTOR GUANYLYLTRANSFERASE,True
+core_functions:
+- description: Transfer of GMP from GTP to Mo-MPT to form the MGD cofactor variant.
+  molecular_function:
+    id: GO:0061603
+    label: molybdenum cofactor guanylyltransferase activity
+  directly_involved_in:
+  - id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/mobA/mobA-uniprot.txt
+    supporting_text: &#34;FUNCTION: Transfers a GMP moiety from GTP&#34;
+  - reference_id: file:PSEPK/mobA/mobA-deep-research-openscientist.md
+    supporting_text: GTP  +  Mo-MPT   --(MobA, Mg2+)--&gt;   MGD  +  PPi
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments:
+- description: Quantify Mo-MGD formation by purified Q88HA3 and test complementation of an MGD-dependent molybdoenzyme phenotype in a mobA deletion strain.
+  experiment_type: enzyme assay and genetic complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
