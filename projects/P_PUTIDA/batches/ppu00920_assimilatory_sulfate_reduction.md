@@ -42,11 +42,12 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 - [x] Curate all six first-pass gene reviews.
 - [x] Create and semantically validate the species-neutral multi-part module.
 - [ ] Complete OpenScientist gene-level research.
-- [ ] Complete generic module OpenScientist research.
+- [x] Attempt generic module OpenScientist research; the corrected request
+  exhausted its 7,200-second provider timeout without returning a report.
 - [x] Complete module + `ppu00920` + PSEPK OpenScientist research.
 - [x] Resolve the CysNC APS-kinase-domain and PP_0860 questions after research.
-- [ ] Integrate useful research findings without treating provider output as authority.
-- [ ] Validate and render the module, gene reviews, and batch page.
+- [x] Integrate useful research findings without treating provider output as authority.
+- [x] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
 
 ## Focused Genes
@@ -66,6 +67,12 @@ The CysD/CysNC mechanism is supported by the homologous Pseudomonas ATP
 sulfurylase structure and biochemistry in PMID:16387658. The FprA requirement
 and evidence for a non-CysJ Pseudomonas sulfite-reduction system come from
 PMID:23794620.
+
+The generic OpenScientist request was allowed to run for the full configured
+7,200 seconds with three iterations but timed out in the provider queue. No
+generic report is cited or represented as evidence. The completed
+module-plus-`ppu00920`-plus-PSEPK report was retained as retrieval context and
+was checked against the primary evidence above.
 
 Exact local family grounding uses PTHR43196:SF1 for CysD,
 PTHR47878:SF1 for Fpr-I, and specific InterPro families for CysN, CysH, and
