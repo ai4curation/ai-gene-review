@@ -28,7 +28,9 @@ and phospholipid synthesis.
 - [x] Attempt module + pathway + PSEPK OpenScientist research; the corrected
   request exhausted the 7,200-second provider timeout without a report.
 - [x] Validate and render all changed reviews, the module, and project pages.
-- [ ] Open one PR for this module and resolve review and CI feedback.
+- [x] Open one non-draft PR for this module:
+  [#2236](https://github.com/ai4curation/ai-gene-review/pull/2236).
+- [ ] Resolve review and CI feedback.
 
 ## Selected Genes
 
