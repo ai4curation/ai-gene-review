@@ -74,6 +74,12 @@ generic report is cited or represented as evidence. The completed
 module-plus-`ppu00920`-plus-PSEPK report was retained as retrieval context and
 was checked against the primary evidence above.
 
+The gene-level `cysI` report correctly recovered the sulfite-reductase
+hemoprotein role but overgeneralized the classical *E. coli* CysJ architecture
+and promoted `PP_0860`/`PP_1703` from KEGG context. That inference was not
+imported: PMID:23794620 remains the direct Pseudomonas evidence for an
+FprA/ferredoxin-fed system, and `PP_0860` remains unresolved.
+
 Exact local family grounding uses PTHR43196:SF1 for CysD,
 PTHR47878:SF1 for Fpr-I, and specific InterPro families for CysN, CysH, and
 CysI where the PSEPK PANTHER labels are misleadingly broad. The reusable module
