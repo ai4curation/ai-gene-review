@@ -36,11 +36,11 @@ type 1 GshA already satisfies step 1.
 - [x] Curate all three first-pass gene reviews.
 - [x] Create and semantically validate the species-neutral two-part module.
 - [ ] Complete OpenScientist gene-level research.
-- [ ] Complete generic module OpenScientist research.
+- [x] Complete generic module OpenScientist research.
 - [ ] Complete module + `ppu00480` + PSEPK OpenScientist research.
-- [ ] Resolve whether `PP_3253` merits a step-1 variant after research.
-- [ ] Integrate useful research findings without treating provider output as authority.
-- [ ] Validate and render the module, gene reviews, and batch page.
+- [x] Resolve whether `PP_3253` merits a step-1 variant after research.
+- [x] Integrate useful research findings without treating provider output as authority.
+- [x] Validate and render the module, gene reviews, and batch page.
 - [ ] Open and shepherd one PR for this module.
 
 ## Focused Genes
@@ -56,5 +56,13 @@ type 1 GshA already satisfies step 1.
 The exact reviewed UniProt records provide RHEA:13285 for GshA and RHEA:13557
 for GshB. Their PANTHER subfamilies are PTHR38761:SF1 and PTHR21621:SF4,
 respectively. PP_3253 belongs to PTHR36510:SF1, a distinct type 2/YbdK family.
+The generic OpenScientist review confirmed the invariant two-reaction boundary
+and identified bifunctional GshAB/GshF proteins as a fused implementation of
+the same ordered roles. The reusable module now grounds both activities with
+reviewed *Pasteurella multocida* GshAB (UniProtKB:Q9CM00) while retaining
+separate reaction parts. The report did not provide organism-specific evidence
+that `PP_3253` performs the first reaction in vivo, so it remains outside the
+module.
+
 The 31-gene KEGG candidate inventory is retained in
 [`ppu00480_glutathione_biosynthesis.tsv`](ppu00480_glutathione_biosynthesis.tsv).
