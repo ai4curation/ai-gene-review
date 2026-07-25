@@ -21,8 +21,10 @@ with valine and isoleucine.
 - [ ] Run OpenScientist deep research for the selected genes.
 - [x] Curate the six selected gene reviews.
 - [x] Revise and semantically validate the species-neutral module.
-- [ ] Run generic module-level OpenScientist research.
-- [ ] Run module + pathway + PSEPK OpenScientist research.
+- [x] Attempt generic module-level OpenScientist research; the corrected
+  request exhausted the 7,200-second provider timeout without a report.
+- [x] Attempt module + pathway + PSEPK OpenScientist research; the corrected
+  request exhausted the 7,200-second provider timeout without a report.
 - [x] Validate and render all changed reviews, the module, and project pages.
 - [ ] Open one PR for this module and resolve review and CI feedback.
 
@@ -52,3 +54,7 @@ with valine and isoleucine.
   lyase PROSITE signature found in MvaB. Its exact function and pathway
   annotations remain undecided rather than being used to fill the terminal
   step.
+- The generic and species-aware OpenScientist requests were each allowed the
+  full configured 7,200 seconds with three iterations. Neither returned a
+  report, so the module retains only the direct Reactome, exact-record, gene
+  review, and primary-literature evidence that can be inspected locally.
