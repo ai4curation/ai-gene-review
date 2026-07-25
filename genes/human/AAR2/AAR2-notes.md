@@ -29,9 +29,15 @@ The mechanism, from yeast structures and now confirmed in human:
   and the human protein was shown to be a genuine ortholog doing the same thing
   [PMID:26527271, "as a true Aar2 orthologue which binds to the RH domain (hsRH) of Prp8 and"].
 - It occupies the site the **SNRNP200/Brr2 helicase** must eventually take, and blocks U4/U6
-  di-snRNA loading — so it prevents premature spliceosome activation. Aar2 and Brr2 are
-  mutually exclusive binders of Prp8; Brr2 displaces Aar2 to yield the mature, catalytically
-  competent U5 snRNP.
+  di-snRNA loading — so it prevents premature spliceosome activation.
+- **Species caveat, corrected during review.** I originally stated the displacement model as
+  human fact. It is yeast-established: Aar2p and Brr2p are mutually exclusive Prp8 binders and
+  Brr2p displaces Aar2p. Human appears to differ —
+  [PMID:34131137, "In yeast, Aar2p is exchanged with Brr2p13,14, while in humans AAR2
+  co-purifies with all four RHC members12, which indicates that AAR2 stays associated until the
+  whole RHC is formed."] and PMID:36322420 reports a structurally distinct human interaction
+  with "marked differences" in SEC interaction patterns. So *when* AAR2 leaves is an open
+  question in human, now flagged in `suggested_questions`.
 - It is a component of the **cytoplasmic precursor U5 snRNP** and is *excluded* from the
   tri-snRNP and the assembled spliceosome.
 - The handoff is **phosphoregulated**.
@@ -60,10 +66,23 @@ Four `GO:0005515` IPIs. Resolving the WITH/FROM accessions:
 
 | Partner | Screens | Assessment |
 |---|---|---|
-| **EAPP** (Q56P03) | PMID:16189514, 28514442, 33961781 | E2F-associated phosphoprotein; no connection to splicing, no follow-up |
+| **EAPP** (Q56P03) | PMID:16189514, 28514442, 33961781 | a **putative U5 chaperone** — plausible, but the pair is uncharacterised |
 | **TSSC4** (Q9Y5U2) | PMID:34131137 | **A real, functionally characterised U5 snRNP partner** |
 
-This is the first gene in this campaign where a `GO:0005515` annotation points at genuine,
+**Correction made during review.** My first draft dismissed EAPP as "a cell-cycle and E2F-pathway
+protein with no described connection to splicing or snRNP assembly". That is wrong, and the
+refutation was in a paper I had already cited: PMID:34131137 describes *"a putative chaperone
+EAPP that has been shown to interact with U5 proteins PRPF8 and EFTUD2"*. EAPP is in the U5
+literature. I had judged it on its best-known identity rather than checking it in the context of
+this gene's own biology — the same error as pattern-matching the partner set, just applied to a
+single accession.
+
+The `MARK_AS_OVER_ANNOTATED` verdict survives but on much narrower grounds: EAPP's U5 role is
+explicitly *"putative"*, the AAR2–EAPP pair specifically has never been pursued, and the term is
+uninformative regardless. If EAPP's U5 chaperone role is confirmed these rows deserve upgrading,
+not discounting.
+
+This is still the first gene in this campaign where a `GO:0005515` annotation points at genuine,
 mechanistically pursued biology. PMID:34131137 is not a screen — it is a dedicated study
 showing [PMID:34131137, "TSSC4 emerges as a specific chaperone that acts in U5 snRNP de novo"]
 biogenesis and recycling, and that
