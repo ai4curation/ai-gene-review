@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tauC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tauC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RA2" target="_blank" class="term-link">
+                        Q88RA2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tauC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RA2" data-a="DESCRIPTION: TauC is the integral-membrane permease subunit of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TauC is the integral-membrane permease subunit of the bacterial TauABC taurine importer. Two TauC units form the translocation pathway used by TauA-bound taurine while the TauB ATPase units provide energy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct location for the multi-pass bacterial permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact record assigns cell-membrane localization and six transmembrane segments.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tauC/tauC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010438" target="_blank" class="term-link">
+                                    GO:0010438
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to sulfur starvation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0010438" data-r="GO_REF:0000118" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible regulatory context but not established for the exact protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Tau systems commonly support sulfur scavenging, but the available exact-record evidence does not demonstrate a KT2440 sulfur-starvation response.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but redundant membrane parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The plasma-membrane annotation is more specific.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042918" target="_blank" class="term-link">
+                                    GO:0042918
+                                </a>
+                            </span>
+                            <span class="term-label">alkanesulfonate transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0042918" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broader than the exact TauC substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The submitted product identifies a taurine-specific ABC permease.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tauC/tauC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Taurine ABC transporter permease subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0043190" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct complex membership.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TauC is the transmembrane unit of a binding-protein-dependent ABC importer.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformative transport parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Taurine transmembrane transport is the substrate-specific process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015411" target="_blank" class="term-link">
+                                    GO:0015411
+                                </a>
+                            </span>
+                            <span class="term-label">ABC-type taurine transporter transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/tauC/tauC-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0015411" data-r="file:PSEPK/tauC/tauC-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Add contribution to the TauABC complex-level transport activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TauC forms the transmembrane pathway but requires TauA and TauB to transport taurine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tauC/tauC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Taurine ABC transporter permease subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015734" target="_blank" class="term-link">
+                                    GO:0015734
+                                </a>
+                            </span>
+                            <span class="term-label">taurine transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/tauC/tauC-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA2" data-a="GO:0015734" data-r="file:PSEPK/tauC/tauC-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Add the substrate-specific transport process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact submitted product identifies the permease as TauC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tauC/tauC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Taurine ABC transporter permease subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Forms the membrane translocation pathway of the TauABC taurine importer.</h3>
+                <span class="vote-buttons" data-g="Q88RA2" data-a="FUNCTION: Forms the membrane translocation pathway of the Ta..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015734" target="_blank" class="term-link">
+                                taurine transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tauC/tauC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Taurine ABC transporter permease subunit</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tauC/tauC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">encodes the **integral inner-membrane permease subunit of the taurine-specific ABC importer TauABC**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tauC/tauC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88RA2 for Pseudomonas putida KT2440 tauC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The exact record identifies the taurine ABC-transporter permease subunit.</div>
+
+                        <div class="finding-text">"SubName: Full=Taurine ABC transporter permease subunit"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TauC is an integral multi-pass cell-membrane protein.</div>
+
+                        <div class="finding-text">"Multi-pass membrane protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tauC/tauC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PSEPK tauC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report corroborates TauC as the non-catalytic membrane subunit of TauABC while explicitly distinguishing orthology-based inference from target-specific transport evidence.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* KT2440 TauC protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Q88RA2 selective for taurine only in its cognate TauABC assembly, or can it transport other aliphatic sulfonates?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RA2" data-a="Q: Is Q88RA2 selective for taurine only in its cognat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute TauA-TauB-TauC transport with radiolabeled taurine and competing sulfonates, and test loss and complementation of tauC in vivo.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RA2" data-a="EXPERIMENT: Reconstitute TauA-TauB-TauC transport with radiola..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tauC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RA2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **tauC** (Q88RA2, PP_0231) — Taurine ABC Transporter Permease Subunit of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T13:59:51.904618</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tauC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="tauC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-tauc-q88ra2-pp_0231-taurine-abc-transporter-permease-subunit-of-pseudomonas-putida-kt2440">Functional Annotation Report: <strong>tauC</strong> (Q88RA2, PP_0231) — Taurine ABC Transporter Permease Subunit of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>tauC</strong> (UniProt <strong>Q88RA2</strong>; ordered locus <strong>PP_0231</strong>) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>integral inner-membrane permease (transmembrane) subunit of the taurine-specific ATP-binding cassette (ABC) importer, TauABC</strong>. Its primary function is to form the polytopic membrane channel through which <strong>taurine (2-aminoethanesulfonate)</strong> is translocated across the cytoplasmic membrane from the periplasm into the cytoplasm. TauC is not itself an enzyme: it is a <strong>non-catalytic transport protein</strong>. Substrate translocation is powered by ATP hydrolysis carried out by the partner nucleotide-binding domain <strong>TauB</strong> (PP_0232), and substrate is delivered to the permease by the periplasmic <strong>substrate-binding protein TauA</strong> (PP_0233). The EC number (EC 3.6.3.36) and "hydrolase activity" terms that appear on the Q88RA2 record are properties of the transporter complex as a whole (specifically the ATPase TauB), not of the TauC permease.</p>
+<p>Biologically, TauC-mediated taurine import is the committed uptake step of an <strong>organosulfur-scavenging (sulfate-starvation) pathway</strong>. Under conditions of sulfate and cysteine limitation, <em>P. putida</em> induces the <strong>tauDCBA</strong> operon; taurine imported by TauABC is handed to the co-operonic <strong>α-ketoglutarate–dependent taurine dioxygenase TauD</strong> (PP_0230), which oxygenolytically releases <strong>sulfite</strong> from taurine, feeding sulfur into cysteine biosynthesis and general sulfur assimilation. Expression of the operon is governed by the <strong>CysB/Cbl LysR-type regulatory network</strong> that controls the sulfate-starvation response in enteric bacteria and, via CysB, in <em>Pseudomonas</em>.</p>
+<p>The annotation rests on multiple convergent lines of evidence: (1) conserved domain architecture (MetI-like transmembrane fold, InterPro IPR000515/IPR035906; Pfam PF00528 BPD_transp_1); (2) a complete, syntenic <strong>tauDCBA</strong> gene cluster in <em>P. putida</em> KT2440 that mirrors the experimentally characterized <em>Escherichia coli</em> system; (3) <strong>64.7% amino-acid identity</strong> to the biochemically/genetically validated <em>E. coli</em> TauC; and (4) a de novo hydropathy analysis reproducing the canonical <strong>six-transmembrane-helix (6-TM)</strong> Type I importer topology. The organism, gene symbol, protein family, and domain content in the literature all agree with the UniProt target identity — this is a genuine, well-supported ortholog of the <em>E. coli</em> taurine transporter permease.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-tauc-is-the-transmembrane-permease-subunit-of-the-tauabc-taurine-abc-importer">Finding 1 — TauC is the transmembrane permease subunit of the TauABC taurine ABC importer</h3>
+<p>UniProt Q88RA2 is annotated "Taurine ABC transporter permease subunit" (gene <em>tauC</em>, locus PP_0231) in <em>P. putida</em> KT2440 and is a member of the binding-protein-dependent transport-system permease family (InterPro IPR000515 "MetI-like"; Pfam PF00528 "BPD_transp_1"). This database assignment is anchored to direct genetic and biochemical characterization of the <em>tauABCD</em> cluster in <em>E. coli</em>, where the founding study established the division of labor among the subunits: <em>"the TauB and TauC proteins showed sequence similarity to ATP-binding proteins and membrane proteins, respectively, of ABC-type transport systems"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8808933/">PMID: 8808933</a>). Disruption of the <em>tau</em> genes abolished the ability to use taurine as a sulfur source, confirming their functional necessity. Subsequent deletion analysis of the <em>E. coli</em> taurine and alkanesulfonate systems reinforced that <strong>TauABC forms a dedicated taurine uptake system</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/10781534/">PMID: 10781534</a>): <em>"The amino acid sequences of SsuABC and TauABC exhibit similarity to those of components of the ATP-binding cassette transporter superfamily, suggesting that two uptake systems for alkanesulfonates are present in E. coli."</em> Within this architecture, TauC is unambiguously the <strong>membrane-embedded permease component</strong>.</p>
+<h3 id="finding-2-the-transported-substrate-is-taurine-the-system-feeds-sulfonate-sulfur-assimilation">Finding 2 — The transported substrate is taurine; the system feeds sulfonate-sulfur assimilation</h3>
+<p>The specificity of the transporter is defined by its periplasmic binding protein, TauA, which binds taurine with high affinity and selectivity — a dissociation constant of ~<strong>11.3 nM</strong> was measured for the <em>E. coli</em> TauA–taurine interaction: <em>"Measurement of K(d) value (mean 11.3 nM) by binding/dialysis studies revealed high affinity and specificity with taurine"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17203388/">PMID: 17203388</a>). This binding protein delivers taurine to the TauBC membrane machinery, of which TauC is the translocation channel. The physiological purpose of import is sulfur scavenging: the <em>tauABCD</em> operon is expressed only under sulfate/cysteine starvation, and imported taurine is then desulfonated. As summarized for <em>E. coli</em>: <em>"The TauD protein is an alpha-ketoglutarate-dependent dioxygenase that preferentially liberates sulfite from taurine (2-aminoethanesulfonic acid)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11479697/">PMID: 11479697</a>). Loss of the transporter genes abolishes growth on taurine as a sulfur source (<a href="https://pubmed.ncbi.nlm.nih.gov/8808933/">PMID: 8808933</a>). Thus TauC's substrate is <strong>taurine</strong>, and its transport activity is the gateway to sulfur release by TauD.</p>
+<h3 id="finding-3-tauc-is-an-inner-membrane-meti-like-permease-operating-by-atp-driven-alternating-access">Finding 3 — TauC is an inner-membrane MetI-like permease operating by ATP-driven alternating access</h3>
+<p>Q88RA2 carries the <strong>MetI-like transmembrane fold</strong> (InterPro IPR000515/IPR035906) and Pfam <strong>PF00528 (BPD_transp_1)</strong>, the diagnostic signature of binding-protein-dependent (Type I) ABC-importer permeases. In canonical bacterial ABC importers, the transmembrane subunits span the cytoplasmic membrane and, driven by ATP hydrolysis at the coupled nucleotide-binding domain (here TauB), cycle between inward- and outward-facing conformations: <em>"ATP hydrolysis on the NBD drives conformational changes in the TMD, resulting in alternating access from inside and outside of the cell for unidirectional transport across the lipid bilayer"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25750732/">PMID: 25750732</a>). Structural studies of homologous importers (ModBC, BtuCD, MetNI) show the periplasmic binding protein docking onto the transmembrane domains to deliver substrate: <em>"the attached binding protein aligns the substrate-binding cleft with the entrance to the presumed translocation pathway"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17322901/">PMID: 17322901</a>). TauC is therefore the moving-parts component that opens alternately to periplasm and cytoplasm, coupled mechanically to TauB's ATPase cycle and primed by TauA docking.</p>
+<h3 id="finding-4-tauabc-expression-is-controlled-by-the-cysbcbl-sulfate-starvation-network-conserved-in-pseudomonas">Finding 4 — <em>tauABC</em> expression is controlled by the CysB/Cbl sulfate-starvation network, conserved in <em>Pseudomonas</em></h3>
+<p>In <em>E. coli</em>, transcription of <em>tauABCD</em> requires the LysR-type regulators <strong>CysB</strong> (the master regulator) and <strong>Cbl</strong>, and is induced under sulfate starvation: <em>"Expression of the tau and ssu genes requires the LysR-type transcriptional regulatory proteins CysB and Cbl"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11479697/">PMID: 11479697</a>). Both regulators bind directly to the <em>tauABCD</em> promoter; DNase I footprinting and gel-shift experiments showed CysB occupying multiple sites while Cbl occupies a single upstream site (from –112 to –68 bp relative to the transcription start), with the CysB inducer <em>N</em>-acetylserine stimulating CysB binding (<a href="https://pubmed.ncbi.nlm.nih.gov/9401024/">PMID: 9401024</a>). In <em>P. putida</em>, the same regulatory logic applies: CysB is the master regulator of the sulfate-starvation response controlling sulfonate-utilization operons — <em>"CysB is a master regulator that controls the sulfate starvation response of the sfn operons, as is the case for the sulfonate utilization genes of Escherichia coli"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18456803/">PMID: 18456803</a>). This places PP_0231/<em>tauC</em> within a conserved, sulfur-responsive regulon rather than a constitutive housekeeping context.</p>
+<h3 id="finding-5-pp_0231tauc-sits-in-a-complete-syntenic-taudcba-operon-in-p-putida-kt2440">Finding 5 — PP_0231/<em>tauC</em> sits in a complete, syntenic <em>tauDCBA</em> operon in <em>P. putida</em> KT2440</h3>
+<p>Genome analysis reveals four contiguous, co-oriented (complement-strand) genes constituting a complete taurine utilization module:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>KEGG Ortholog</th>
+<th>Function</th>
+<th>Coordinates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0233</td>
+<td><em>tauA</em></td>
+<td>K15551</td>
+<td>Taurine substrate-binding protein (periplasmic)</td>
+<td>287,136–288,107</td>
+</tr>
+<tr>
+<td>PP_0232</td>
+<td><em>tauB</em></td>
+<td>K10831</td>
+<td>Taurine transport ATP-binding protein (EC 7.6.2.7)</td>
+<td>286,334–287,122</td>
+</tr>
+<tr>
+<td><strong>PP_0231</strong></td>
+<td><strong><em>tauC</em></strong></td>
+<td><strong>K15552</strong></td>
+<td><strong>Taurine transport permease</strong></td>
+<td><strong>285,498–286,337</strong></td>
+</tr>
+<tr>
+<td>PP_0230</td>
+<td><em>tauD</em></td>
+<td>K03119</td>
+<td>Taurine dioxygenase (EC 1.14.11.17)</td>
+<td>284,616–285,449</td>
+</tr>
+</tbody>
+</table>
+<p>This module — a complete <strong>transporter (TauABC) plus desulfonation enzyme (TauD)</strong> unit — mirrors the experimentally characterized <em>E. coli</em> <em>tauABCD</em> cluster (<a href="https://pubmed.ncbi.nlm.nih.gov/8808933/">PMID: 8808933</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/11479697/">PMID: 11479697</a>). TauC receives the dedicated KEGG Ortholog assignment <strong>K15552</strong> ("taurine transport system permease protein"). The founding <em>E. coli</em> study articulated exactly this organization: <em>"we suggest that the proteins encoded by tauABC constitute an uptake system for taurine and that the product of tauD is involved in the oxygenolytic release of sulfite from taurine."</em> The syntenic conservation is strong evidence of orthology and conserved function.</p>
+<h3 id="finding-6-canonical-6-tm-meti-like-type-i-importer-topology-the-ec-36336-hydrolase-annotation-is-mis-propagated-onto-the-permease">Finding 6 — Canonical 6-TM MetI-like Type I importer topology; the EC 3.6.3.36 / hydrolase annotation is mis-propagated onto the permease</h3>
+<p>UniProt Q88RA2 is a <strong>279-residue polytopic membrane protein</strong> with six annotated helical transmembrane segments (approximately residues 30–52, 91–113, 125–144, 150–169, 213–234, and 240–260) and a single ABC transmembrane type-1 domain (residues 84–264), matching the MetI-like fold. Its subcellular location is the <strong>cell (cytoplasmic/plasma) membrane</strong>; its eggNOG ortholog is <strong>COG0600</strong> (ABC-type nitrate/sulfonate/taurine permease); and its GO annotations include alkanesulfonate transmembrane transport (GO:0042918) and cellular response to sulfur starvation (GO:0010438). Critically, the <strong>EC 3.6.3.36</strong> and GO "hydrolase activity" (GO:0016787) terms carried on the permease record derive from the whole transporter-complex EC number; the actual ATP-hydrolysis chemistry resides in the partner nucleotide-binding domain <strong>TauB</strong> (PP_0232, EC 7.6.2.7), <strong>not</strong> in the TauC permease. This is consistent with the canonical ABC-transporter division of labor: <em>"ABC transporters are widespread in all forms of life and are characterized by two nucleotide-binding domains (NBD) and two transmembrane domains (TMDs)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25750732/">PMID: 25750732</a>). TauC is a TMD; it is a channel, not a catalyst.</p>
+<h3 id="finding-7-647-amino-acid-identity-to-experimentally-characterized-e-coli-tauc-confirms-functional-orthology">Finding 7 — 64.7% amino-acid identity to experimentally characterized <em>E. coli</em> TauC confirms functional orthology</h3>
+<p>Global pairwise alignment of <em>P. putida</em> KT2440 TauC (Q88RA2, 279 aa) against <em>E. coli</em> K-12 TauC (Q47539/TAUC_ECOLI, 275 aa) yields <strong>176/272 identical residues = 64.7% identity</strong> over the aligned length. This far exceeds the ~30% identity threshold above which conserved three-dimensional fold and function can be confidently inferred for membrane transporters. Both proteins share identical domain architecture (six TM helices, MetI-like/BPD_transp_1 fold) and equivalent operonic context (<em>tauABCD</em>). Because the <em>E. coli</em> protein is directly validated by gene-disruption and transport phenotypes, this high sequence identity transfers functional confidence to the <em>P. putida</em> ortholog.</p>
+<h3 id="finding-8-tauc-mediated-taurine-uptake-is-part-of-p-putidas-abc-based-organosulfur-scavenging-ecologically-important-in-soilrhizosphere">Finding 8 — TauC-mediated taurine uptake is part of <em>P. putida</em>'s ABC-based organosulfur scavenging, ecologically important in soil/rhizosphere</h3>
+<p>Authoritative reviews establish that in aerobic bacteria all identified sulfonate/sulfate-ester transporters are ABC-type systems whose synthesis is CysB/LysR-regulated by sulfur supply: <em>"the sulfonate and sulfate ester transporters identified to date are all ABC-type systems, whose synthesis is tightly regulated by the sulfur supply to the cell, mediated by the CysB protein and other transcriptional regulators of the LysR-family"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11421275/">PMID: 11421275</a>). Imported sulfonates are desulfonated oxygenolytically: <em>"Desulfonation of aromatic and aliphatic sulfonates as sulfur sources by aerobic bacteria is oxygen-dependent, carried out by the alpha-ketoglutarate-dependent taurine dioxygenase"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10717312/">PMID: 10717312</a>) — precisely the enzyme (TauD, PP_0230) encoded beside <em>tauC</em>. This organosulfur-mobilization capacity has demonstrated ecological significance for <em>P. putida</em> in plant–microbe interactions: <em>"P. putida S-313 mutants that cannot metabolize sulphonate-sulphur do not promote the growth of tomato plants as the wild-type strain does"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15181108/">PMID: 15181108</a>). TauC-mediated taurine uptake is one contributor to this broader sulfur-scavenging repertoire.</p>
+<h3 id="finding-9-independent-hydropathy-analysis-corroborates-the-6-tm-inner-membrane-topology">Finding 9 — Independent hydropathy analysis corroborates the 6-TM inner-membrane topology</h3>
+<p>A de novo Kyte–Doolittle hydropathy scan (19-residue window, threshold 1.6) of the Q88RA2 sequence recovers roughly five strong hydrophobic, membrane-spanning regions (approximately residues 30–57, 87–111, 134–170, and 230–268), where the broad 134–170 and 230–268 peaks each encompass two closely spaced annotated helices. This first-principles result independently reproduces the six UniProt-annotated TM helices (30–52, 91–113, 125–144, 150–169, 213–234, 240–260) and confirms the MetI-like 6-TM architecture <strong>without relying on the database annotation</strong> — an internal cross-validation that the protein is a genuine polytopic inner-membrane permease.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>TauC functions as one of two transmembrane domains of a <strong>Type I ABC importer</strong>. The complete transport unit and its metabolic connection can be summarized as follows:</p>
+<div class="codehilite"><pre><span></span><code>      PERIPLASM
+ │
+  taurine (2-aminoethanesulfonate)
+ │
+ ▼
+   ┌────────────┐
+   │   TauA      │  periplasmic binding protein (PP_0233)
+   │ (Kd ~11 nM) │  captures taurine, docks onto permease
+   └─────┬───────┘
+ │ delivers substrate
+   ══════════════▼══════════════  CYTOPLASMIC (INNER) MEMBRANE
+   ┌───────────────────────────┐
+   │        TauC  (PP_0231)     │  6-TM MetI-like permease — THIS PROTEIN
+   │   alternating-access gate  │  forms translocation channel
+   └─────────────┬─────────────┘
+ │  mechanically coupled
+   ┌─────────────▼─────────────┐
+   │        TauB  (PP_0232)     │  nucleotide-binding domain (ATPase,
+   │   ATP → ADP + Pi           │  EC 7.6.2.7) powers transport
+   └───────────────────────────┘
+ │
+      CYTOPLASM
+ │
+  taurine (imported)
+ │
+ ▼
+   ┌───────────┐
+   │  TauD      │  α-ketoglutarate-dependent dioxygenase
+   │ (PP_0230)  │  EC 1.14.11.17
+   └─────┬──────┘
+ │  O2, α-ketoglutarate
+ ▼
+sulfite (SO3²⁻) + aminoacetaldehyde + succinate + CO2
+ │
+ ▼
+       sulfur assimilation → cysteine biosynthesis
+</code></pre></div>
+
+<p><strong>Transport cycle.</strong> In the resting inward-facing (or nucleotide-free) state, TauC presents its translocation pathway toward the cytoplasm. Substrate-loaded TauA docks onto the periplasmic face of TauC. ATP binding and hydrolysis at the TauB nucleotide-binding domains drive rigid-body rotations of the TauC transmembrane helices, switching the permease to an outward-facing conformation that accepts taurine from TauA, then resetting to release taurine into the cytoplasm — the "alternating access" mechanism established structurally for homologous importers (BtuCD, HI1470/1, MetNI, ModBC) (<a href="https://pubmed.ncbi.nlm.nih.gov/25750732/">PMID: 25750732</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/18948194/">PMID: 18948194</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/17158291/">PMID: 17158291</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/17322901/">PMID: 17322901</a>).</p>
+<p><strong>Regulatory logic.</strong> The <em>tauDCBA</em> operon is silent when sulfate or cysteine is abundant. Sulfur limitation activates the LysR-type master regulator CysB (with Cbl in enterics), which binds the operon promoter and induces transcription. This ensures TauC is produced only when the cell needs to scavenge alternative (organosulfur) sulfur sources (<a href="https://pubmed.ncbi.nlm.nih.gov/11479697/">PMID: 11479697</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/9401024/">PMID: 9401024</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/18456803/">PMID: 18456803</a>).</p>
+<p><strong>Metabolic role.</strong> TauC's transport activity has no value on its own; it is the committed uptake step that supplies taurine to TauD. TauD then cleaves the C–S bond oxygenolytically to release sulfite, which enters cysteine biosynthesis. TauC is thus the <strong>membrane gateway of a sulfur-scavenging module</strong>, not a metabolic enzyme.</p>
+<p><strong>Localization.</strong> TauC carries out its function embedded in the <strong>cytoplasmic (inner) membrane</strong>, spanning it six times, with its function exerted at the membrane interface between periplasm (substrate reception) and cytoplasm (substrate release).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8808933/">8808933</a></td>
+<td>Sulfate starvation-regulated <em>tau</em> cluster in <em>E. coli</em></td>
+<td><strong>Foundational.</strong> Identifies TauC as the membrane permease of the taurine ABC transporter; defines <em>tauABCD</em> operon; disruption abolishes taurine-sulfur utilization.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10781534/">10781534</a></td>
+<td>Deletion analysis of <em>E. coli</em> taurine/alkanesulfonate transport</td>
+<td>Confirms TauABC as a dedicated ABC-type taurine uptake system.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17203388/">17203388</a></td>
+<td>Functional characterization of TauA binding protein</td>
+<td>Establishes taurine as the specific substrate (Kd ~11.3 nM); defines substrate delivered to the TauBC membrane machinery.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11479697/">11479697</a></td>
+<td>Sulfonate-sulfur metabolism and regulation in <em>E. coli</em></td>
+<td>Links import to TauD desulfonation (sulfite release); establishes CysB/Cbl regulatory control.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9401024/">9401024</a></td>
+<td>CysB and Cbl in <em>tauABCD</em> expression</td>
+<td>Direct promoter binding (footprinting/gel-shift) by CysB and Cbl; sulfate-starvation induction.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18456803/">18456803</a></td>
+<td>CysB and SfnR hierarchy in <em>P. putida</em></td>
+<td>Shows the same CysB-centered regulatory logic operates in <em>Pseudomonas putida</em>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25750732/">25750732</a></td>
+<td>Structure and mechanism of ABC transporters</td>
+<td>Establishes TMD/NBD division of labor and the alternating-access transport mechanism relevant to TauC/TauB.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17322901/">17322901</a></td>
+<td>Structure of an ABC transporter with its binding protein</td>
+<td>Model for periplasmic binding protein (TauA) delivering substrate to the permease (TauC).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18948194/">18948194</a></td>
+<td>Structural insights into ABC transporter mechanism</td>
+<td>Rigid-body TMD rotations couple ATP hydrolysis to substrate translocation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17158291/">17158291</a></td>
+<td>Inward-facing metal-chelate ABC transporter</td>
+<td>Structural model for inward/outward-facing conformations of Type I importer TMDs.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11421275/">11421275</a></td>
+<td>Bacterial transporters for sulfate/organosulfur</td>
+<td>Places TauC in the class of CysB-regulated ABC sulfonate transporters.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10717312/">10717312</a></td>
+<td>Metabolism of sulfonates/sulfate esters in gram-negative bacteria</td>
+<td>Identifies α-KG-dependent taurine dioxygenase (TauD) as the desulfonation enzyme downstream of import.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15181108/">15181108</a></td>
+<td>Role of soil microbes in plant sulphur nutrition</td>
+<td>Demonstrates ecological importance of <em>P. putida</em> sulfonate mobilization (plant growth promotion).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10781557/">10781557</a></td>
+<td><em>ssu</em> locus in <em>P. putida</em> S-313</td>
+<td>Context for parallel organosulfur (alkanesulfonate) ABC transport in <em>Pseudomonas</em>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence fits together.</strong> The direct experimental foundation is in <em>E. coli</em> (gene disruption, transport phenotypes, binding-protein affinity, promoter footprinting). The transfer to <em>P. putida</em> Q88RA2 is supported by (a) 64.7% sequence identity to the validated <em>E. coli</em> TauC, (b) an identical, complete, syntenic <em>tauDCBA</em> operon, (c) conserved domain architecture and a de novo hydropathy analysis reproducing 6-TM topology, and (d) evidence that the same CysB-centered sulfur-starvation regulon operates in <em>Pseudomonas</em>. No paper contradicts the annotation; all convergent lines support it.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> KT2440 TauC protein.</strong> The functional assignment for Q88RA2 is an inference by orthology (sequence identity, synteny, domain conservation, regulatory context). There is no published transport assay, knockout, or structure specifically for PP_0231. The confidence is high but not experimentally direct for this exact protein.</p>
+</li>
+<li>
+<p><strong>Substrate specificity has not been tested for the <em>P. putida</em> ortholog.</strong> While <em>E. coli</em> TauABC is taurine-specific (via TauA's ~11 nM Kd), whether the <em>P. putida</em> system imports only taurine or also accepts related aminosulfonates (e.g., cysteate, <em>N</em>-methyltaurine) has not been directly measured. Given <em>P. putida</em>'s broad organosulfur repertoire (overlapping <em>ssu</em> systems), some functional redundancy or broader specificity is possible.</p>
+</li>
+<li>
+<p><strong>The EC 3.6.3.36 / hydrolase annotation on the permease record is misleading.</strong> As noted, the ATPase chemistry belongs to TauB, not TauC. Automated pipelines that read the permease EC number literally could mis-classify TauC as an enzyme; this report explicitly corrects that.</p>
+</li>
+<li>
+<p><strong>Stoichiometry and quaternary structure unconfirmed for this system.</strong> By analogy to canonical Type I importers, the functional complex is expected to be TauA·TauC₂·TauB₂ (or a TauC-plus-a-second-TMD arrangement), but the exact assembly for the taurine transporter has not been structurally resolved.</p>
+</li>
+<li>
+<p><strong>Regulatory fine detail in <em>P. putida</em> is inferred.</strong> CysB is confirmed as master regulator of the sulfate-starvation response in <em>P. putida</em>, but direct footprinting of the <em>tauDCBA</em> promoter in KT2440 (analogous to the <em>E. coli</em> Cbl/CysB study) has not been reported here.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Targeted gene knockout / complementation.</strong> Construct a clean PP_0231 (<em>tauC</em>) deletion in <em>P. putida</em> KT2440 and test growth on taurine as the sole sulfur source (sulfate-free minimal medium). Complementation with wild-type <em>tauC</em> should restore growth — the definitive functional test.</p>
+</li>
+<li>
+<p><strong>Radiolabeled transport assay.</strong> Measure [³⁵S]- or [¹⁴C]-taurine uptake in whole cells or right-side-out membrane vesicles, comparing wild-type, Δ<em>tauC</em>, and complemented strains to directly demonstrate TauC-dependent transport and determine kinetic parameters (Km, Vmax).</p>
+</li>
+<li>
+<p><strong>Substrate-specificity profiling.</strong> Test competition/uptake with candidate alternative substrates (cysteate, <em>N</em>-methyltaurine, isethionate, sulfoacetate) to define whether the <em>P. putida</em> transporter is taurine-specific or broader.</p>
+</li>
+<li>
+<p><strong>Reconstitution and ATPase coupling.</strong> Purify TauB, TauC, and TauA; reconstitute into proteoliposomes; and measure taurine-stimulated ATP hydrolysis to confirm that transport is coupled to TauB ATPase activity (and that TauC itself is catalytically inert).</p>
+</li>
+<li>
+<p><strong>Promoter analysis in <em>P. putida</em>.</strong> Perform RT-qPCR or reporter fusions across a sulfate→taurine shift, plus CysB binding assays (EMSA/footprinting) on the <em>tauDCBA</em> promoter, to confirm sulfate-starvation induction and CysB control in KT2440 directly.</p>
+</li>
+<li>
+<p><strong>Structural modeling / cryo-EM.</strong> Generate an AlphaFold model of the TauABC complex and, ideally, a cryo-EM structure to visualize the 6-TM permease fold, the TauA docking interface, and inward/outward-facing states — validating the alternating-access mechanism for this specific transporter.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>tauC (Q88RA2, PP_0231)</strong> encodes the <strong>integral inner-membrane permease subunit of the taurine-specific ABC importer TauABC</strong> in <em>Pseudomonas putida</em> KT2440. It forms the six-transmembrane-helix (MetI-like) translocation channel through which <strong>taurine</strong> is imported across the cytoplasmic membrane, powered by the partner ATPase TauB and primed by the periplasmic binding protein TauA. Imported taurine is desulfonated by the co-operonic dioxygenase TauD (PP_0230) to release sulfite, making TauC the uptake gateway of a <strong>CysB-regulated organosulfur-scavenging (sulfate-starvation) pathway</strong> that lets the bacterium use taurine as a sulfur source when inorganic sulfate is scarce. TauC is a <strong>non-catalytic membrane transport protein</strong> — the EC 3.6.3.36/hydrolase annotation reflects the whole complex's ATPase (TauB), not the permease itself. The assignment is robustly supported by conserved domains, a complete syntenic <em>tauDCBA</em> operon, 64.7% identity to the experimentally validated <em>E. coli</em> TauC, and de novo hydropathy confirmation of the 6-TM topology.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tauC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="tauC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:8808933</li>
+<li>PMID:10781534</li>
+<li>PMID:17203388</li>
+<li>PMID:11479697</li>
+<li>PMID:25750732</li>
+<li>PMID:17322901</li>
+<li>PMID:9401024</li>
+<li>PMID:18456803</li>
+<li>PMID:11421275</li>
+<li>PMID:10717312</li>
+<li>PMID:15181108</li>
+<li>PMID:18948194</li>
+<li>PMID:17158291</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tauC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RA2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tauc-curation-notes">tauC curation notes</h1>
+<ul>
+<li>Q88RA2 is submitted as the TauABC permease<br />
+  [file:PSEPK/tauC/tauC-uniprot.txt, "SubName: Full=Taurine ABC transporter<br />
+  permease subunit"].</li>
+<li>The exact record predicts a multi-pass cell-membrane protein<br />
+  [file:PSEPK/tauC/tauC-uniprot.txt, "Multi-pass membrane protein"].</li>
+<li>TauC contributes to, but does not independently enable, the complex-level<br />
+  taurine transporter activity. The broad membrane and transmembrane-transport<br />
+  annotations are therefore not used as core terms.</li>
+<li>A sulfur-starvation response is plausible for Tau systems but remains<br />
+  undecided for the exact KT2440 protein without direct expression evidence.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RA2
+gene_symbol: tauC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: TauC is the integral-membrane permease subunit of the bacterial TauABC taurine importer.
+  Two TauC units form the translocation pathway used by TauA-bound taurine while the TauB ATPase units
+  provide energy.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct location for the multi-pass bacterial permease.
+    action: ACCEPT
+    reason: The exact record assigns cell-membrane localization and six transmembrane segments.
+    supported_by:
+    - reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+- term:
+    id: GO:0010438
+    label: cellular response to sulfur starvation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Plausible regulatory context but not established for the exact protein.
+    action: UNDECIDED
+    reason: Tau systems commonly support sulfur scavenging, but the available exact-record evidence does
+      not demonstrate a KT2440 sulfur-starvation response.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct but redundant membrane parent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The plasma-membrane annotation is more specific.
+- term:
+    id: GO:0042918
+    label: alkanesulfonate transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Correct but broader than the exact TauC substrate.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The submitted product identifies a taurine-specific ABC permease.
+    supported_by:
+    - reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Taurine ABC transporter permease subunit&#39;
+- term:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: part_of
+  review:
+    summary: Correct complex membership.
+    action: ACCEPT
+    reason: TauC is the transmembrane unit of a binding-protein-dependent ABC importer.
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Correct but uninformative transport parent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Taurine transmembrane transport is the substrate-specific process.
+- term:
+    id: GO:0015411
+    label: ABC-type taurine transporter transporter activity
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+  qualifier: contributes_to
+  review:
+    summary: Add contribution to the TauABC complex-level transport activity.
+    action: NEW
+    reason: TauC forms the transmembrane pathway but requires TauA and TauB to transport taurine.
+    supported_by:
+    - reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Taurine ABC transporter permease subunit&#39;
+- term:
+    id: GO:0015734
+    label: taurine transmembrane transport
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: Add the substrate-specific transport process.
+    action: NEW
+    reason: The exact submitted product identifies the permease as TauC.
+    supported_by:
+    - reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Taurine ABC transporter permease subunit&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related
+    proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/tauC/tauC-uniprot.txt
+  title: UniProtKB entry Q88RA2 for Pseudomonas putida KT2440 tauC
+  findings:
+  - statement: The exact record identifies the taurine ABC-transporter permease subunit.
+    supporting_text: &#39;SubName: Full=Taurine ABC transporter permease subunit&#39;
+    reference_section_type: RESULTS
+  - statement: TauC is an integral multi-pass cell-membrane protein.
+    supporting_text: Multi-pass membrane protein
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact accession, gene, submitted product name, membrane assignment, and transmembrane
+      topology verified; the record is unreviewed and lacks a direct transport assay.
+- id: file:PSEPK/tauC/tauC-deep-research-openscientist.md
+  title: OpenScientist gene research for PSEPK tauC
+  findings:
+  - statement: The report corroborates TauC as the non-catalytic membrane subunit of TauABC while
+      explicitly distinguishing orthology-based inference from target-specific transport evidence.
+    supporting_text: No direct experimental characterization of the *P. putida* KT2440 TauC protein.
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider synthesis retained as secondary context; reported sequence identity,
+      hydropathy, regulation, and complex stoichiometry were not independently verified.
+core_functions:
+- description: Forms the membrane translocation pathway of the TauABC taurine importer.
+  contributes_to_molecular_function:
+    id: GO:0015411
+    label: ABC-type taurine transporter transporter activity
+  directly_involved_in:
+  - id: GO:0015734
+    label: taurine transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  in_complex:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  supported_by:
+  - reference_id: file:PSEPK/tauC/tauC-uniprot.txt
+    supporting_text: &#39;SubName: Full=Taurine ABC transporter permease subunit&#39;
+  - reference_id: file:PSEPK/tauC/tauC-deep-research-openscientist.md
+    supporting_text: encodes the **integral inner-membrane permease subunit of the
+      taurine-specific ABC importer TauABC**
+suggested_questions:
+- question: Is Q88RA2 selective for taurine only in its cognate TauABC assembly, or can it transport other
+    aliphatic sulfonates?
+suggested_experiments:
+- description: Reconstitute TauA-TauB-TauC transport with radiolabeled taurine and competing sulfonates,
+    and test loss and complementation of tauC in vivo.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
