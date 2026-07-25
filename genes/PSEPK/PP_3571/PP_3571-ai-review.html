@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_3571 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_3571</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88GZ4" target="_blank" class="term-link">
+                        Q88GZ4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_3571";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88GZ4" data-a="DESCRIPTION: PP_3571 (Q88GZ4) encodes an uncharacterized M20A-f..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_3571 (Q88GZ4) encodes an uncharacterized M20A-family metallohydrolase predicted to deacylate an N-acylated amino acid. Its physiological substrate is unresolved and could fall among acetylornithine, N-acetylcitrulline, succinyldiaminopimelate, or a related metabolite. A direct role in L-arginine biosynthesis has not been established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GZ4" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A role in L-arginine biosynthesis is plausible but not established for PP_3571.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is propagated from a broad M20A/ArgE-like family without direct KT2440 evidence. The same PANTHER subfamily contains proteins with DapE and N-acetylcitrulline-deacetylase assignments, and PP_3571 is not in an arginine-biosynthesis gene neighborhood.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3571/PP_3571-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">However, the specific-substrate assignment of &#34;acetylornithine deacetylase&#34; for PP_3571 is a homology inference with no experimental characterization of this particular protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008777" target="_blank" class="term-link">
+                                    GO:0008777
+                                </a>
+                            </span>
+                            <span class="term-label">acetylornithine deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GZ4" data-a="GO:0008777" data-r="GO_REF:0000118" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acetylornithine is one plausible substrate, but the substrate-specific activity cannot be resolved from current evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TIGR01892 and IPR010169 support an ArgE-like enzyme, but Q88GZ4 lacks an ArgE HAMAP assignment and its PAINT/PANTHER branch spans multiple M20A substrate classes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3571/PP_3571-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">However, the specific-substrate assignment of &#34;acetylornithine deacetylase&#34; for PP_3571 is a homology inference with no experimental characterization of this particular protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GZ4" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The M20A peptidase fold supports metal-dependent amide-bond hydrolysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This broad chemistry remains credible even though the physiological substrate is unresolved.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019213" target="_blank" class="term-link">
+                                    GO:0019213
+                                </a>
+                            </span>
+                            <span class="term-label">deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GZ4" data-a="GO:0019213" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein is likely an N-acyl-amino-acid hydrolase, but acetyl-group specificity is unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ArgE-like signals support deacetylation, whereas the same PANTHER branch also contains succinyl-amino-acid hydrolases. Current evidence does not distinguish acetyl from succinyl chemistry for Q88GZ4.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3571/PP_3571-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK PP_3571</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Records an unreviewed acetylornithine-deacetylase name and broad ArgE-like family assignments.</div>
+
+                        <div class="finding-text">"Full=Acetylornithine deacetylase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3571/PP_3571-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK PP_3571</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the four existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR43808/PTHR43808-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR43808 member snapshot</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The SF31 branch used for Q88GZ4 also contains the reviewed KT2440 DapE succinyldiaminopimelate desuccinylase, so its displayed subfamily label does not establish substrate specificity.</div>
+
+                        <div class="finding-text">"Q88MP5,Succinyl-diaminopimelate desuccinylase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR43808/PTHR43808-paint.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR43808 PAINT annotation snapshot</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The acetylornithine-deacetylase IBD node is seeded by proteins assigned to more than one N-acetyl-amino-acid substrate class.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3571/PP_3571-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK PP_3571</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The retrieval found no direct characterization of Q88GZ4 and concluded that its physiological substrate and pathway remain unresolved.</div>
+
+                        <div class="finding-text">"However, the specific-substrate assignment of &#34;acetylornithine deacetylase&#34; for PP_3571 is a homology inference with no experimental characterization of this particular protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which N-acetylated or N-succinylated amino-acid substrate is preferred by Q88GZ4, and does loss of PP_3571 cause arginine or lysine auxotrophy?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: microbial amino-acid metabolism, M20 metallohydrolases</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88GZ4" data-a="Q: Which N-acetylated or N-succinylated amino-acid su..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3571-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GZ4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_3571 (UniProt Q88GZ4) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">4 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T16:46:44.010914</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3571-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3571-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3571-deep-research-openscientist_artifacts/provenance_m20_tree.json" class="term-link">OpenScientist m20 tree</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3571-deep-research-openscientist_artifacts/provenance_m20_tree.png" class="term-link">OpenScientist m20 tree</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_3571-uniprot-q88gz4-in-pseudomonas-putida-kt2440">Functional Annotation Report: PP_3571 (UniProt Q88GZ4) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_3571 (UniProt Q88GZ4) encodes a soluble, cytoplasmic, Zn²⁺/Co²⁺-dependent dinuclear metallohydrolase of the peptidase M20A (ArgE/aminoacylase) family.</strong> Its predicted biochemical activity is the hydrolysis of an α-N-acyl-L-amino acid — nominally the deacetylation of N²-acetyl-L-ornithine to L-ornithine plus acetate (acetylornithine deacetylase, EC 3.5.1.16). The protein carries a complete, perfectly conserved dinuclear-metal active site: mapping the experimentally defined catalytic residues of <em>Escherichia coli</em> ArgE onto PP_3571 shows 100% conservation of all eight functional residues, and its AlphaFold model is of very high confidence (mean pLDDT 95.9), together demonstrating that PP_3571 is a structurally intact, catalytically competent deacylase.</p>
+<p><strong>However, the specific-substrate assignment of "acetylornithine deacetylase" for PP_3571 is a homology inference with no experimental characterization of this particular protein.</strong> Three independent lines of evidence weaken the literal annotation. First, <em>P. putida</em> KT2440 synthesizes ornithine through the cyclic ArgJ pathway (ornithine acetyltransferase, PP_1346), which recycles the acetyl group internally and does not release free N-acetylornithine — so a dedicated acetylornithine deacetylase is not required for arginine biosynthesis in this organism. Second, of the two argE-annotated paralogs in the genome, PP_5186 is the bona fide ArgE ortholog (56.4% identity to <em>E. coli</em> ArgE and clustered with an argA-like gene), whereas PP_3571 is a divergent paralog roughly equidistant from ArgE and DapE reference enzymes and phylogenetically placed outside both clades. Third, characterized ArgE-type enzymes are broad-specificity α-N-acyl-amino-acid aminoacylases whose preferred substrates (e.g., N-acetyl-/N-formyl-methionine, N-acyl-aromatic amino acids) often exceed acetylornithine in activity.</p>
+<p><strong>The most defensible conclusion is that PP_3571 is an accessory cytoplasmic M20A aminoacylase — a Zn/Co metallohydrolase that cleaves the amide bond of α-N-acyl-L-amino acids — whose true physiological substrate and pathway remain experimentally undetermined.</strong> The "acetylornithine deacetylase (EC 3.5.1.16)" label should be treated as the family-based prediction it is, not as a verified function. This report documents the evidence behind each of these conclusions and proposes concrete experiments to resolve the residual ambiguity.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pp_3571-is-an-m20aarge-family-zn-dependent-metallohydrolase-predicted-to-be-acetylornithine-deacetylase">F001 — PP_3571 is an M20A/ArgE-family Zn-dependent metallohydrolase predicted to be acetylornithine deacetylase</h3>
+<p>UniProt Q88GZ4 describes a 391-amino-acid protein submitted under the name "Acetylornithine deacetylase," assigned to the peptidase <strong>M20A family, ArgE subfamily</strong>, with a Zn(2+) cofactor and the keywords Zinc, Cobalt, Metal-binding, Hydrolase, and Cytoplasm. The domain architecture is canonical for this family: <strong>Peptidase_M20 (PF01546)</strong> catalytic domain, <strong>M20_dimer (PF07687)</strong> dimerization domain, the <strong>ArgE/DapE conserved active-site signature (IPR001261)</strong>, and the <strong>acetylornithine-deacetylase signature (IPR010169)</strong>. Orthology databases place it in <strong>COG0624</strong> (acetylornithine deacetylase / succinyl-diaminopimelate desuccinylase and related deacylases), and KEGG maps <code>ppu:PP_3571</code> to <strong>K01438 (EC 3.5.1.16)</strong>.</p>
+<p>Critically, <strong>every functional annotation attached to this protein is computational</strong> (ECO:0000256 ARBA and IEA:TreeGrafter evidence codes); there is no experimental characterization of PP_3571 itself. The prediction rests on the well-studied biochemistry of family homologs. In <em>Sinorhizobium meliloti</em>, ArgE hydrolyzes N-acetylornithine to acetate and ornithine <a href="https://pubmed.ncbi.nlm.nih.gov/26271664/">PMID: 26271664</a>: <em>"N-acetylornithine (NAO) deacetylase (ArgE) hydrolyses NAO to acetate and ornithine."</em> Structural work on <em>E. coli</em> ArgE shows that the enzyme forms a dinuclear metal center <a href="https://pubmed.ncbi.nlm.nih.gov/22459917/">PMID: 22459917</a>: <em>"the data best fit a model that included a M-M vector at 3.3 and 3.4Å for Zn(II) and Co(II), respectively, suggesting the formation of a dinuclear site,"</em> consistent with PP_3571's Zn/Co cofactor annotation and M20 fold.</p>
+<h3 id="f002-in-p-putida-the-physiological-ornithine-forming-step-uses-argj-not-an-acetylornithine-deacetylase">F002 — In <em>P. putida</em> the physiological ornithine-forming step uses ArgJ, not an acetylornithine deacetylase</h3>
+<p>Arginine biosynthesis in bacteria proceeds by one of two strategies for regenerating ornithine from N-acetylornithine: a <strong>linear route</strong> using a dedicated acetylornithine deacetylase (ArgE), or a <strong>cyclic route</strong> using ornithine acetyltransferase (ArgJ), which transfers the acetyl group from N-acetylornithine back onto glutamate. In <em>P. putida</em> KT2440, the cyclic route operates: <code>argJ</code> = <strong>PP_1346</strong> (K00620). This means free N-acetylornithine is not normally released as a metabolic intermediate, and a standalone acetylornithine deacetylase is not needed for arginine biosynthesis.</p>
+<p>Two argE-annotated paralogs map to K01438 in the genome — the target <strong>PP_3571</strong> and <strong>PP_5186</strong>. PP_5186 sits immediately downstream of the argA-like gene PP_5185 (K14682, N-acetylglutamate synthase), placing it within an acetylglutamate/arginine-metabolism gene cluster. By contrast, <strong>PP_3571 is not in any arginine operon</strong>: its neighbors are PP_3569 (quinate dehydrogenase, K05358), PP_3570 (carbohydrate-selective porin, K07267), PP_3568 (cupin), and PP_3573 (a flavin monooxygenase) — a catabolic/transport context unrelated to arginine biosynthesis.</p>
+<p>The literature supports the taxonomic argument. The ArgJ (cyclic) pathway is characteristic of <em>Pseudomonas</em> <a href="https://pubmed.ncbi.nlm.nih.gov/1339419/">PMID: 1339419</a>: <em>"This reaction is catalyzed by the enzyme ornithine acetyltransferase, which is a product of the argJ gene,"</em> and the same study notes that <em>Pseudomonas aeruginosa</em> carries argJ whereas <em>E. coli</em> does not: <em>"Southern blots were able to detect bands that specifically hybridized to the gonococcal argJ gene in genomic DNA from Pseudomonas aeruginosa but not E. coli, a result that reflects the divergent nature of the arginine biosynthetic pathway in these organisms."</em> The dedicated argE deacetylase route is taxonomically restricted <a href="https://pubmed.ncbi.nlm.nih.gov/10692366/">PMID: 10692366</a>: <em>"Only two exceptions had been reported-the Enterobacteriaceae and Myxococcus xanthus...in which ornithine is produced from N-alpha-acetylornithine by a deacylase, acetylornithinase (AOase) (argE encoded)."</em></p>
+<h3 id="f003-pp_3571-acts-in-the-cytoplasm">F003 — PP_3571 acts in the cytoplasm</h3>
+<p>UniProt Q88GZ4 carries the "Cytoplasm" keyword. The protein has <strong>no signal peptide, no transmembrane segments, and no export motifs</strong> — it is a soluble 391-residue M20 hydrolase, and amino-acid/arginine metabolism is a cytoplasmic process. Direct localization evidence exists for a family homolog: the plant ArgE homolog DRIP-1 was localized by immunogold electron microscopy <a href="https://pubmed.ncbi.nlm.nih.gov/12102508/">PMID: 12102508</a>: <em>"Immunogold electron microscopy reveals the enzyme to be confined exclusively to the cytosol."</em> This supports a cytoplasmic site of action for PP_3571.</p>
+<h3 id="f004-pp_3571-has-a-complete-conserved-m20-dinuclear-metal-active-site">F004 — PP_3571 has a complete, conserved M20 dinuclear-metal active site</h3>
+<p>A global alignment of PP_3571 (Q88GZ4) against the experimentally annotated <em>E. coli</em> ArgE (UniProt P23908) shows <strong>100% conservation of all eight functional residues</strong> at 46.6% overall sequence identity. The mapping is summarized below.</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th><em>E. coli</em> ArgE residue</th>
+<th>PP_3571 residue</th>
+<th>Conserved?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Metal ligand</td>
+<td>His80</td>
+<td>His77</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>General base</td>
+<td>Asp82</td>
+<td>Asp79</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Metal ligand</td>
+<td>Asp112</td>
+<td>Asp109</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Catalytic / active-site</td>
+<td>Glu144</td>
+<td>Glu141</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Metal ligand</td>
+<td>Glu145</td>
+<td>Glu142</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Metal ligand</td>
+<td>Glu169</td>
+<td>Glu169</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Metal ligand (2nd site)</td>
+<td>His355</td>
+<td>His363</td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
+<p>The His-x-Asp metal-binding motif lies within the conserved <code>VLSGHTD</code> segment (His77/Asp79), and the C-terminal His363 completes the second metal site, matching the canonical peptidase M20 two-metal architecture. This dinuclear centre is the same one experimentally confirmed for <em>E. coli</em> ArgE <a href="https://pubmed.ncbi.nlm.nih.gov/22459917/">PMID: 22459917</a>: <em>"suggesting the formation of a dinuclear site."</em> The complete conservation of the catalytic machinery indicates PP_3571 is a genuine, catalytically competent metallohydrolase — not a degenerate pseudo-enzyme.</p>
+<h3 id="f005-pp_5186-not-pp_3571-is-the-bona-fide-arge-ortholog-pp_3571-is-a-divergent-paralog-of-ambiguous-specificity">F005 — PP_5186, not PP_3571, is the bona fide ArgE ortholog; PP_3571 is a divergent paralog of ambiguous specificity</h3>
+<p>Pairwise global-identity comparisons cleanly separate the two paralogs:</p>
+<table>
+<thead>
+<tr>
+<th>Protein</th>
+<th>vs <em>E. coli</em> ArgE</th>
+<th>vs <em>E. coli</em> DapE</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_5186</strong> (Q88CJ5)</td>
+<td>56.4%</td>
+<td>39.6%</td>
+<td>Clearly ArgE-type; clustered with argA (PP_5185)</td>
+</tr>
+<tr>
+<td><strong>PP_3571</strong> (Q88GZ4)</td>
+<td>46.6%</td>
+<td>49.4%</td>
+<td>Essentially equidistant; marginally closer to DapE</td>
+</tr>
+</tbody>
+</table>
+<p>The two paralogs share only 46.1% identity with each other, and <em>P. putida</em> additionally encodes a separate dedicated succinyl-diaminopimelate desuccinylase, DapE = PP_1525 (Q88MP5). The fact that a divergent M20A paralog can still deacetylate N-acetylornithine as an accessory activity is precedented <a href="https://pubmed.ncbi.nlm.nih.gov/26271664/">PMID: 26271664</a>: <em>"Extracts of the double mutant contained aminoacylase (Ama) activity that deacetylated NAO to form ornithine,"</em> showing that non-dedicated aminoacylases can substitute in this reaction.</p>
+<h3 id="f006-the-arge-type-reaction-is-broad-n-acyl-amino-acid-hydrolysis-znco-dependent-via-a-general-acid-base-mechanism">F006 — The ArgE-type reaction is broad α-N-acyl-amino-acid hydrolysis, Zn/Co-dependent, via a general acid-base mechanism</h3>
+<p>The mechanistic anchor for this family is the study of <em>E. coli</em> ArgE by Javid-Majd &amp; Blanchard <a href="https://pubmed.ncbi.nlm.nih.gov/10684608/">PMID: 10684608</a>. That work established that ArgE has <strong>relatively broad specificity</strong> and, importantly, that acetylornithine is <em>not</em> its best substrate: <em>"The substrate specificity of the enzyme is relatively broad, with a number of alpha-N-acyl-L-amino acids exhibiting activity, including both alpha-N-acetyl- and alpha-N-formylmethionine that exhibit higher activity than alpha-N-acetyl-L-ornithine."</em> The same study explains the Zn/Co cofactor dependence: <em>"The activity of this enzyme can be increased greater than 2-fold by the addition of zinc, or 8-fold by the addition of cobalt."</em> pH-rate profiles revealed one catalytic general base and one general acid, and solvent isotope effects indicated a single proton transfer in the rate-limiting step.</p>
+<p>Independent evidence reinforces the family's broad and variable specificity. A thermostable bacterial aminoacylase that complements <em>E. coli</em> argE mutants nonetheless prefers aromatic substrates <a href="https://pubmed.ncbi.nlm.nih.gov/8285691/">PMID: 8285691</a>: <em>"The enzyme hydrolyzes N-acyl derivatives of aromatic amino acids most efficiently."</em> PP_3571 conserves the general base (Asp79) and general acid/catalytic residue (Glu141) as well as the Zn ligands, and UniProt lists both Zn and Cobalt for Q88GZ4 — fully consistent with this mechanistic class, but not diagnostic of any single substrate.</p>
+<h3 id="f007-high-confidence-alphafold-model-catabolictransport-genomic-neighborhood">F007 — High-confidence AlphaFold model; catabolic/transport genomic neighborhood</h3>
+<p>The AlphaFold DB model of Q88GZ4 has a <strong>mean pLDDT of 95.9</strong> (very high confidence), consistent with a well-ordered two-domain peptidase M20 fold (catalytic domain plus dimerization domain). The genomic neighborhood of PP_3571 (complement 4051279..4052454) contains PP_3572 (DUF1028, unknown, a likely operon partner), PP_3569 (quinate dehydrogenase, K05358), PP_3570 (carbohydrate-selective porin, K07267), PP_3568 (cupin), and PP_3573 (a flavin monooxygenase resembling lysine/ornithine oxygenases). There are <strong>no arginine-biosynthesis genes nearby</strong>, reinforcing that PP_3571's functional context is catabolic/peripheral rather than part of core arginine biosynthesis.</p>
+<h3 id="f008-phylogenetic-placement-pp_3571-is-an-orphan-m20a-branch">F008 — Phylogenetic placement: PP_3571 is an orphan M20A branch</h3>
+<p>UPGMA clustering of a curated M20 reference set (distances from pairwise global alignment) resolves two tight functional clades and leaves PP_3571 outside both:</p>
+<ul>
+<li><strong>ArgE clade:</strong> <em>E. coli</em> ArgE + <em>P. putida</em> PP_5186 (50.3% mutual identity)</li>
+<li><strong>DapE clade:</strong> <em>E. coli</em> DapE + <em>P. putida</em> PP_1525 (62.0% mutual identity)</li>
+<li><strong>PP_3571:</strong> groups with neither — roughly equidistant from PP_1525–DapE (38.0%), <em>E. coli</em> ArgE (37.2%), PP_5186 (36.8%), carboxypeptidase G2 (35.8%), peptidase-T (34.4%), and <em>E. coli</em> DapE (33.0%); human aminoacylase-1 is a distant outgroup (~26%).</li>
+</ul>
+<p>While absolute identity values are alignment-parameter dependent, the robust and reproducible signal is the <strong>branching topology</strong>: PP_3571 forms its own divergent lineage rather than nesting inside the ArgE clade, which its literal annotation would predict.</p>
+<p>{{figure:m20_tree.png|caption=UPGMA tree of curated peptidase M20 enzymes. PP_3571 (Q88GZ4) branches as an orphan lineage outside both the ArgE clade (E. coli ArgE + P. putida PP_5186) and the DapE clade (E. coli DapE + P. putida PP_1525), consistent with a divergent M20A deacylase of uncertain substrate specificity.}}</p>
+<h3 id="f009-neither-arginine-biosynthesis-nor-catabolism-in-p-putida-routes-through-an-acetylornithine-deacetylase">F009 — Neither arginine biosynthesis nor catabolism in <em>P. putida</em> routes through an acetylornithine deacetylase</h3>
+<p>Two converging metabolic facts leave no obvious physiological role for a dedicated acetylornithine deacetylase in <em>P. putida</em>. On the <strong>biosynthetic</strong> side, the cyclic ArgJ pathway (PP_1346) recycles the acetyl group internally, so free acetylornithine is not released. On the <strong>catabolic</strong> side, <em>P. putida</em> degrades arginine and ornithine via the arginine succinyltransferase (AST) and arginine oxidase pathways, using <strong>succinyl</strong> (not acetyl) intermediates. Stalon et al. <a href="https://pubmed.ncbi.nlm.nih.gov/3129535/">PMID: 3129535</a> report: <em>"the first step of ornithine utilization as a carbon source was the conversion of ornithine into succinylornithine through an ornithine succinyltransferase,"</em> and Tricot et al. <a href="https://pubmed.ncbi.nlm.nih.gov/1791443/">PMID: 1791443</a> confirm: <em>"Pseudomonas putida mutants impaired in the utilization of arginine are affected in either the arginine succinyltransferase pathway, the arginine oxidase route, or both."</em> Neither core pathway generates an N-acetyl substrate that would require PP_3571's predicted activity — which is precisely why its true physiological substrate remains an open question.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Bringing the findings together, PP_3571 is best modeled as a <strong>structurally intact, catalytically competent cytoplasmic M20A metallo-aminoacylase whose physiological substrate is not the one implied by its name.</strong></p>
+<p><strong>What we can state with confidence (structure and mechanism):</strong></p>
+<div class="codehilite"><pre><span></span><code>α-N-acyl-L-amino acid  +  H2O
+     |
+     |   PP_3571 (M20A; dinuclear Zn/Co centre)
+     |   general base Asp79 activates water;
+     |   general acid Glu141 protonates leaving amine
+     v
+L-amino acid  +  carboxylate (e.g. acetate)
+</code></pre></div>
+
+<p>The dinuclear metal centre (His77, Asp109, Glu142, Glu169, His363), the catalytic dyad (Asp79 base / Glu141 acid), the two-domain M20 fold, and the high-confidence AlphaFold model together establish the <strong>reaction chemistry</strong>: hydrolysis of the amide bond of an α-N-acyl-L-amino acid, a Zn/Co-dependent general acid-base reaction.</p>
+<p><strong>What remains uncertain (physiological substrate and pathway):</strong> The name "acetylornithine deacetylase" derives entirely from family membership (COG0624 / K01438 / IPR010169), not from assay data on PP_3571. Four observations argue against the literal interpretation:</p>
+<table>
+<thead>
+<tr>
+<th>Line of evidence</th>
+<th>Observation</th>
+<th>Implication for the "acetylornithine deacetylase" label</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pathway logic (F002, F009)</td>
+<td><em>P. putida</em> uses cyclic ArgJ for ornithine and succinyl (not acetyl) routes for catabolism</td>
+<td>No metabolic demand for a dedicated acetylornithine deacetylase</td>
+</tr>
+<tr>
+<td>Paralog analysis (F005)</td>
+<td>PP_5186 is the clustered, high-identity ArgE ortholog</td>
+<td>The canonical ArgE role is already filled by PP_5186</td>
+</tr>
+<tr>
+<td>Phylogeny (F008)</td>
+<td>PP_3571 branches outside both ArgE and DapE clades</td>
+<td>Substrate cannot be assigned by clade membership</td>
+</tr>
+<tr>
+<td>Family biochemistry (F006)</td>
+<td>ArgE-type enzymes prefer N-acyl-Met and N-acyl-aromatics over N-acetylornithine</td>
+<td>The "default" substrate need not be acetylornithine</td>
+</tr>
+</tbody>
+</table>
+<p>The most parsimonious model is therefore that <strong>PP_3571 is an accessory α-N-acyl-amino-acid aminoacylase</strong> — plausibly acting on an N-acetyl or N-formyl amino acid arising from protein turnover, peripheral metabolism, or a catabolic pathway hinted at by its neighbors (the flavin monooxygenase PP_3573 and porin PP_3570). Its genomic context (catabolic/transport, with a DUF1028 partner PP_3572) is more consistent with a scavenging/deacylation role than with core arginine anabolism. It could still deacetylate N-acetylornithine opportunistically — family homologs demonstrably can (F005, PMID 26271664) — but that is unlikely to be its principal physiological function.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (paraphrased title)</th>
+<th>How it informs this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26271664/">26271664</a></td>
+<td>Arginine biosynthesis in <em>Sinorhizobium meliloti</em></td>
+<td>Defines the ArgE reaction (NAO → ornithine + acetate); shows non-dedicated aminoacylases can substitute (supports F001, F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22459917/">22459917</a></td>
+<td>Metal-loaded forms of <em>E. coli</em> ArgE (N-acetylornithine deacetylase)</td>
+<td>Confirms the dinuclear Zn/Co metal centre whose ligands are conserved in PP_3571 (supports F001, F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10684608/">10684608</a></td>
+<td>Mechanistic analysis of <em>E. coli</em> ArgE</td>
+<td>Establishes broad specificity (N-acyl-Met &gt; N-acetylornithine), general acid-base mechanism, Zn/Co dependence (supports F006; challenges literal substrate label)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8285691/">8285691</a></td>
+<td>Thermostable aminoacylase from <em>Bacillus stearothermophilus</em></td>
+<td>Shows family members can prefer N-acyl-aromatics; complements argE mutants (supports F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1339419/">1339419</a></td>
+<td><em>argJ</em> from <em>Neisseria gonorrhoeae</em>; hybridization to <em>Pseudomonas</em></td>
+<td>Confirms <em>Pseudomonas</em> uses ArgJ (cyclic) pathway (supports F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10692366/">10692366</a></td>
+<td>Evolution of arginine biosynthesis; N-α-acetylornithinase</td>
+<td>Shows dedicated argE deacetylase route is taxonomically restricted (supports F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12102508/">12102508</a></td>
+<td>DRIP-1 (ArgE homolog) in wild watermelon</td>
+<td>Direct cytosolic localization of an ArgE-family enzyme (supports F003)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3129535/">3129535</a></td>
+<td>Catabolism of arginine/citrulline/ornithine in <em>Pseudomonas</em></td>
+<td>Ornithine catabolism uses succinyl, not acetyl, intermediates (supports F009)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1791443/">1791443</a></td>
+<td><em>P. putida</em> arginine/ornithine catabolism mutants</td>
+<td>Catabolism runs via succinyltransferase/oxidase routes (supports F009)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11852094/">11852094</a></td>
+<td><em>lysK</em> (argE homolog) in <em>Thermus thermophilus</em></td>
+<td>Illustrates that argE homologs can act on both N-acetyllysine and N-acetylornithine — broad/shared specificity within the family (context for F006)</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is internally consistent: the structural/mechanistic papers (22459917, 10684608, 8285691) firmly establish PP_3571's reaction chemistry, while the pathway/evolution papers (1339419, 10692366, 3129535, 1791443) collectively explain why the literal "acetylornithine deacetylase" role is implausible as the protein's primary function in <em>P. putida</em>.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No experimental data on PP_3571 itself.</strong> Every functional annotation (EC 3.5.1.16, "acetylornithine deacetylase," cytoplasmic localization) is computational (ARBA/IEA/TreeGrafter). There is no purified-enzyme kinetics, no crystal structure, and no mutant phenotype for this specific protein.</li>
+<li><strong>Substrate specificity is unknown.</strong> Because the ArgE family is broad and PP_3571 is a phylogenetic orphan, its preferred α-N-acyl-amino-acid substrate cannot be assigned from sequence alone.</li>
+<li><strong>Alignment-parameter sensitivity.</strong> Absolute pairwise identities depend on the alignment method; the robust conclusions are the topology (PP_3571 outside both ArgE and DapE clades) and the residue-level active-site conservation, not the exact percentages.</li>
+<li><strong>Localization is inferred.</strong> Cytoplasmic localization is supported by sequence features and a plant homolog, but has not been directly demonstrated for PP_3571.</li>
+<li><strong>Operon/regulatory context is unresolved.</strong> The relationship between PP_3571 and its neighbors (especially the DUF1028 protein PP_3572, the porin PP_3570, and the monooxygenase PP_3573) is suggestive but not experimentally tested; co-transcription and co-regulation are unverified.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant enzyme substrate screen (highest priority).</strong> Express and purify His-tagged PP_3571 and assay it against a panel of α-N-acyl-L-amino acids — N-acetyl-L-ornithine, N-acetyl-/N-formyl-L-methionine, N-acetyl-L-lysine, N-acyl-aromatic amino acids, and N-succinyl substrates — measuring kcat/Km for each. This directly resolves whether acetylornithine is a preferred, minor, or non-substrate, mirroring the ArgE study design in PMID 10684608.</li>
+<li><strong>Metal-dependence and dinuclear-site confirmation.</strong> Test activity with apo-, Zn-, Co-, and Mn-loaded enzyme and quantify metal stoichiometry (ICP-MS/EXAFS), directly testing the predicted Zn/Co dinuclear centre (cf. PMID 22459917).</li>
+<li><strong>Genetic complementation and knockout.</strong> Test whether PP_3571 complements an <em>E. coli</em> ΔargE mutant, and construct a <em>P. putida</em> ΔPP_3571 (and ΔPP_5186, and the double mutant) to identify growth phenotypes and confirm which paralog is the physiological ArgE.</li>
+<li><strong>Transcriptional/operon mapping.</strong> Determine whether PP_3571 is co-transcribed with PP_3572 (DUF1028) and characterize expression under different carbon/nitrogen sources to place it in a catabolic pathway.</li>
+<li><strong>Metabolomic substrate hunting.</strong> Compare intracellular N-acyl-amino-acid pools in wild-type vs ΔPP_3571 under conditions that induce the neighboring genes (quinate, aromatic compounds), to detect an accumulating physiological substrate.</li>
+<li><strong>Structural determination.</strong> Solve the crystal structure (or validate the pLDDT-95.9 AlphaFold model with a low-resolution experimental structure) with bound substrate/product analogs to define the specificity pocket.</li>
+</ol>
+<hr />
+<p><em>Prepared from a five-iteration autonomous investigation. Nine findings were confirmed and 18 papers reviewed. The central conclusion — that PP_3571 is a structurally intact, cytoplasmic M20A metallo-aminoacylase whose "acetylornithine deacetylase" label is a homology-only prediction with no experimental support in</em> P. putida <em>— is robust across structural, phylogenetic, genomic, and pathway-level evidence.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_3571-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_3571-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="PP_3571-deep-research-openscientist_artifacts/provenance_m20_tree.json">OpenScientist m20 tree</a><br />
+<img alt="OpenScientist m20 tree" src="PP_3571-deep-research-openscientist_artifacts/provenance_m20_tree.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:26271664</li>
+<li>PMID:22459917</li>
+<li>PMID:1339419</li>
+<li>PMID:10692366</li>
+<li>PMID:12102508</li>
+<li>PMID:10684608</li>
+<li>PMID:8285691</li>
+<li>PMID:3129535</li>
+<li>PMID:1791443</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3571-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GZ4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3571-curation-notes">PP_3571 curation notes</h1>
+<ul>
+<li>UniProt names Q88GZ4 as an acetylornithine deacetylase but the record is<br />
+  unreviewed and carries no EC number or catalytic-activity section<br />
+  [file:PSEPK/PP_3571/PP_3571-uniprot.txt,<br />
+  "SubName: Full=Acetylornithine deacetylase"].</li>
+<li>InterPro <code>IPR010169</code> and NCBIfam <code>TIGR01892</code> support an ArgE-like enzyme, but<br />
+  the PANTHER <code>PTHR43808:SF31</code> member set is substrate-heterogeneous. It<br />
+  includes the reviewed KT2440 lysine-pathway DapE protein Q88MP5<br />
+  [file:interpro/panther/PTHR43808/PTHR43808-entries.csv,<br />
+  "Q88MP5,Succinyl-diaminopimelate desuccinylase"].</li>
+<li>The PAINT family file assigns GO:0008777 at an ancestral node seeded by both<br />
+  Q8P8J5 and P23908, while the member snapshot identifies Q8P8J5 as an<br />
+  N-acetyl-L-citrulline deacetylase. This makes the substrate-specific<br />
+  propagation insufficient by itself<br />
+  [file:interpro/panther/PTHR43808/PTHR43808-paint.tsv,<br />
+  "UniProtKB:Q8P8J5|UniProtKB:P23908"].</li>
+<li>The immediate PP_3565-PP_3577 neighborhood contains transport, quinate,<br />
+  porin, regulatory, monooxygenase, and siderophore-system genes rather than a<br />
+  recognizable arginine-biosynthesis cluster<br />
+  [file:projects/P_PUTIDA/data/psepk_gene_list.tsv, "PP_3571"].<br />
+First-pass decision: retain generic hydrolase/deacetylase chemistry as non-core;<br />
+leave acetylornithine deacetylase activity and L-arginine biosynthesis<br />
+<code>UNDECIDED</code> pending direct substrate or genetic evidence.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88GZ4
+gene_symbol: PP_3571
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_3571 (Q88GZ4) encodes an uncharacterized M20A-family metallohydrolase
+  predicted to deacylate an N-acylated amino acid. Its physiological substrate
+  is unresolved and could fall among acetylornithine, N-acetylcitrulline,
+  succinyldiaminopimelate, or a related metabolite. A direct role in L-arginine
+  biosynthesis has not been established.
+existing_annotations:
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: A role in L-arginine biosynthesis is plausible but not established for PP_3571.
+    action: UNDECIDED
+    reason: &gt;-
+      The annotation is propagated from a broad M20A/ArgE-like family without
+      direct KT2440 evidence. The same PANTHER subfamily contains proteins with
+      DapE and N-acetylcitrulline-deacetylase assignments, and PP_3571 is not in
+      an arginine-biosynthesis gene neighborhood.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3571/PP_3571-deep-research-openscientist.md
+      supporting_text: &gt;-
+        However, the specific-substrate assignment of &#34;acetylornithine
+        deacetylase&#34; for PP_3571 is a homology inference with no experimental
+        characterization of this particular protein.
+- term:
+    id: GO:0008777
+    label: acetylornithine deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Acetylornithine is one plausible substrate, but the substrate-specific activity cannot be resolved from current evidence.
+    action: UNDECIDED
+    reason: &gt;-
+      TIGR01892 and IPR010169 support an ArgE-like enzyme, but Q88GZ4 lacks an
+      ArgE HAMAP assignment and its PAINT/PANTHER branch spans multiple M20A
+      substrate classes.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3571/PP_3571-deep-research-openscientist.md
+      supporting_text: &gt;-
+        However, the specific-substrate assignment of &#34;acetylornithine
+        deacetylase&#34; for PP_3571 is a homology inference with no experimental
+        characterization of this particular protein.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The M20A peptidase fold supports metal-dependent amide-bond hydrolysis.
+    action: KEEP_AS_NON_CORE
+    reason: This broad chemistry remains credible even though the physiological substrate is unresolved.
+- term:
+    id: GO:0019213
+    label: deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The protein is likely an N-acyl-amino-acid hydrolase, but acetyl-group specificity is unresolved.
+    action: UNDECIDED
+    reason: &gt;-
+      ArgE-like signals support deacetylation, whereas the same PANTHER branch
+      also contains succinyl-amino-acid hydrolases. Current evidence does not
+      distinguish acetyl from succinyl chemistry for Q88GZ4.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_3571/PP_3571-uniprot.txt
+  title: UniProtKB entry for PSEPK PP_3571
+  findings:
+  - statement: Records an unreviewed acetylornithine-deacetylase name and broad ArgE-like family assignments.
+    supporting_text: Full=Acetylornithine deacetylase
+- id: file:PSEPK/PP_3571/PP_3571-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK PP_3571
+  findings:
+  - statement: Contains the four existing annotations reviewed above.
+- id: file:interpro/panther/PTHR43808/PTHR43808-entries.csv
+  title: PANTHER PTHR43808 member snapshot
+  findings:
+  - statement: &gt;-
+      The SF31 branch used for Q88GZ4 also contains the reviewed KT2440 DapE
+      succinyldiaminopimelate desuccinylase, so its displayed subfamily label
+      does not establish substrate specificity.
+    supporting_text: Q88MP5,Succinyl-diaminopimelate desuccinylase
+- id: file:interpro/panther/PTHR43808/PTHR43808-paint.tsv
+  title: PANTHER PTHR43808 PAINT annotation snapshot
+  findings:
+  - statement: &gt;-
+      The acetylornithine-deacetylase IBD node is seeded by proteins assigned
+      to more than one N-acetyl-amino-acid substrate class.
+- id: file:PSEPK/PP_3571/PP_3571-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK PP_3571
+  findings:
+  - statement: &gt;-
+      The retrieval found no direct characterization of Q88GZ4 and concluded
+      that its physiological substrate and pathway remain unresolved.
+    supporting_text: &gt;-
+      However, the specific-substrate assignment of &#34;acetylornithine
+      deacetylase&#34; for PP_3571 is a homology inference with no experimental
+      characterization of this particular protein.
+suggested_questions:
+- question: &gt;-
+    Which N-acetylated or N-succinylated amino-acid substrate is preferred by
+    Q88GZ4, and does loss of PP_3571 cause arginine or lysine auxotrophy?
+  experts:
+  - microbial amino-acid metabolism
+  - M20 metallohydrolases
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

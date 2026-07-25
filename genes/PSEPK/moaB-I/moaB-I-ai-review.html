@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>moaB-I - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>moaB-I</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88L15" target="_blank" class="term-link">
+                        Q88L15
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "moaB-I";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88L15" data-a="DESCRIPTION: moaB-I encodes a soluble MoaB-family protein adjac..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>moaB-I encodes a soluble MoaB-family protein adjacent to moeA. MoaB-family proteins bind GTP and molybdopterin, but catalytic MPT adenylyltransferase activity is lineage-dependent; the exact biochemical contribution and necessity of this KT2440 paralog remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L15" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization is compatible with this small soluble MoaB-family protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88L15 lacks membrane/export features and is adjacent to cytosolic moeA.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006777" target="_blank" class="term-link">
+                                    GO:0006777
+                                </a>
+                            </span>
+                            <span class="term-label">Mo-molybdopterin cofactor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L15" data-a="GO:0006777" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pathway involvement is plausible but the paralog&#39;s exact contribution and necessity are unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt says MoaB may participate but explicitly transfers a no-MPT-adenylyltransferase statement from the family; no gene-specific assay establishes Q88L15&#39;s role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaB-I/moaB-I-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: May be involved in the biosynthesis of molybdopterin. Can
+CC       bind GTP and has low GTPase activity. Can bind MPT, but has no MPT
+CC       adenylyl transferase activity. {ECO:0000256|ARBA:ARBA00055616}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">2. **MoaB&#39;s precise physiological role is unresolved even in *E. coli*.** Despite two crystal structures, the specific in vivo activity of MoaB (as distinct from MogA) has never been unambiguously established.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MoaB-family GTP/MPT-binding protein with an unresolved catalytic or accessory contribution to molybdenum-cofactor biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88L15" data-a="FUNCTION: MoaB-family GTP/MPT-binding protein with an unreso..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/moaB-I/moaB-I-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- FUNCTION: May be involved in the biosynthesis of molybdopterin. Can
+CC       bind GTP and has low GTPase activity. Can bind MPT, but has no MPT
+CC       adenylyl transferase activity. {ECO:0000256|ARBA:ARBA00055616}.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">4. **Substrate specificity is inferred, not measured.** The predicted substrate (molybdopterin) and product (MPT-AMP) derive from the Cnx1 and MogA literature, not from assays on MoaB-I.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaB-I/moaB-I-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for moaB-I</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places Q88L15 in the proteobacterial MoaB family and transfers GTP/MPT binding but no MPT adenylyltransferase activity.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: May be involved in the biosynthesis of molybdopterin. Can
+CC       bind GTP and has low GTPase activity. Can bind MPT, but has no MPT
+CC       adenylyl transferase activity. {ECO:0000256|ARBA:ARBA00055616}."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaB-I/moaB-I-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for moaB-I</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains the cytosol and Mo-molybdopterin biosynthesis rows reviewed here.</div>
+
+                        <div class="finding-text">"UniProtKB	Q88L15	moaB-I	located_in	GO:0005829	cytosol	cellular_component	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN002456466	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	Molybdenum cofactor biosynthesis protein B	20260706
+UniProtKB	Q88L15	moaB-I	involved_in	GO:0006777	Mo-molybdopterin cofactor biosynthetic process	biological_process	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR008284|InterPro:IPR012245|InterPro:IPR013484|UniRule:UR000143783	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Molybdenum cofactor biosynthesis protein B	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for moaB-I</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report explicitly acknowledges that neither the target protein nor the distinct physiological role of MoaB has been resolved experimentally.</div>
+
+                        <div class="finding-text">"2. **MoaB&#39;s precise physiological role is unresolved even in *E. coli*.** Despite two crystal structures, the specific in vivo activity of MoaB (as distinct from MogA) has never been unambiguously established."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR43232/PTHR43232-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER entries for the MoaB family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PTHR43232 contains MoaB proteins, including biochemically active archaeal MoaB, but does not by itself resolve each bacterial paralog.</div>
+
+                        <div class="finding-text">"Q8U3T3,Molybdopterin adenylyltransferase,protein,186497,Pyrococcus furiosus (strain ATCC 43587 / DSM 3638 / JCM 8422 / Vc1),Pyrococcus furiosus (strain ATCC 43587 / DSM 3638 / JCM 8422 / Vc1),moaB,169,PTHR43232:SF2,MOLYBDENUM COFACTOR BIOSYNTHESIS PROTEIN B,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Q88L15 catalyze MPT adenylylation, act as a noncatalytic partner of MoeA, or have no required role in KT2440 Mo-cofactor biosynthesis?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88L15" data-a="Q: Does Q88L15 catalyze MPT adenylylation, act as a n..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified Q88L15 with Q88E67 in MPT-binding, ATP-dependent MPT adenylylation, and MoeA-coupled Mo-MPT formation assays.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative biochemical assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88L15" data-a="EXPERIMENT: Compare purified Q88L15 with Q88E67 in MPT-binding..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(moaB-I-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88L15" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *moaB-I* (Q88L15, PP_2122) — Molybdenum Cofactor Biosynthesis Protein B in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T17:00:31.129973</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="moaB-I-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="moaB-I-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-moab-i-q88l15-pp_2122-molybdenum-cofactor-biosynthesis-protein-b-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>moaB-I</em> (Q88L15, PP_2122) — Molybdenum Cofactor Biosynthesis Protein B in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>moaB-I</strong> (UniProt <strong>Q88L15</strong>; ordered locus <strong>PP_2122</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>Molybdenum cofactor biosynthesis protein B (MoaB)</strong>, a small (~179 amino acid, ~19 kDa) soluble protein of the <strong>MoaB/Mog "G-domain" superfamily</strong>. Sequence, structural, and genomic-context evidence converge on a single coherent conclusion: MoaB-I is a <strong>cytoplasmic</strong> component of the ancient, highly conserved <strong>molybdenum cofactor (Moco) biosynthesis pathway</strong>, acting at or near the <strong>terminal molybdenum-insertion step</strong> in which the pterin scaffold molybdopterin (MPT) is activated and charged with molybdenum to produce the active cofactor required by more than 50 redox molybdoenzymes.</p>
+<p>The primary line of positive identification is sequence-based: pairwise alignment shows Q88L15 is <strong>54.7 % identical to <em>Escherichia coli</em> MoaB</strong> (P0AEZ9) but only <strong>29.9 % identical to <em>E. coli</em> MogA/Mog</strong> (P0AF03, molybdopterin adenylyltransferase). This cleanly assigns the protein to the <strong>MoaB</strong> branch of the family and distinguishes it from the closely related MogA. The diagnostic family signatures — the glycine-rich loop (I/V)TGGTGF and the PGST pterin/nucleotide-binding motif — are conserved. Structurally, the direct <em>E. coli</em> MoaB ortholog adopts a <strong>MogA-like modified Rossmann fold</strong> and assembles into a <strong>hexamer (a dimer of trimers)</strong> with a conserved putative pterin-binding site, a fold shared with MogA, MoeA, and the eukaryotic multidomain proteins gephyrin (mammals) and Cnx1 (plants).</p>
+<p>Functionally, members of this G-domain family catalyze the <strong>ATP/Mg²⁺-dependent adenylylation of molybdopterin to MPT-AMP</strong>, the activated intermediate that the MoeA-type protein subsequently uses to ligate molybdenum and yield mature Moco. A striking feature of <em>P. putida</em> KT2440 supports a direct role for MoaB-I in this step: the genome <strong>lacks a dedicated <em>mogA</em> gene</strong>, <strong>moaB-I (PP_2122) sits immediately adjacent to <em>moeA</em> (PP_2123)</strong>, and a second paralog, <strong>moaB-II (PP_4600)</strong>, sits next to <strong>moaA (PP_4597)</strong>. This synteny implicates MoaB-I as the <strong>MogA-equivalent partner of MoeA</strong> in the terminal Mo-insertion reaction. It must be stated clearly that this precise catalytic assignment is <strong>inferred</strong> from homology, structure, and gene neighborhood — the enzymatic activity of MoaB-I (or of any MoaB, as opposed to MogA) has <strong>not been directly demonstrated experimentally</strong>, and the specific in vivo role of MoaB proteins remains an open question in the Moco field.</p>
+<hr />
+<h2 id="geneprotein-identity-verification-passed">Gene/Protein Identity Verification (PASSED)</h2>
+<p>The mandatory identity check was completed and passed:</p>
+<table>
+<thead>
+<tr>
+<th>Verification item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "moaB-I" matches protein description</td>
+<td>✔ Matches — MoaB/Mog family, Molybdenum cofactor biosynthesis protein B</td>
+</tr>
+<tr>
+<td>Organism is <em>Pseudomonas putida</em> KT2440</td>
+<td>✔ Confirmed (UniProt organism_id 160488)</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✔ MoaB/Mog family; InterPro IPR012245, IPR001453, IPR013484, IPR036425, IPR008284 all consistent with MoaB</td>
+</tr>
+<tr>
+<td>No conflicting literature for a different gene</td>
+<td>✔ No ambiguity found; MoaB is a well-defined Moco-biosynthesis protein</td>
+</tr>
+</tbody>
+</table>
+<p>The target is a <strong>bona fide MoaB ortholog</strong>, unambiguously placed in the Moco biosynthesis pathway, confirmed independently by pairwise alignment (54.7 % identity to <em>E. coli</em> MoaB vs 29.9 % to MogA) and by conservation of the diagnostic MoaB/Mog motifs. There is no evidence of gene-symbol ambiguity. The main caveat is not misidentification but <strong>sparse protein-specific experimental literature</strong>: no dedicated functional study exists for the <em>P. putida</em> MoaB-I protein itself, so its function is annotated by homology and inference from the well-studied <em>E. coli</em> and eukaryotic homologs.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-q88l15-is-a-genuine-moab-ortholog-distinct-from-the-moga-paralog">Finding 1 — Q88L15 is a genuine MoaB ortholog, distinct from the MogA paralog</h3>
+<p>Pairwise Needleman–Wunsch alignment of the 179-residue <em>P. putida</em> KT2440 MoaB-I sequence against <em>E. coli</em> K-12 proteins gives <strong>54.7 % identity (93/170 aligned positions) to <em>E. coli</em> MoaB</strong> (P0AEZ9) versus only <strong>29.9 % (52/174) to <em>E. coli</em> MogA/Mog</strong> (P0AF03, molybdopterin adenylyltransferase). This nearly two-fold difference in identity is decisive for branch assignment: the protein belongs to the <strong>MoaB</strong> subfamily rather than the MogA subfamily, even though the two are homologous members of the same MoaB/Mog family.</p>
+<p>The alignment further confirms conservation of the two diagnostic family motifs:<br />
+- The <strong>glycine-rich loop I(V)TGGTGF</strong> — <em>Pp</em>MoaB-I <code>LITGGTGFTGRD</code> closely matches <em>Ec</em>MoaB <code>LITGGTGLTEGD</code>.<br />
+- The <strong>PGST pterin/nucleotide-binding motif</strong> — <em>Pp</em>MoaB-I <code>LPGSTNAV</code> matches <em>Ec</em>MoaB <code>MPGSTKAC</code>.</p>
+<p>UniProt independently assigns family = MoaB/Mog, and InterPro places the protein in <strong>IPR013484 (MoaB_proteobac)</strong> and <strong>IPR001453 (MoaB/Mog_dom)</strong>. Together these establish, with high confidence, that Q88L15 is a proteobacterial MoaB.</p>
+<h3 id="finding-2-moab-adopts-a-moga-like-rossmann-fold-and-assembles-as-a-hexamer-with-a-conserved-pterin-binding-site">Finding 2 — MoaB adopts a MogA-like Rossmann fold and assembles as a hexamer with a conserved pterin-binding site</h3>
+<p>Two independent crystal structures of <em>E. coli</em> MoaB — the direct 54.7 %-identical ortholog of Q88L15 — reveal a <strong>modified Rossmann fold</strong> that assembles into a <strong>32-symmetric hexamer composed of two trimers</strong>. This fold is structurally homologous to <strong>MogA, MoeA, and the G-domains of gephyrin and plant Cnx1</strong>, all members of the Moco-biosynthesis Mo-insertion machinery. Sanishvili et al. (2004; <a href="https://pubmed.ncbi.nlm.nih.gov/15269205/">PMID: 15269205</a>) solved MoaB to 1.6 Å and reported that "<em>MoaB is assembled into a hexamer composed of two trimers. The monomers have high structural similarity with two proteins, MogA and MoeA, from the molybdenum cofactor synthesis pathway in E. coli, as well as with domains of mammalian gephyrin and plant Cnx1.</em>" An independent structure by Bader et al. (2004; <a href="https://pubmed.ncbi.nlm.nih.gov/15159566/">PMID: 15159566</a>) at 2.1 Å similarly noted that "<em>the overall fold of the monomer is similar to those of the MogA protein of E. coli, the G-domains of rat and human gephyrin and the G-domains of Cnx1 protein from A. thaliana, all of which are involved in the insertion of an unknown molybdenum species into molybdopterin to form the molybdenum cofactor.</em>"</p>
+<p>The archaeal ortholog from <em>Sulfolobus tokodaii</em> (ST2315) is likewise a trimer/hexamer with the same fold (Antonyuk et al. 2009; <a href="https://pubmed.ncbi.nlm.nih.gov/20054111/">PMID: 20054111</a>), confirming that the oligomeric architecture is conserved across all three domains of life. Structural comparison and conservation mapping reveal a <strong>putative active/ligand-binding site predicted to bind a pterin compound</strong>, most likely a molybdopterin biosynthesis intermediate. By virtue of its 54.7 % identity, <em>P. putida</em> MoaB-I is expected to share this hexameric Rossmann-fold architecture and pterin-binding pocket.</p>
+<h3 id="finding-3-the-mogamoab-family-reaction-adenylylation-of-molybdopterin-to-mpt-amp">Finding 3 — The MogA/MoaB family reaction: adenylylation of molybdopterin to MPT-AMP</h3>
+<p>The mechanistic template for this protein family comes from the plant Cnx1 G domain (a homolog of both MogA and MoaB). Kuper, Llamas, Hecht, Mendel &amp; Schwarz (2004, <em>Nature</em>; <a href="https://pubmed.ncbi.nlm.nih.gov/15306815/">PMID: 15306815</a>) showed that the <strong>Cnx1 G domain binds molybdopterin with high affinity and, in an ATP/Mg²⁺-dependent reaction, produces adenylated molybdopterin (MPT-AMP)</strong> — described in their words as: "<em>The Cnx1 G domain (Cnx1G)… binds molybdopterin with high affinity and participates in the catalysis of molybdenum insertion. Here we present two high-resolution crystal structures of Cnx1G in complex with molybdopterin and with adenylated molybdopterin (molybdopterin-AMP), a mechanistically important intermediate.</em>" This MPT-AMP intermediate is then processed by the MoeA-like E domain in a Mg²⁺-dependent reaction that inserts molybdenum and yields active Moco.</p>
+<p>In <em>E. coli</em>, this terminal step is split between two proteins: <strong>MogA adenylylates MPT (ATP-dependent)</strong> and <strong>MoeA ligates Mo to MPT</strong>. Nichols et al. (2007; <a href="https://pubmed.ncbi.nlm.nih.gov/17198377/">PMID: 17198377</a>) established that "<em>In Escherichia coli, the MoeA protein mediates ligation of Mo to molybdopterin while the MogA protein enhances this process in an ATP-dependent manner.</em>" Because Q88L15 is 29.9 % identical to <em>E. coli</em> MogA and 54.7 % identical to <em>E. coli</em> MoaB, it belongs squarely within this catalytic superfamily and is predicted to carry out (or contribute to) the pterin-adenylylation chemistry that primes MPT for molybdenum insertion.</p>
+<h3 id="finding-4-moab-functions-in-the-cytoplasm-within-the-conserved-moco-biosynthesis-pathway-p-putida-carries-a-duplicated-moab">Finding 4 — MoaB functions in the cytoplasm within the conserved Moco biosynthesis pathway; <em>P. putida</em> carries a duplicated <em>moaB</em></h3>
+<p>The molybdenum cofactor biosynthesis pathway is a <strong>soluble, cytoplasmic, evolutionarily conserved</strong> route present across archaea, bacteria, and eukaryotes (Xiang et al. 2001, <a href="https://pubmed.ncbi.nlm.nih.gov/11525167/">PMID: 11525167</a>: "<em>Molybdenum cofactor (Moco) biosynthesis is an evolutionarily conserved pathway present in archaea, eubacteria, and eukaryotes</em>"; Schwarz et al. 2001, <a href="https://pubmed.ncbi.nlm.nih.gov/11554796/">PMID: 11554796</a>). In <em>E. coli</em>, <em>moaB</em> lies in the <strong>moaABCDE operon</strong> (Bader et al. 2004, <a href="https://pubmed.ncbi.nlm.nih.gov/15159566/">PMID: 15159566</a>: "<em>The moaABC operon of Escherichia coli is involved in early steps of the biosynthesis of the molybdenum-binding cofactor molybdopterin</em>").</p>
+<p>The <em>P. putida</em> gene symbol <strong>moaB-I</strong> and its "-I" suffix indicate a genome carrying <strong>two moaB paralogs (moaB-I and moaB-II)</strong> — a duplication of the mogA-like Moco biosynthesis gene. Consistent with cytoplasmic localization, the protein has <strong>no transmembrane segments or signal peptides</strong>; it is a soluble hexamer, exactly as expected for an enzyme of the soluble Moco pathway. It therefore carries out its function <strong>inside the cell, in the cytosol</strong>.</p>
+<h3 id="finding-5-genomic-synteny-moab-i-sits-beside-moea-and-kt2440-lacks-a-dedicated-moga">Finding 5 — Genomic synteny: moaB-I sits beside moeA, and KT2440 lacks a dedicated mogA</h3>
+<p>Ordered-locus mapping of the KT2440 genome (via UniProt, organism_id 160488) revealed a functionally informative gene neighborhood and confirmed the complete pathway complement:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Locus</th>
+<th>Product</th>
+<th>Pathway step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>moaA</em></td>
+<td>PP_4597 (Q88E69)</td>
+<td>GTP 3',8-cyclase</td>
+<td>cPMP formation</td>
+</tr>
+<tr>
+<td><strong>moaB-II</strong></td>
+<td><strong>PP_4600 (Q88E67)</strong></td>
+<td>Mo-cofactor biosynthesis protein B (paralog)</td>
+<td>beside <em>moaA</em> (early region)</td>
+</tr>
+<tr>
+<td><em>moaC</em></td>
+<td>PP_1292</td>
+<td>cPMP synthase</td>
+<td>cPMP formation</td>
+</tr>
+<tr>
+<td><em>moaD</em></td>
+<td>PP_1293</td>
+<td>molybdopterin synthase sulfur-carrier</td>
+<td>MPT formation</td>
+</tr>
+<tr>
+<td><em>moaE</em></td>
+<td>PP_1294</td>
+<td>molybdopterin synthase catalytic subunit</td>
+<td>MPT formation</td>
+</tr>
+<tr>
+<td><strong>moaB-I</strong></td>
+<td><strong>PP_2122 (Q88L15)</strong></td>
+<td><strong>Mo-cofactor biosynthesis protein B (TARGET)</strong></td>
+<td><strong>Mo insertion (beside <em>moeA</em>)</strong></td>
+</tr>
+<tr>
+<td><em>moeA</em></td>
+<td>PP_2123 (Q88L14)</td>
+<td>molybdopterin molybdenumtransferase</td>
+<td>Mo insertion</td>
+</tr>
+<tr>
+<td><em>mobA</em></td>
+<td>PP_3457</td>
+<td>Mo-cofactor guanylyltransferase</td>
+<td>MGD attachment</td>
+</tr>
+</tbody>
+</table>
+<p>Two observations are decisive for the <em>P. putida</em>-specific interpretation: (i) <strong>moaB-I (PP_2122) is immediately adjacent to moeA (PP_2123)</strong> — a two-gene neighborhood physically coupling MoaB-I to the molybdenum-insertion enzyme; and (ii) a genome-wide UniProt query returned <strong>no gene annotated as <em>mogA</em></strong> in KT2440. Since MogA normally performs the ATP-dependent MPT adenylylation that immediately precedes MoeA-catalyzed Mo insertion, the MoaB paralogs are the best candidates to supply that activity, and moaB-I's synteny with moeA points to it as MoeA's functional partner. The second paralog, moaB-II (PP_4600), sits with <em>moaA</em> in the early (cPMP) region, suggesting possible sub-functionalization of the two MoaB copies. MoaB-I and MoaB-II are both 55–56 % identical to <em>E. coli</em> MoaB and ~30 % to <em>E. coli</em> MogA.</p>
+<h3 id="finding-6-authoritative-pathway-placement-moab-acts-in-cytoplasmic-moco-biosynthesis-that-activates-molybdenum-for-50-molybdoenzymes">Finding 6 — Authoritative pathway placement: MoaB acts in cytoplasmic Moco biosynthesis that activates molybdenum for &gt;50 molybdoenzymes</h3>
+<p>The definitive modern review of the field (Mendel &amp; Leimkühler 2015; <a href="https://pubmed.ncbi.nlm.nih.gov/24980677/">PMID: 24980677</a>) frames Moco biosynthesis as "<em>an ancient, ubiquitous, and highly conserved pathway leading to the biochemical activation of molybdenum.</em>" The pathway proceeds in defined steps: (1) cyclic pyranopterin monophosphate (cPMP) formation by MoaA/MoaC; (2) MPT formation by MoaD/MoaE (molybdopterin synthase); (3) molybdenum insertion into MPT by MogA/MoeA to form Moco; and (4) in bacteria/archaea, nucleotide attachment (e.g., MobA → molybdopterin guanine dinucleotide, MGD). Moco is the essential component of <strong>more than 50 redox molybdoenzymes</strong>, and, as the review notes, "<em>in all molybdoenzymes except nitrogenase, molybdenum is coordinated to a dithiolene group on the 6-alkyl side chain of a pterin called molybdopterin (MPT).</em>"</p>
+<p><em>P. putida</em> KT2440 encodes the <strong>full pathway</strong> — moaA (PP_4597), moaC/D/E (PP_1292–1294), moeA (PP_2123), mobA (PP_3457), plus the two moaB paralogs moaB-I/-II — so MoaB-I operates as one node of a complete cytoplasmic biosynthetic system. Its output, Moco, enables <em>P. putida</em>'s molybdoenzyme repertoire (e.g., nitrate reductases, DMSO/TMAO reductases, xanthine/aldehyde oxidoreductases) important for the organism's versatile respiratory and catabolic metabolism.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-moco-biosynthesis-pathway-and-where-moab-i-acts">The Moco biosynthesis pathway and where MoaB-I acts</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">GTP</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">MoaA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_4597</span><span class="p">,</span><span class="w"> </span><span class="n">radical</span><span class="o">-</span><span class="n">SAM</span><span class="w"> </span><span class="mi">3</span><span class="s1">&#39;,8-cyclase)  +  MoaC (PP_1292)</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">cPMP</span><span class="w">  </span><span class="p">(</span><span class="n">cyclic</span><span class="w"> </span><span class="n">pyranopterin</span><span class="w"> </span><span class="n">monophosphate</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">MoaD</span><span class="err">–</span><span class="n">MoaE</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1293</span><span class="o">/</span><span class="mi">1294</span><span class="p">,</span><span class="w"> </span><span class="n">molybdopterin</span><span class="w"> </span><span class="n">synthase</span><span class="p">;</span><span class="w"> </span><span class="n">sulfur</span><span class="w"> </span><span class="n">transfer</span><span class="p">)</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">MPT</span><span class="w">  </span><span class="p">(</span><span class="n">molybdopterin</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">dithiolene</span><span class="w"> </span><span class="n">pterin</span><span class="w"> </span><span class="n">scaffold</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="o">=====</span><span class="w"> </span><span class="n">TERMINAL</span><span class="w"> </span><span class="n">Mo</span><span class="o">-</span><span class="n">INSERTION</span><span class="w"> </span><span class="n">STEP</span><span class="w"> </span><span class="o">=====</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">ADENYLYLATION</span><span class="w">  </span><span class="err">—</span><span class="w"> </span><span class="n">ATP</span><span class="o">/</span><span class="n">Mg²</span><span class="err">⁺</span><span class="w"> </span><span class="n">dependent</span>
+<span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="n">MPT</span><span class="w"> </span><span class="err">──────────────►</span><span class="w"> </span><span class="n">MPT</span><span class="o">-</span><span class="n">AMP</span>
+<span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="p">[</span><span class="n">MogA</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">E</span><span class="o">.</span><span class="w"> </span><span class="n">coli</span><span class="p">]</span><span class="w">   </span><span class="err">◄──</span><span class="w"> </span><span class="n">inferred</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">MoaB</span><span class="o">-</span><span class="n">I</span><span class="w"> </span><span class="p">(</span><span class="n">PP_2122</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span><span class="w">                              </span><span class="p">(</span><span class="n">no</span><span class="w"> </span><span class="n">MogA</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">KT2440</span><span class="p">;</span><span class="w"> </span><span class="n">moaB</span><span class="o">-</span><span class="n">I</span><span class="w"> </span><span class="n">adjacent</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">moeA</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="n">Mo</span><span class="w"> </span><span class="n">LIGATION</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">insertion</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">Mg²</span><span class="err">⁺</span><span class="w"> </span><span class="n">dependent</span>
+<span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="n">MPT</span><span class="o">-</span><span class="n">AMP</span><span class="w"> </span><span class="err">──────────►</span><span class="w"> </span><span class="n">Mo</span><span class="o">-</span><span class="n">MPT</span><span class="w">  </span><span class="p">(</span><span class="o">=</span><span class="w"> </span><span class="n">Moco</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="p">[</span><span class="n">MoeA</span><span class="p">,</span><span class="w"> </span><span class="n">PP_2123</span><span class="w"> </span><span class="p">(</span><span class="n">Q88L14</span><span class="p">)]</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">Moco</span><span class="w">  </span><span class="p">(</span><span class="n">molybdenum</span><span class="w"> </span><span class="n">cofactor</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">MobA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3457</span><span class="p">,</span><span class="w"> </span><span class="n">guanylyltransferase</span><span class="p">)</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">MGD</span><span class="w">  </span><span class="p">(</span><span class="n">molybdopterin</span><span class="w"> </span><span class="n">guanine</span><span class="w"> </span><span class="n">dinucleotide</span><span class="p">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">bacterial</span><span class="w"> </span><span class="n">molybdoenzymes</span>
+<span class="w">        </span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="w"> </span><span class="n">nitrate</span><span class="w"> </span><span class="n">reductase</span><span class="p">,</span><span class="w"> </span><span class="n">DMSO</span><span class="o">/</span><span class="n">TMAO</span><span class="w"> </span><span class="n">reductase</span><span class="w"> </span><span class="p">(</span><span class="o">&gt;</span><span class="mi">50</span><span class="w"> </span><span class="n">enzymes</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="synthesis">Synthesis</h3>
+<p>All independent lines of evidence — sequence identity, protein fold, oligomeric state, conserved catalytic motifs, gene neighborhood, and pathway completeness — point to a single interpretation:</p>
+<ol>
+<li><strong>Identity:</strong> MoaB-I is a proteobacterial MoaB, not a MogA (Finding 1).</li>
+<li><strong>Structure/localization:</strong> It is a soluble, cytoplasmic, hexameric Rossmann-fold protein with a conserved pterin-binding pocket (Findings 2, 4).</li>
+<li><strong>Family chemistry:</strong> Its superfamily catalyzes ATP-dependent adenylylation of molybdopterin to MPT-AMP, the activated intermediate for Mo insertion (Finding 3).</li>
+<li><strong>Pathway role in <em>P. putida</em>:</strong> Because KT2440 lacks MogA and moaB-I is genomically coupled to moeA, MoaB-I is the most plausible <strong>functional substitute for MogA</strong> — the adenylylating partner that hands MPT-AMP to MoeA for molybdenum ligation (Findings 5, 6).</li>
+</ol>
+<p>The MoaB/MogA relationship is best understood as <strong>paralogous subfunctionalization</strong>. In <em>E. coli</em>, both MoaB and MogA exist; MogA's adenylyltransferase role is biochemically established, while MoaB's precise physiological function remains formally undefined despite its near-identical fold. In an organism like <em>P. putida</em> that has duplicated MoaB but discarded MogA, it is parsimonious that one or both MoaB paralogs assumed the MogA-type adenylylation role — which is why MoaB-I is annotated as, and most likely functions as, the terminal-step MPT-activating enzyme.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Paper (abbreviated)</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15269205/">15269205</a></td>
+<td><em>Crystal structure of E. coli MoaB</em> (Sanishvili et al. 2004)</td>
+<td>Direct structural template (54.7 % id ortholog): MoaB is a hexamer (dimer of trimers) with a MogA/MoeA/gephyrin/Cnx1-like fold. Supports Findings 2, 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15159566/">15159566</a></td>
+<td><em>Structure of E. coli MoaB</em> (Bader et al. 2004)</td>
+<td>Independent MoaB structure; confirms fold homology to Mo-insertion proteins and pterin-binding prediction; places moaB in the moaABC operon. Supports Findings 2, 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15306815/">15306815</a></td>
+<td><em>Molybdopterin-bound Cnx1G domain</em> (Kuper et al. 2004, <em>Nature</em>)</td>
+<td>Defines the MPT → MPT-AMP adenylylation reaction of the G-domain family — the mechanistic template for MoaB's inferred activity. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17198377/">17198377</a></td>
+<td><em>E. coli MoeA mutational analysis</em> (Nichols et al. 2007)</td>
+<td>Confirms the two-protein MogA/MoeA split of the terminal Mo-insertion step in bacteria. Supports Findings 3, 5.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11525167/">11525167</a></td>
+<td><em>E. coli MoeA structure / gephyrin</em> (Xiang et al. 2001)</td>
+<td>Establishes the conserved cytoplasmic Moco pathway across archaea, bacteria, eukaryotes. Supports Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11554796/">11554796</a></td>
+<td><em>Gephyrin &amp; Cnx1 G-domain structures</em> (Schwarz et al. 2001)</td>
+<td>Refines the predicted MPT-binding site; links bacterial MogA/MoaB to eukaryotic Moco machinery. Supports Findings 2, 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24980677/">24980677</a></td>
+<td><em>The biosynthesis of the molybdenum cofactors</em> (Mendel &amp; Leimkühler 2015)</td>
+<td>Authoritative review: pathway steps, purpose (activating Mo), molybdopterin definition, &gt;50 molybdoenzymes. Supports Finding 6.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20054111/">20054111</a></td>
+<td><em>S. tokodaii MoaB (ST2315)</em> (Antonyuk et al. 2009)</td>
+<td>Archaeal MoaB is a trimer/hexamer with the same fold — conservation across domains of life. Supports Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21206014/">21206014</a></td>
+<td><em>Thermophilic MogA structures</em></td>
+<td>Comparative MogA structural/functional analysis; proposes a MogA–MoeA complex. Contextualizes the terminal step.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11428898/">11428898</a></td>
+<td><em>E. coli MoeA structure</em></td>
+<td>MoeA domain 3 resembles MogA; shared ligand/substrate binding. Context for the MoaB-I/MoeA partnership.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11325967/">11325967</a></td>
+<td><em>Gephyrin N-terminal (MogA-like) G-domain structure</em> (Sola et al. 2001)</td>
+<td>Trimeric MogA-like G-domain with conserved molybdopterin-binding motif. Supports the family fold interpretation.</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is internally consistent: every structural study of a MoaB or MogA family member reports the same Rossmann fold, the same trimeric/hexameric assembly, and the same conserved pterin-binding site, and every functional study places these proteins at the terminal Mo-insertion step of Moco biosynthesis.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- <strong>H1 — Gene identity:</strong> Q88L15/moaB-I is a genuine MoaB (MogA/MoaB family) ortholog. <em>Supported</em> (54.7 % identity to <em>E. coli</em> MoaB; conserved family motifs; concordant family/domain annotations).<br />
+- <strong>H2 — Cytoplasmic Moco-biosynthesis role:</strong> MoaB-I functions intracellularly within the conserved Moco pathway. <em>Supported</em> (structural homology to MogA/MoeA/gephyrin/Cnx1; complete moa/moe/mob gene complement present in KT2440; no TM/signal features).<br />
+- <strong>H3 — Terminal-step (Mo-insertion/adenylylation) association:</strong> MoaB-I is linked to the MogA-type step. <em>Supported by bioinformatic inference</em> — synteny with <em>moeA</em> (PP_2123) and absence of <em>mogA</em> in KT2440.</p>
+<p><strong>Refuted / rejected alternatives</strong><br />
+- MoaB-I is <strong>not</strong> MogA itself (only ~30 % identity; a distinct paralog).<br />
+- MoaB-I is <strong>not</strong> a membrane transporter, structural/adapter protein, or extracellular/secreted protein (no TM/signal features; soluble hexamer).<br />
+- The gene symbol is <strong>not</strong> ambiguous or mismatched — the "different gene, same symbol" failure mode does not apply here.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of MoaB-I.</strong> There is no dedicated biochemical, genetic, or structural study of the <em>P. putida</em> KT2440 MoaB-I protein itself. Its function is assigned entirely by <strong>homology, structure, and genomic synteny</strong>; the consensus should be read as a strong, well-supported inference rather than a demonstrated fact.</p>
+</li>
+<li>
+<p><strong>MoaB's precise physiological role is unresolved even in <em>E. coli</em>.</strong> Despite two crystal structures, the specific in vivo activity of MoaB (as distinct from MogA) has never been unambiguously established. MoaB structural papers make functional predictions ("<em>suggests a probable role</em>"), not enzymatic assays, and some note MoaB may bind an as-yet-unidentified pterin intermediate rather than MPT.</p>
+</li>
+<li>
+<p><strong>Paralog redundancy is untested.</strong> <em>P. putida</em> has two MoaB paralogs (moaB-I / moaB-II) with different gene neighborhoods (moeA vs moaA). Whether they are redundant, whether only one supplies MogA-type activity, and whether they are differentially regulated (e.g., under anaerobic/nitrate conditions) are all open questions.</p>
+</li>
+<li>
+<p><strong>Substrate specificity is inferred, not measured.</strong> The predicted substrate (molybdopterin) and product (MPT-AMP) derive from the Cnx1 and MogA literature, not from assays on MoaB-I. Whether MoaB-I acts on MPT, cPMP, or another pterin intermediate has not been directly tested.</p>
+</li>
+<li>
+<p><strong>Synteny is suggestive, not conclusive.</strong> The moaB-I–moeA adjacency is a strong hint that they act together, but gene-neighborhood organization does not by itself prove a physical or enzymatic partnership.</p>
+</li>
+<li>
+<p><strong>Direct localization data absent.</strong> Cytoplasmic localization is inferred from sequence features and pathway biology, not experimentally shown for MoaB-I.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Gene deletion / complementation.</strong> Construct ΔmoaB-I, ΔmoaB-II, and the double mutant in KT2440 and assay Moco-dependent phenotypes (nitrate/DMSO/TMAO reductase activity, anaerobic/denitrifying growth). Complement with each paralog and with <em>E. coli mogA</em> to test functional equivalence and MogA substitution; cross-complement an <em>E. coli ΔmogA</em> strain.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution.</strong> Recombinantly express and purify MoaB-I and test for <strong>ATP/Mg²⁺-dependent adenylylation of molybdopterin to MPT-AMP</strong> (following the Cnx1G assay design, <a href="https://pubmed.ncbi.nlm.nih.gov/15306815/">PMID: 15306815</a>), directly measuring substrate specificity and kinetics.</p>
+</li>
+<li>
+<p><strong>Reconstituted terminal step with MoeA (PP_2123).</strong> Combine purified MoaB-I and MoeA (Q88L14) with MPT, ATP/Mg²⁺, and a Mo source to reconstitute full Moco synthesis and test whether MoaB-I + MoeA suffice for Mo insertion in the absence of MogA.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal or cryo-EM structure of <em>P. putida</em> MoaB-I, ideally with bound MPT/MPT-AMP, to confirm the hexameric fold and map the pterin-binding pocket; compare to <em>E. coli</em> MoaB (<a href="https://pubmed.ncbi.nlm.nih.gov/15269205/">PMID: 15269205</a>).</p>
+</li>
+<li>
+<p><strong>Physical interaction studies.</strong> Test for a MoaB-I–MoeA complex (pull-down, co-elution, or crosslinking), building on the proposed MogA–MoeA complex model (<a href="https://pubmed.ncbi.nlm.nih.gov/21206014/">PMID: 21206014</a>).</p>
+</li>
+<li>
+<p><strong>Expression/regulation profiling.</strong> Determine whether moaB-I and moaB-II are differentially expressed under molybdenum limitation, anaerobiosis, or nitrate respiration to resolve paralog specialization.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>moaB-I</em> (Q88L15, PP_2122) encodes <strong>Molybdenum cofactor biosynthesis protein B</strong>, a soluble, cytoplasmic, hexameric MoaB/Mog-family protein (54.7 % identical to <em>E. coli</em> MoaB) with a MogA-like Rossmann fold and a conserved pterin-binding site. It functions in the <strong>terminal, molybdenum-insertion phase of the conserved cytoplasmic Moco biosynthesis pathway</strong>, where — by structural homology and by the genomic facts that KT2440 lacks a <em>mogA</em> gene and <em>moaB-I</em> lies directly beside <em>moeA</em> (PP_2123) — it most plausibly serves as the <strong>MogA-equivalent enzyme that ATP-dependently adenylylates molybdopterin to MPT-AMP</strong> for subsequent MoeA-catalyzed molybdenum ligation, yielding the cofactor required by <em>P. putida</em>'s &gt;50 molybdoenzymes. The assignment is robust at the level of family, fold, localization, and pathway, but the specific catalytic activity of MoaB-I has <strong>not been directly demonstrated experimentally</strong> and is inferred from its well-characterized homologs.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="moaB-I-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="moaB-I-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15269205</li>
+<li>PMID:15159566</li>
+<li>PMID:20054111</li>
+<li>PMID:15306815</li>
+<li>PMID:17198377</li>
+<li>PMID:11525167</li>
+<li>PMID:11554796</li>
+<li>PMID:24980677</li>
+<li>PMID:21206014</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88L15
+gene_symbol: moaB-I
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  moaB-I encodes a soluble MoaB-family protein adjacent to moeA. MoaB-family
+  proteins bind GTP and molybdopterin, but catalytic MPT adenylyltransferase
+  activity is lineage-dependent; the exact biochemical contribution and
+  necessity of this KT2440 paralog remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosolic localization is compatible with this small soluble MoaB-family protein.
+    action: KEEP_AS_NON_CORE
+    reason: Q88L15 lacks membrane/export features and is adjacent to cytosolic moeA.
+- term:
+    id: GO:0006777
+    label: Mo-molybdopterin cofactor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Pathway involvement is plausible but the paralog&#39;s exact contribution and necessity are unresolved.
+    action: UNDECIDED
+    reason: UniProt says MoaB may participate but explicitly transfers a no-MPT-adenylyltransferase statement from the family; no gene-specific assay establishes Q88L15&#39;s role.
+    supported_by:
+    - reference_id: file:PSEPK/moaB-I/moaB-I-uniprot.txt
+      supporting_text: |-
+        CC   -!- FUNCTION: May be involved in the biosynthesis of molybdopterin. Can
+        CC       bind GTP and has low GTPase activity. Can bind MPT, but has no MPT
+        CC       adenylyl transferase activity. {ECO:0000256|ARBA:ARBA00055616}.
+    - reference_id: file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md
+      supporting_text: &gt;-
+        2. **MoaB&#39;s precise physiological role is unresolved even in *E. coli*.**
+        Despite two crystal structures, the specific in vivo activity of MoaB (as
+        distinct from MogA) has never been unambiguously established.
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/moaB-I/moaB-I-uniprot.txt
+  title: UniProtKB entry for moaB-I
+  findings:
+  - statement: UniProt places Q88L15 in the proteobacterial MoaB family and transfers GTP/MPT binding but no MPT adenylyltransferase activity.
+    supporting_text: |-
+      CC   -!- FUNCTION: May be involved in the biosynthesis of molybdopterin. Can
+      CC       bind GTP and has low GTPase activity. Can bind MPT, but has no MPT
+      CC       adenylyl transferase activity. {ECO:0000256|ARBA:ARBA00055616}.
+- id: file:PSEPK/moaB-I/moaB-I-goa.tsv
+  title: QuickGO GOA annotations for moaB-I
+  findings:
+  - statement: The fetched table contains the cytosol and Mo-molybdopterin biosynthesis rows reviewed here.
+    supporting_text: |-
+      UniProtKB	Q88L15	moaB-I	located_in	GO:0005829	cytosol	cellular_component	ECO:0007826	IEA	GO_REF:0000118	PANTHER:PTN002456466	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	TreeGrafter	Molybdenum cofactor biosynthesis protein B	20260706
+      UniProtKB	Q88L15	moaB-I	involved_in	GO:0006777	Mo-molybdopterin cofactor biosynthetic process	biological_process	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR008284|InterPro:IPR012245|InterPro:IPR013484|UniRule:UR000143783	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Molybdenum cofactor biosynthesis protein B	20260706
+- id: file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md
+  title: OpenScientist gene research for moaB-I
+  reference_review:
+    relevance: HIGH
+    correctness: LOW_QUALITY
+    review_notes: The report correctly identifies the MoaB family and acknowledges the absence of a Q88L15 assay, but then overstates synteny and family homology as a robust MogA-equivalent catalytic assignment. That conclusion conflicts with the target UniProt no-adenylyltransferase statement and is not used here.
+  findings:
+  - statement: The report explicitly acknowledges that neither the target protein nor the distinct physiological role of MoaB has been resolved experimentally.
+    supporting_text: &gt;-
+      2. **MoaB&#39;s precise physiological role is unresolved even in *E. coli*.**
+      Despite two crystal structures, the specific in vivo activity of MoaB (as
+      distinct from MogA) has never been unambiguously established.
+- id: file:interpro/panther/PTHR43232/PTHR43232-entries.csv
+  title: PANTHER entries for the MoaB family
+  findings:
+  - statement: PTHR43232 contains MoaB proteins, including biochemically active archaeal MoaB, but does not by itself resolve each bacterial paralog.
+    supporting_text: |-
+      Q8U3T3,Molybdopterin adenylyltransferase,protein,186497,Pyrococcus furiosus (strain ATCC 43587 / DSM 3638 / JCM 8422 / Vc1),Pyrococcus furiosus (strain ATCC 43587 / DSM 3638 / JCM 8422 / Vc1),moaB,169,PTHR43232:SF2,MOLYBDENUM COFACTOR BIOSYNTHESIS PROTEIN B,True
+core_functions:
+- description: MoaB-family GTP/MPT-binding protein with an unresolved catalytic or accessory contribution to molybdenum-cofactor biosynthesis.
+  supported_by:
+  - reference_id: file:PSEPK/moaB-I/moaB-I-uniprot.txt
+    supporting_text: |-
+      CC   -!- FUNCTION: May be involved in the biosynthesis of molybdopterin. Can
+      CC       bind GTP and has low GTPase activity. Can bind MPT, but has no MPT
+      CC       adenylyl transferase activity. {ECO:0000256|ARBA:ARBA00055616}.
+  - reference_id: file:PSEPK/moaB-I/moaB-I-deep-research-openscientist.md
+    supporting_text: &gt;-
+      4. **Substrate specificity is inferred, not measured.** The predicted substrate
+      (molybdopterin) and product (MPT-AMP) derive from the Cnx1 and MogA literature,
+      not from assays on MoaB-I.
+proposed_new_terms: []
+suggested_questions:
+- question: Does Q88L15 catalyze MPT adenylylation, act as a noncatalytic partner of MoeA, or have no required role in KT2440 Mo-cofactor biosynthesis?
+suggested_experiments:
+- description: Compare purified Q88L15 with Q88E67 in MPT-binding, ATP-dependent MPT adenylylation, and MoeA-coupled Mo-MPT formation assays.
+  experiment_type: comparative biochemical assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
