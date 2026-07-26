@@ -11,6 +11,7 @@ autolink_gene_symbols: false
 
 - Module: `lysine_dav_catabolism`
 - Pathway context: KEGG `ppu00310` (lysine degradation)
+- Pull request: [#2252](https://github.com/ai4curation/ai-gene-review/pull/2252)
 - Focused genes: 4
 - Broad membership-table candidates: 32
 
@@ -40,7 +41,7 @@ the broad TSV for later pathway batches.
 - [x] Complete module + `ppu00310` + PSEPK OpenScientist research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open and shepherd one PR for this module.
+- [x] Open one PR for this module; automated review and CI are in progress.
 
 ## Focused Genes
 
