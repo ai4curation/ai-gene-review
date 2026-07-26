@@ -114,14 +114,34 @@ over-annotated on that basis.
   RYRKF` at 315-319, mouse `SLQQL → RYRKL` at 312-316 (the mouse change is UniProt
   `VSP_051965`/`VSP_051966`, i.e. exactly ACRBP-V5).
 
-One conserved intron-5 read-through event, then, not a rodent innovation. The isoform-mismatch
-objection does not hold, and the `GO:0001675` transfer stands.
+One conserved intron-5 read-through event at the sequence level, then, not a rodent invention.
 
-Two limits, recorded because they matter for how much weight the finding can carry: GENCODE
-annotating a transcript is not evidence the protein is made in human spermatids, and
-PMID:23426433 reports experimental RT-PCR, which outranks a genome annotation as evidence about
-expression. What the finding does establish is that the *sequence-level* premise of the
-objection is wrong, so the objection cannot be used to downgrade the annotation.
+**But the sequence level is only half the objection, and the other half survives.** The 2019
+paper — same laboratory, three years after the knockout study, and a paper this review already
+cites for the acrosome-reaction mechanism — states the human negative outright in its
+introduction: [PMID:30606959 "Porcine, guinea pig, and human spermatogenic cells produce only a
+single form of Acrbp (termed Acrbp-W) mRNA, whereas two mRNA forms, wild-type Acrbp-W and intron
+5-retaining variant Acrbp-V5 mRNAs, are synthesized by pre-mRNA alternative splicing of the Acrbp
+gene in mouse"]. That is an RT-PCR claim about what is transcribed, and it outranks a genome
+annotation on precisely that question.
+
+So the honest conclusion is a **discrepancy, not a refutation**: GENCODE annotates
+`ENST00000536350`, and the primary literature reports that human spermatogenic cells do not make
+the corresponding mRNA. Nobody has looked for the protein. The two claims have never been
+reconciled, and reconciling them is the point of the `GO:0001675` knowledge gap in the review.
+
+`GO:0001675 acrosome assembly` is nonetheless ACCEPTed, for a reason that does not depend on the
+isoform argument at all: the mouse source annotation is an IMP on a knockout of the **whole gene**,
+which ablates both forms, so what transferred is a gene-level requirement for normal acrosome
+formation rather than a V5-specific activity. UniProt's curator reading of the same full text also
+credits the mature form with partially contributing to acrosomal-granule assembly.
+
+Process note, recorded because it is the kind of error worth remembering: the first draft of this
+review concluded that the isoform objection "fails and the term stands", and marked PMID:23426433
+`DISPUTED` on the strength of the GENCODE annotation. Both were wrong, and the evidence against
+them was in a cached full text this review was already citing four times — found by the PR
+reviewer, not by me. A genome annotation does not outrank an expression experiment. The reference
+is now `VERIFIED` and the conclusion is scoped to the sequence level.
 
 Consequence for curation: UniProt Q8NEB7 has no `ALTERNATIVE PRODUCTS` section, so there is no
 human isoform identifier to put in the review's `isoform:` field even though the mouse function
