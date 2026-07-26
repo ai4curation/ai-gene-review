@@ -358,3 +358,28 @@ donors; `GRANULARITY_MISMATCH` is only apt when the donors agree and the term st
 them"). The reasoning is now stated inline in both hydrolase rows rather than left implicit, and
 the schema's enum description is flagged as worth clarifying so the two readings stop being
 interchangeable.
+
+### Round-3 tidy-up (the five optional items from the #2286 review)
+
+All five taken; none changed a conclusion.
+
+1. The `GRANULARITY_MISMATCH` argument was stated twice in the same `reason` field — the round-1
+   sentence survived alongside the fuller round-2 paragraph. Round-1 sentence dropped, and the
+   `IPR013094` IEA row now cross-references the argument on the IBA row instead of repeating the
+   whole paragraph verbatim.
+2. `RESULTS.md` still carried the self-contradicting sentence the YAML had already fixed ("places
+   its own catalytic **serine** on position 189, and fourteen of them carry a serine there").
+   Corrected at source to "catalytic **nucleophile**", and the `supporting_text` that quotes it
+   moved with it — the fix had to be made in both places or the quote would have gone stale.
+3. "True of every donor **at** the family node" was an inference stated as a measurement: the
+   family donor set is the `WITH/FROM` of the `GO:0016020` row, and `PTN009058713`'s membership is
+   never enumerated because the PANTHER tree is not fetched. Reworded throughout to "every donor
+   PAINT **cites** at that node", with `membership_enumerated: false` recorded in the audit JSON.
+   The independently measured half of the argument is the `IPR017157` split, which is per donor.
+4. Two script infelicities: the `uncovered` guard could not fire (`from_quickgo` is built from
+   `PARALOG_ACCESSIONS`, which covers all three genes), so it is now an assertion documenting the
+   invariant — it fires if a gene is ever added to `GENES` without an accession; and
+   `family_mechanism` silently skipped an unresolvable family-row token, which now dies, matching
+   what `query_for` already refuses to do.
+5. Two `supporting_text` entries quoted the same file with one a strict prefix of the other, the
+   longer starting mid-bold. Reduced to the single clean quote.

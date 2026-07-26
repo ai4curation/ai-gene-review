@@ -45,6 +45,9 @@ Deliberate discipline, each point having cost a previous round:
   * A missing input is never silently converted into an absence: a gene whose TSV is absent is
     named in the output with the reason, and the run aborts unless QuickGO covers it, so no
     gene drops out of the equality test unnoticed.
+  * The family node's donor set is the WITH/FROM of the GO:0016020 row PAINT transferred from
+    PTN009058713, and is labelled as such: the PANTHER tree is not fetched, so the node's
+    membership is not enumerated and no claim is made that it is.
   * The nucleophile call is reported with its basis. For most donors UniProt annotates the
     triad but does not label which member is the nucleophile, so the call rests on the
     N-terminal-most position of a nucleophile-acid-base triad; the GDXG elbow pentapeptide is
@@ -426,10 +429,14 @@ def main() -> int:
             die(f"{g}: committed GOA TSV and live QuickGO disagree on the WITH/FROM set "
                 f"({len(from_tsv[g])} vs {len(from_quickgo[g])} tokens); re-run "
                 f"`just fetch-gene human {g}`")
+    # Every paralog must be covered by at least one source, or the equality test is incomplete.
+    # PARALOG_ACCESSIONS is what makes that true today, so assert the coverage rather than
+    # testing a condition that cannot fail: if a gene is ever added to GENES without an
+    # accession, this fires instead of the gene silently dropping out of the comparison.
     uncovered = [g for g in GENES if g not in present and g not in from_quickgo]
-    if uncovered:
-        die(f"no WITH/FROM source for {uncovered}; the three-gene equality test would be "
-            f"incomplete, so this is a hard error rather than a silent gap")
+    assert not uncovered, (
+        f"no WITH/FROM source for {uncovered}: neither a committed GOA TSV nor an entry in "
+        f"PARALOG_ACCESSIONS, so the equality test would silently omit them")
 
     reference = from_tsv["AADACL2"]
     identical_genes = sorted(from_quickgo)
@@ -488,7 +495,11 @@ def main() -> int:
             most_specific = t
             break
 
-    # The family node's own donor set, for the node-placement question.
+    # The donor set PAINT cites at the family node, taken from the GO:0016020 row's WITH/FROM.
+    # This is not an enumeration of PTN009058713's membership: the PANTHER tree is not fetched,
+    # so what is measured is "the donors PAINT cites at that node", which is what a PAINT node
+    # annotation rests on. The independent line of evidence that the deep node's blockers lie
+    # outside the family is the IPR017157 membership split, which *is* measured per donor.
     family_tokens = withfrom["AADACL2"]["family_row"]
     family_members = sorted(
         {donors[t]["protein"]["entry_name"] for t in family_tokens
@@ -498,9 +509,15 @@ def main() -> int:
     # recommendation rests on their evidence codes rather than on a recollection of them.
     family_mechanism = {}
     for t in family_tokens:
+        if t.startswith("PANTHER:"):
+            continue  # the node itself, not a protein
         d = donors.get(t)
-        if not d or d["kind"] != "protein":
-            continue
+        if d is None:
+            die(f"family-row token {t} is not in the audited row's WITH/FROM set, so it was "
+                f"never resolved; resolve it explicitly rather than dropping it from the "
+                f"family-node tally")
+        if d["kind"] != "protein":
+            die(f"family-row token {t} did not resolve to a protein")
         pr_ = d["protein"]
         rec = pr_["go_mf"]["terms"].get("GO:0017171")
         family_mechanism[pr_["entry_name"]] = {
@@ -562,7 +579,11 @@ def main() -> int:
         "most_specific_licensed_term": most_specific,
         "blockers_per_term": blockers,
         "family_node": {"node": "PANTHER:PTN009058713", "row": FAMILY_ROW_TERM,
-                        "with_from": family_tokens, "members": family_members,
+                        "membership_enumerated": False,
+                        "what_is_measured": "the donors PAINT cites at this node on the "
+                                            f"{FAMILY_ROW_TERM} row, not the node's membership",
+                        "with_from": family_tokens, "donors_painter_cites": family_members,
+                        "members": family_members,
                         "mechanism_term_support": family_mechanism,
                         "n_members_with_GO_0017171_IDA": n_family_ida},
         "interpro_membership_split": signature_split,
@@ -597,7 +618,7 @@ def main() -> int:
               + (f"  -- refuted by {c['FALSE']}" if c["FALSE"] else ""))
     print(f"\nterms no donor refutes: {licensed}")
     print(f"most specific licensed term: {most_specific}")
-    print(f"family node PTN009058713 donors: {family_members}; "
+    print(f"family node PTN009058713 donors PAINT cites: {family_members}; "
           f"{n_family_ida} of {len(family_mechanism)} carry GO:0017171 by IDA")
     print(f"IPR017157 members among donors: {signature_split['IPR017157']['in']}")
     print("\nGO:0017171 sensitivity to the positional nucleophile rule:")

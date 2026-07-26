@@ -60,8 +60,8 @@ Broken down by position, the aggregate understates the nucleophile badly:
 | 341 | Asp | 8 / 15 | 8 / 15 |
 | 371 | His | 8 / 15 | 8 / 15 |
 
-**Every one of the fifteen sources places its own catalytic serine on AADACL2 position 189**,
-and fourteen of them carry a serine there. The single exception is soybean HIDH, whose own
+**Every one of the fifteen sources places its own catalytic nucleophile on AADACL2 position
+189**, and fourteen of them carry a serine there. The single exception is soybean HIDH, whose own
 annotated nucleophile is a threonine — and HIDH is the one source in the set whose
 physiologically important reaction is a dehydration rather than a hydrolysis, so the
 substitution is informative rather than noise. (HIDH is bifunctional, not a pure lyase: it
