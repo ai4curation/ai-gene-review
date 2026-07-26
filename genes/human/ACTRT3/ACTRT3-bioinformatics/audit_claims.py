@@ -305,24 +305,47 @@ def main() -> int:
             P.append(
                 ("scope, profilin GO:0005515 annotations vs entities (the double-logging itself)",
                  r"(\d+) protein-binding annotations spread over only (\d+) entities",
-                 (prof["true_annotations_per_term"]["GO:0005515"], prof_pb), review, 1))
+                 (prof["true_annotations_per_term"].get("GO:0005515", "MISSING"), prof_pb),
+                 review, 1))
         # rows_complete is the property entity counting actually needs; term-list closure is
         # weaker and was the wrong gate. Both are asserted so a regression in either is visible.
-        if not theca["rows_complete"]:
-            problems_early.append(
-                "PMID:35793634's row list is no longer complete, so its entity counts are a lower "
-                "bound and the '12 proteins' sentence rests on a sample")
+        def flag(block: dict, field: str, want, why: str) -> None:
+            """Assert a JSON field without direct indexing, so a renamed or dropped field is
+            reported by name rather than raising KeyError -- the same reason entity_count()
+            uses .get()."""
+            if field not in block:
+                problems_early.append(
+                    f"PMID:{block.get('pmid', '?')} has no '{field}' field; reference_scope.py's "
+                    f"output shape changed and {why} can no longer be checked")
+            elif block[field] != want:
+                problems_early.append(
+                    f"PMID:{block.get('pmid', '?')}: {field} is {block[field]!r}, expected "
+                    f"{want!r} - {why}")
+
+        flag(theca, "rows_complete", True,
+             "its entity counts would be a lower bound and the '12 proteins' sentence would rest "
+             "on a sample")
+        flag(theca, "term_list_provably_complete", True,
+             "the projection verdict on it would rest on a partial term list")
+        flag(theca, "projecting_database_rows", [],
+             "the review states this reference has no projecting-database rows")
+        flag(bioplex, "assigning_databases_provably_complete", True,
+             "the review's 'sum exactly to the total' sentence would be unproven")
         P.extend([
+            ("scope, theca reference distinct entities",
+             r"reference annotates (\d+) entities across (\d+) terms",
+             (theca["distinct_entities_seen"], len(theca["true_annotations_per_term"])),
+             review, 1),
             ("scope, BioPlex total annotations",
              r"PMID:33961781 accounts for (\d+) GOA annotations",
              (bioplex["total_annotations"],), review, 1),
             ("scope, BioPlex exact protein-binding count",
              r"of which (\d+) are GO:0005515 itself",
-             (bioplex["true_annotations_per_term"]["GO:0005515"],), review, 1),
+             (bioplex["true_annotations_per_term"].get("GO:0005515", "MISSING"),), review, 1),
             ("scope, BioPlex per-database split",
              r"\(IntAct (\d+), ComplexPortal (\d+)\)",
-             (bioplex["true_annotations_per_db"]["IntAct"],
-              bioplex["true_annotations_per_db"]["ComplexPortal"]), review, 1),
+             (bioplex["true_annotations_per_db"].get("IntAct", "MISSING"),
+              bioplex["true_annotations_per_db"].get("ComplexPortal", "MISSING")), review, 1),
             ("scope, profilin reference entity count",
              r"yields (\d+) annotations across just (\d+) entities",
              (prof["total_annotations"], prof["distinct_entities_seen"]), review, 1),
@@ -333,23 +356,11 @@ def main() -> int:
             problems_early.append(
                 "PMID:35793634's GO:0007286 row no longer covers exactly one entity; the "
                 "'not a projection' argument on the GO:0033011 rows depends on it")
-        if not theca["term_list_provably_complete"]:
-            problems_early.append(
-                "PMID:35793634's term list is no longer provably complete, so the projection "
-                "verdict on it rests on a sample and the prose must say so")
-        if theca["projecting_database_rows"]:
-            problems_early.append(
-                "PMID:35793634 now has rows from a projecting database; the review states it has "
-                "none, and that sentence must be re-read")
         # And the BioPlex reference's projection tail is asserted in the review, so it must exist.
         if not bioplex["projecting_database_rows"]:
             problems_early.append(
                 "the review states PMID:33961781 carries a ComplexPortal projection tail, but "
                 "reference_scope.json no longer finds one")
-        if not bioplex["assigning_databases_provably_complete"]:
-            problems_early.append(
-                "PMID:33961781's assigning databases no longer sum to its total, so the review's "
-                "'sum exactly to the total' sentence is unproven")
 
     # Phrasings an earlier draft contained; each was a real error, so each stays retracted.
     RETRACTED = [

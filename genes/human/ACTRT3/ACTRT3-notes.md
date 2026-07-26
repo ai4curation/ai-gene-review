@@ -451,7 +451,8 @@ Two of these changed the review.
    Actrt3 carries protein binding by IPI two separate times from that reference, which reads as two
    experiments. The reference covers only 2 entities in total, so the rows are one
    co-immunoprecipitation logged once by UniProt and once by IntAct, recorded reciprocally on
-   Actrt3 and Pfn3 — one experiment recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my own review. The `GO:0005522`
+   Actrt3 and Pfn3 — one experiment recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my
+   own review. The `GO:0005522`
    proposal never depended on a replicate count, so the term survives; the sentence supporting it
    did not.
 
@@ -550,11 +551,43 @@ surviving in the two fields the rename had not reached (PMID:33961781 read
 with a `spread_units` field carrying `entities` or `annotations`, and `verdict()` now prints the
 units rather than assuming them.
 
-The pattern across all four rounds is one thing, stated four ways at four depths: **a number's
+### The round-5 correction: the same fix, in the output a human reads
+
+The units fix from round 4 reached the JSON and three of `verdict()`'s five branches. Two still
+hardcoded the noun: the general fallback said "functional rows on N entities" outright, and the
+branch the whole theca argument prints through was units-correct on the localisation count and
+hardcoded on the functional one ("confined to N entity"). Both render
+`max_functional_spread`/`max_location_spread`, which hold **annotation** counts whenever
+`spread_units == "annotations"` — the truncated large-screen case the docstring names as its
+motivation. Unreachable with these six references today, and irrelevant that the JSON was right
+beside it: `verdict()` is what `main()` prints, and the printed sentence is where a reader forms
+the projection judgement.
+
+That is the second time a defect has survived because its branch was unreachable from the cited
+data. So the coverage is no longer left to the dataset: `selftest()` runs on every invocation,
+before any report is written, driving `verdict()` with synthetic blocks that take the fallback,
+localisation and same-count branches on an annotations basis and asserting that **no printed count
+carries a unit the block did not declare** — plus the mirror, that an entities basis says entities.
+Verified by reintroducing the exact regression: the run aborts in `selftest()` rather than emitting
+a report.
+
+Also this round: `audit_claims.py` reaches every JSON field through a `flag()` helper that reports a
+renamed or dropped field **by name** instead of raising `KeyError` (verified by renaming
+`rows_complete`); the previously unguarded 19-entities figure is now value-checked against
+`distinct_entities_seen`; and the review's prose no longer justifies the projection precondition by
+naming term-list closure when row completeness is what does the work.
+
+The pattern across all five rounds is one thing, stated five ways at five depths: **a number's
 name must match how it was obtained.** Round 1 mixed a total with a sample; round 2 mixed an
 annotation count with an entity count; round 3 left two fields the rename missed; round 4 gated a
-row-derived count on a term-derived property. Each was invisible to every mechanical check in the
-repository, and each was found by someone asking what a specific number was actually counting.
+row-derived count on a term-derived property; round 5 left the hardcoded noun in the two branches
+a reader actually sees. Each was invisible to every mechanical check in the repository, and each
+was found by someone asking what a specific number was actually counting.
+
+The second, procedural lesson is that **a fix verified only against reachable data is half
+verified**. Rounds 3 and 5 were both branches the six cited references never enter; both were
+correct in the JSON and wrong in the code path. `selftest()` exists because the reviewer had to
+find the same class twice.
 
 Two further guard gaps surfaced from break-testing this round, both of the same family as the
 round-2 blindness:

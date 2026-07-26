@@ -195,9 +195,9 @@ def scope(pmid: str) -> dict:
     spread_units = "entities" if complete else "annotations"
 
     proj_line = (
-        f"{ref} projection test on {('entities' if complete else 'annotations')}: "
+        f"{ref} projection test on {spread_units}: "
         + ", ".join(f"{t}={n}" for t, n in sorted(basis.items()))
-        + f"; max functional {max_func}, max localisation {max_loc} ({spread_units})"
+        + f"; max functional {max_func}, max localisation {max_loc}"
     ) if total else f"{ref} projection test: not curated by GOA"
     summary = (
         f"{ref}: {total} annotations total, {len(rows)} rows examined"
@@ -288,9 +288,9 @@ def verdict(s: dict) -> str:
         )
     elif l > 1 and f <= 1:
         parts.append(
-            f"multi-entity LOCALISATION ({l} {units}) with the functional claim confined to {f} "
-            "entity, and no projecting database involved: honest per-protein curation, NOT a "
-            "projection - a projection spreads the phenotype too"
+            f"multi-entity LOCALISATION ({l} {units}) with the functional claim confined to "
+            f"{f} {units}, and no projecting database involved: honest per-protein curation, NOT "
+            "a projection - a projection spreads the phenotype too"
         )
     elif f > 1 and f == l:
         parts.append(
@@ -303,7 +303,7 @@ def verdict(s: dict) -> str:
             "or reciprocal partner rows"
         )
     else:
-        parts.append(f"functional rows on {f} entities, location rows on {l}")
+        parts.append(f"functional rows on {f} {units}, location rows on {l} {units}")
 
     if s["unaccounted_annotations"]:
         parts.append(
@@ -314,7 +314,45 @@ def verdict(s: dict) -> str:
     return "; ".join(parts)
 
 
+def selftest() -> None:
+    """Exercise the verdict() branches this dataset cannot reach, on every run.
+
+    Twice now a defect has survived because the branch carrying it was unreachable with the six
+    references actually cited: the location-versus-function inversion on projected rows, and then
+    two branches still hardcoding the noun "entities" over what may be annotation counts. Live
+    data cannot cover them, so synthetic blocks do, and a failure here aborts before any report is
+    written. The invariant is simply that no printed count is ever labelled with a unit the block
+    did not declare.
+    """
+    base = {
+        "pmid": "00000000", "total_annotations": 5000, "rows_examined": 200, "truncated": True,
+        "unaccounted_annotations": 0, "term_list_provably_complete": True, "rows_complete": False,
+        "distinct_entities_seen": 119, "projecting_database_rows": [],
+        "max_functional_spread": 3000, "max_location_spread": 12, "spread_units": "annotations",
+    }
+    cases = {
+        "general fallback, annotations basis": base,
+        "localisation branch, annotations basis": {**base, "max_functional_spread": 1},
+        "same-count branch, annotations basis": {**base, "max_location_spread": 3000},
+    }
+    for label, block in cases.items():
+        got = verdict(block)
+        if "entities" in got:
+            raise AssertionError(
+                f"selftest: verdict() said 'entities' for a block declaring "
+                f"spread_units={block['spread_units']!r} ({label}): {got}"
+            )
+        if "annotations" not in got:
+            raise AssertionError(f"selftest: verdict() declared no units at all ({label}): {got}")
+    # and the mirror: an entities basis must say entities
+    ent = verdict({**base, "spread_units": "entities", "truncated": False, "rows_complete": True,
+                   "max_functional_spread": 1})
+    if "entities" not in ent:
+        raise AssertionError(f"selftest: entities basis did not say entities: {ent}")
+
+
 def main() -> None:
+    selftest()
     out = {p: scope(p) for p in cited_pmids()}
     (HERE / "reference_scope.json").write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
     for s in out.values():
