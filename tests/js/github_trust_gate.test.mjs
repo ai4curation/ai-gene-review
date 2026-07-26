@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { classifyCommentRisk, isBotLogin, normalizeLogin } = require(
+const { classifyCommentRisk, isBotLogin, isTrustedLogin, normalizeLogin } = require(
   "../../.github/scripts/github-trust-gate.js",
 );
 
@@ -98,9 +98,10 @@ describe("github trust gate login handling", () => {
     }
   });
 
-  it("treats a missing login as a bot (fail closed on the trusted side)", () => {
-    assert.equal(isBotLogin(""), true);
-    assert.equal(isBotLogin(undefined), true);
+  it("does not treat a missing login as a bot", () => {
+    // isTrustedLogin fails closed on a missing login; see the trust test below.
+    assert.equal(isBotLogin(""), false);
+    assert.equal(isBotLogin(undefined), false);
   });
 
   it("does not treat ordinary users as bots", () => {
@@ -109,5 +110,42 @@ describe("github trust gate login handling", () => {
 
   it("normalizes logins case-insensitively", () => {
     assert.equal(normalizeLogin("  CMungall "), "cmungall");
+  });
+});
+
+describe("github trust gate trust decisions", () => {
+  const github = {
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async ({ username }) => {
+          if (username === "collab") return { data: { permission: "write" } };
+          if (username === "reader") return { data: { permission: "read" } };
+          throw new Error("Not Found");
+        },
+      },
+    },
+  };
+  const base = { github, owner: "o", repo: "r", controllers: ["cmungall"] };
+
+  it("fails closed on a missing login", async () => {
+    assert.equal(await isTrustedLogin({ ...base, login: "" }), false);
+    assert.equal(await isTrustedLogin({ ...base, login: undefined }), false);
+  });
+
+  it("trusts a controller, case-insensitively", async () => {
+    assert.equal(await isTrustedLogin({ ...base, login: "CMungall" }), true);
+  });
+
+  it("trusts an App comment author", async () => {
+    assert.equal(await isTrustedLogin({ ...base, login: "ai4c-agent[bot]" }), true);
+  });
+
+  it("trusts a collaborator with write access but not a read-only one", async () => {
+    assert.equal(await isTrustedLogin({ ...base, login: "collab" }), true);
+    assert.equal(await isTrustedLogin({ ...base, login: "reader" }), false);
+  });
+
+  it("treats an unknown user as untrusted", async () => {
+    assert.equal(await isTrustedLogin({ ...base, login: "stranger" }), false);
   });
 });

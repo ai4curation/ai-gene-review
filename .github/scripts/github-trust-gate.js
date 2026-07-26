@@ -66,7 +66,7 @@ function loadControllers(controllersPath = ".github/ai-controllers.json") {
 
 function isBotLogin(login, extraBotLogins = []) {
   if (!login) {
-    return true;
+    return false;
   }
   const normalized = normalizeLogin(login);
   if (normalized.endsWith(BOT_LOGIN_SUFFIX)) {
@@ -85,7 +85,13 @@ async function isTrustedLogin({
   controllers = [],
   permissionCache = new Map(),
 }) {
-  if (!login || isBotLogin(login)) {
+  // A missing login is NOT trusted. This is a trust gate: the safe default for
+  // an author we cannot identify is untrusted, and the caller's risk classifier
+  // decides whether anything actually happens.
+  if (!login) {
+    return false;
+  }
+  if (isBotLogin(login)) {
     return true;
   }
   const loginKey = normalizeLogin(login);
