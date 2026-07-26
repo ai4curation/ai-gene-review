@@ -1,7 +1,7 @@
 ---
 title: "Stilbene Cleavage Oxygenases (SCO / lignostilbene α,β-dioxygenase family)"
 maturity: SCOPING
-tags: [ENZYME_FAMILY]
+tags: [BIOLOGY_DOMAIN]
 species: [NEUCR, NOVAD, SPHPI, MYCMD]
 genes:
   - cao-1
