@@ -26,7 +26,7 @@ committed in this repo, ComplexPortal, IntAct and 20 primary papers.
 Retraction screen: all 20 PMIDs cited here were checked against PubMed publication types and
 an explicit `retracted publication[pt] OR expression of concern[pt]` query over the whole set —
 **0 hits**. No reference in this review is retracted or carries an expression of concern. **But
-that method is insufficient on its own — see §13**, which records one Publisher Correction it
+that method is insufficient on its own — see §15**, which records one Publisher Correction it
 missed and the check that finds them.
 
 ---
@@ -46,7 +46,7 @@ A recombinant **human** minimal core containing ARP8 slides nucleosomes
 
 The recognition itself is quantified on the purified human protein
 [PMID:22977180 "strongly prefer nucleosomes and H3-H4 tetramers over H2A-H2B dimers, suggesting that Arp8 functions as a nucleosome recognition module"].
-**Table 2 mixes species and must be read per-species** — see §11c, where a cross-species join in my
+**Table 2 mixes species and must be read per-species** — see §13, where a cross-species join in my
 first draft produced an inverted conclusion. The human rows only:
 
 | ligand | HsArp8 `K_d,app` (nM) | Hill `nH` |
@@ -484,7 +484,7 @@ functionally unassigned trace activity is the mirror of accepting one off a fold
   separately annotated `GO:0006275` and `GO:0006282`. Kept non-core rather than flagged as
   over-annotation: a redundant true parent is not an over-annotation.
 
-## 11b. Three claims of my own that a self-audit retracted
+## 12. Three claims of my own that a self-audit retracted
 
 Recorded because the corrections are the useful part, and because each is a *composite* claim —
 every constituent quote verbatim, the join unsupported. None would have been caught by quote
@@ -512,7 +512,7 @@ participants, IntAct 82 records / 14 publications, PTHR11937 9 `GO:0005200` rows
 and the two ontology-ancestry claims — all confirmed. The three failures above were all
 *qualitative* superlatives, not numbers.
 
-## 11c. The error the reviewer caught: a cross-species join inside one table
+## 13. The error the reviewer caught: a cross-species join inside one table
 
 Worth recording in full, because it is the single sharpest instance in this review of the failure
 class the campaign says dominates — **every constituent number verbatim and correct, the join
@@ -554,7 +554,7 @@ cross-row comparison as cross-species until proved otherwise, and re-derive any 
 species.** The affected verdicts did **not** change — `GO:0031491` IDA with `enables` rests on
 HsArp8 at 51 ± 9.6 nM measured on the purified human protein — which is exactly why the error
 survived my own audit: it sat in the *justification*, not in the term, the evidence code or the
-qualifier, and my superlative sweep (§11b) was looking for absolutes rather than for species.
+qualifier, and my superlative sweep (§12) was looking for absolutes rather than for species.
 
 Two smaller reviewer corrections accepted on the same pass:
 
@@ -568,7 +568,7 @@ Two smaller reviewer corrections accepted on the same pass:
   `PMID:16230350`, the MI 0.67 targeted co-IP, `NbExp=5`, the YY1/INO80E ranking, the negative
   regulatory arm, the *Ino80*-null embryonic phenotype, the three conjoined claims).
 
-## 12c. Two parallel PRs, one new term, one duplicate — a gate that cannot fire per-PR
+## 14. Two parallel PRs, one new term, one duplicate — a gate that cannot fire per-PR
 
 Found while re-running the gates for this follow-up. `cache/go/terms.csv` on `main` carried
 **`GO:0031011` twice**:
@@ -597,9 +597,13 @@ removed here, keeping the sorted-position row, so the term appears exactly once.
 2. **The duplicate check belongs in CI on `main`, not only in each PR**, since only the merge
    result can exhibit the fault. A per-PR approximation is to re-run the check after
    `git merge origin/main` immediately before pushing — which this review did on three merges, but
-   ACTR5 had not yet merged at that point, so the collision was still invisible.
+   ACTR5 had not yet merged at that point, so the collision was still invisible. Filed as
+   [issue #2294](https://github.com/ai4curation/ai-gene-review/issues/2294) rather than fixed here,
+   because the workflow is shared CI config outside gene-review scope; the issue records that
+   `main` already carries two pre-existing duplicates (`GO:0001675`, `GO:0009566`) which a bare
+   "must be empty" assertion would trip over, and that the file must not be re-sorted.
 
-
+## 15. The correction screen used the wrong instrument
 
 Prompted by a cross-gene note that provider records cite corrected papers unflagged. Re-running
 the screen properly found one item my round-1 method could not have found, and the **method** is
@@ -636,7 +640,16 @@ article, never by a publication-type query over the cited set.** The two `Commen
 show why the `RefType` must be matched rather than merely counted — a commentary is not a
 correction.
 
-## 12b. Two cross-gene claims checked, and one refuted
+The correction record itself is now cached at `publications/PMID_41039152.md`, so its existence and
+its `Erratum for` linkage to `PMID:40205054` are verifiable from the repository rather than resting
+on a network call — a reviewer flagged that it was otherwise uncheckable offline, which was fair.
+It is deliberately **not** added to the `references:` list: it is a correction notice, not a source
+of any claim here, and listing it would imply this review draws evidence from it. The consequence,
+also deliberate, is that `PMID:41039152` appears only in `review_notes` prose and so will not be
+picked up by a programmatic sweep over `references` — the right place to catch it is the
+`CommentsCorrections` scan described above, run against each cited article.
+
+## 16. Two cross-gene claims checked, and one refuted
 
 Both arrived as cross-gene guidance while this review was in flight. Recorded with outcomes
 because a check whose result is not written down reads the same as a check never run.
@@ -672,7 +685,7 @@ The only multiplicity difference is the `GO:0031011`/IDA/`PMID:21303910` row tha
 (once ComplexPortal, once UniProt), documented at the top of these notes. **No collapse occurred
 here** — but the check is what establishes that, not the absence of a symptom.
 
-## 12. Core-vs-non-core rule applied consistently
+## 17. Core-vs-non-core rule applied consistently
 
 `ACCEPT` where the supporting experiment manipulated or measured **ARP8/Actr8 itself**;
 `KEEP_AS_NON_CORE` where the only evidence is a complex-level manipulation (INO80 knockdown,
