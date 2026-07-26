@@ -39,6 +39,9 @@ PROSITE_SER_PATTERN = "https://prosite.expasy.org/PS01174.txt"
 
 QUERY = "Q5VUY0"
 
+# One page must hold every signature match for a protein; see add_interpro.
+MATCH_PAGE_SIZE = 200
+
 # Panel: the human AADAC-family cluster plus the characterised relatives that
 # PAINT and InterPro actually used as evidence for AADACL3's annotations.
 PANEL: dict[str, str] = {
@@ -64,6 +67,15 @@ TRACKED_SIGNATURES: dict[str, str] = {
     "IPR013094": "Alpha/beta hydrolase fold-3 (InterPro, fold)",
     "IPR050300": "GDXG lipolytic enzyme (InterPro, family)",
 }
+
+
+def format_score(score: float | None) -> str:
+    """Render a member-database e-value without making underflow look like an integer."""
+    if score is None:
+        return ""
+    if score == 0:
+        return "0.0"
+    return f"{score:g}"
 
 
 def get_json(url: str) -> dict:
@@ -156,9 +168,21 @@ def _frag_spans(locations: list[dict]) -> list[tuple[int, int]]:
 
 def add_interpro(entry: Entry) -> None:
     """Attach InterPro signature matches and InterProScan sequence features."""
-    matches = get_json(f"{INTERPRO}/entry/all/protein/uniprot/{entry.accession}/?page_size=200")
+    matches = get_json(
+        f"{INTERPRO}/entry/all/protein/uniprot/{entry.accession}/?page_size={MATCH_PAGE_SIZE}"
+    )
     if matches.get("count", 0) == 0:
         raise RuntimeError(f"InterPro returned no signature matches for {entry.accession}")
+    # The tracked-signature table reports *absences* as well as matches, so a
+    # truncated page would turn a real match into a false negative. Refuse to
+    # continue rather than paginate silently.
+    if matches["count"] > MATCH_PAGE_SIZE:
+        raise RuntimeError(
+            f"InterPro reports {matches['count']} signature matches for {entry.accession}, "
+            f"more than the single page of {MATCH_PAGE_SIZE} requested; the results would be "
+            "truncated and absences could not be trusted. Raise MATCH_PAGE_SIZE or follow the "
+            "API's `next` link."
+        )
     for result in matches["results"]:
         meta = result["metadata"]
         spans = [
@@ -536,7 +560,8 @@ def render_markdown(r: dict, entries: dict[str, Entry]) -> str:
         "matches at all: a fold signature constrains architecture, a subfamily "
         "signature constrains the reaction. Spans are residue ranges on each protein; "
         "score is the member-database e-value where the API reports one (InterPro "
-        "entries themselves carry no score)."
+        "entries themselves carry no score). An e-value of `0.0` is the API reporting "
+        "underflow below double precision, not a literal zero."
     )
     L.append("")
     for sig, desc in TRACKED_SIGNATURES.items():
@@ -554,7 +579,7 @@ def render_markdown(r: dict, entries: dict[str, Entry]) -> str:
             cells.append(
                 "; ".join(
                     f"{h['start']}-{h['end']}"
-                    + (f" ({h['score']:g})" if h.get("score") is not None else "")
+                    + (f" ({format_score(h['score'])})" if h.get("score") is not None else "")
                     + (" [representative]" if h.get("representative") else "")
                     for h in hits
                 )

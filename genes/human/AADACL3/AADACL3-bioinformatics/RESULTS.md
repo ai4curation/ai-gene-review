@@ -67,7 +67,7 @@ Pattern (fetched from PROSITE): `[LIVM]-x-[LIVMF]-[SA]-G-D-S-[CAS]-G-[GA]-x-[LI]
 
 ## 6. Subfamily-level versus fold-level signature assignment
 
-Which signature carries an activity inference matters more than whether one matches at all: a fold signature constrains architecture, a subfamily signature constrains the reaction. Spans are residue ranges on each protein; score is the member-database e-value where the API reports one (InterPro entries themselves carry no score).
+Which signature carries an activity inference matters more than whether one matches at all: a fold signature constrains architecture, a subfamily signature constrains the reaction. Spans are residue ranges on each protein; score is the member-database e-value where the API reports one (InterPro entries themselves carry no score). An e-value of `0.0` is the API reporting underflow below double precision, not a literal zero.
 
 - `IPR017157` - Arylacetamide deacetylase (InterPro, subfamily)
 - `PIRSF037251` - Arylacetamide deacetylase (PIRSF member signature)
@@ -78,10 +78,10 @@ Which signature carries an activity inference matters more than whether one matc
 |---|---|---|---|---|
 | ADCL3_HUMAN (Q5VUY0) | 19-403 | 19-403 (5.8e-82) [representative] | 115-245; 310-380 | 74-385 |
 | ADCL4_HUMAN (Q5VUY2) | 21-404 | 21-404 (1.3e-79) [representative] | 115-268; 310-378 | 79-402 |
-| ADCL2_HUMAN (Q6P093) | 3-401 | 3-401 (0) [representative] | 107-258; 311-373 | 73-400 |
-| AAAD_HUMAN (P22760) | 4-399 | 4-399 (0) [representative] | 107-265; 315-376 | 71-397 |
-| NCEH1_HUMAN (Q6PIU2) | 1-408 | 1-408 (0) [representative] | 109-262; 320-381 | 77-406 |
-| NCEH1_MOUSE (Q8BLF1) | 1-408 | 1-408 (0) [representative] | 109-261; 318-381 | 66-406 |
+| ADCL2_HUMAN (Q6P093) | 3-401 | 3-401 (0.0) [representative] | 107-258; 311-373 | 73-400 |
+| AAAD_HUMAN (P22760) | 4-399 | 4-399 (0.0) [representative] | 107-265; 315-376 | 71-397 |
+| NCEH1_HUMAN (Q6PIU2) | 1-408 | 1-408 (0.0) [representative] | 109-262; 320-381 | 77-406 |
+| NCEH1_MOUSE (Q8BLF1) | 1-408 | 1-408 (0.0) [representative] | 109-261; 318-381 | 66-406 |
 | HIDH_SOYBN (Q5NUF3) | - | - | 74-298 | - |
 
 ## Interpretation
