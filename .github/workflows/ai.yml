@@ -104,24 +104,37 @@ jobs:
             // *documenting* the mention keyword (in a PR description, or in this
             // workflow's own docs) does not dispatch the agent. Only a real,
             // prose-level "@ai4c-agent please ..." qualifies.
+            // Blank code spans with EQUAL-LENGTH filler so offsets are preserved:
+            // the gate runs on this copy (so merely *documenting* the keyword does
+            // not dispatch a run), but the request text is then extracted from the
+            // ORIGINAL at the same offset — otherwise a legitimate request loses
+            // its inline code and fenced blocks.
+            const blank = (m) => ' '.repeat(m.length);
             const forMatching = content
-              .replace(/```[\s\S]*?```/g, ' ')
-              .replace(/`[^`]*`/g, ' ');
+              .replace(/```[\s\S]*?```/g, blank)
+              .replace(/`[^`]*`/g, blank);
             // dragon-ai-agent is the retired legacy alias, kept so old habits and
-            // older issue threads still work.
-            const mentionRegex = /@(?:ai4c-agent|dragon-ai-agent)\s+please\s+(.*)/i;
-            // Gate on the stripped text, but extract the request from the ORIGINAL:
-            // stripping is only there to stop a documented keyword from triggering
-            // a run, and extracting from the stripped copy would silently delete
-            // any inline code or fenced block from a legitimate request.
+            // older issue threads still work. [\s\S]* rather than .* so a fenced
+            // block inside the request survives the newline.
+            const mentionRegex = /@(?:ai4c-agent|dragon-ai-agent)\s+please\s+([\s\S]*)/i;
             const gateMatch = forMatching.match(mentionRegex);
-            const rawMatch = content.match(mentionRegex);
-
-            const qualifiedMention = isAllowed && gateMatch !== null;
+            // Same occurrence, by construction: slice the original at the offset the
+            // gate matched at, so gate and payload can never disagree about which
+            // mention fired.
+            const rawMatch =
+              gateMatch === null ? null : content.slice(gateMatch.index).match(mentionRegex);
             const prompt = rawMatch !== null ? rawMatch[1].trim() : '';
 
+            // A non-empty request is part of the gate. Blanking a code span can
+            // CREATE a match that does not exist in the original — e.g.
+            // "@ai4c-agent `v2` please rerun" splices into a qualifying mention —
+            // which would otherwise dispatch a bypassPermissions agent, holding the
+            // App token and every provider key, with an empty request.
+            const qualifiedMention = isAllowed && gateMatch !== null && prompt !== '';
+
             console.log(
-              `User: ${userLogin}, Allowed: ${isAllowed}, Has mention: ${gateMatch !== null}`
+              `User: ${userLogin}, Allowed: ${isAllowed}, Has mention: ${gateMatch !== null}, ` +
+              `Request length: ${prompt.length}`
             );
 
             return {
