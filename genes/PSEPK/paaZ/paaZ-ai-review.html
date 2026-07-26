@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>paaZ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>paaZ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HT3" target="_blank" class="term-link">
+                        Q88HT3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "paaZ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HT3" data-a="DESCRIPTION: PaaZ is a predicted bifunctional oxepin-CoA hydrol..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PaaZ is a predicted bifunctional oxepin-CoA hydrolase and 3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase in the aerobic phenylacetate pathway of Pseudomonas putida KT2440. Its two domains couple ring-opening hydrolysis to NADP-dependent aldehyde oxidation in the upper-to-lower pathway transition.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HT3" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad for the aldehyde-dehydrogenase domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns one PaaZ domain as 3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016620" target="_blank" class="term-link">
+                                    oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HT3" data-a="GO:0016787" data-r="file:PSEPK/paaZ/paaZ-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Missing annotation for the second catalytic domain of bifunctional PaaZ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The NCBI-submitted product name assigns an oxepin-CoA hydrolase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010124" target="_blank" class="term-link">
+                                    GO:0010124
+                                </a>
+                            </span>
+                            <span class="term-label">phenylacetate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HT3" data-a="GO:0010124" data-r="file:PSEPK/paaZ/paaZ-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Missing pathway annotation for the PaaZ bifunctional enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Both activities named for PaaZ act on CoA-ester intermediates specific to aerobic phenylacetate ring opening.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Oxidizes the ring-opened semialdehyde intermediate in the upper-to-lower transition of aerobic phenylacetate catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88HT3" data-a="FUNCTION: Oxidizes the ring-opened semialdehyde intermediate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016620" target="_blank" class="term-link">
+                            oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010124" target="_blank" class="term-link">
+                                phenylacetate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/paaZ/paaZ-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase domain (formerly MaoC) that cleaves the ring and produces a highly reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde dehydrogenase domain that oxidizes the aldehyde to 3-oxo-5,6-dehydrosuberyl-CoA</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes the oxepin-CoA intermediate formed after phenylacetyl-CoA epoxidation and rearrangement.</h3>
+                <span class="vote-buttons" data-g="Q88HT3" data-a="FUNCTION: Hydrolyzes the oxepin-CoA intermediate formed afte..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                            hydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010124" target="_blank" class="term-link">
+                                phenylacetate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/paaZ/paaZ-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase domain (formerly MaoC) that cleaves the ring and produces a highly reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde dehydrogenase domain that oxidizes the aldehyde to 3-oxo-5,6-dehydrosuberyl-CoA</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/paaZ/paaZ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88HT3 for Pseudomonas putida KT2440 paaZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns two pathway activities to the PaaZ polypeptide.</div>
+
+                        <div class="finding-text">"SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/paaZ/paaZ-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK paaZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report assigns the two PaaZ domains consecutive ring-opening and aldehyde-oxidation reactions.</div>
+
+                        <div class="finding-text">"The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase domain (formerly MaoC) that cleaves the ring and produces a highly reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde dehydrogenase domain that oxidizes the aldehyde to 3-oxo-5,6-dehydrosuberyl-CoA"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct biochemical characterization of the KT2440 target remains limited.</div>
+
+                        <div class="finding-text">"**Direct enzymology on the *P. putida* KT2440 ortholog is limited.**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are both predicted PaaZ domains catalytically active in the KT2440 protein?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HT3" data-a="Q: Are both predicted PaaZ domains catalytically acti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express full-length PaaZ and catalytic-domain variants, then quantify oxepin-CoA hydrolysis and NAD(P)-dependent semialdehyde oxidation separately.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HT3" data-a="EXPERIMENT: Express full-length PaaZ and catalytic-domain vari..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(paaZ-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HT3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **paaZ** (Q88HT3 / PP_3270) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T15:43:12.255388</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="paaZ-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="paaZ-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-paaz-q88ht3-pp_3270-in-pseudomonas-putida-kt2440">Functional Annotation Report: <strong>paaZ</strong> (Q88HT3 / PP_3270) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>paaZ</strong> (UniProt <strong>Q88HT3</strong>; ordered locus <strong>PP_3270</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes a <strong>soluble, cytoplasmic, bifunctional enzyme</strong> that catalyzes the pivotal ring-cleavage step of the <strong>aerobic phenylacetate (Paa) degradation pathway</strong>. The protein is a natural <strong>fusion of two catalytic domains</strong>: a C-terminal (R)-specific enoyl-CoA hydratase domain (of the MaoC/HotDog fold) that hydrolytically opens the seven-membered <strong>oxepin-CoA</strong> ring (<strong>EC 3.3.2.12</strong>, oxepin-CoA hydrolase), and an N-terminal <strong>NADP⁺-dependent aldehyde dehydrogenase</strong> domain (of the Ald_DH/histidinol_DH fold) that immediately oxidizes the resulting reactive aldehyde to <strong>3-oxo-5,6-dehydrosuberyl-CoA</strong> (<strong>EC 1.2.1.91</strong>). These two activities and their domain assignments match the UniProt description and InterPro domain complement precisely, confirming that the gene symbol, organism, and domain architecture are all internally consistent — <strong>this is the correct gene</strong>, and it is unambiguous.</p>
+<p>The PaaZ reaction sits at the <strong>branch point</strong> between an unstable, chemically reactive intermediate and productive catabolism. The oxepin-CoA ring, generated upstream by a multicomponent oxygenase (PaaABC(D)E) that epoxidizes phenylacetyl-CoA plus an isomerase that converts the epoxide, is opened by PaaZ to yield a highly reactive aldehyde. If this aldehyde is not oxidized instantly it cyclizes into a stable dead-end product; the physical fusion of the hydratase and dehydrogenase activities in a single polypeptide — and the enzyme's higher-order <strong>trimer-of-dimers</strong> architecture with <strong>substrate channeling</strong> — ensures the aldehyde is captured and oxidized before it can escape. The 3-oxo-5,6-dehydrosuberyl-CoA product is then processed by β-oxidation-like reactions, ultimately yielding <strong>acetyl-CoA and succinyl-CoA</strong>, which feed central metabolism.</p>
+<p>Biologically, <em>paaZ</em> is embedded in the <em>paa</em> catabolic gene cluster, is induced in response to the true inducer <strong>phenylacetyl-CoA</strong> (via the PaaX repressor), and enables <em>P. putida</em> to grow on phenylacetate and on the many aromatic compounds (phenylalanine, 2-phenylethylamine, styrene, ethylbenzene) that funnel through phenylacetyl-CoA. This same machinery has been co-opted biotechnologically for medium-chain dicarboxylate (e.g., adipate) metabolism, underscoring the pathway's chemical logic and plasticity.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Consistent with literature?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88HT3</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Gene symbol</td>
+<td><em>paaZ</em></td>
+<td>✔ (assigned to the ring-cleavage step across taxa)</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_3270</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440</td>
+<td>✔ (pathway characterized in <em>P. putida</em> and <em>E. coli</em>)</td>
+</tr>
+<tr>
+<td>EC numbers</td>
+<td>3.3.2.12 + 1.2.1.91</td>
+<td>✔ (both directly demonstrated biochemically)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>Ald_DH N/C (IPR016161/2/3, IPR015590) + HotDog/MaoC (IPR029069)</td>
+<td>✔ (dehydrogenase + hydratase fusion)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification result: CONFIRMED and unambiguous.</strong> All evidence converges on a single, well-characterized bifunctional enzyme of the aerobic phenylacetate pathway. There is no symbol clash with an unrelated gene.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-paaz-is-a-bifunctional-oxepin-coa-hydrolase-aldehyde-dehydrogenase">Finding 1 — PaaZ is a bifunctional oxepin-CoA hydrolase / aldehyde dehydrogenase</h3>
+<p>PaaZ is not a single-activity enzyme but a <strong>fusion protein</strong> combining two chemically distinct catalytic modules on one polypeptide chain. Biochemical characterization by Teufel and colleagues established that the <strong>C-terminal (R)-specific enoyl-CoA hydratase domain</strong> — historically annotated as "MaoC" — performs the ring-opening chemistry: it hydrolytically cleaves the oxepin-CoA ring to generate a <strong>highly reactive aldehyde</strong> intermediate. The <strong>N-terminal NADP⁺-dependent aldehyde dehydrogenase domain</strong> then oxidizes that aldehyde to <strong>3-oxo-5,6-dehydrosuberyl-CoA</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>).</p>
+<p>These two activities correspond exactly to the two EC numbers annotated in UniProt for Q88HT3: <strong>EC 3.3.2.12</strong> (oxepin-CoA hydrolase) and <strong>EC 1.2.1.91</strong> (3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase). The domain assignments are also fully consistent with the InterPro complement listed in the target record — the aldehyde dehydrogenase N- and C-terminal domains (IPR016162, IPR016163, IPR015590), the shared aldehyde/histidinol DH superfamily fold (IPR016161), and the HotDog domain superfamily (IPR029069) that houses the MaoC-like hydratase. As the authors state verbatim: <em>"The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase domain (formerly MaoC) that cleaves the ring and produces a highly reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde dehydrogenase domain that oxidizes the aldehyde to 3-oxo-5,6-dehydrosuberyl-CoA"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>).</p>
+<p>This finding establishes the <strong>primary molecular function</strong> of the gene product: an enzyme catalyzing two sequential reactions — hydrolytic ring opening followed by NADP⁺-dependent aldehyde oxidation — with the CoA-thioester substrate providing the anchoring handle for both active sites. The <strong>NADP⁺</strong> (rather than NAD⁺) dependence distinguishes the fused PaaZ arrangement from the alternative seen in some bacteria that use a stand-alone NAD⁺-dependent aldehyde dehydrogenase plus a separate hydratase.</p>
+<h3 id="finding-2-paaz-acts-at-the-ring-cleavage-branch-point-of-the-aerobic-phenylacetate-pathway">Finding 2 — PaaZ acts at the ring-cleavage branch point of the aerobic phenylacetate pathway</h3>
+<p>The broader pathway context was elucidated by Teufel et al. (2010), who defined a fundamentally <strong>novel aerobic catabolic route</strong> distinct from classical ring-hydroxylating dioxygenase pathways. In this route, phenylacetate is first activated to <strong>phenylacetyl-CoA</strong>; the aromatic ring is then epoxidized to a <strong>ring 1,2-epoxide</strong> by a distinct multicomponent oxygenase (PaaABC(D)E); the reactive epoxide is isomerized to a <strong>seven-membered O-heterocyclic enol ether (an oxepin)</strong>; and this oxepin undergoes <strong>hydrolytic ring cleavage and β-oxidation</strong>, ultimately producing <strong>acetyl-CoA and succinyl-CoA</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>). PaaZ performs the hydrolytic ring-cleavage-plus-oxidation node of this sequence. In the authors' words: <em>"the aromatic ring of phenylacetyl-CoA becomes activated to a ring 1,2-epoxide by a distinct multicomponent oxygenase. The reactive nonaromatic epoxide is isomerized to a seven-member O-heterocyclic enol ether, an oxepin. This isomerization is followed by hydrolytic ring cleavage and beta-oxidation steps, leading to acetyl-CoA and succinyl-CoA"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>).</p>
+<p>Crucially, PaaZ sits at a <strong>metabolic branch point</strong> because the aldehyde it generates is chemically labile. Teufel et al. (2011) demonstrated that <em>"If not oxidized immediately, the reactive aldehyde condenses intramolecularly to a stable cyclic derivative that is largely prevented by PaaZ fusion in vivo"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>). This provides the <strong>physiological rationale</strong> for why the two activities are fused into one protein: the fusion minimizes escape of the reactive intermediate into a dead-end cyclic product — a chemistry that, in other bacteria, is exploited to make tropone/tropolone natural products. PaaZ therefore functions not merely as a catalyst but as a <strong>committed channeling device</strong> that steers a reactive intermediate toward productive catabolism.</p>
+<p>The downstream fate of the PaaZ product in <em>P. putida</em> was defined by Nogales et al. (2007), who characterized the final steps and confirmed that <em>"succinyl-CoA is one of the final products of this pathway in Pseudomonas putida and Escherichia coli"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17259607/">PMID: 17259607</a>). Thus the 3-oxo-5,6-dehydrosuberyl-CoA generated by PaaZ is processed through β-oxidation-like steps to acetyl-CoA and succinyl-CoA, which enter the TCA cycle.</p>
+<h3 id="finding-3-paaz-forms-a-trilobed-trimer-of-dimers-and-channels-its-intermediate-by-electrostatic-pivoting">Finding 3 — PaaZ forms a trilobed trimer-of-dimers and channels its intermediate by electrostatic pivoting</h3>
+<p>The structural basis for PaaZ's channeling function was resolved by cryo-electron microscopy. Sathyanarayanan et al. (2019) determined structures of PaaZ with and without ligands and showed that <strong>three domain-swapped dimers assemble into a trilobed hexamer</strong> (a trimer of dimers): <em>"The structures reveal that three domain-swapped dimers of the enzyme form a trilobed structure"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/31511507/">PMID: 31511507</a>). This higher-order architecture spatially organizes the hydratase and dehydrogenase active sites within each functional unit.</p>
+<p>Integrating the structures with small-angle X-ray scattering (SAXS), computation, site-directed mutagenesis, and microbial growth assays, the authors proposed a striking <strong>substrate-channeling mechanism</strong>. Rather than a conventional enclosed hydrophobic tunnel, PaaZ transfers its labile intermediate between the two active sites by <strong>electrostatic pivoting of the CoA moiety</strong>: <em>"the key intermediate is transferred from one active site to the other by a mechanism of electrostatic pivoting of the CoA moiety, mediated by a set of conserved positively charged residues"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/31511507/">PMID: 31511507</a>). The CoA arm acts as a molecular tether that swings the reactive aldehyde from the ring-opening (hydratase) site to the oxidation (dehydrogenase) site, guided by conserved basic residues. This mechanism directly explains, at atomic resolution, the physiological observation from Finding 2 — the fusion and channeling together suppress formation of the dead-end cyclic product.</p>
+<h3 id="finding-4-paaz-is-encoded-in-the-paa-catabolic-cluster-induced-by-phenylacetyl-coa-and-physiologically-enables-aromatic-catabolism">Finding 4 — <em>paaZ</em> is encoded in the <em>paa</em> catabolic cluster, induced by phenylacetyl-CoA, and physiologically enables aromatic catabolism</h3>
+<p>The genetic and regulatory context of <em>paaZ</em> was established in <em>E. coli</em> by Ferrández et al. (1998) and extends to <em>P. putida</em> by homology and pathway conservation. In <em>E. coli</em> the <em>paa</em> cluster is organized as <em>paaZ</em>, <em>paaABCDEFGHIJK</em>, and <em>paaXY</em>; <em>paaZ</em> is transcribed from its own promoter (Pz), and PaaZ <em>"appears to catalyze the third enzymatic step"</em> of the aerobic hybrid pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/9748275/">PMID: 9748275</a>). Regulation is exerted by the <strong>PaaX repressor</strong>, which responds to the CoA-thioester intermediate rather than to free phenylacetate: <em>"As PA-CoA is the true inducer, PaaX becomes the first regulator of an aromatic catabolic pathway that responds to a CoA derivative"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9748275/">PMID: 9748275</a>). This means <em>paaZ</em> expression is switched on precisely when the substrate for the pathway (phenylacetyl-CoA) accumulates. The homologous cluster and organization occur in <em>P. putida</em> and other proteobacteria such as <em>Azoarcus evansii</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12189419/">PMID: 12189419</a>).</p>
+<p>Physiologically, the <em>paa</em> pathway is a <strong>funneling hub</strong>: diverse aromatic compounds — phenylalanine, 2-phenylethylamine, styrene, and ethylbenzene — are catabolized to the common intermediate phenylacetyl-CoA, which the pathway (including PaaZ) then degrades. In <em>P. putida</em> this supports growth on phenylacetate as a sole carbon and energy source and even underlies <strong>chemotaxis toward phenylacetate</strong> (mediated by the energy-taxis receptor Aer2 in <em>P. putida</em> F1) (<a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">PMID: 23377939</a>). The same <em>paa</em>/β-oxidation machinery was more recently <strong>co-opted for medium-chain dicarboxylate (adipate) metabolism</strong> in engineered <em>P. putida</em> KT2440, where the <em>paa</em> cluster plays a central role in enabling growth on adipate, suberate, and sebacate (<a href="https://pubmed.ncbi.nlm.nih.gov/33965615/">PMID: 33965615</a>). This highlights both the native role and the biotechnological versatility of the pathway in which <em>paaZ</em> participates.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>PaaZ is best understood as a <strong>two-active-site molecular assembly line</strong> that converts a chemically dangerous intermediate into a stable, catabolizable thioester. The following diagram places PaaZ within the aerobic phenylacetate (Paa) pathway:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="n">Aromatic</span><span class="w"> </span><span class="n">funnel</span><span class="w"> </span><span class="n">substrates</span>
+<span class="w">  </span><span class="p">(</span><span class="n">phenylalanine</span><span class="p">,</span><span class="w"> </span><span class="mh">2</span><span class="o">-</span><span class="n">phenylethylamine</span><span class="p">,</span>
+<span class="w">   </span><span class="n">styrene</span><span class="p">,</span><span class="w"> </span><span class="n">ethylbenzene</span><span class="p">,</span><span class="w"> </span><span class="n">phenylacetate</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">▼</span>
+<span class="w">       </span><span class="n">Phenylacetyl</span><span class="o">-</span><span class="n">CoA</span><span class="w">  </span><span class="err">◄───</span><span class="w"> </span><span class="n">PaaX</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PA</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="n">regulation</span><span class="w"> </span><span class="p">(</span><span class="n">true</span><span class="w"> </span><span class="n">inducer</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">PaaABC</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="n">E</span><span class="w">  </span><span class="p">(</span><span class="n">multicomponent</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="o">-</span><span class="n">epoxidase</span><span class="o">/</span><span class="n">oxygenase</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">       </span><span class="mh">1</span><span class="p">,</span><span class="mh">2</span><span class="o">-</span><span class="n">epoxyphenylacetyl</span><span class="o">-</span><span class="n">CoA</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">PaaG</span><span class="w">  </span><span class="p">(</span><span class="n">isomerase</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">  </span><span class="n">Oxepin</span><span class="o">-</span><span class="n">CoA</span><span class="w">  </span><span class="p">(</span><span class="mh">7</span><span class="o">-</span><span class="n">membered</span><span class="w"> </span><span class="n">O</span><span class="o">-</span><span class="n">heterocyclic</span><span class="w"> </span><span class="n">enol</span><span class="w"> </span><span class="n">ether</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="w">   </span><span class="err">┌────────────┴──────────────────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">                    </span><span class="n">P</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Z</span><span class="w">   </span><span class="p">(</span><span class="n">fusion</span><span class="p">)</span><span class="w">                   </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">                                                         </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">MaoC</span><span class="o">/</span><span class="n">HotDog</span><span class="w"> </span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">-</span><span class="n">hydratase</span><span class="w">                   </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">hydrolytic</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="n">opening</span><span class="w"> </span><span class="p">(</span><span class="n">EC</span><span class="w"> </span><span class="mf">3.3.2.12</span><span class="p">)</span><span class="w">               </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">  </span><span class="n">reactive</span><span class="w"> </span><span class="n">aldehyde</span><span class="w">                             </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">  </span><span class="err">↳</span><span class="w"> </span><span class="n">electrostatic</span><span class="w"> </span><span class="n">pivoting</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">CoA</span><span class="w"> </span><span class="n">moiety</span><span class="w">        </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">▼</span><span class="w">  </span><span class="p">(</span><span class="n">conserved</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">charged</span><span class="w"> </span><span class="n">residues</span><span class="p">;</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="n">tunnel</span><span class="p">)</span><span class="w">     </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">NADP</span><span class="o">+-</span><span class="n">dependent</span><span class="w"> </span><span class="n">aldehyde</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w">      </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">oxidation</span><span class="w"> </span><span class="p">(</span><span class="n">EC</span><span class="w"> </span><span class="mf">1.2.1.91</span><span class="p">)</span><span class="w">                             </span><span class="err">│</span>
+<span class="w">   </span><span class="err">└────────────┬──────────────────────────────────────────┘</span>
+<span class="err">▼</span>
+<span class="w">     </span><span class="mh">3</span><span class="o">-</span><span class="n">oxo</span><span class="o">-</span><span class="mh">5</span><span class="p">,</span><span class="mh">6</span><span class="o">-</span><span class="n">dehydrosuberyl</span><span class="o">-</span><span class="n">CoA</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="err">β</span><span class="o">-</span><span class="n">oxidation</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="p">(</span><span class="n">PaaF</span><span class="o">/</span><span class="n">PaaG</span><span class="o">/</span><span class="n">PaaH</span><span class="o">/</span><span class="n">PaaJ</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">      </span><span class="n">Acetyl</span><span class="o">-</span><span class="n">CoA</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">Succinyl</span><span class="o">-</span><span class="n">CoA</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="n">TCA</span><span class="w"> </span><span class="n">cycle</span>
+
+<span class="p">(</span><span class="nl">branch:</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">aldehyde</span><span class="w"> </span><span class="n">escapes</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">stable</span><span class="w"> </span><span class="n">cyclic</span><span class="w"> </span><span class="n">dead</span><span class="o">-</span><span class="k">end</span>
+<span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">tropone</span><span class="o">/</span><span class="n">tropolone</span><span class="w"> </span><span class="n">natural</span><span class="w"> </span><span class="n">products</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">taxa</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The central chemical problem the pathway must solve is that the oxepin-CoA ring, once opened, yields an aldehyde that will spontaneously cyclize into a stable, non-metabolizable dead end. Evolution's solution is elegant on three nested levels:</p>
+<ol>
+<li><strong>Domain fusion</strong> — placing the ring-opening hydratase and the aldehyde-oxidizing dehydrogenase on a single polypeptide keeps the two catalytic events tightly coupled in time and space (Finding 1, <a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>).</li>
+<li><strong>Quaternary organization</strong> — assembling three domain-swapped dimers into a trilobed hexamer creates the geometric framework in which the two active sites of a functional unit are correctly juxtaposed (Finding 3, <a href="https://pubmed.ncbi.nlm.nih.gov/31511507/">PMID: 31511507</a>).</li>
+<li><strong>Electrostatic channeling</strong> — using the CoA arm as a charged lever, the enzyme swings the reactive aldehyde from the hydratase site to the dehydrogenase site guided by conserved positive residues, rather than relying on a sealed hydrophobic tunnel (Finding 3, <a href="https://pubmed.ncbi.nlm.nih.gov/31511507/">PMID: 31511507</a>).</li>
+</ol>
+<p>Together these features suppress the dead-end cyclic derivative in vivo and channel carbon into β-oxidation. The table below summarizes the two reactions and their attributes.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Ring-opening activity</th>
+<th>Oxidation activity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain</td>
+<td>C-terminal MaoC / HotDog (R)-hydratase</td>
+<td>N-terminal Ald_DH (aldehyde dehydrogenase)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>3.3.2.12 (oxepin-CoA hydrolase)</td>
+<td>1.2.1.91</td>
+</tr>
+<tr>
+<td>Substrate</td>
+<td>Oxepin-CoA</td>
+<td>Reactive ring-opened aldehyde</td>
+</tr>
+<tr>
+<td>Product</td>
+<td>Reactive aldehyde (ring-opened)</td>
+<td>3-oxo-5,6-dehydrosuberyl-CoA</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>None (hydrolytic)</td>
+<td>NADP⁺</td>
+</tr>
+<tr>
+<td>InterPro fold</td>
+<td>HotDog domain superfamily (IPR029069)</td>
+<td>Ald_DH/histidinol_DH (IPR016161/2/3, IPR015590)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Localization.</strong> No secretion signal, membrane-spanning region, or lipid anchor is implied by the domain architecture; all substrates are soluble CoA thioesters and the cofactor is soluble NADP⁺. Consistent with the entire Paa pathway operating on cytoplasmic CoA-activated intermediates, PaaZ carries out its function in the <strong>cytoplasm</strong> as a soluble oligomeric enzyme.</p>
+<p><strong>Pathway role summary.</strong> PaaZ catalyzes the committed conversion that transforms a ring-opened but still reactive species into a stable β-oxidation substrate. It is the linchpin connecting the oxygenase/isomerase "upper" segment of the pathway (ring activation and oxepin formation) to the "lower" segment (β-oxidation to acetyl-CoA and succinyl-CoA).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">21296885</a></td>
+<td><em>Studies on the mechanism of ring hydrolysis in phenylacetate degradation: a metabolic branching point</em></td>
+<td>Primary biochemical characterization defining PaaZ's two catalytic domains, the two reactions (EC 3.3.2.12 and EC 1.2.1.91), the product 3-oxo-5,6-dehydrosuberyl-CoA, and the rationale for the fusion (preventing a dead-end cyclic aldehyde). Basis for Findings 1 and 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">20660314</a></td>
+<td><em>Bacterial phenylalanine and phenylacetate catabolic pathway revealed</em></td>
+<td>Landmark elucidation of the full aerobic phenylacetate pathway (epoxidation → oxepin → hydrolytic ring cleavage → β-oxidation → acetyl-CoA + succinyl-CoA) in <em>E. coli</em> and <em>P. putida</em>, placing PaaZ's step in context. Basis for Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31511507/">31511507</a></td>
+<td><em>Molecular basis for metabolite channeling in a ring opening enzyme of the phenylacetate degradation pathway</em></td>
+<td>Cryo-EM/SAXS/mutagenesis study revealing the trilobed trimer-of-dimers architecture and the electrostatic-pivoting channeling mechanism. Basis for Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17259607/">17259607</a></td>
+<td><em>Characterization of the last step of the aerobic phenylacetic acid degradation pathway</em></td>
+<td>Establishes succinyl-CoA as a final product of the pathway in <em>P. putida</em> and <em>E. coli</em>, defining the downstream fate of PaaZ's product. Supports Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9748275/">9748275</a></td>
+<td><em>Catabolism of phenylacetic acid in E. coli: a new aerobic hybrid pathway</em></td>
+<td>Defines the <em>paa</em> gene cluster organization, assigns PaaZ to the third enzymatic step, and establishes PaaX/phenylacetyl-CoA regulation. Basis for Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">23377939</a></td>
+<td><em>Taxis of P. putida F1 toward phenylacetic acid (Aer2)</em></td>
+<td>Demonstrates the physiological importance of PAA catabolism in <em>P. putida</em>, including chemotaxis via energy taxis. Supports Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33965615/">33965615</a></td>
+<td><em>Engineering adipic acid metabolism in P. putida</em></td>
+<td>Shows the <em>paa</em> cluster's central role when the pathway is co-opted for medium-chain dicarboxylate (adipate) metabolism. Supports Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22582071/">22582071</a></td>
+<td><em>Epoxy Coenzyme A Thioester pathways for degradation of aromatic compounds</em></td>
+<td>Review contextualizing the epoxide/oxepin CoA-thioester strategy of aerobic aromatic degradation (benzoate and phenylacetate). Supports the pathway framework.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12189419/">12189419</a></td>
+<td><em>Aerobic metabolism of phenylacetic acids in Azoarcus evansii</em></td>
+<td>Independent characterization of a conserved <em>paa</em> cluster (paaYZGHIKABCDE) and pathway in another proteobacterium, supporting the generality of the pathway.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28153386/">28153386</a></td>
+<td><em>Phenylacetaldehyde dehydrogenase from P. putida S12 styrene pathway</em></td>
+<td>Related aldehyde dehydrogenase in an upstream funneling route (styrene → phenylacetate), illustrating how aromatics feed into phenylacetyl-CoA. Contextual.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12906358/">12906358</a></td>
+<td><em>Design of catabolic cassettes for styrene biodegradation</em></td>
+<td>Demonstrates that styrene degradation funnels into phenylacetate/PAA metabolism, supporting the funneling role of the pathway. Contextual.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency with UniProt/InterPro annotation.</strong> The literature-derived functions align exactly with the target record: the two EC numbers (3.3.2.12 and 1.2.1.91), the bifunctional "oxepin-CoA hydrolase / 3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase" description, the gene name <em>paaZ</em>, the locus PP_3270, and the InterPro domains (aldehyde dehydrogenase N/C domains and the HotDog superfamily that houses the MaoC hydratase). All verification criteria are satisfied.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- PaaZ (Q88HT3/PP_3270) is a bifunctional oxepin-CoA hydrolase (EC 3.3.2.12) + NADP⁺-dependent aldehyde dehydrogenase (EC 1.2.1.91). ✔ (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>)<br />
+- Its substrate is the pathway-specific oxepin-CoA; its product is 3-oxo-5,6-dehydrosuberyl-CoA. ✔ (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>)<br />
+- It performs the ring-cleavage (third) step of the aerobic <em>paa</em> pathway, upstream of β-oxidation to succinyl-CoA/acetyl-CoA. ✔ (<a href="https://pubmed.ncbi.nlm.nih.gov/9748275/">PMID: 9748275</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/17259607/">PMID: 17259607</a>)<br />
+- It is a cytoplasmic trimer-of-dimers that channels its intermediate via electrostatic pivoting. ✔ (<a href="https://pubmed.ncbi.nlm.nih.gov/31511507/">PMID: 31511507</a>)<br />
+- The fusion prevents accumulation of a toxic cyclic dead-end product. ✔ (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>)</p>
+<p><strong>Refuted / ruled out:</strong><br />
+- PaaZ is <strong>not</strong> an oxygenolytic ring-cleavage enzyme; ring opening is <strong>hydrolytic</strong> (non-oxygenolytic). (<a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>)<br />
+- The gene symbol is <strong>not</strong> ambiguous here; all evidence converges on a single, well-defined enzyme.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>Direct enzymology on the <em>P. putida</em> KT2440 ortholog is limited.</strong> The definitive biochemical (Teufel et al.) and structural (Sathyanarayanan et al.) work was performed largely on PaaZ orthologs (notably from <em>E. coli</em> and related systems). Function is assigned to Q88HT3 by strong sequence/domain homology, identical EC annotations, and conserved pathway organization rather than by direct kinetic characterization of the KT2440 protein itself. Strain-specific kinetic parameters (kcat, Km for oxepin-CoA) were not located.</p>
+</li>
+<li>
+<p><strong>Cofactor specificity nuance.</strong> The dehydrogenase domain is NADP⁺-dependent; the strictness of NADP⁺ vs. NAD⁺ preference and its regulatory implications for the KT2440 enzyme are not experimentally quantified here.</p>
+</li>
+<li>
+<p><strong>Localization is inferred, not measured.</strong> The cytoplasmic assignment follows logically from the soluble CoA-thioester substrates and the absence of targeting/membrane domains, but no direct fractionation or imaging evidence for Q88HT3 was examined.</p>
+</li>
+<li>
+<p><strong>Regulatory details in <em>P. putida</em>.</strong> PaaX/phenylacetyl-CoA regulation is best characterized in <em>E. coli</em>. The precise promoter architecture and operon boundaries around PP_3270 in KT2440 were not directly verified.</p>
+</li>
+<li>
+<p><strong>Channeling residue conservation.</strong> The electrostatic-pivoting mechanism was demonstrated for a specific ortholog; residue-level validation in the KT2440 sequence would confirm identical implementation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct biochemical characterization of Q88HT3.</strong> Heterologously express and purify the KT2440 PaaZ; measure steady-state kinetics for oxepin-CoA hydrolysis and aldehyde oxidation, confirm the NADP⁺ preference, and verify the 3-oxo-5,6-dehydrosuberyl-CoA product by LC-MS.</p>
+</li>
+<li>
+<p><strong>Genetic knockout / complementation in KT2440.</strong> Delete PP_3270 and test loss of growth on phenylacetate (and on funneling substrates such as phenylalanine, 2-phenylethylamine, styrene); complement in trans. Assess accumulation of the predicted dead-end cyclic aldehyde derivative in the mutant by metabolomics.</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Use cell fractionation and/or a fluorescent fusion to confirm cytoplasmic localization of PP_3270.</p>
+</li>
+<li>
+<p><strong>Structural validation.</strong> Solve or predict (AlphaFold/cryo-EM) the KT2440 PaaZ structure, confirm the trilobed trimer-of-dimers assembly, and test key conserved basic residues implicated in electrostatic CoA pivoting via site-directed mutagenesis and channeling assays.</p>
+</li>
+<li>
+<p><strong>Regulatory mapping.</strong> Define the <em>paaZ</em> (PP_3270) promoter and PaaX binding site in KT2440; confirm induction by phenylacetyl-CoA using reporter fusions.</p>
+</li>
+<li>
+<p><strong>Applied metabolic engineering.</strong> Given the demonstrated co-option of the <em>paa</em> cluster for adipate/dicarboxylate metabolism, systematically test PaaZ variants for expanded substrate scope toward plastic-monomer dicarboxylates, informing bio-upcycling strain design.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated for target gene paaZ (UniProt Q88HT3, locus PP_3270) in</em> Pseudomonas putida <em>KT2440. All functional claims are attributed to the primary and review literature cited above; annotation-database attributes (EC numbers, InterPro domains) were cross-checked against and found consistent with the experimental literature.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="paaZ-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="paaZ-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:21296885</li>
+<li>PMID:20660314</li>
+<li>PMID:17259607</li>
+<li>PMID:31511507</li>
+<li>PMID:9748275</li>
+<li>PMID:12189419</li>
+<li>PMID:23377939</li>
+<li>PMID:33965615</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(paaZ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HT3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="paaz-curation-notes">paaZ curation notes</h1>
+<ul>
+<li>UniProt accession Q88HT3 names the target<br />
+<code>Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase</code><br />
+  [file:PSEPK/paaZ/paaZ-uniprot.txt,<br />
+  "SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase"].</li>
+<li>The record assigns EC 3.3.2.12 and EC 1.2.1.91, but has prediction-level<br />
+  protein evidence. The review therefore models both catalytic roles while<br />
+  explicitly retaining the need for target-specific biochemical confirmation.</li>
+<li>The existing generic oxidoreductase term is replaced by the<br />
+  aldehyde/oxo-group oxidoreductase child term. A hydrolase annotation is added<br />
+  for the second domain; GO currently offers only a broad hydrolase term in the<br />
+  local record.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HT3
+gene_symbol: paaZ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PaaZ is a predicted bifunctional oxepin-CoA hydrolase and
+  3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase in the aerobic
+  phenylacetate pathway of Pseudomonas putida KT2440. Its two domains couple
+  ring-opening hydrolysis to NADP-dependent aldehyde oxidation
+  in the upper-to-lower pathway transition.
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but too broad for the aldehyde-dehydrogenase domain.
+    action: MODIFY
+    reason: &gt;-
+      UniProt assigns one PaaZ domain as
+      3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase.
+    proposed_replacement_terms:
+    - id: GO:0016620
+      label: oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor
+    supported_by:
+    - reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+      supporting_text: &#39;SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase&#39;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IC
+  original_reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+  qualifier: enables
+  review:
+    summary: Missing annotation for the second catalytic domain of bifunctional PaaZ.
+    action: NEW
+    reason: The NCBI-submitted product name assigns an oxepin-CoA hydrolase activity.
+    supported_by:
+    - reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+      supporting_text: &#39;SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase&#39;
+- term:
+    id: GO:0010124
+    label: phenylacetate catabolic process
+  evidence_type: IC
+  original_reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: Missing pathway annotation for the PaaZ bifunctional enzyme.
+    action: NEW
+    reason: &gt;-
+      Both activities named for PaaZ act on CoA-ester intermediates specific
+      to aerobic phenylacetate ring opening.
+    supported_by:
+    - reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+      supporting_text: &#39;SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: file:PSEPK/paaZ/paaZ-uniprot.txt
+  title: UniProtKB entry Q88HT3 for Pseudomonas putida KT2440 paaZ
+  findings:
+  - statement: UniProt assigns two pathway activities to the PaaZ polypeptide.
+    supporting_text: &#39;SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession. The entry is prediction-level and the submitted
+      bifunctional assignment is not direct experimental evidence.
+- id: file:PSEPK/paaZ/paaZ-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK paaZ
+  findings:
+  - statement: The report assigns the two PaaZ domains consecutive ring-opening and aldehyde-oxidation reactions.
+    supporting_text: &gt;-
+      The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase
+      domain (formerly MaoC) that cleaves the ring and produces a highly
+      reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde
+      dehydrogenase domain that oxidizes the aldehyde to
+      3-oxo-5,6-dehydrosuberyl-CoA
+    reference_section_type: RESULTS
+  - statement: Direct biochemical characterization of the KT2440 target remains limited.
+    supporting_text: &gt;-
+      **Direct enzymology on the *P. putida* KT2440 ortholog is limited.**
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The exact accession, fusion-domain
+      architecture, two EC assignments, and pathway context agree with local
+      records; detailed catalysis and channeling derive from orthologs.
+core_functions:
+- description: &gt;-
+    Oxidizes the ring-opened semialdehyde intermediate in the upper-to-lower
+    transition of aerobic phenylacetate catabolism.
+  molecular_function:
+    id: GO:0016620
+    label: oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor
+  directly_involved_in:
+  - id: GO:0010124
+    label: phenylacetate catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+    supporting_text: &#39;SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase&#39;
+  - reference_id: file:PSEPK/paaZ/paaZ-deep-research-openscientist.md
+    supporting_text: &gt;-
+      The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase
+      domain (formerly MaoC) that cleaves the ring and produces a highly
+      reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde
+      dehydrogenase domain that oxidizes the aldehyde to
+      3-oxo-5,6-dehydrosuberyl-CoA
+- description: &gt;-
+    Hydrolyzes the oxepin-CoA intermediate formed after
+    phenylacetyl-CoA epoxidation and rearrangement.
+  molecular_function:
+    id: GO:0016787
+    label: hydrolase activity
+  directly_involved_in:
+  - id: GO:0010124
+    label: phenylacetate catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/paaZ/paaZ-uniprot.txt
+    supporting_text: &#39;SubName: Full=Oxepin-CoA hydrolase/3-oxo-5,6-dehydrosuberyl-CoA semialdehyde dehydrogenase&#39;
+  - reference_id: file:PSEPK/paaZ/paaZ-deep-research-openscientist.md
+    supporting_text: &gt;-
+      The enzyme consists of a C-terminal (R)-specific enoyl-CoA hydratase
+      domain (formerly MaoC) that cleaves the ring and produces a highly
+      reactive aldehyde and an N-terminal NADP(+)-dependent aldehyde
+      dehydrogenase domain that oxidizes the aldehyde to
+      3-oxo-5,6-dehydrosuberyl-CoA
+suggested_questions:
+- question: Are both predicted PaaZ domains catalytically active in the KT2440 protein?
+suggested_experiments:
+- description: &gt;-
+    Express full-length PaaZ and catalytic-domain variants, then quantify
+    oxepin-CoA hydrolysis and NAD(P)-dependent semialdehyde oxidation separately.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

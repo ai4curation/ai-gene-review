@@ -1,0 +1,3985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYPL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SYPL1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q16563" target="_blank" class="term-link">
+                        Q16563
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SYPL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q16563" data-a="DESCRIPTION: Synaptophysin-like protein 1 (SYPL1), also called ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Synaptophysin-like protein 1 (SYPL1), also called pantophysin, is a broadly expressed four-pass integral membrane protein of small cytoplasmic transport vesicles. In non-neuroendocrine cells it marks constitutive-secretory and endocytic vesicles rather than the specialized synaptic vesicles occupied by synaptophysin and synaptoporin. In mammalian male germ cells, SYPL1 cooperates with VAMP3 in a trans-Golgi-derived vesicle pathway that generates and sequesters membranous saccules in the sperm cytoplasmic droplet. This pathway concentrates metabolic and volume-regulatory cargo needed for normal sperm maturation, morphology, motility, and fertility. SYPL1 is present in human sperm cytoplasmic droplets, while the causal genetic evidence comes from mouse. Its autonomous biochemical activity has not been established.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>sperm cytoplasmic droplet organization</h3>
+                <span class="vote-buttons" data-g="Q16563" data-a="sperm cytoplasmic droplet organization" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A process that results in the assembly, arrangement of constituent parts, or disassembly of the sperm cytoplasmic droplet, including formation and sequestration of its Golgi-derived membranous saccular elements.</p>
+
+
+
+            <p><strong>Justification:</strong> GO contains the sperm cytoplasmic droplet cellular-component term but no process term that captures active formation and organization of this conserved organelle. SYPL1/VAMP3-dependent vesicle production and saccule sequestration are experimentally separable from generic vesicle organization and from the broader process of spermatid development.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016050" target="_blank" class="term-link">
+                    vesicle organization
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                        PMID:37607933
+                    </a>
+
+
+                    : Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030672" target="_blank" class="term-link">
+                                    GO:0030672
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0030672" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PAINT inference transfers a specialized synaptic-vesicle location from other physin-family proteins to the ubiquitously expressed pantophysin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct human and mammalian-cell evidence identifies SYPL1 on constitutive small cytoplasmic transport vesicles, including secretory and endocytic carriers. Endogenous synaptic-vesicle localization has not been established for SYPL1, so the family-derived term is too specific; cytoplasmic vesicle membrane preserves the supported vesicular-membrane essence.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">GO_REF:0000033</span>
+
+                                    &middot; PAINT physin-family inference
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Synaptic-vesicle localization is valid for specialized physin paralogs, but direct evidence places pantophysin on broadly distributed constitutive transport vesicles.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    cytoplasmic vesicle membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8707851" target="_blank" class="term-link">
+                                        PMID:8707851
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SYPL1/SYPL1-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">These results directly support cytoplasmic vesicle membrane localization.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008021" target="_blank" class="term-link">
+                                    GO:0008021
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic vesicle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0008021" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro mapping likewise over-specializes pantophysin as a synaptic-vesicle protein on the basis of family membership.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SYPL1 is homologous to synaptophysin but is broadly expressed and directly localized to constitutive transport vesicles. The experimentally supported replacement is cytoplasmic vesicle membrane, appropriate for this integral membrane protein.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    cytoplasmic vesicle membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8034131" target="_blank" class="term-link">
+                                        PMID:8034131
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the synaptophysin-related gene is ubiquitously expressed in vitro and in vivo</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8707851" target="_blank" class="term-link">
+                                        PMID:8707851
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">colocalizing with constitutive secretory and endocytotic vesicle markers in nonneuroendocrine cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic membrane assignment is correct for a four-pass protein but loses SYPL1&#39;s defining vesicular context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct microscopy, immunoelectron microscopy, and fractionation support the more informative cytoplasmic vesicle membrane term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    cytoplasmic vesicle membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8707851" target="_blank" class="term-link">
+                                        PMID:8707851
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the majority of pantophysin reactivity is detected at vesicles with a diameter of &lt; 100 nm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    GO:0030659
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0030659" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping correctly places SYPL1 on cytoplasmic vesicle membranes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This location is directly supported by antibody localization, immunoelectron microscopy, and vesicle fractionation in human and mammalian cells and represents SYPL1&#39;s characteristic cellular compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8707851" target="_blank" class="term-link">
+                                        PMID:8707851
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042470" target="_blank" class="term-link">
+                                    GO:0042470
+                                </a>
+                            </span>
+                            <span class="term-label">melanosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0042470" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SYPL1 was identified by mass spectrometry in human melanosome fractions spanning maturation stages I through IV.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The curated proteomic detection is compatible with SYPL1 residence on broadly distributed transport vesicles, but it is a cell-type-specific localization rather than evidence that melanosome biology is a core SYPL1 function. The cached main text does not expose the protein-level supplementary row.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29547901" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29547901
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular partners of hNOT/ALG3, the human counterpart of th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0005515" data-r="PMID:29547901" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A focused ALG3 interaction study reports an in vivo ALG3-SYPL1 association.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The partner-level result is experimentally supported, but generic protein binding is not an informative molecular function and does not establish the biochemical role of SYPL1. The interaction can instead be retained as mechanistic context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29547901" target="_blank" class="term-link">
+                                        PMID:29547901
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">provide experimental evidence for its in vivo interaction with the functionally linked proteins OSBP, OSBPL9 and LRP1, the SYPL1 protein and the transcription factor CREB3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The human reference interactome reports multiple binary interaction candidates for SYPL1 under this collapsed GOA group.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteome-scale binary interactions provide partner hypotheses but do not define a specific SYPL1 activity. Generic protein binding is uninformative and should not be treated as a core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SYPL1 was detected in a large-scale proteomic survey of human urinary exosomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The proteomic detection is plausible for a broadly expressed vesicle membrane protein, but exosomal recovery is context-specific and does not by itself identify SYPL1&#39;s evolved core role. The main cached article does not expose the SYPL1 peptide row.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8034131" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8034131
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of the synaptophysin gene family is not restricte...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0005886" data-r="PMID:8034131" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The older cloning/expression paper is cited for plasma-membrane localization, but its cached abstract does not state or show that localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The relevant full text is unavailable. Later direct work strongly supports intracellular transport-vesicle membranes, but this is insufficient to conclude that the curator&#39;s full-text plasma-membrane evidence was absent or incorrect. The annotation should remain unresolved pending inspection of the original figures and methods.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007268" target="_blank" class="term-link">
+                                    GO:0007268
+                                </a>
+                            </span>
+                            <span class="term-label">chemical synaptic transmission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8034131" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8034131
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of the synaptophysin gene family is not restricte...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0007268" data-r="PMID:8034131" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A synaptic-transmission process was inferred in the original family/cloning context despite pantophysin&#39;s explicitly ubiquitous distribution.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited abstract establishes homology to synaptophysin and broad expression, not participation in neurotransmitter release. Direct later evidence instead defines constitutive transport vesicles and a germ-cell vesicle pathway. A redundant neuronal contribution remains possible, so this is flagged as an unsupported family-level over-annotation rather than confidently removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8034131" target="_blank" class="term-link">
+                                        PMID:8034131
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">To stress the ubiquity of expression in contrast to the restricted distribution of synaptophysin and synaptoporin, I propose to refer to the encoded polypeptide as pantophysin.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1730063" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1730063
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of a cDNA encoding a novel protein related...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0016020" data-r="PMID:1730063" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original partial cDNA sequence correctly identifies a synaptophysin-like membrane protein, but the generic term can now be made more informative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Subsequent direct localization establishes cytoplasmic vesicle membrane as the appropriate specific location for SYPL1.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    cytoplasmic vesicle membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1730063" target="_blank" class="term-link">
+                                        PMID:1730063
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HL-5 appears to be a member of a previously undescribed family of synaptophysin-like genes.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8707851" target="_blank" class="term-link">
+                                        PMID:8707851
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097598" target="_blank" class="term-link">
+                                    GO:0097598
+                                </a>
+                            </span>
+                            <span class="term-label">sperm cytoplasmic droplet</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37607933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SYPL1 defines a vesicular pathway essential for sperm cytopl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0097598" data-r="PMID:37607933" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new direct human annotation. SYPL1 and VAMP3 are enriched in the cytoplasmic droplets of human spermatozoa.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The study directly examined human sperm and demonstrated conserved cytoplasmic-droplet localization, independently of the mouse knockout transfer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                        PMID:37607933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the enrichment of SYPL1 and VAMP3 is conserved, also appearing in the CDs of human spermatozoa</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016050" target="_blank" class="term-link">
+                                    GO:0016050
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37607933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SYPL1 defines a vesicular pathway essential for sperm cytopl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0016050" data-r="PMID:37607933" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed orthology-supported annotation. Mouse Sypl1 loss prevents normal formation and accumulation of Golgi-derived saccular vesicle elements in the sperm cytoplasmic droplet.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The knockout phenotype directly establishes a requirement for SYPL1 in organizing these vesicular elements, and conserved localization in human sperm supports transfer to human SYPL1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                        PMID:37607933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048194" target="_blank" class="term-link">
+                                    GO:0048194
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi vesicle budding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37607933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SYPL1 defines a vesicular pathway essential for sperm cytopl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0048194" data-r="PMID:37607933" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed orthology-supported annotation. SYPL1 is required for production of trans-Golgi-network-derived vesicles that form sperm cytoplasmic-droplet saccules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genetic loss and ultrastructural analysis establish the SYPL1-dependent Golgi-derived vesicle pathway in mouse; conserved human sperm localization supports an ISS transfer while avoiding a claim of direct human genetics.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                        PMID:37607933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we uncover a mechanism for trans Golgi network (TGN) vesicle production that is critical for the formation of saccules and their segregation within the CD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007286" target="_blank" class="term-link">
+                                    GO:0007286
+                                </a>
+                            </span>
+                            <span class="term-label">spermatid development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37607933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SYPL1 defines a vesicular pathway essential for sperm cytopl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0007286" data-r="PMID:37607933" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed orthology-supported annotation. The SYPL1 pathway forms the cytoplasmic-droplet saccules and concentrates metabolic cargo during late spermatid maturation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mouse knockout evidence connects SYPL1-dependent vesicle formation to late spermatid and sperm development, and the pathway&#39;s localization is conserved in human sperm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                        PMID:37607933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm, which are required for sperm development and male fertility.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097722" target="_blank" class="term-link">
+                                    GO:0097722
+                                </a>
+                            </span>
+                            <span class="term-label">sperm motility</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37607933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SYPL1 defines a vesicular pathway essential for sperm cytopl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q16563" data-a="GO:0097722" data-r="PMID:37607933" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed orthology-supported annotation. Sypl1-null mouse sperm exhibit a severe motility defect together with cytoplasmic-droplet and flagellar abnormalities.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The loss-of-function phenotype supports a causal contribution to sperm motility. ISS appropriately conveys that the phenotype is demonstrated in mouse while SYPL1 localization is conserved in human sperm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                        PMID:37607933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">KO epididymal sperm showed severely impaired motility</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Organizes a VAMP3-associated, trans-Golgi-derived vesicle pathway in late spermatids that produces and sequesters membranous saccules in the sperm cytoplasmic droplet and concentrates metabolic cargo required for sperm maturation.</h3>
+                <span class="vote-buttons" data-g="Q16563" data-a="FUNCTION: Organizes a VAMP3-associated, trans-Golgi-derived ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016050" target="_blank" class="term-link">
+                                vesicle organization
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048194" target="_blank" class="term-link">
+                                Golgi vesicle budding
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007286" target="_blank" class="term-link">
+                                spermatid development
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                cytoplasmic vesicle membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097598" target="_blank" class="term-link">
+                                sperm cytoplasmic droplet
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                PMID:37607933
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                PMID:37607933
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm, which are required for sperm development and male fertility.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Supports normal sperm morphology and motility downstream of cytoplasmic-droplet saccule formation and cargo sequestration.</h3>
+                <span class="vote-buttons" data-g="Q16563" data-a="FUNCTION: Supports normal sperm morphology and motility down..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097722" target="_blank" class="term-link">
+                                sperm motility
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097598" target="_blank" class="term-link">
+                                sperm cytoplasmic droplet
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                                PMID:37607933
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">KO epididymal sperm showed severely impaired motility</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1730063" target="_blank" class="term-link">
+                            PMID:1730063
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning of a cDNA encoding a novel protein related to the neuronal vesicle protein synaptophysin.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The partial human clone encodes a protein in a newly recognized synaptophysin-like family.</div>
+
+                        <div class="finding-text">"HL-5 appears to be a member of a previously undescribed family of synaptophysin-like genes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8034131" target="_blank" class="term-link">
+                            PMID:8034131
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of the synaptophysin gene family is not restricted to neuronal and neuroendocrine differentiation in rat and human.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The newly cloned rat and human pantophysin gene is broadly expressed.</div>
+
+                        <div class="finding-text">"the synaptophysin-related gene is ubiquitously expressed in vitro and in vivo"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pantophysin was named to distinguish its ubiquitous distribution from specialized family members.</div>
+
+                        <div class="finding-text">"To stress the ubiquity of expression in contrast to the restricted distribution of synaptophysin and synaptoporin, I propose to refer to the encoded polypeptide as pantophysin."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8707851" target="_blank" class="term-link">
+                            PMID:8707851
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pantophysin is a ubiquitously expressed synaptophysin homologue and defines constitutive transport vesicles.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pantophysin colocalizes with constitutive-secretory and endocytic vesicle markers in non-neuroendocrine cells.</div>
+
+                        <div class="finding-text">"colocalizing with constitutive secretory and endocytotic vesicle markers in nonneuroendocrine cells"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Most pantophysin immunoreactivity occurs on small vesicles under 100 nm in diameter.</div>
+
+                        <div class="finding-text">"the majority of pantophysin reactivity is detected at vesicles with a diameter of &lt; 100 nm"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pantophysin is a broad marker of small cytoplasmic transport vesicles.</div>
+
+                        <div class="finding-text">"Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17081065" target="_blank" class="term-link">
+                            PMID:17081065
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic and bioinformatic characterization of the biogenesis and function of melanosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29547901" target="_blank" class="term-link">
+                            PMID:29547901
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular partners of hNOT/ALG3, the human counterpart of the Drosophila NOT and yeast ALG3 gene, suggest its involvement in distinct cellular processes relevant to congenital disorders of glycosylation, cancer, neurodegeneration and a variety of further pathologies.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study detected an in vivo ALG3-SYPL1 interaction.</div>
+
+                        <div class="finding-text">"provide experimental evidence for its in vivo interaction with the functionally linked proteins OSBP, OSBPL9 and LRP1, the SYPL1 protein and the transcription factor CREB3"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37607933" target="_blank" class="term-link">
+                            PMID:37607933
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SYPL1 defines a vesicular pathway essential for sperm cytoplasmic droplet formation and male fertility.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SYPL1 and VAMP3 govern formation and sequestration of sperm cytoplasmic-droplet saccules.</div>
+
+                        <div class="finding-text">"This process is governed by a transmembrane protein SYPL1 and its interaction with VAMP3."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Sypl1 loss prevents normal formation and accumulation of cytoplasmic-droplet saccular elements.</div>
+
+                        <div class="finding-text">"Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SYPL1 vesicles segregate key metabolic enzymes into the forming sperm cytoplasmic droplet.</div>
+
+                        <div class="finding-text">"Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm, which are required for sperm development and male fertility."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Sypl1 loss severely impairs sperm motility.</div>
+
+                        <div class="finding-text">"KO epididymal sperm showed severely impaired motility"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytoplasmic-droplet enrichment of SYPL1 and VAMP3 is conserved in human sperm.</div>
+
+                        <div class="finding-text">"the enrichment of SYPL1 and VAMP3 is conserved, also appearing in the CDs of human spermatozoa"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/SYPL1/SYPL1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry for human SYPL1 (Q16563)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places SYPL1 on cytoplasmic vesicle membranes and records human melanosome detection.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cytoplasmic vesicle membrane"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/SYPL1/SYPL1-deep-research-manual.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual literature synthesis for SYPL1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What direct molecular activity does SYPL1 contribute to VAMP3-associated vesicle budding, saccule shaping, or cargo selection?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: sperm cytoplasmic-droplet biologists, membrane-trafficking biochemists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16563" data-a="Q: What direct molecular activity does SYPL1 contribu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is SYPL1 required for constitutive-secretory or endocytic vesicle organization in human somatic cells, or is its causal requirement restricted to specialized contexts such as late spermatids?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: vesicle-trafficking cell biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16563" data-a="Q: Is SYPL1 required for constitutive-secretory or en..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the two human SYPL1 splice isoforms differ in vesicle localization, VAMP3 engagement, or support of sperm cytoplasmic-droplet formation?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: reproductive cell biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16563" data-a="Q: Do the two human SYPL1 splice isoforms differ in v..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Create SYPL1-null human spermatid-like cells or testicular organoids and perform isoform-resolved rescue while quantifying TGN-derived vesicle budding, cytoplasmic-droplet-like saccule formation, and HK1/PGK2 cargo sequestration by live imaging and electron microscopy.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human SYPL1 is required cell-autonomously for VAMP3-associated Golgi vesicle production and metabolic-cargo sequestration during late germ-cell maturation.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: CRISPR genetics, organoid differentiation, live imaging, and electron microscopy</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16563" data-a="EXPERIMENT: Create SYPL1-null human spermatid-like cells or te..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute purified SYPL1 and VAMP3 in composition-controlled Golgi-like membranes and measure budding, membrane curvature, fusion, and cargo capture after systematic mutation of the SYPL1 transmembrane and cytoplasmic regions.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SYPL1 supplies a membrane-organizing activity that cooperates with VAMP3 to generate or stabilize cytoplasmic-droplet saccules.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical membrane reconstitution and structure-function analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16563" data-a="EXPERIMENT: Reconstitute purified SYPL1 and VAMP3 in compositi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Acutely degrade endogenous SYPL1 in representative human epithelial and neuroendocrine cells and quantify constitutive secretion, endocytic recycling, vesicle size, and VAMP3/SCAMP cargo distribution.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SYPL1 has a general, partially redundant role in small constitutive transport vesicles beyond its specialized germ-cell function.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: degron genetics, quantitative trafficking assays, and microscopy</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16563" data-a="EXPERIMENT: Acutely degrade endogenous SYPL1 in representative..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular activity by which SYPL1 cooperates with VAMP3 to produce, shape, sequester, or load cytoplasmic-droplet saccules is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> SYPL1 is an integral vesicle-membrane protein; mouse loss-of-function abolishes normal saccular accumulation, and interaction/localization data place VAMP3 in the same pathway, but these observations do not distinguish membrane shaping, budding, fusion, scaffolding, or cargo-selection activities.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the activity would permit a precise molecular-function annotation and explain how the pathway builds the sperm cytoplasmic droplet.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Purified-protein membrane reconstitution, structural analysis, separation-of- function mutants, and matched cellular rescue assays should distinguish the candidate mechanisms.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"No autonomous molecular activity has been demonstrated for SYPL1."</em> — file:human/SYPL1/SYPL1-notes.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether SYPL1 is functionally required for constitutive transport-vesicle organization in human somatic cells remains unestablished.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Direct human localization identifies SYPL1 on constitutive-secretory and endocytic vesicles, whereas the available causal knockout evidence concerns the mouse germ-cell cytoplasmic-droplet pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This distinction determines whether germ-cell vesicle organization is a specialized instance of a general SYPL1 function or an independently evolved tissue-specific role.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Acute endogenous depletion with quantitative secretion, recycling, and ultrastructural assays across multiple human somatic cell types is required.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content."</em> — PMID:8707851</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SYPL1-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q16563" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">SYPL1 manual deep research</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="sypl1-manual-deep-research">SYPL1 manual deep research</h1>
+<p>Date: 2026-07-18</p>
+<h2 id="scope-and-source-limitations">Scope and source limitations</h2>
+<p>The configured Falcon deep-research request returned HTTP 402, and its Perplexity-lite fallback returned HTTP 401 because the provider quotas were exhausted. This manual report uses the reviewed UniProt record and locally cached primary publications. It is deliberately named <code>-deep-research-manual.md</code> and does not impersonate a provider-generated report.</p>
+<h2 id="identity-and-topology">Identity and topology</h2>
+<p>Human SYPL1 (UniProt Q16563), also called pantophysin, is a 259-residue member of the synaptophysin/synaptogyrin family with four predicted transmembrane helices. The original human cloning work identified a protein similar to synaptophysin across its membrane-spanning and loop regions but lacking the characteristic synaptophysin cytoplasmic tail. Expression was detected broadly rather than being restricted to neuronal or neuroendocrine cells [PMID:8034131, "This polypeptide is very similar to synaptophysin in the four transmembrane domains and the connecting loop regions but lacks the characteristic cytoplasmic tail."; PMID:8034131, "the synaptophysin-related gene is ubiquitously expressed in vitro and in vivo"].</p>
+<h2 id="constitutive-cytoplasmic-transport-vesicles">Constitutive cytoplasmic transport vesicles</h2>
+<p>The strongest direct human localization study used antibodies against pantophysin in human pancreas and cultured cells. Pantophysin colocalized with constitutive-secretory and endocytic vesicle markers in non-neuroendocrine cells. Immunoelectron microscopy placed most signal on smooth, electron-lucent vesicles smaller than 100 nm; fractionation and immunoisolation showed that the vesicles contain cellubrevin/VAMP3 and ubiquitous SCAMPs [PMID:8707851, "colocalizing with constitutive secretory and endocytotic vesicle markers in nonneuroendocrine cells"; PMID:8707851, "the majority of pantophysin reactivity is detected at vesicles with a diameter of &lt; 100 nm"; PMID:8707851, "Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content."].</p>
+<p>These results directly support cytoplasmic vesicle membrane localization. They do not establish that endogenous human SYPL1 is principally a synaptic-vesicle protein, nor do they establish an autonomous catalytic or transporter activity.</p>
+<h2 id="sperm-cytoplasmic-droplet-pathway">Sperm cytoplasmic-droplet pathway</h2>
+<p>A 2023 study identified a specific in vivo function using Sypl1-null mice. SYPL1 interacts with VAMP3 and controls production of trans-Golgi-network-derived vesicles that form and accumulate as flattened saccules in the cytoplasmic droplet of late spermatids and epididymal sperm [PMID:37607933, "This process is governed by a transmembrane protein SYPL1 and its interaction with VAMP3."; PMID:37607933, "Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm"]. SYPL1 loss depleted the droplet's saccular elements, disrupted focal sequestration of glycolytic and volume-regulatory cargo, impaired sperm morphology and motility, and caused severe male subfertility or infertility [PMID:37607933, "KO epididymal sperm showed severely impaired motility"; PMID:37607933, "Together, these results indicate that Sypl1 is a critical gene for sperm maturation and male fertility."].</p>
+<p>The investigators also examined human sperm and found conserved enrichment of SYPL1 and VAMP3 in the cytoplasmic droplet [PMID:37607933, "the enrichment of SYPL1 and VAMP3 is conserved, also appearing in the CDs of human spermatozoa"]. Direct human localization is therefore established, while the causal vesicle-organization, spermatid-development, and sperm-motility annotations are appropriately represented as orthology-supported transfers from mouse.</p>
+<h2 id="secondary-localization-and-interaction-evidence">Secondary localization and interaction evidence</h2>
+<p>Mass-spectrometry studies detected SYPL1 in melanosome fractions and urinary exosomes. These observations are credible context-specific localizations but do not define the protein's evolved core function. A focused ALG3 study experimentally detected an ALG3-SYPL1 interaction [PMID:29547901, "provide experimental evidence for its in vivo interaction with the functionally linked proteins OSBP, OSBPL9 and LRP1, the SYPL1 protein and the transcription factor CREB3"], and reference-interactome work reports additional candidates. None of these data identifies a specific SYPL1 molecular activity, so generic <code>protein binding</code> should not be used as the core function.</p>
+<h2 id="synthesis-and-open-boundary">Synthesis and open boundary</h2>
+<p>The best-supported model is that SYPL1 is a broadly expressed integral membrane component of small constitutive transport vesicles, with a genetically demonstrated specialized role in generating and organizing Golgi-derived vesicles and saccules in the mammalian sperm cytoplasmic droplet. This pathway sequesters metabolic cargo needed for normal sperm maturation, morphology, motility, and fertility. The direct biochemical activity of SYPL1, the molecular mechanics of its cooperation with VAMP3, and its functional requirements in non-germline constitutive trafficking remain unresolved.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SYPL1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q16563" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sypl1-review-notes">SYPL1 review notes</h1>
+<h2 id="2026-07-18">2026-07-18</h2>
+<ul>
+<li>Initialized the human review with <code>just fetch-gene human SYPL1</code>. The generated stub contains 11 collapsed GOA annotation groups.</li>
+<li><code>just deep-research-falcon human SYPL1 --fallback perplexity-lite</code> could not produce a report: Falcon returned HTTP 402 and Perplexity-lite returned HTTP 401 because the configured quotas are exhausted. I continued with a clearly labeled manual synthesis in <code>SYPL1-deep-research-manual.md</code>; no provider-named report was created.</li>
+<li>Pantophysin/SYPL1 is a broadly expressed four-pass membrane protein. Direct microscopy and fractionation place it on small cytoplasmic transport vesicles in human pancreas and cultured cells, including vesicles carrying constitutive-secretory and endocytic markers [PMID:8707851, "colocalizing with constitutive secretory and endocytotic vesicle markers in nonneuroendocrine cells"; PMID:8707851, "Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content."].</li>
+<li>The older cloning paper explicitly contrasts ubiquitous pantophysin expression with the restricted expression of synaptophysin and synaptoporin [PMID:8034131, "the synaptophysin-related gene is ubiquitously expressed in vitro and in vivo"]. This makes the PAINT/InterPro synaptic-vesicle annotations too specific; I replace them with cytoplasmic vesicle membrane rather than treating pantophysin as a specialized synaptic-vesicle protein.</li>
+<li>A mouse knockout study establishes a separable germ-cell role: SYPL1 and VAMP3 govern formation and sequestration of Golgi-derived saccules in the sperm cytoplasmic droplet [PMID:37607933, "This process is governed by a transmembrane protein SYPL1 and its interaction with VAMP3."; PMID:37607933, "Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet."].</li>
+<li>That study also reports severely impaired sperm motility and near-complete male infertility after mouse Sypl1 loss [PMID:37607933, "KO epididymal sperm showed severely impaired motility"; PMID:37607933, "Together, these results indicate that Sypl1 is a critical gene for sperm maturation and male fertility."].</li>
+<li>Human relevance is supported by direct immunodetection of both SYPL1 and VAMP3 in human sperm cytoplasmic droplets [PMID:37607933, "the enrichment of SYPL1 and VAMP3 is conserved, also appearing in the CDs of human spermatozoa"]. The causal process annotations are therefore transferred to human with ISS rather than presented as direct human knockout evidence.</li>
+<li>The melanosome and urinary-exosome detections are retained as non-core proteomic localizations. The ALG3 and reference-interactome <code>protein binding</code> annotations are marked as uninformative over-annotations rather than converted into a molecular activity.</li>
+<li>The PMID:8034131 plasma-membrane TAS annotation remains <code>UNDECIDED</code>: the cached record is abstract-only and does not expose the localization evidence, so it would be inappropriate to overrule the original curator from incomplete evidence.</li>
+<li>No autonomous molecular activity has been demonstrated for SYPL1. Its defining evidence concerns membrane localization, vesicle organization, and VAMP3-dependent trafficking; generic binding or sequence-family membership does not establish a molecular-function term.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q16563
+gene_symbol: SYPL1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Synaptophysin-like protein 1 (SYPL1), also called pantophysin, is a broadly
+  expressed four-pass integral membrane protein of small cytoplasmic transport
+  vesicles. In non-neuroendocrine cells it marks constitutive-secretory and
+  endocytic vesicles rather than the specialized synaptic vesicles occupied by
+  synaptophysin and synaptoporin. In mammalian male germ cells, SYPL1 cooperates
+  with VAMP3 in a trans-Golgi-derived vesicle pathway that generates and
+  sequesters membranous saccules in the sperm cytoplasmic droplet. This pathway
+  concentrates metabolic and volume-regulatory cargo needed for normal sperm
+  maturation, morphology, motility, and fertility. SYPL1 is present in human
+  sperm cytoplasmic droplets, while the causal genetic evidence comes from mouse.
+  Its autonomous biochemical activity has not been established.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q16563-1
+  description: Canonical isoform; no isoform-specific function is established.
+- name: &#39;2&#39;
+  id: Q16563-2
+  sequence_note: VSP_008557
+  description: Alternative splice isoform; no distinct localization or function is established.
+existing_annotations:
+- term:
+    id: GO:0030672
+    label: synaptic vesicle membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      The PAINT inference transfers a specialized synaptic-vesicle location from
+      other physin-family proteins to the ubiquitously expressed pantophysin.
+    action: MODIFY
+    reason: &gt;-
+      Direct human and mammalian-cell evidence identifies SYPL1 on constitutive
+      small cytoplasmic transport vesicles, including secretory and endocytic
+      carriers. Endogenous synaptic-vesicle localization has not been established
+      for SYPL1, so the family-derived term is too specific; cytoplasmic vesicle
+      membrane preserves the supported vesicular-membrane essence.
+    proposed_replacement_terms:
+    - id: GO:0030659
+      label: cytoplasmic vesicle membrane
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: GO_REF:0000033
+        source_label: PAINT physin-family inference
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Synaptic-vesicle localization is valid for specialized physin paralogs,
+          but direct evidence places pantophysin on broadly distributed
+          constitutive transport vesicles.
+    supported_by:
+    - reference_id: PMID:8707851
+      supporting_text: Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: file:human/SYPL1/SYPL1-deep-research-manual.md
+      supporting_text: These results directly support cytoplasmic vesicle membrane localization.
+- term:
+    id: GO:0008021
+    label: synaptic vesicle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro mapping likewise over-specializes pantophysin as a synaptic-vesicle
+      protein on the basis of family membership.
+    action: MODIFY
+    reason: &gt;-
+      SYPL1 is homologous to synaptophysin but is broadly expressed and directly
+      localized to constitutive transport vesicles. The experimentally supported
+      replacement is cytoplasmic vesicle membrane, appropriate for this integral
+      membrane protein.
+    proposed_replacement_terms:
+    - id: GO:0030659
+      label: cytoplasmic vesicle membrane
+    supported_by:
+    - reference_id: PMID:8034131
+      supporting_text: the synaptophysin-related gene is ubiquitously expressed in vitro and in vivo
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:8707851
+      supporting_text: colocalizing with constitutive secretory and endocytotic vesicle markers in nonneuroendocrine cells
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The generic membrane assignment is correct for a four-pass protein but loses
+      SYPL1&#39;s defining vesicular context.
+    action: MODIFY
+    reason: &gt;-
+      Direct microscopy, immunoelectron microscopy, and fractionation support the
+      more informative cytoplasmic vesicle membrane term.
+    proposed_replacement_terms:
+    - id: GO:0030659
+      label: cytoplasmic vesicle membrane
+    supported_by:
+    - reference_id: PMID:8707851
+      supporting_text: the majority of pantophysin reactivity is detected at vesicles with a diameter of &lt; 100 nm
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0030659
+    label: cytoplasmic vesicle membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping correctly places SYPL1 on cytoplasmic
+      vesicle membranes.
+    action: ACCEPT
+    reason: &gt;-
+      This location is directly supported by antibody localization,
+      immunoelectron microscopy, and vesicle fractionation in human and mammalian
+      cells and represents SYPL1&#39;s characteristic cellular compartment.
+    supported_by:
+    - reference_id: PMID:8707851
+      supporting_text: Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0042470
+    label: melanosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      SYPL1 was identified by mass spectrometry in human melanosome fractions
+      spanning maturation stages I through IV.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The curated proteomic detection is compatible with SYPL1 residence on
+      broadly distributed transport vesicles, but it is a cell-type-specific
+      localization rather than evidence that melanosome biology is a core SYPL1
+      function. The cached main text does not expose the protein-level
+      supplementary row.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29547901
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A focused ALG3 interaction study reports an in vivo ALG3-SYPL1 association.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The partner-level result is experimentally supported, but generic protein
+      binding is not an informative molecular function and does not establish the
+      biochemical role of SYPL1. The interaction can instead be retained as
+      mechanistic context.
+    supported_by:
+    - reference_id: PMID:29547901
+      supporting_text: provide experimental evidence for its in vivo interaction with the functionally linked proteins OSBP, OSBPL9 and LRP1, the SYPL1 protein and the transcription factor CREB3
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The human reference interactome reports multiple binary interaction
+      candidates for SYPL1 under this collapsed GOA group.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Proteome-scale binary interactions provide partner hypotheses but do not
+      define a specific SYPL1 activity. Generic protein binding is uninformative
+      and should not be treated as a core molecular function.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      SYPL1 was detected in a large-scale proteomic survey of human urinary
+      exosomes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The proteomic detection is plausible for a broadly expressed vesicle
+      membrane protein, but exosomal recovery is context-specific and does not by
+      itself identify SYPL1&#39;s evolved core role. The main cached article does not
+      expose the SYPL1 peptide row.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8034131
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The older cloning/expression paper is cited for plasma-membrane localization,
+      but its cached abstract does not state or show that localization.
+    action: UNDECIDED
+    reason: &gt;-
+      The relevant full text is unavailable. Later direct work strongly supports
+      intracellular transport-vesicle membranes, but this is insufficient to
+      conclude that the curator&#39;s full-text plasma-membrane evidence was absent or
+      incorrect. The annotation should remain unresolved pending inspection of the
+      original figures and methods.
+- term:
+    id: GO:0007268
+    label: chemical synaptic transmission
+  evidence_type: TAS
+  original_reference_id: PMID:8034131
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A synaptic-transmission process was inferred in the original family/cloning
+      context despite pantophysin&#39;s explicitly ubiquitous distribution.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The cited abstract establishes homology to synaptophysin and broad expression,
+      not participation in neurotransmitter release. Direct later evidence instead
+      defines constitutive transport vesicles and a germ-cell vesicle pathway.
+      A redundant neuronal contribution remains possible, so this is flagged as an
+      unsupported family-level over-annotation rather than confidently removed.
+    supported_by:
+    - reference_id: PMID:8034131
+      supporting_text: To stress the ubiquity of expression in contrast to the restricted distribution of synaptophysin and synaptoporin, I propose to refer to the encoded polypeptide as pantophysin.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:1730063
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The original partial cDNA sequence correctly identifies a synaptophysin-like
+      membrane protein, but the generic term can now be made more informative.
+    action: MODIFY
+    reason: &gt;-
+      Subsequent direct localization establishes cytoplasmic vesicle membrane as
+      the appropriate specific location for SYPL1.
+    proposed_replacement_terms:
+    - id: GO:0030659
+      label: cytoplasmic vesicle membrane
+    supported_by:
+    - reference_id: PMID:1730063
+      supporting_text: HL-5 appears to be a member of a previously undescribed family of synaptophysin-like genes.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:8707851
+      supporting_text: Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0097598
+    label: sperm cytoplasmic droplet
+  evidence_type: IDA
+  original_reference_id: PMID:37607933
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed new direct human annotation. SYPL1 and VAMP3 are enriched in the
+      cytoplasmic droplets of human spermatozoa.
+    action: NEW
+    reason: &gt;-
+      The study directly examined human sperm and demonstrated conserved
+      cytoplasmic-droplet localization, independently of the mouse knockout
+      transfer.
+    supported_by:
+    - reference_id: PMID:37607933
+      supporting_text: the enrichment of SYPL1 and VAMP3 is conserved, also appearing in the CDs of human spermatozoa
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0016050
+    label: vesicle organization
+  evidence_type: ISS
+  original_reference_id: PMID:37607933
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed orthology-supported annotation. Mouse Sypl1 loss prevents normal
+      formation and accumulation of Golgi-derived saccular vesicle elements in the
+      sperm cytoplasmic droplet.
+    action: NEW
+    reason: &gt;-
+      The knockout phenotype directly establishes a requirement for SYPL1 in
+      organizing these vesicular elements, and conserved localization in human
+      sperm supports transfer to human SYPL1.
+    supported_by:
+    - reference_id: PMID:37607933
+      supporting_text: Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0048194
+    label: Golgi vesicle budding
+  evidence_type: ISS
+  original_reference_id: PMID:37607933
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed orthology-supported annotation. SYPL1 is required for production of
+      trans-Golgi-network-derived vesicles that form sperm cytoplasmic-droplet
+      saccules.
+    action: NEW
+    reason: &gt;-
+      Genetic loss and ultrastructural analysis establish the SYPL1-dependent
+      Golgi-derived vesicle pathway in mouse; conserved human sperm localization
+      supports an ISS transfer while avoiding a claim of direct human genetics.
+    supported_by:
+    - reference_id: PMID:37607933
+      supporting_text: we uncover a mechanism for trans Golgi network (TGN) vesicle production that is critical for the formation of saccules and their segregation within the CD
+      reference_section_type: INTRODUCTION
+- term:
+    id: GO:0007286
+    label: spermatid development
+  evidence_type: ISS
+  original_reference_id: PMID:37607933
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed orthology-supported annotation. The SYPL1 pathway forms the
+      cytoplasmic-droplet saccules and concentrates metabolic cargo during late
+      spermatid maturation.
+    action: NEW
+    reason: &gt;-
+      Mouse knockout evidence connects SYPL1-dependent vesicle formation to late
+      spermatid and sperm development, and the pathway&#39;s localization is conserved
+      in human sperm.
+    supported_by:
+    - reference_id: PMID:37607933
+      supporting_text: Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm, which are required for sperm development and male fertility.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0097722
+    label: sperm motility
+  evidence_type: ISS
+  original_reference_id: PMID:37607933
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed orthology-supported annotation. Sypl1-null mouse sperm exhibit a
+      severe motility defect together with cytoplasmic-droplet and flagellar
+      abnormalities.
+    action: NEW
+    reason: &gt;-
+      The loss-of-function phenotype supports a causal contribution to sperm
+      motility. ISS appropriately conveys that the phenotype is demonstrated in
+      mouse while SYPL1 localization is conserved in human sperm.
+    supported_by:
+    - reference_id: PMID:37607933
+      supporting_text: KO epididymal sperm showed severely impaired motility
+      reference_section_type: RESULTS
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:1730063
+  title: Molecular cloning of a cDNA encoding a novel protein related to the neuronal vesicle protein synaptophysin.
+  findings:
+  - statement: The partial human clone encodes a protein in a newly recognized synaptophysin-like family.
+    supporting_text: HL-5 appears to be a member of a previously undescribed family of synaptophysin-like genes.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The paper supports the original
+      human sequence/family assignment but does not establish a specific vesicle
+      function.
+- id: PMID:8034131
+  title: Expression of the synaptophysin gene family is not restricted to neuronal and neuroendocrine differentiation in rat and human.
+  findings:
+  - statement: The newly cloned rat and human pantophysin gene is broadly expressed.
+    supporting_text: the synaptophysin-related gene is ubiquitously expressed in vitro and in vivo
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Pantophysin was named to distinguish its ubiquitous distribution from specialized family members.
+    supporting_text: To stress the ubiquity of expression in contrast to the restricted distribution of synaptophysin and synaptoporin, I propose to refer to the encoded polypeptide as pantophysin.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The paper directly supports human
+      cloning and broad expression but its unavailable full text prevents
+      adjudication of the plasma-membrane TAS row.
+- id: PMID:8707851
+  title: Pantophysin is a ubiquitously expressed synaptophysin homologue and defines constitutive transport vesicles.
+  findings:
+  - statement: Pantophysin colocalizes with constitutive-secretory and endocytic vesicle markers in non-neuroendocrine cells.
+    supporting_text: colocalizing with constitutive secretory and endocytotic vesicle markers in nonneuroendocrine cells
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Most pantophysin immunoreactivity occurs on small vesicles under 100 nm in diameter.
+    supporting_text: the majority of pantophysin reactivity is detected at vesicles with a diameter of &lt; 100 nm
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Pantophysin is a broad marker of small cytoplasmic transport vesicles.
+    supporting_text: Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and the cached abstract were checked. This is the direct
+      localization and fractionation study defining pantophysin&#39;s characteristic
+      vesicle compartment.
+- id: PMID:17081065
+  title: Proteomic and bioinformatic characterization of the biogenesis and function of melanosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The paper identity and UniProt&#39;s curated mass-spectrometry attribution were
+      checked, but the cached abstract does not expose the SYPL1 supplementary row.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The article and GOA evidence code were checked; the main cached text does not
+      expose the protein-level SYPL1 result from the large supplementary dataset.
+- id: PMID:29547901
+  title: Molecular partners of hNOT/ALG3, the human counterpart of the Drosophila NOT and yeast ALG3 gene, suggest its involvement in distinct cellular processes relevant to congenital disorders of glycosylation, cancer, neurodegeneration and a variety of further pathologies.
+  findings:
+  - statement: The study detected an in vivo ALG3-SYPL1 interaction.
+    supporting_text: provide experimental evidence for its in vivo interaction with the functionally linked proteins OSBP, OSBPL9 and LRP1, the SYPL1 protein and the transcription factor CREB3
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The partner result is explicit but
+      does not define a specific molecular function for SYPL1.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GOA cites this systematic human interactome map for several SYPL1 IPI rows.
+      These high-throughput interactions do not establish a core activity.
+- id: PMID:37607933
+  title: SYPL1 defines a vesicular pathway essential for sperm cytoplasmic droplet formation and male fertility.
+  findings:
+  - statement: SYPL1 and VAMP3 govern formation and sequestration of sperm cytoplasmic-droplet saccules.
+    supporting_text: This process is governed by a transmembrane protein SYPL1 and its interaction with VAMP3.
+    reference_section_type: ABSTRACT
+  - statement: Sypl1 loss prevents normal formation and accumulation of cytoplasmic-droplet saccular elements.
+    supporting_text: Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.
+    reference_section_type: ABSTRACT
+  - statement: SYPL1 vesicles segregate key metabolic enzymes into the forming sperm cytoplasmic droplet.
+    supporting_text: Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm, which are required for sperm development and male fertility.
+    reference_section_type: ABSTRACT
+  - statement: Mouse Sypl1 loss severely impairs sperm motility.
+    supporting_text: KO epididymal sperm showed severely impaired motility
+    reference_section_type: RESULTS
+  - statement: Cytoplasmic-droplet enrichment of SYPL1 and VAMP3 is conserved in human sperm.
+    supporting_text: the enrichment of SYPL1 and VAMP3 is conserved, also appearing in the CDs of human spermatozoa
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. Mouse knockout,
+      ultrastructure, motility, fertility, interaction, and rescue/context
+      experiments establish the causal pathway; human sperm were directly examined
+      for conserved localization.
+- id: file:human/SYPL1/SYPL1-uniprot.txt
+  title: UniProt entry for human SYPL1 (Q16563)
+  findings:
+  - statement: UniProt places SYPL1 on cytoplasmic vesicle membranes and records human melanosome detection.
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasmic vesicle membrane&#39;
+- id: file:human/SYPL1/SYPL1-deep-research-manual.md
+  title: Manual literature synthesis for SYPL1
+  findings: []
+core_functions:
+- description: &gt;-
+    Organizes a VAMP3-associated, trans-Golgi-derived vesicle pathway in late
+    spermatids that produces and sequesters membranous saccules in the sperm
+    cytoplasmic droplet and concentrates metabolic cargo required for sperm
+    maturation.
+  directly_involved_in:
+  - id: GO:0016050
+    label: vesicle organization
+  - id: GO:0048194
+    label: Golgi vesicle budding
+  - id: GO:0007286
+    label: spermatid development
+  locations:
+  - id: GO:0030659
+    label: cytoplasmic vesicle membrane
+  - id: GO:0097598
+    label: sperm cytoplasmic droplet
+  supported_by:
+  - reference_id: PMID:37607933
+    supporting_text: Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:37607933
+    supporting_text: Derived from the Golgi, SYPL1 vesicles are critical for segregation of key metabolic enzymes within the forming cytoplasmic droplet of late spermatids and epididymal sperm, which are required for sperm development and male fertility.
+    reference_section_type: ABSTRACT
+- description: &gt;-
+    Supports normal sperm morphology and motility downstream of cytoplasmic-droplet
+    saccule formation and cargo sequestration.
+  directly_involved_in:
+  - id: GO:0097722
+    label: sperm motility
+  locations:
+  - id: GO:0097598
+    label: sperm cytoplasmic droplet
+  supported_by:
+  - reference_id: PMID:37607933
+    supporting_text: KO epididymal sperm showed severely impaired motility
+    reference_section_type: RESULTS
+proposed_new_terms:
+- proposed_name: sperm cytoplasmic droplet organization
+  proposed_definition: &gt;-
+    A process that results in the assembly, arrangement of constituent parts, or
+    disassembly of the sperm cytoplasmic droplet, including formation and
+    sequestration of its Golgi-derived membranous saccular elements.
+  justification: &gt;-
+    GO contains the sperm cytoplasmic droplet cellular-component term but no
+    process term that captures active formation and organization of this conserved
+    organelle. SYPL1/VAMP3-dependent vesicle production and saccule sequestration
+    are experimentally separable from generic vesicle organization and from the
+    broader process of spermatid development.
+  proposed_parent:
+    id: GO:0016050
+    label: vesicle organization
+  supported_by:
+  - reference_id: PMID:37607933
+    supporting_text: Genetic ablation of SYPL1 in mice reveals that SYPL1 dictates the formation and accumulation of saccular elements in the forming cytoplasmic droplet.
+    reference_section_type: ABSTRACT
+suggested_questions:
+- question: &gt;-
+    What direct molecular activity does SYPL1 contribute to VAMP3-associated
+    vesicle budding, saccule shaping, or cargo selection?
+  experts:
+  - sperm cytoplasmic-droplet biologists
+  - membrane-trafficking biochemists
+- question: &gt;-
+    Is SYPL1 required for constitutive-secretory or endocytic vesicle organization
+    in human somatic cells, or is its causal requirement restricted to specialized
+    contexts such as late spermatids?
+  experts:
+  - vesicle-trafficking cell biologists
+- question: &gt;-
+    Do the two human SYPL1 splice isoforms differ in vesicle localization, VAMP3
+    engagement, or support of sperm cytoplasmic-droplet formation?
+  experts:
+  - reproductive cell biologists
+suggested_experiments:
+- description: &gt;-
+    Create SYPL1-null human spermatid-like cells or testicular organoids and perform
+    isoform-resolved rescue while quantifying TGN-derived vesicle budding,
+    cytoplasmic-droplet-like saccule formation, and HK1/PGK2 cargo sequestration by
+    live imaging and electron microscopy.
+  experiment_type: CRISPR genetics, organoid differentiation, live imaging, and electron microscopy
+  hypothesis: &gt;-
+    Human SYPL1 is required cell-autonomously for VAMP3-associated Golgi vesicle
+    production and metabolic-cargo sequestration during late germ-cell maturation.
+- description: &gt;-
+    Reconstitute purified SYPL1 and VAMP3 in composition-controlled Golgi-like
+    membranes and measure budding, membrane curvature, fusion, and cargo capture
+    after systematic mutation of the SYPL1 transmembrane and cytoplasmic regions.
+  experiment_type: biochemical membrane reconstitution and structure-function analysis
+  hypothesis: &gt;-
+    SYPL1 supplies a membrane-organizing activity that cooperates with VAMP3 to
+    generate or stabilize cytoplasmic-droplet saccules.
+- description: &gt;-
+    Acutely degrade endogenous SYPL1 in representative human epithelial and
+    neuroendocrine cells and quantify constitutive secretion, endocytic recycling,
+    vesicle size, and VAMP3/SCAMP cargo distribution.
+  experiment_type: degron genetics, quantitative trafficking assays, and microscopy
+  hypothesis: &gt;-
+    SYPL1 has a general, partially redundant role in small constitutive transport
+    vesicles beyond its specialized germ-cell function.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular activity by which SYPL1 cooperates with VAMP3 to produce,
+    shape, sequester, or load cytoplasmic-droplet saccules is unknown.
+  boundary: &gt;-
+    SYPL1 is an integral vesicle-membrane protein; mouse loss-of-function abolishes
+    normal saccular accumulation, and interaction/localization data place VAMP3 in
+    the same pathway, but these observations do not distinguish membrane shaping,
+    budding, fusion, scaffolding, or cargo-selection activities.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving the activity would permit a precise molecular-function annotation and
+    explain how the pathway builds the sperm cytoplasmic droplet.
+  resolution: &gt;-
+    Purified-protein membrane reconstitution, structural analysis, separation-of-
+    function mutants, and matched cellular rescue assays should distinguish the
+    candidate mechanisms.
+  provenance:
+  - reference_id: file:human/SYPL1/SYPL1-notes.md
+    supporting_text: No autonomous molecular activity has been demonstrated for SYPL1.
+- gap_statement: &gt;-
+    Whether SYPL1 is functionally required for constitutive transport-vesicle
+    organization in human somatic cells remains unestablished.
+  boundary: &gt;-
+    Direct human localization identifies SYPL1 on constitutive-secretory and
+    endocytic vesicles, whereas the available causal knockout evidence concerns the
+    mouse germ-cell cytoplasmic-droplet pathway.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    This distinction determines whether germ-cell vesicle organization is a
+    specialized instance of a general SYPL1 function or an independently evolved
+    tissue-specific role.
+  resolution: &gt;-
+    Acute endogenous depletion with quantitative secretion, recycling, and
+    ultrastructural assays across multiple human somatic cell types is required.
+  provenance:
+  - reference_id: PMID:8707851
+    supporting_text: Pantophysin is therefore a broadly distributed marker of small cytoplasmic transport vesicles independent of their content.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>glcD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>glcD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88GH8" target="_blank" class="term-link">
+                        Q88GH8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "glcD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88GH8" data-a="DESCRIPTION: glcD encodes the FAD-linked GlcD subunit of a bact..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>glcD encodes the FAD-linked GlcD subunit of a bacterial GlcDEF glycolate dehydrogenase/oxidase complex. In KT2440 it is predicted to participate in oxidation of glycolate to glyoxylate, connecting glycolate utilization with glyoxylate metabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic catalytic activity annotation is compatible but uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific glycolate dehydrogenase activity annotation captures the expected catalytic role of GlcD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88GH8	glcD	enables	GO:0019154	glycolate dehydrogenase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003973" target="_blank" class="term-link">
+                                    GO:0003973
+                                </a>
+                            </span>
+                            <span class="term-label">(S)-2-hydroxy-acid oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0003973" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broader 2-hydroxy-acid oxidase term is compatible with the FAD-linked family but less precise than glycolate dehydrogenase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro supports the broader oxidase family assignment, while EC mapping provides the more pathway-specific glycolate dehydrogenase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR004490; GlcD.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009339" target="_blank" class="term-link">
+                                    GO:0009339
+                                </a>
+                            </span>
+                            <span class="term-label">glycolate oxidase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0009339" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlcD is part of the multicomponent glycolate oxidase/dehydrogenase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GlcD family assignment and local glcD/glcE/glcF cluster support membership in the glycolate oxidase complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88GH8	glcD	part_of	GO:0009339	glycolate oxidase complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019154" target="_blank" class="term-link">
+                                    GO:0019154
+                                </a>
+                            </span>
+                            <span class="term-label">glycolate dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0019154" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific pathway activity expected for GlcD in the GlcDEF complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 1.1.99.14 and GOA maps GlcD to glycolate dehydrogenase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE            EC=1.1.99.14 {ECO:0000313|EMBL:AAN69340.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88GH8	glcD	enables	GO:0019154	glycolate dehydrogenase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">GlcD&#39;s precise physiological role is the committed oxidation of glycolate to glyoxylate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAD binding is supported, but the GOA also carries the exact FAD binding term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0071949 is the more direct retained FAD-binding annotation for this review.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88GH8	glcD	enables	GO:0071949	FAD binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlcD is an FAD-linked oxidoreductase subunit, so FAD binding is part of the expected chemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt record and InterPro signatures identify GlcD as an FAD-linked oxidoreductase component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016166; FAD-bd_PCMH.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88GH8	glcD	enables	GO:0071949	FAD binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046487" target="_blank" class="term-link">
+                                    GO:0046487
+                                </a>
+                            </span>
+                            <span class="term-label">glyoxylate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/glcD/glcD-goa.tsv
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GH8" data-a="GO:0046487" data-r="file:PSEPK/glcD/glcD-goa.tsv" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlcD is predicted to participate in glyoxylate metabolism through the GlcDEF glycolate-to-glyoxylate reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GOA and UniProt support glycolate dehydrogenase activity for GlcD, and this reaction produces glyoxylate in the glycolate/glyoxylate assimilation branch.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88GH8	glcD	enables	GO:0019154	glycolate dehydrogenase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Glycolate oxidase, putative FAD-linked subunit</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glcD/glcD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">GlcD&#39;s precise physiological role is the committed oxidation of glycolate to glyoxylate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-linked GlcD subunit participating in glycolate oxidation to glyoxylate.</h3>
+                <span class="vote-buttons" data-g="Q88GH8" data-a="FUNCTION: FAD-linked GlcD subunit participating in glycolate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019154" target="_blank" class="term-link">
+                            glycolate dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046487" target="_blank" class="term-link">
+                                glyoxylate metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009339" target="_blank" class="term-link">
+                            glycolate oxidase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glcD/glcD-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88GH8	glcD	enables	GO:0019154	glycolate dehydrogenase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glcD/glcD-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88GH8	glcD	part_of	GO:0009339	glycolate oxidase complex</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glcD/glcD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">it is one of three subunits of a heteromeric enzyme, GlcDEF</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glcD/glcD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for glcD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies glcD as a putative FAD-linked glycolate oxidase subunit with EC 1.1.99.14.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glcD/glcD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GOA annotations for glcD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA includes glycolate dehydrogenase activity, FAD binding, and glycolate oxidase complex membership; the review adds inferred glyoxylate metabolic process participation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glcD/glcD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for glcD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supported GlcD as the FAD-linked GlcDEF subunit catalyzing glycolate oxidation to glyoxylate and emphasized that it acts in the heteromeric GlcDEF dehydrogenase complex.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(glcD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GH8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *glcD* (PP_3745, UniProt Q88GH8) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T17:18:54.654154</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="glcD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="glcD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-glcd-pp_3745-uniprot-q88gh8-in-pseudomonas-putida-kt2440">Functional Annotation of <em>glcD</em> (PP_3745, UniProt Q88GH8) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary / Answer to the Research Question</h2>
+<p><strong>glcD (PP_3745; UniProt Q88GH8) encodes the FAD-linked catalytic subunit of the bacterial glycolate oxidase / glycolate dehydrogenase (EC 1.1.99.14; KEGG Orthology K00104).</strong> Its primary function is to catalyze the flavin-dependent oxidation of <strong>glycolate (2-hydroxyacetate) to glyoxylate</strong>. GlcD does not act alone: it is one of three subunits of a heteromeric enzyme, GlcDEF, in which GlcD and GlcE are FAD-binding flavoprotein subunits and GlcF is an iron–sulfur subunit that relays electrons to the membrane quinone pool. The enzyme is a <strong>membrane-associated respiratory dehydrogenase</strong> (electrons pass to quinones/respiratory chain, not directly to O₂ — hence the "1.1.99, unknown/other acceptor" classification). In <em>P. putida</em> KT2440 this reaction is the committed step of <strong>glycolate catabolism</strong>, feeding glyoxylate into central carbon metabolism (glyoxylate carboligase and glycerate/glyoxylate-cycle routes) and detoxifying glycolate generated during growth on C2 compounds such as ethylene glycol.</p>
+<p>Gene identity was verified and is unambiguous: the gene symbol <em>glcD</em>, the protein description (glycolate oxidase FAD-linked subunit, EC 1.1.99.14), the organism (<em>P. putida</em> KT2440), and the FAD-bd_PCMH domain set given in the UniProt record all match the coherent body of literature and database evidence assembled below.</p>
+<hr />
+<h2 id="2-gene-protein-identity-and-verification">2. Gene / Protein Identity and Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><em>glcD</em></td>
+<td>UniProt Q88GH8; KEGG ppu:PP_3745</td>
+</tr>
+<tr>
+<td>Locus tag</td>
+<td>PP_3745</td>
+<td>KEGG; genome AE015451 (AAN69340.1)</td>
+</tr>
+<tr>
+<td>Protein length</td>
+<td>499 aa (53.5 kDa)</td>
+<td>UniProt Q88GH8</td>
+</tr>
+<tr>
+<td>Enzyme</td>
+<td>Glycolate dehydrogenase, FAD-linked subunit; EC 1.1.99.14</td>
+<td>KEGG KO <strong>K00104</strong></td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>FAD</td>
+<td>UniProt (ChEBI:57692)</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>ppu00630 Glyoxylate and dicarboxylate metabolism</td>
+<td>KEGG</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>FAD_binding_4 (PF01565) + FAD-oxidase_C (PF02913); FAD-bd_PCMH; TIGR00387 (glcD); COG0277</td>
+<td>UniProt/InterPro</td>
+</tr>
+<tr>
+<td>Orthology</td>
+<td>80.8% identity to <em>E. coli</em> GlcD (P0AEP9)</td>
+<td>This work (global alignment)</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol, the enzyme description, the FAD-binding PCMH domain architecture specified in the target record, and the KEGG orthology assignment (K00104, EC 1.1.99.14) are fully mutually consistent. There is <strong>no ambiguity</strong> in this identification.</p>
+<hr />
+<h2 id="3-primary-function-reaction-catalyzed-and-substrate-specificity">3. Primary Function: Reaction Catalyzed and Substrate Specificity</h2>
+<h3 id="31-reaction">3.1 Reaction</h3>
+<p>GlcD is the flavin-containing catalytic subunit that carries out:</p>
+<blockquote>
+<p><strong>Glycolate + acceptor(ox) → glyoxylate + acceptor(red)</strong>  (EC 1.1.99.14)</p>
+</blockquote>
+<p>i.e., oxidation of the C2 α-hydroxyl of glycolate (the smallest 2-hydroxyacid) to the carbonyl of glyoxylate, with hydride transfer to enzyme-bound FAD and subsequent re-oxidation of the flavin by downstream electron carriers.</p>
+<h3 id="32-enzyme-is-a-three-subunit-complex-glcdef">3.2 Enzyme is a three-subunit complex (GlcDEF)</h3>
+<p>Classic genetic dissection of the <em>E. coli</em> <em>glc</em> locus showed that GlcD and GlcE resemble flavoenzymes while GlcF resembles iron–sulfur proteins, and that a cassette insertion in <em>glcD</em>, <em>glcE</em>, <strong>or</strong> <em>glcF</em> each abolishes glycolate oxidase activity — establishing that all three are required subunits of the enzyme (Pellicer et al. 1996, PMID 8606183). The <em>P. putida</em> GlcD therefore functions as the FAD-linked catalytic partner within a GlcDEF heterotrimer, with GlcF providing the [Fe–S] electron-relay.</p>
+<h3 id="33-substrate-specificity">3.3 Substrate specificity</h3>
+<p>GlcD belongs to the <strong>FAD-dependent 2-hydroxyacid oxidase/dehydrogenase (VAO/PCMH) superfamily</strong>, which includes glycolate oxidase (GOX), L-lactate oxidase, and D-lactate dehydrogenase. Within this superfamily, glycolate-vs-lactate specificity is governed by a small number of active-site residues: Hackenberg et al. (2011, PMID 21828292) showed cyanobacterial/algal GlcD-type enzymes catalyze glycolate oxidation, and that converting the active site of a related lactate oxidase (No-LOX) to that of Arabidopsis GOX2 reversed its lactate/glycolate activity ratio. The bacterial GlcDEF enzyme is annotated and physiologically dedicated to <strong>glycolate</strong> as its preferred substrate (EC 1.1.99.14).</p>
+<h3 id="34-evolutionary-support-functional-transfer">3.4 Evolutionary support (functional transfer)</h3>
+<p>A gap-free global alignment shows <strong>80.8% amino-acid identity over all 499 residues</strong> between <em>P. putida</em> GlcD (Q88GH8) and the experimentally characterized <em>E. coli</em> GlcD (P0AEP9). This is strict 1:1 orthology (not merely shared family membership), which permits high-confidence transfer of the <em>E. coli</em> experimental annotation and upgrades the UniProt "putative/predicted" (evidence level 4) label to a well-supported functional assignment.</p>
+<hr />
+<h2 id="4-subcellular-localization-and-site-of-action">4. Subcellular Localization and Site of Action</h2>
+<p>EC 1.1.99.14 is a <strong>dehydrogenase</strong> (sub-subclass 1.1.99 = "acting on CH–OH with unknown/other acceptors"), not an O₂-dependent oxidase. Biochemical study of a glycolate-oxidizing bacterium demonstrated that glycolate dehydrogenase activity reduces artificial electron acceptors (benzyl viologen, methylene blue, DCPIP, ferricyanide, water-soluble quinones) and is recovered as a <strong>membrane-bound</strong> activity with <strong>menaquinones as electron carriers</strong> (Friedrich &amp; Schink 1993, PMID 8223560). Consistent with this, InterPro/GO assign GlcD to the <strong>"glycolate oxidase complex" (GO:0009339)</strong> with FAD binding.</p>
+<p><strong>Interpretation of localization:</strong> GlcD carries out its reaction as part of a membrane-associated GlcDEF complex at the cytoplasmic face of the inner membrane. Electrons flow substrate → GlcD-FAD → GlcE-FAD → GlcF [Fe–S] → membrane quinone (ubiquinone/menaquinone) pool, coupling glycolate oxidation to the aerobic respiratory chain. This mechanism explains the "dehydrogenase" (quinone acceptor) rather than "oxidase" (O₂ acceptor) designation.</p>
+<h3 id="41-structure-based-evidence-for-a-catalytically-competent-flavoenzyme">4.1 Structure-based evidence for a catalytically competent flavoenzyme</h3>
+<p>Motif analysis of the 499-aa GlcD sequence identifies the conserved hallmarks of the FAD-linked oxidase (VAO/PCMH; D-lactate-dehydrogenase-like) superfamily, all present at identical positions in the experimentally validated <em>E. coli</em> GlcD ortholog:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>P. putida position</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GAGTG</strong></td>
+<td>86–90</td>
+<td>N-terminal FAD-anchoring glycine-rich loop</td>
+</tr>
+<tr>
+<td><strong>GGNVAEN</strong></td>
+<td>~157</td>
+<td>FAD_binding_4 (PF01565) domain signature</td>
+</tr>
+<tr>
+<td><strong>HAGDGNMH</strong></td>
+<td>386–393</td>
+<td>C-terminal FAD-oxidase domain motif</td>
+</tr>
+<tr>
+<td><strong>E-H431-G-V-G-R-E</strong> (EHGVGRE)</td>
+<td>430–436</td>
+<td>Catalytic motif with invariant <strong>His431</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The catalytic motif is essentially identical between the two proteins (P. putida <code>SITGEHGVGREKINQ</code> vs <em>E. coli</em> <code>SISGEHGIGREKINQ</code>; <strong>His431 invariant</strong>). In this flavoenzyme family the conserved active-site histidine acts as the catalytic base that deprotonates the substrate C2 α-hydroxyl during hydride transfer to FAD. Conservation of both the FAD-binding loop and the catalytic His between <em>P. putida</em> GlcD and the genetically validated <em>E. coli</em> enzyme is structure/sequence-based evidence that GlcD is a <strong>catalytically competent</strong> FAD-dependent glycolate dehydrogenase subunit, not a degenerate/pseudo-enzyme.</p>
+<hr />
+<h2 id="5-genomic-context-regulation-and-pathway">5. Genomic Context, Regulation, and Pathway</h2>
+<h3 id="51-operon">5.1 Operon</h3>
+<p>PP_3745 lies within a conserved <strong>glcC–glcDEFG</strong> cluster in <em>P. putida</em> KT2440 (KEGG):</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>KO</th>
+<th>Product</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3744</td>
+<td><em>glcC</em></td>
+<td>K11474</td>
+<td>GntR-family transcriptional activator of the <em>glc</em> operon (divergently oriented)</td>
+</tr>
+<tr>
+<td><strong>PP_3745</strong></td>
+<td><strong><em>glcD</em></strong></td>
+<td><strong>K00104</strong></td>
+<td><strong>Glycolate dehydrogenase, FAD-linked subunit (target)</strong></td>
+</tr>
+<tr>
+<td>PP_3746</td>
+<td><em>glcE</em></td>
+<td>K11472</td>
+<td>Glycolate dehydrogenase, FAD-binding subunit</td>
+</tr>
+<tr>
+<td>PP_3747</td>
+<td><em>glcF</em></td>
+<td>K11473</td>
+<td>Glycolate dehydrogenase, iron–sulfur subunit</td>
+</tr>
+<tr>
+<td>PP_3748</td>
+<td><em>glcG</em></td>
+<td>K11477</td>
+<td><em>glc</em> operon protein of unknown function</td>
+</tr>
+</tbody>
+</table>
+<p>The genes are contiguous and co-oriented (glcD 4,274,044–4,275,543; glcE 4,275,543–4,276,595; glcF 4,276,605–4,277,840; glcG 4,277,833–4,278,231), mirroring the <em>E. coli glc</em> locus first characterized by Pellicer et al. (1996), where <em>glcC</em> is divergent from <em>glcDEFGB</em> and encodes the pathway regulator. Expression of the structural genes is glycolate-inducible via GlcC.</p>
+<h3 id="52-metabolic-pathway-and-physiological-role-in-p-putida">5.2 Metabolic pathway and physiological role in <em>P. putida</em></h3>
+<p>The product <strong>glyoxylate</strong> is assimilated through the glyoxylate carboligase (Gcl) pathway and glycerate/glyoxylate-cycle routes into gluconeogenesis and the TCA cycle (KEGG ppu00630). <em>P. putida</em> KT2440 oxidizes ethylene glycol via the toxic intermediates glycolaldehyde and glycolate; Franden et al. (2018, PMID 29885475) showed that overexpression of the <strong>glcDEF glycolate oxidase operon "removes the glycolate bottleneck and minimizes the production of these toxic intermediates,"</strong> enabling efficient growth on this C2 substrate. Li et al. (2019, PMID 31166064) similarly placed glycolate oxidation within the "initial oxidations of ethylene glycol to glyoxylate" that must be balanced for C2 growth.</p>
+<p><strong>Thus GlcD's precise physiological role is the committed oxidation of glycolate to glyoxylate</strong>, simultaneously (i) enabling use of glycolate (and upstream ethylene glycol/glycolaldehyde) as carbon and energy sources and (ii) preventing accumulation of cytotoxic C2 intermediates.</p>
+<hr />
+<h2 id="6-supported-and-refuted-hypotheses">6. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1 (identity): <em>glcD</em>/PP_3745 encodes the FAD-linked subunit of glycolate dehydrogenase (EC 1.1.99.14). ✔ Multiple concordant lines (UniProt, KEGG K00104, domains, 80.8% orthology to characterized E. coli GlcD).<br />
+- H2 (reaction/substrate): catalyzes glycolate → glyoxylate; glycolate is the physiological substrate. ✔<br />
+- H3 (quaternary structure): acts as part of a GlcDEF three-subunit complex (FAD + FAD + [Fe–S]). ✔ (E. coli genetics; conserved operon).<br />
+- H4 (localization/mechanism): membrane-associated, quinone-linked respiratory dehydrogenase (not O₂ oxidase). ✔<br />
+- H5 (pathway): routes glycolate/C2 carbon into central metabolism via glyoxylate; detoxifies glycolate. ✔</p>
+<p><strong>Refuted / disfavored:</strong><br />
+- That GlcD is a soluble, O₂-dependent glycolate <em>oxidase</em> like eukaryotic peroxisomal GOX — refuted: bacterial GlcDEF is a quinone-linked, membrane-associated dehydrogenase (EC 1.1.99.14).<br />
+- That GlcD is a standalone catalytic enzyme — refuted: it requires GlcE and GlcF for activity.</p>
+<hr />
+<h2 id="7-evidence-quality-limitations-and-future-directions">7. Evidence Quality, Limitations, and Future Directions</h2>
+<p><strong>Strengths of the annotation.</strong> The functional assignment rests on (i) direct genetic evidence in the <em>E. coli</em> ortholog (subunit knockouts abolish activity), (ii) very high, gap-free sequence orthology (80.8% over 499 aa), (iii) consistent domain/family/EC/KO assignments, and (iv) direct experimental demonstration of the glcDEF operon's glycolate-detoxifying role in <em>P. putida</em> KT2440 itself.</p>
+<p><strong>Limitations.</strong> No structure, purified-enzyme kinetics, or targeted mutant has yet been reported for the <em>P. putida</em> GlcD protein specifically; substrate specificity and membrane topology are inferred from orthologs and family biochemistry. Whether FAD is covalently or non-covalently bound in GlcD (versus GlcE) has not been experimentally resolved for this protein. The precise in vivo electron acceptor (ubiquinone vs menaquinone) in <em>P. putida</em> is inferred.</p>
+<p><strong>Future directions.</strong> Purification/reconstitution of the <em>P. putida</em> GlcDEF complex to measure kcat/KM for glycolate versus other 2-hydroxyacids; a clean PP_3745 deletion to confirm loss of growth on glycolate/ethylene glycol; and structural determination (or AlphaFold-guided mutagenesis) of the FAD and substrate-binding pockets to define specificity-determining residues.</p>
+<hr />
+<h2 id="8-key-references">8. Key References</h2>
+<ul>
+<li>Pellicer MT, Badía J, Aguilar J, Baldomà L. <em>glc</em> locus of <em>Escherichia coli</em>: characterization of genes encoding the subunits of glycolate oxidase and the glc regulator protein. <em>J Bacteriol</em> 1996. <strong>PMID 8606183</strong>.</li>
+<li>Friedrich M, Schink B. Hydrogen formation from glycolate driven by reversed electron transport in membrane vesicles of a syntrophic glycolate-oxidizing bacterium. <em>Eur J Biochem</em> 1993. <strong>PMID 8223560</strong>.</li>
+<li>Franden MA, et al. Engineering <em>Pseudomonas putida</em> KT2440 for efficient ethylene glycol utilization. <em>Metab Eng</em> 2018. <strong>PMID 29885475</strong>.</li>
+<li>Li W-J, et al. Laboratory evolution reveals the metabolic and regulatory basis of ethylene glycol metabolism by <em>Pseudomonas putida</em> KT2440. <em>Environ Microbiol</em> 2019. <strong>PMID 31166064</strong>.</li>
+<li>Hackenberg C, et al. Cyanobacterial lactate oxidases serve as essential partners in N₂ fixation and evolved into photorespiratory glycolate oxidases in plants. <em>Plant Cell</em> 2011. <strong>PMID 21828292</strong>.</li>
+<li>Database records: UniProt Q88GH8; KEGG ppu:PP_3745 (K00104, EC 1.1.99.14); InterPro FAD-bd_PCMH; NCBIfam TIGR00387 (glcD); COG0277.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="glcD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="glcD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88GH8
+gene_symbol: glcD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  glcD encodes the FAD-linked GlcD subunit of a bacterial GlcDEF glycolate
+  dehydrogenase/oxidase complex. In KT2440 it is predicted to participate in
+  oxidation of glycolate to glyoxylate, connecting glycolate utilization with
+  glyoxylate metabolism.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The generic catalytic activity annotation is compatible but uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The specific glycolate dehydrogenase activity annotation captures the expected catalytic role of GlcD.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tenables\tGO:0019154\tglycolate dehydrogenase activity&#34;
+- term:
+    id: GO:0003973
+    label: (S)-2-hydroxy-acid oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This broader 2-hydroxy-acid oxidase term is compatible with the FAD-linked family but less precise than glycolate dehydrogenase activity.
+    action: KEEP_AS_NON_CORE
+    reason: InterPro supports the broader oxidase family assignment, while EC mapping provides the more pathway-specific glycolate dehydrogenase activity.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR004490; GlcD.&#34;
+- term:
+    id: GO:0009339
+    label: glycolate oxidase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: GlcD is part of the multicomponent glycolate oxidase/dehydrogenase complex.
+    action: ACCEPT
+    reason: The GlcD family assignment and local glcD/glcE/glcF cluster support membership in the glycolate oxidase complex.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tpart_of\tGO:0009339\tglycolate oxidase complex&#34;
+- term:
+    id: GO:0019154
+    label: glycolate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: This is the specific pathway activity expected for GlcD in the GlcDEF complex.
+    action: ACCEPT
+    reason: UniProt assigns EC 1.1.99.14 and GOA maps GlcD to glycolate dehydrogenase activity.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-uniprot.txt
+      supporting_text: &#34;DE            EC=1.1.99.14 {ECO:0000313|EMBL:AAN69340.1};&#34;
+    - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tenables\tGO:0019154\tglycolate dehydrogenase activity&#34;
+    - reference_id: file:PSEPK/glcD/glcD-deep-research-openscientist.md
+      supporting_text: &#34;GlcD&#39;s precise physiological role is the committed oxidation of glycolate to glyoxylate&#34;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: FAD binding is supported, but the GOA also carries the exact FAD binding term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0071949 is the more direct retained FAD-binding annotation for this review.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tenables\tGO:0071949\tFAD binding&#34;
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: GlcD is an FAD-linked oxidoreductase subunit, so FAD binding is part of the expected chemistry.
+    action: ACCEPT
+    reason: The UniProt record and InterPro signatures identify GlcD as an FAD-linked oxidoreductase component.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR016166; FAD-bd_PCMH.&#34;
+    - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tenables\tGO:0071949\tFAD binding&#34;
+- term:
+    id: GO:0046487
+    label: glyoxylate metabolic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/glcD/glcD-goa.tsv
+  qualifier: involved_in
+  review:
+    summary: GlcD is predicted to participate in glyoxylate metabolism through the GlcDEF glycolate-to-glyoxylate reaction.
+    action: NEW
+    reason: GOA and UniProt support glycolate dehydrogenase activity for GlcD, and this reaction produces glyoxylate in the glycolate/glyoxylate assimilation branch.
+    supported_by:
+    - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tenables\tGO:0019154\tglycolate dehydrogenase activity&#34;
+    - reference_id: file:PSEPK/glcD/glcD-uniprot.txt
+      supporting_text: &#34;DE   SubName: Full=Glycolate oxidase, putative FAD-linked subunit&#34;
+    - reference_id: file:PSEPK/glcD/glcD-deep-research-openscientist.md
+      supporting_text: &#34;GlcD&#39;s precise physiological role is the committed oxidation of glycolate to glyoxylate&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: file:PSEPK/glcD/glcD-uniprot.txt
+  title: UniProtKB entry for glcD
+  findings:
+  - statement: UniProt identifies glcD as a putative FAD-linked glycolate oxidase subunit with EC 1.1.99.14.
+- id: file:PSEPK/glcD/glcD-goa.tsv
+  title: GOA annotations for glcD
+  findings:
+  - statement: GOA includes glycolate dehydrogenase activity, FAD binding, and glycolate oxidase complex membership; the review adds inferred glyoxylate metabolic process participation.
+- id: file:PSEPK/glcD/glcD-deep-research-openscientist.md
+  title: OpenScientist deep research report for glcD
+  findings:
+  - statement: OpenScientist supported GlcD as the FAD-linked GlcDEF subunit catalyzing glycolate oxidation to glyoxylate and emphasized that it acts in the heteromeric GlcDEF dehydrogenase complex.
+core_functions:
+- description: FAD-linked GlcD subunit participating in glycolate oxidation to glyoxylate.
+  molecular_function:
+    id: GO:0019154
+    label: glycolate dehydrogenase activity
+  in_complex:
+    id: GO:0009339
+    label: glycolate oxidase complex
+  directly_involved_in:
+  - id: GO:0046487
+    label: glyoxylate metabolic process
+  supported_by:
+  - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tenables\tGO:0019154\tglycolate dehydrogenase activity&#34;
+  - reference_id: file:PSEPK/glcD/glcD-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88GH8\tglcD\tpart_of\tGO:0009339\tglycolate oxidase complex&#34;
+  - reference_id: file:PSEPK/glcD/glcD-deep-research-openscientist.md
+    supporting_text: &#34;it is one of three subunits of a heteromeric enzyme, GlcDEF&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

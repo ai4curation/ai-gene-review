@@ -1,0 +1,3020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spiA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>spiA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q02465" target="_blank" class="term-link">
+                        Q02465
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "spiA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q02465" data-a="DESCRIPTION: spiA encodes Dd31, a late spore-specific, multi-pa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>spiA encodes Dd31, a late spore-specific, multi-pass membrane protein of the SCAMP (secretory carrier-associated membrane protein) family in the social amoeba Dictyostelium discoideum. Its transcript is induced specifically in prespore cells and spores during culmination, the terminal stage of fruiting body (sorocarp) formation, making spiA a widely used sporulation marker. The Dd31 protein (~30 kDa on Western blots) is associated with the inner face of the spore coat in a detergent-resistant manner. Loss of spiA does not detectably perturb development or spore morphology, but mutant spores lose viability far more rapidly than wild-type spores as they age, especially when submerged in dilute buffer, indicating a role in maintaining long-term spore stability and dormancy. The precise molecular activity of Dd31 is not established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006887" target="_blank" class="term-link">
+                                    GO:0006887
+                                </a>
+                            </span>
+                            <span class="term-label">exocytosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0006887" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of an exocytosis role transferred from the broader SCAMP family, whose canonical members function in post-Golgi membrane trafficking and regulated exocytosis. For spiA/Dd31 there is no direct evidence of an exocytic function; the experimentally established role is in maintaining spore stability, and the demonstrated location is the inner face of the spore coat.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A membrane-trafficking/exocytic role is plausible for a SCAMP-family protein and could relate to delivery of spore coat material during encapsulation, but it has not been demonstrated for this divergent spore-specific paralog and is not the core, experimentally supported function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032588" target="_blank" class="term-link">
+                                    GO:0032588
+                                </a>
+                            </span>
+                            <span class="term-label">trans-Golgi network membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0032588" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA localization transferred from canonical SCAMP proteins, which cycle through the trans-Golgi network. The only experimentally determined location for Dd31 is the inner face of the spore coat, not the TGN, and spiA is a highly divergent, spore-specific family member.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a generic family-level localization not supported by any direct evidence for spiA. The demonstrated site of action is the spore coat, so assigning an active TGN-membrane location over-annotates this divergent paralog.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000074637</span>
+
+                                    &middot; PANTHER node for SCAMP secretory-carrier membrane proteins
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">trans-Golgi-network-membrane localization is a canonical SCAMP property; SpiA is a spore-coat protein and the family compartment is not demonstrated for it</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:O15127</span>
+
+                                    &middot; human SCAMP2
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Canonical SCAMP cycles through the TGN; SpiA localizes to the spore coat, so the compartment does not transfer</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055038" target="_blank" class="term-link">
+                                    GO:0055038
+                                </a>
+                            </span>
+                            <span class="term-label">recycling endosome membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0055038" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA localization transferred from canonical SCAMP proteins that reside on recycling endosomes. As with the TGN annotation, there is no direct evidence placing Dd31 on recycling endosomes; the demonstrated location is the spore coat.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Family-level localization inference not supported for this spore-specific SCAMP. The experimentally shown location is the inner face of the spore coat, so an active recycling-endosome-membrane location over-annotates the gene.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000074637</span>
+
+                                    &middot; PANTHER node for SCAMP secretory-carrier membrane proteins
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Recycling-endosome-membrane localization is a canonical SCAMP property not supported for the spore-specific SpiA</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:O15127</span>
+
+                                    &middot; human SCAMP2
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Canonical SCAMP resides on recycling endosomes; SpiA is a spore-coat protein</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0015031" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) annotation derived from the SCAMP domain (IPR007273). Protein transport is a broad process associated with the SCAMP family but has not been demonstrated for spiA, whose characterized role is in spore maintenance.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A membrane-trafficking/protein-transport role is consistent with SCAMP family membership and cannot be excluded, but it is a domain-based inference rather than an experimentally established core function for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dd31 is a multi-pass membrane protein with four predicted transmembrane helices, consistent with SCAMP family topology. Membrane localization is well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein sequence contains four hydrophobic transmembrane segments and UniProt annotates it as a multi-pass membrane protein; a generic membrane location is correct, though more specific locations (spore coat) are better captured elsewhere.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function placeholder (ND) reflecting that no specific molecular activity has been assigned to Dd31. This accurately represents the current state of knowledge.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular function of spiA/Dd31 is genuinely unknown; beyond SCAMP family membership and membrane topology, no biochemical activity has been demonstrated. The ND annotation is appropriate and should be retained until a specific activity is established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030587" target="_blank" class="term-link">
+                                    GO:0030587
+                                </a>
+                            </span>
+                            <span class="term-label">sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1592257
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Disruption of the sporulation-specific gene spiA in Dictyost...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0030587" data-r="PMID:1592257" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Gene disruption (IMP) shows that spiA is required for normal spore properties during fruiting body (sorocarp) development. spiA-null strains develop and form morphologically normal spores, but the spores lose viability abnormally rapidly with age, a defect rescued by reintroducing the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core, experimentally supported developmental role of the gene, established by a clean knockout-and-rescue experiment showing a specific spore-stability phenotype within sorocarp development.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutant spores have normal viability when assayed soon after the completion of development, but, as the spiA- spores age, they lose viability more rapidly than those of the spiA+ parent.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Reinserting an intact copy of the spiA gene into a spiA- strain restores the stability of its spores.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031160" target="_blank" class="term-link">
+                                    GO:0031160
+                                </a>
+                            </span>
+                            <span class="term-label">spore wall</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1592257
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Disruption of the sporulation-specific gene spiA in Dictyost...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0031160" data-r="PMID:1592257" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (IDA) localizes Dd31 to the spore coat/wall, specifically to the inner face of spore coat fragments in a detergent-resistant manner. This is the core, experimentally established subcellular location of the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> An antibody against Dd31 showed the protein is stably associated with the inner face of the spore coat, directly supporting a spore-wall location that is consistent with its role in spore stability.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This location is consistent with its observed role in maintaining stability of the spores.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031154" target="_blank" class="term-link">
+                                    GO:0031154
+                                </a>
+                            </span>
+                            <span class="term-label">culmination involved in sorocarp development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25887420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Leaps and lulls in the developmental transcriptome of Dictyo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q02465" data-a="GO:0031154" data-r="PMID:25887420" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Expression-based (IEP) annotation reflecting that spiA transcript is sharply up-regulated during culmination (18-24 h of development) and is used as a sporulation marker. Expression timing indicates involvement in this stage but does not by itself demonstrate a causal function in culmination.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IEP evidence establishes that spiA is expressed specifically during culmination, consistent with its spore-maturation role, but expression pattern alone is weaker than the knockout evidence and marks stage-specific expression rather than a demonstrated driver of culmination; retain as a non-core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link">
+                                        PMID:25887420
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">spiA was up-regulated between 18 h and 20 h, and accumulated rapidly through 24 h.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                        PMID:1592257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The spiA gene of Dictyostelium is expressed specifically in prespore cells and spores during culmination, the final stage of development during which prespore and prestalk cells undergo terminal differentiation to form spores and stalk.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>spiA/Dd31 is a late spore-specific, multi-pass membrane protein of the SCAMP family that becomes stably associated with the inner face of the spore coat during culmination and is required to maintain long-term spore viability and dormancy. Its specific molecular activity is not established; loss of function does not block spore formation but accelerates the loss of spore viability with age.</h3>
+                <span class="vote-buttons" data-g="Q02465" data-a="FUNCTION: spiA/Dd31 is a late spore-specific, multi-pass mem..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030587" target="_blank" class="term-link">
+                                sorocarp development
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031160" target="_blank" class="term-link">
+                                spore wall
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                PMID:1592257
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                PMID:1592257
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This location is consistent with its observed role in maintaining stability of the spores.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                                PMID:1592257
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Mutant spores have normal viability when assayed soon after the completion of development, but, as the spiA- spores age, they lose viability more rapidly than those of the spiA+ parent.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1592257" target="_blank" class="term-link">
+                            PMID:1592257
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Disruption of the sporulation-specific gene spiA in Dictyostelium discoideum leads to spore instability.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">spiA is expressed specifically in prespore cells and spores during culmination, the terminal stage of development.</div>
+
+                        <div class="finding-text">"The spiA gene of Dictyostelium is expressed specifically in prespore cells and spores during culmination, the final stage of development during which prespore and prestalk cells undergo terminal differentiation to form spores and stalk."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Dd31 protein is associated with the inner face of the spore coat in a detergent-resistant manner.</div>
+
+                        <div class="finding-text">"Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">spiA-null spores develop and look normal but lose viability far more rapidly with age than wild-type spores, and reintroducing spiA restores spore stability.</div>
+
+                        <div class="finding-text">"Mutant spores have normal viability when assayed soon after the completion of development, but, as the spiA- spores age, they lose viability more rapidly than those of the spiA+ parent."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25887420" target="_blank" class="term-link">
+                            PMID:25887420
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Leaps and lulls in the developmental transcriptome of Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">spiA is a sporulation marker whose transcript is up-regulated during culmination between 18 and 24 h of development.</div>
+
+                        <div class="finding-text">"spiA was up-regulated between 18 h and 20 h, and accumulated rapidly through 24 h."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DICDI/spiA/spiA-hypotheses/spia-scamp-trafficking/openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist function-assignment analysis of the SpiA SCAMP trafficking hypothesis</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(spiA-hypotheses/spia-scamp-trafficking/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q02465" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">SpiA (Q02465) — SCAMP Family Membership vs. Vesicular Trafficking Function</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-12T12:17:45.464590</span>
+
+
+
+                    <a href="spiA-hypotheses/spia-scamp-trafficking/openscientist.md.citations.md" class="term-link">citations file</a>
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="spiA-hypotheses/spia-scamp-trafficking/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="spiA-hypotheses/spia-scamp-trafficking/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="spia-q02465-scamp-family-membership-vs-vesicular-trafficking-function">SpiA (Q02465) — SCAMP Family Membership vs. Vesicular Trafficking Function</h1>
+<p><strong>Target gene:</strong> spiA (Q02465, DD31_DICDI), <em>Dictyostelium discoideum</em> (NCBITaxon:44689)<br />
+<strong>Seed hypothesis:</strong> <em>SpiA is a secretory carrier membrane protein (SCAMP family) that functions in vesicular membrane trafficking.</em><br />
+<strong>Focus type:</strong> function_assignment</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The seed hypothesis bundles two separable claims, and the evidence pulls them apart sharply. The <strong>family claim — that SpiA is a SCAMP (secretory carrier membrane protein) — is well supported</strong> by concordant, independent domain and sequence evidence: SpiA carries the SCAMP Pfam domain (PF04144), the InterPro SCAMP signature (IPR007273), and the PANTHER subfamily assignment (PTHR10687:SF2), plus a canonical four-transmembrane-helix membrane core and ~28% mean identity to the five human SCAMPs concentrated in that core. Critically, SpiA is the <em>single</em> SCAMP-family gene in the entire <em>D. discoideum</em> genome, so this is not a paralog-confused call.</p>
+<p>The <strong>functional claim — that SpiA "functions in vesicular membrane trafficking" — is only weakly (homology-only) supported and is not the gene's demonstrated primary function.</strong> Every trafficking-flavored GO annotation on the protein (exocytosis, recycling endosome membrane, trans-Golgi network membrane, protein transport) carries a phylogenetic (IBA) or electronic (IEA) evidence code with no organism-specific experimental backing. The <em>only</em> directly demonstrated function of SpiA is a <strong>structural, spore-coat-associated role in maintaining spore viability during dormancy</strong>, established by targeted gene deletion (Richardson &amp; Loomis 1992, <a href="https://pubmed.ncbi.nlm.nih.gov/1592257/">PMID: 1592257</a>). SpiA is also a <em>divergent</em> SCAMP that lacks the N-terminal NPF motif repeats that mechanistically drive canonical SCAMP–EH-domain trafficking interactions.</p>
+<p><strong>Bottom line for the curator:</strong> Retain the SCAMP-family molecular identity and the experimentally grounded spore/sorocarp terms as core. Treat the vesicular-trafficking GO terms as <strong>non-core, homology-only annotations</strong> that do not represent the gene product's primary function. The seed hypothesis should <em>narrow</em> the review — SpiA is a SCAMP, but its established biology is spore-coat maintenance, not general membrane trafficking. Verdict: <strong>partially supported / over-annotated on the trafficking claim.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-spia-is-confidently-a-scamp-family-multi-pass-membrane-protein">Finding 1 — SpiA is confidently a SCAMP-family multi-pass membrane protein</h3>
+<p>SpiA (Q02465, DD31_DICDI) is unambiguously a SCAMP on structural and domain grounds. The UniProt entry describes a <strong>269-amino-acid protein with four predicted transmembrane helices</strong> (approximately residues 111–131, 139–159, 177–197, and 225–245), matching the canonical SCAMP membrane core of four TM segments flanked by cytoplasmic N- and C-termini. Three independent classification resources converge: <strong>Pfam PF04144 (SCAMP)</strong>, <strong>InterPro IPR007273 (SCAMP)</strong>, and <strong>PANTHER PTHR10687:SF2 (Secretory carrier-associated membrane protein)</strong>, and UniProt carries the SIMILARITY comment "Belongs to the SCAMP family" (ECO:0000305, curator inference). This is the robust half of the hypothesis — supported by multiple orthogonal signatures, with no competing family assignment. The caveat is that it is homology/domain-level evidence, not a direct biochemical demonstration.</p>
+<h3 id="finding-2-spia-lacks-canonical-scamp-npf-trafficking-motifs-and-is-structurally-divergent">Finding 2 — SpiA lacks canonical SCAMP NPF trafficking motifs and is structurally divergent</h3>
+<p>A direct sequence scan of Q02465 found <strong>zero NPF (Asn-Pro-Phe) motifs</strong> and zero NPY variants. This matters mechanistically: canonical mammalian SCAMP1–3 carry two to four N-terminal NPF repeats that bind EH-domain proteins (e.g., intersectin, EHD family) to recruit the machinery driving endocytic and exocytic vesicle trafficking. SpiA's N-terminal cytoplasmic region (~residues 1–110) is instead <strong>short, partly disordered (annotated disordered 1–35), and Ser/Ala/Pro-rich</strong>, not an NPF-repeat interaction module, and the protein is shorter (269 aa) than the long mammalian SCAMPs (~330 aa). The absence of the very motif that mechanistically links SCAMPs to vesicle traffic undermines the specific trafficking claim. <em>Caveat:</em> the short human SCAMP4/SCAMP5 (229/235 aa) are also NPF-less yet still traffic, so NPF absence is suggestive rather than decisive.</p>
+<h3 id="finding-3-the-demonstrated-function-of-spia-is-spore-coat-associated-stability-not-trafficking">Finding 3 — The demonstrated function of SpiA is spore-coat-associated stability, not trafficking</h3>
+<p>The decisive evidence is the loss-of-function study of Richardson &amp; Loomis 1992 (<a href="https://pubmed.ncbi.nlm.nih.gov/1592257/">PMID: 1592257</a>). Using homologous recombination to delete <em>spiA</em>, they found that <strong>spiA-null cells develop normally and produce morphologically normal spores</strong> (indistinguishable from wild type by transmission and scanning EM). The defect is one of <strong>durability, not formation</strong>: as spiA-null spores age, they lose viability far faster than the parent — after 11 days submerged in dilute buffer (conditions preventing germination), <strong>spiA-null spore viability dropped ~10⁵-fold versus only ~10-fold for the parent</strong> — a phenotype rescued by reinserting an intact <em>spiA</em> copy. The gene product <strong>Dd31 (30 kDa) associates with the inner face of the spore coat in a detergent-resistant manner</strong>, consistent with a structural role stabilizing the dormant spore. The experimental GO annotations mirror this biology: <strong>spore wall (GO:0031160, IDA)</strong>, <strong>sorocarp development (GO:0030587, IMP)</strong>, and <strong>culmination (GO:0031154, IEP)</strong> — while all trafficking terms remain IBA/IEA.</p>
+<h3 id="finding-4-spia-is-the-only-scamp-gene-in-d-discoideum-ruling-out-paralog-confusion">Finding 4 — SpiA is the ONLY SCAMP gene in <em>D. discoideum</em>, ruling out paralog confusion</h3>
+<p>UniProt searches restricted to organism 44689 return <strong>exactly one protein</strong> for Pfam PF04144, one for InterPro IPR007273, and one for PANTHER PTHR10687 — Q02465/spiA in all three cases. There is therefore <strong>no within-organism paralog-confusion risk</strong>. For comparison, humans carry five SCAMPs (SCAMP1 O15126 338 aa, SCAMP2 O15127 329 aa, SCAMP3 O14828 347 aa, SCAMP4 Q969E2 229 aa, SCAMP5 Q8TAC9 235 aa). SpiA (269 aa) is closest in size to the short SCAMP4/5 subgroup, which also lack NPF repeats yet still function in synaptic-vesicle trafficking — keeping the trafficking hypothesis alive as a possibility but not a fact. The single-copy status cuts both ways: it removes paralog confusion but implies <em>Dictyostelium</em> has repurposed its lone ancestral SCAMP toward a lineage-specific, developmentally restricted spore-coat role.</p>
+<h3 id="finding-5-quantitative-confirmation-28-identity-to-human-scamps-concentrated-in-the-tm-core">Finding 5 — Quantitative confirmation: ~28% identity to human SCAMPs, concentrated in the TM core</h3>
+<p>Global Needleman–Wunsch alignment of SpiA against the five human SCAMPs gave <strong>SCAMP1 30.6%, SCAMP3 30.6%, SCAMP2 28.9%, SCAMP4 26.6%, SCAMP5 23.8% (mean 28.1%)</strong>. The highest identity is to the <em>long</em> SCAMP1/SCAMP3 rather than the size-matched short SCAMP4/5, indicating that conservation is concentrated in the transmembrane core rather than the cytoplasmic tails. This twilight-zone identity, combined with concordant Pfam/InterPro/PANTHER HMM hits, solidly confirms genuine but divergent SCAMP-family membership while explaining why the trafficking-associated N-terminal features are not conserved.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">SEED</span><span class="w"> </span><span class="n">HYPOTHESIS</span>
+<span class="w">    </span><span class="ss">&quot;SpiA is a SCAMP that functions in vesicular trafficking&quot;</span>
+<span class="w">          </span><span class="o">|</span>
+<span class="w"> </span><span class="o">+</span><span class="c1">----------------+----------------+</span>
+<span class="w"> </span><span class="o">|</span><span class="w">                                 </span><span class="o">|</span>
+<span class="w">   </span><span class="n">CLAIM</span><span class="w"> </span><span class="nl">A</span><span class="p">:</span><span class="w"> </span><span class="n">family</span><span class="w">                  </span><span class="n">CLAIM</span><span class="w"> </span><span class="nl">B</span><span class="p">:</span><span class="w"> </span><span class="k">function</span>
+<span class="w">   </span><span class="ss">&quot;is a SCAMP&quot;</span><span class="w">                     </span><span class="ss">&quot;vesicular trafficking&quot;</span>
+<span class="w"> </span><span class="o">|</span><span class="w">                                 </span><span class="o">|</span>
+<span class="w">   </span><span class="n">SUPPORTED</span><span class="w"> </span><span class="p">(</span><span class="n">strong</span><span class="p">)</span><span class="w">              </span><span class="n">WEAK</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">homology</span><span class="o">-</span><span class="k">only</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="n">PF04144</span><span class="p">,</span><span class="w"> </span><span class="n">IPR007273</span><span class="p">,</span><span class="w">           </span><span class="o">-</span><span class="w"> </span><span class="ow">all</span><span class="w"> </span><span class="n">trafficking</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">IBA</span><span class="o">/</span><span class="n">IEA</span>
+<span class="w">     </span><span class="nl">PTHR10687</span><span class="p">:</span><span class="n">SF2</span><span class="w">                  </span><span class="o">-</span><span class="w"> </span><span class="k">NO</span><span class="w"> </span><span class="n">NPF</span><span class="w"> </span><span class="n">motifs</span><span class="w"> </span><span class="p">(</span><span class="n">canonical</span><span class="w"> </span><span class="n">SCAMP</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="mi">4</span><span class="o">-</span><span class="n">TM</span><span class="w"> </span><span class="n">core</span><span class="w">                        </span><span class="n">trafficking</span><span class="w"> </span><span class="n">motif</span><span class="w"> </span><span class="n">absent</span><span class="p">)</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="mf">28.1</span><span class="o">%</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">human</span><span class="w"> </span><span class="n">SCAMPs</span><span class="w">      </span><span class="o">-</span><span class="w"> </span><span class="n">divergent</span><span class="p">,</span><span class="w"> </span><span class="n">short</span><span class="w"> </span><span class="n">disordered</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">term</span>
+<span class="w">   </span><span class="o">-</span><span class="w"> </span><span class="n">single</span><span class="o">-</span><span class="n">copy</span><span class="w"> </span><span class="p">(</span><span class="k">no</span><span class="w"> </span><span class="n">paralog</span><span class="w">       </span><span class="o">-</span><span class="w"> </span><span class="k">NO</span><span class="w"> </span><span class="n">organism</span><span class="o">-</span><span class="k">specific</span><span class="w"> </span><span class="n">trafficking</span><span class="w"> </span><span class="n">assay</span>
+<span class="w">     </span><span class="n">confusion</span><span class="p">)</span><span class="w">                          </span><span class="o">|</span>
+<span class="w">                   </span><span class="n">DEMONSTRATED</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="nl">instead</span><span class="p">:</span>
+<span class="w">                   </span><span class="o">-</span><span class="w"> </span><span class="n">spiA</span><span class="o">-</span><span class="k">null</span><span class="err">:</span><span class="w"> </span><span class="n">normal</span><span class="w"> </span><span class="n">spores</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">lose</span>
+<span class="w">                     </span><span class="n">viability</span><span class="w"> </span><span class="mi">10</span><span class="o">^</span><span class="mi">5</span><span class="o">-</span><span class="n">fold</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">aging</span>
+<span class="w">                   </span><span class="o">-</span><span class="w"> </span><span class="n">Dd31</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="n">spore</span><span class="w"> </span><span class="n">coat</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">detergent</span><span class="o">-</span><span class="n">resistant</span>
+<span class="w">                   </span><span class="o">-</span><span class="w"> </span><span class="k">GO</span><span class="err">:</span><span class="w"> </span><span class="n">spore</span><span class="w"> </span><span class="n">wall</span><span class="w"> </span><span class="p">(</span><span class="n">IDA</span><span class="p">),</span><span class="w"> </span><span class="n">sorocarp</span>
+<span class="w">                     </span><span class="n">dev</span><span class="w"> </span><span class="p">(</span><span class="n">IMP</span><span class="p">),</span><span class="w"> </span><span class="n">culmination</span><span class="w"> </span><span class="p">(</span><span class="n">IEP</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The most parsimonious model is that <em>Dictyostelium</em> possesses a single, ancestral SCAMP that has been <strong>evolutionarily specialized as a structural component of the dormant spore's inner coat</strong>. Its SCAMP membrane architecture (4-TM core) is retained and likely inserts into spore-coat/plasma membranes, but the trafficking-adaptor module (N-terminal NPF repeats) that defines canonical SCAMP trafficking has been lost or never elaborated in this lineage. Developmental regulation (PKA → SrfA → spiA) places SpiA firmly in a terminal-differentiation/sporulation program, not a constitutive membrane-traffic pathway.</p>
+<p>An important caveat preserves a minimal trafficking possibility: the spore coat itself is assembled from secreted prespore-vesicle contents, and clathrin-mediated traffic is required for spore differentiation (<a href="https://pubmed.ncbi.nlm.nih.gov/9053320/">PMID: 9053320</a>). So SpiA operates <em>within</em> a trafficking-dependent developmental context, but the data localize SpiA to the <em>product</em> (the inner coat) rather than the <em>machinery</em> (vesicles/adaptors). Being embedded in a trafficking-dependent process is not the same as being a trafficking effector — indeed, the clathrin data place spiA expression <em>downstream</em> of the trafficking machinery.</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Evidence type</th>
+<th>Direction</th>
+<th>Claim tested</th>
+<th>Key finding</th>
+<th>Context</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt Q02465 (PF04144, IPR007273, PTHR10687:SF2)</td>
+<td>Structural/evolutionary + computational</td>
+<td>Supports</td>
+<td>SpiA is a SCAMP-family protein</td>
+<td>SCAMP domain + 4 TM helices = canonical SCAMP core</td>
+<td><em>D. discoideum</em> record</td>
+<td>High for family; homology-based (ECO:0000305/IEA)</td>
+</tr>
+<tr>
+<td>Sequence scan of Q02465 (this work)</td>
+<td>Computational</td>
+<td>Qualifies/refutes trafficking</td>
+<td>Does SpiA have canonical SCAMP trafficking motifs?</td>
+<td><strong>Zero NPF/NPY motifs</strong>; short, disordered, Ser/Ala/Pro-rich N-terminus; 269 aa vs ~330 aa</td>
+<td>In-silico</td>
+<td>Weakened caveat: short human SCAMP4/5 also NPF-less yet traffic</td>
+</tr>
+<tr>
+<td>Needleman–Wunsch alignment (this work)</td>
+<td>Structural/evolutionary + computational</td>
+<td>Supports family; qualifies trafficking</td>
+<td>Quantitative SCAMP identity</td>
+<td>28.1% mean identity to 5 human SCAMPs, concentrated in TM core</td>
+<td>Sequence</td>
+<td>High; conservation in core not termini</td>
+</tr>
+<tr>
+<td>UniProt taxon-44689 search (this work)</td>
+<td>Computational</td>
+<td>Qualifies</td>
+<td>Paralog confusion?</td>
+<td>Exactly one SCAMP gene in <em>D. discoideum</em> (=spiA); human has 5</td>
+<td>Genome-wide</td>
+<td>High; rules out within-organism paralog cross-annotation</td>
+</tr>
+<tr>
+<td>Richardson &amp; Loomis 1992, <a href="https://pubmed.ncbi.nlm.nih.gov/1592257/">PMID: 1592257</a></td>
+<td>Mutant phenotype + localization</td>
+<td>Refutes trafficking as core; supports spore role</td>
+<td>What does SpiA do?</td>
+<td>spiA-null → normal spores lose viability 10⁵-fold on aging; Dd31 on inner spore coat, detergent-resistant; rescued by re-insertion</td>
+<td><em>D. discoideum</em> spores</td>
+<td>High; decisive functional study. No trafficking assay done</td>
+</tr>
+<tr>
+<td>Escalante &amp; Sastre 1998, <a href="https://pubmed.ncbi.nlm.nih.gov/9729488/">PMID: 9729488</a></td>
+<td>Expression/regulation</td>
+<td>Qualifies (context)</td>
+<td>When/where is spiA expressed</td>
+<td>Late prespore/spore maturation marker; mRNA reduced in srfA-null</td>
+<td>Sporulation</td>
+<td>Medium-high; spore-specific, not vegetative-trafficking context</td>
+</tr>
+<tr>
+<td>SrfA/PKA study, <a href="https://pubmed.ncbi.nlm.nih.gov/12204259/">PMID: 12204259</a></td>
+<td>Expression/regulation</td>
+<td>Qualifies (context)</td>
+<td>Regulation of spiA</td>
+<td>spiA induced via PKA→SrfA at culmination</td>
+<td>Sporulation</td>
+<td>Medium; regulatory context</td>
+</tr>
+<tr>
+<td>Niswonger &amp; O'Halloran 1997, <a href="https://pubmed.ncbi.nlm.nih.gov/9053320/">PMID: 9053320</a></td>
+<td>Mutant phenotype (clathrin)</td>
+<td>Competing/context</td>
+<td>Is spiA downstream of trafficking machinery?</td>
+<td>Clathrin-minus cells fail to express spiA and make no spores</td>
+<td>Development</td>
+<td>Medium; places spiA downstream of, not as, trafficking effector</td>
+</tr>
+<tr>
+<td>stkA/stalky, <a href="https://pubmed.ncbi.nlm.nih.gov/11100898/">PMID: 11100898</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/8898200/">PMID: 8898200</a></td>
+<td>Mutant phenotype/expression</td>
+<td>Qualifies (context)</td>
+<td>spiA as spore-pathway marker</td>
+<td>spiA fails to express in stalky mutants; spore-specific transcript</td>
+<td>Cell-fate</td>
+<td>Medium; confirms spore-specificity</td>
+</tr>
+<tr>
+<td>yelA, <a href="https://pubmed.ncbi.nlm.nih.gov/9254905/">PMID: 9254905</a></td>
+<td>Mutant phenotype/expression</td>
+<td>Qualifies (context)</td>
+<td>spiA as sporulation marker</td>
+<td>spiA precociously expressed in yelA-null</td>
+<td>Development</td>
+<td>Low-medium; regulatory context only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<p><strong>Likely curation action (leads requiring curator verification):</strong></p>
+<ul>
+<li><strong>Retain (direct evidence):</strong> <code>GO:0031160 spore wall</code> (IDA), <code>GO:0030587 sorocarp development</code> (IMP), <code>GO:0031154 culmination involved in sorocarp development</code> (IEP). Consider adding <code>GO:0016021 integral component of membrane</code> (4 TM helices) and a spore-coat CC consistent with the detergent-resistant inner-coat localization.</li>
+<li><strong>Keep but flag as non-core / homology-only:</strong> <code>GO:0006887 exocytosis</code> (IBA), <code>GO:0055038 recycling endosome membrane</code> (IBA), <code>GO:0032588 trans-Golgi network membrane</code> (IBA), <code>GO:0015031 protein transport</code> (IEA). Do <strong>not</strong> upgrade to experimental; the divergent, NPF-less sequence weakens automatic SCAMP propagation, and no <em>Dictyostelium</em> trafficking assay exists.</li>
+<li><strong>Family/MF term:</strong> the SCAMP-family membrane-protein assignment is justified from PF04144/IPR007273; avoid asserting a specific vesicular-transport MF beyond family membership, and avoid "protein binding" as a final recommendation.</li>
+<li><strong>Seed-hypothesis-as-core-function:</strong> Do <strong>not</strong> record "vesicular membrane trafficking" as SpiA's primary function; the supported core function is spore-coat-associated maintenance of spore viability within sorocarp development.</li>
+</ul>
+<h3 id="go-decision-table-computed-lead-requiring-curator-verification">GO Decision Table (computed — lead requiring curator verification)</h3>
+<table>
+<thead>
+<tr>
+<th>GO_ID</th>
+<th>term</th>
+<th>aspect</th>
+<th>evidence code</th>
+<th>curation lead</th>
+<th>rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0031160</td>
+<td>spore wall</td>
+<td>CC</td>
+<td>IDA (dictyBase)</td>
+<td><strong>RETAIN</strong></td>
+<td>Direct: Dd31 on inner face of spore coat (PMID 1592257)</td>
+</tr>
+<tr>
+<td>GO:0030587</td>
+<td>sorocarp development</td>
+<td>BP</td>
+<td>IMP (dictyBase)</td>
+<td><strong>RETAIN</strong></td>
+<td>Direct: spiA-null spore-instability phenotype (PMID 1592257)</td>
+</tr>
+<tr>
+<td>GO:0031154</td>
+<td>culmination in sorocarp development</td>
+<td>BP</td>
+<td>IEP (dictyBase)</td>
+<td><strong>RETAIN</strong></td>
+<td>Spore/prespore-specific expression at culmination</td>
+</tr>
+<tr>
+<td>GO:0016021</td>
+<td>integral component of membrane</td>
+<td>CC</td>
+<td>(add) ISS/IEA</td>
+<td><strong>ADD-LEAD</strong></td>
+<td>4 predicted TM helices; supported by topology</td>
+</tr>
+<tr>
+<td>GO:0006887</td>
+<td>exocytosis</td>
+<td>BP</td>
+<td>IBA (GO_Central)</td>
+<td><strong>KEEP-NONCORE</strong></td>
+<td>Homology-only; no <em>Dictyostelium</em> assay</td>
+</tr>
+<tr>
+<td>GO:0055038</td>
+<td>recycling endosome membrane</td>
+<td>CC</td>
+<td>IBA (GO_Central)</td>
+<td><strong>KEEP-NONCORE</strong></td>
+<td>Homology-only; conflicts with spore-coat localization</td>
+</tr>
+<tr>
+<td>GO:0032588</td>
+<td>trans-Golgi network membrane</td>
+<td>CC</td>
+<td>IBA (GO_Central)</td>
+<td><strong>KEEP-NONCORE</strong></td>
+<td>Homology-only; no organism-specific data</td>
+</tr>
+<tr>
+<td>GO:0015031</td>
+<td>protein transport</td>
+<td>BP</td>
+<td>IEA (InterPro)</td>
+<td><strong>KEEP-NONCORE</strong></td>
+<td>Electronic family propagation only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<p>The immediate molecular identity tested is an integral, multi-pass (4-TM) SCAMP-family membrane protein. The direct cellular function demonstrated is association with the inner face of the spore coat and maintenance of spore structural integrity/viability during dormancy. The proposed "vesicular membrane trafficking" is a <strong>family-level inference, not a measured activity</strong>; the spore-instability phenotype is the demonstrated loss-of-function outcome and is developmental/structural, not a generic trafficking defect. Distinctions to keep clear:</p>
+<ul>
+<li><strong>Direct activity (demonstrated):</strong> membrane-embedded, inner-spore-coat protein required to maintain spore viability during dormancy.</li>
+<li><strong>Direct activity (hypothesized, homology-only):</strong> SCAMP-type vesicular carrier — not shown in <em>Dictyostelium</em>, and weakened by NPF-motif absence.</li>
+<li><strong>Downstream/context phenotype:</strong> the spore-viability decay on aging is the <em>readout</em> of losing a structural protein, not evidence of a trafficking defect.</li>
+<li><strong>Pathway context:</strong> spore-coat assembly overall depends on vesicular secretion and clathrin (<a href="https://pubmed.ncbi.nlm.nih.gov/9053320/">PMID: 9053320</a>), but those functions belong to other genes; SpiA is a cargo/product component, not the machinery.</li>
+</ul>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<ul>
+<li><strong>Divergent-paralog / over-propagation risk:</strong> SpiA lacks canonical SCAMP NPF EH-binding repeats, so IBA transfer of exocytosis/recycling-endosome/TGN terms from long metazoan/plant SCAMPs may over-annotate this specialized ortholog. <em>Caveat:</em> short human SCAMP4/5 are also NPF-less yet still traffic, so NPF absence is suggestive, not decisive.</li>
+<li><strong>Single-SCAMP genome:</strong> <em>D. discoideum</em> encodes exactly one SCAMP-family gene — spiA itself. This removes classic paralog confusion (no separate housekeeping SCAMP to mis-map), but implies the lone ancestral SCAMP was co-opted/neofunctionalized for a terminal spore-coat role, so uncritically propagating generic SCAMP trafficking terms is risky.</li>
+<li><strong>Developmental specialization:</strong> SpiA is expressed only at terminal spore differentiation, unlike housekeeping SCAMPs that operate constitutively.</li>
+<li><strong>Downstream vs. effector:</strong> clathrin-minus data (<a href="https://pubmed.ncbi.nlm.nih.gov/9053320/">PMID: 9053320</a>) place spiA expression <em>downstream</em> of the trafficking machinery, arguing SpiA is a differentiation product rather than a trafficking effector.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>Direct trafficking assay in <em>Dictyostelium</em> — none exists.</strong> Checked PubMed; no <em>Dictyostelium</em> SCAMP/exocytosis study found. Resolving this would determine whether the IBA terms are real.</li>
+<li><strong>Membrane topology/orientation</strong> — predicted (4 TM) but not experimentally mapped; matters for whether cytoplasmic loops could engage trafficking partners.</li>
+<li><strong>Interaction partners</strong> — no known EH-domain or SNARE partners; NPF absence predicts none. An interactome would test the trafficking mechanism.</li>
+<li><strong>N-terminal function unknown</strong> — the Ser/Ala/Pro-rich disordered N-terminus is uncharacterized and may mediate a <em>Dictyostelium</em>-specific interaction (e.g., with coat proteins such as SP85/PsB, <a href="https://pubmed.ncbi.nlm.nih.gov/12455962/">PMID: 12455962</a>).</li>
+<li><strong>Structure not experimentally solved</strong> — only predicted TM topology is available; an AlphaFold model exists but was not parsed here.</li>
+<li><strong>Single functional study</strong> — the definitive phenotype rests largely on one 1992 deletion study; modern reproduction with quantitative trafficking assays would strengthen the negative-for-trafficking case.</li>
+</ol>
+<p>Overall, conclusions about trafficking are conservative because they hinge on absence of evidence plus motif divergence rather than a direct negative assay.</p>
+<hr />
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<ul>
+<li><strong>GFP-SpiA live imaging</strong> across vegetative and developing cells: does it traffic through endosomes/TGN/plasma membrane, or only deposit at the forming spore coat?</li>
+<li><strong>Endocytosis/exocytosis assays in spiA-null vegetative cells</strong> (fluid-phase uptake, lysosomal-enzyme secretion, contractile-vacuole dynamics) to test for a generic trafficking phenotype.</li>
+<li><strong>Interaction proteomics (BioID/AP-MS)</strong> for EH-domain proteins/SNAREs (trafficking) vs. spore-coat proteins such as SP85/PsB, SP60, cotB (structural).</li>
+<li><strong>Domain-swap/rescue:</strong> can a mammalian SCAMP rescue spiA-null spore instability, and can SpiA rescue a SCAMP-trafficking defect? Tests functional equivalence.</li>
+<li><strong>Comparative genomics across Amoebozoa</strong> to determine whether the single-SCAMP, spore-specialized configuration is lineage-conserved.</li>
+</ul>
+<hr />
+<h2 id="curation-leads-require-curator-verification">Curation Leads (require curator verification)</h2>
+<ul>
+<li><strong>Reference to verify:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/1592257/">PMID: 1592257</a> (Richardson &amp; Loomis 1992) — snippet: <em>"Dd31 is associated with the inner face of spore coat fragments in a detergent-resistant manner. This location is consistent with its observed role in maintaining stability of the spores."</em> Supports spore-coat CC + spore-stability BP as the core function.</li>
+<li><strong>Reference to verify:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/9729488/">PMID: 9729488</a> (Escalante &amp; Sastre 1998) — spiA as srfA-dependent spore maturation marker.</li>
+<li><strong>Reference to verify:</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/9053320/">PMID: 9053320</a> — clathrin (not SpiA) is the trafficking component required upstream of spiA expression.</li>
+<li><strong>Candidate action changes:</strong> retain direct spore terms; add <code>GO:0016021 integral component of membrane</code>; keep trafficking terms with IBA/IEA codes but <strong>do not treat as core</strong>; add a curator note that SpiA is a divergent, NPF-less SCAMP with no organism-specific trafficking evidence.</li>
+<li><strong>Suggested questions for curator:</strong> Should IBA exocytosis/recycling-endosome/TGN terms be retained for a lineage-specific, motif-divergent SCAMP with a demonstrated non-trafficking phenotype? Is a spore-coat structural-constituent term warranted?</li>
+<li><strong>Suggested experiments:</strong> GFP-SpiA localization time-course; endo/exocytosis assays in spiA-null; interaction proteomics — as detailed under Discriminating Tests.</li>
+</ul>
+<hr />
+<h2 id="evidence-base-literature-summary">Evidence Base (Literature Summary)</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Role in this evaluation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1592257/">1592257</a></td>
+<td><em>Disruption of spiA leads to spore instability</em></td>
+<td><strong>Decisive.</strong> Establishes spore-coat structural role; refutes trafficking as primary function</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9729488/">9729488</a></td>
+<td><em>SRF homolog required for spore differentiation</em></td>
+<td>Regulatory context; spiA as spore maturation marker</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12204259/">12204259</a></td>
+<td><em>SrfA mediates PKA activation during sporulation</em></td>
+<td>PKA→SrfA→spiA regulatory axis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9053320/">9053320</a></td>
+<td><em>Clathrin required for spore differentiation</em></td>
+<td>Trafficking machinery is upstream of, and separate from, SpiA</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11100898/">11100898</a></td>
+<td><em>STKA-dependent genes</em></td>
+<td>spiA is a spore-pathway transcript</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8898200/">8898200</a></td>
+<td><em>Cell fate gene stalky</em></td>
+<td>spiA fails in stalky mutants</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9254905/">9254905</a></td>
+<td><em>yelA null precocious sporulation</em></td>
+<td>spiA as precocious-sporulation marker</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12455962/">12455962</a></td>
+<td><em>Outside-in signaling by spore coat protein SP85</em></td>
+<td>Spore-coat assembly context (potential SpiA partners)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10556070/">10556070</a></td>
+<td><em>Adenylyl cyclase acrA in late development</em></td>
+<td>Sporulation regulatory context</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The seed hypothesis is <strong>half right and half over-reaching</strong>. SpiA is genuinely a SCAMP-family, four-transmembrane membrane protein — a call supported by concordant domain assignments, quantitative sequence identity (~28% to human SCAMPs, concentrated in the TM core), and single-copy status that rules out paralog confusion. But "functions in vesicular membrane trafficking" is an inference from mammalian homology that is (a) mechanistically weakened by SpiA's loss of the canonical NPF trafficking motifs, and (b) not the gene product's demonstrated primary function. The one direct functional study shows SpiA is a detergent-resistant inner-spore-coat protein whose loss causes accelerated spore-viability decay — a structural, developmentally restricted role. For curation, keep the SCAMP identity and the experimentally grounded spore/sorocarp terms as core, and treat the trafficking GO terms as non-core, homology-only annotations that must not be presented as SpiA's primary function.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="spiA-hypotheses/spia-scamp-trafficking/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="spiA-hypotheses/spia-scamp-trafficking/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q02465
+gene_symbol: spiA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: spiA encodes Dd31, a late spore-specific, multi-pass membrane protein
+  of the SCAMP (secretory carrier-associated membrane protein) family in the social
+  amoeba Dictyostelium discoideum. Its transcript is induced specifically in prespore
+  cells and spores during culmination, the terminal stage of fruiting body
+  (sorocarp) formation, making spiA a widely used sporulation marker. The Dd31
+  protein (~30 kDa on Western blots) is associated with the inner face of the spore
+  coat in a detergent-resistant manner. Loss of spiA does not detectably perturb
+  development or spore morphology, but mutant spores lose viability far more rapidly
+  than wild-type spores as they age, especially when submerged in dilute buffer,
+  indicating a role in maintaining long-term spore stability and dormancy. The
+  precise molecular activity of Dd31 is not established.
+existing_annotations:
+- term:
+    id: GO:0006887
+    label: exocytosis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) inference of an exocytosis role transferred from the
+      broader SCAMP family, whose canonical members function in post-Golgi membrane
+      trafficking and regulated exocytosis. For spiA/Dd31 there is no direct
+      evidence of an exocytic function; the experimentally established role is in
+      maintaining spore stability, and the demonstrated location is the inner face
+      of the spore coat.
+    action: KEEP_AS_NON_CORE
+    reason: A membrane-trafficking/exocytic role is plausible for a SCAMP-family
+      protein and could relate to delivery of spore coat material during
+      encapsulation, but it has not been demonstrated for this divergent
+      spore-specific paralog and is not the core, experimentally supported function.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Dd31 is associated with the inner face of spore coat fragments
+        in a detergent-resistant manner.
+- term:
+    id: GO:0032588
+    label: trans-Golgi network membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: IBA localization transferred from canonical SCAMP proteins, which cycle
+      through the trans-Golgi network. The only experimentally determined location
+      for Dd31 is the inner face of the spore coat, not the TGN, and spiA is a highly
+      divergent, spore-specific family member.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000074637
+        source_label: &#34;PANTHER node for SCAMP secretory-carrier membrane proteins&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;trans-Golgi-network-membrane localization is a canonical SCAMP property; SpiA is a spore-coat protein and the family compartment is not demonstrated for it&#34;
+      - source_id: UniProtKB:O15127
+        source_label: &#34;human SCAMP2&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Canonical SCAMP cycles through the TGN; SpiA localizes to the spore coat, so the compartment does not transfer&#34;
+    reason: This is a generic family-level localization not supported by any direct
+      evidence for spiA. The demonstrated site of action is the spore coat, so
+      assigning an active TGN-membrane location over-annotates this divergent
+      paralog.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Dd31 is associated with the inner face of spore coat fragments
+        in a detergent-resistant manner.
+- term:
+    id: GO:0055038
+    label: recycling endosome membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: IBA localization transferred from canonical SCAMP proteins that reside
+      on recycling endosomes. As with the TGN annotation, there is no direct
+      evidence placing Dd31 on recycling endosomes; the demonstrated location is the
+      spore coat.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000074637
+        source_label: &#34;PANTHER node for SCAMP secretory-carrier membrane proteins&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Recycling-endosome-membrane localization is a canonical SCAMP property not supported for the spore-specific SpiA&#34;
+      - source_id: UniProtKB:O15127
+        source_label: &#34;human SCAMP2&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Canonical SCAMP resides on recycling endosomes; SpiA is a spore-coat protein&#34;
+    reason: Family-level localization inference not supported for this spore-specific
+      SCAMP. The experimentally shown location is the inner face of the spore coat,
+      so an active recycling-endosome-membrane location over-annotates the gene.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Dd31 is associated with the inner face of spore coat fragments
+        in a detergent-resistant manner.
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO (IEA) annotation derived from the SCAMP domain (IPR007273).
+      Protein transport is a broad process associated with the SCAMP family but has
+      not been demonstrated for spiA, whose characterized role is in spore
+      maintenance.
+    action: KEEP_AS_NON_CORE
+    reason: A membrane-trafficking/protein-transport role is consistent with SCAMP
+      family membership and cannot be excluded, but it is a domain-based inference
+      rather than an experimentally established core function for this gene.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Dd31 is associated with the inner face of spore coat fragments
+        in a detergent-resistant manner.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Dd31 is a multi-pass membrane protein with four predicted transmembrane
+      helices, consistent with SCAMP family topology. Membrane localization is well
+      supported.
+    action: ACCEPT
+    reason: The protein sequence contains four hydrophobic transmembrane segments and
+      UniProt annotates it as a multi-pass membrane protein; a generic membrane
+      location is correct, though more specific locations (spore coat) are better
+      captured elsewhere.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Dd31 is associated with the inner face of spore coat fragments
+        in a detergent-resistant manner.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: Root molecular_function placeholder (ND) reflecting that no specific
+      molecular activity has been assigned to Dd31. This accurately represents the
+      current state of knowledge.
+    action: ACCEPT
+    reason: The molecular function of spiA/Dd31 is genuinely unknown; beyond SCAMP
+      family membership and membrane topology, no biochemical activity has been
+      demonstrated. The ND annotation is appropriate and should be retained until a
+      specific activity is established.
+- term:
+    id: GO:0030587
+    label: sorocarp development
+  evidence_type: IMP
+  original_reference_id: PMID:1592257
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Gene disruption (IMP) shows that spiA is required for normal spore
+      properties during fruiting body (sorocarp) development. spiA-null strains
+      develop and form morphologically normal spores, but the spores lose viability
+      abnormally rapidly with age, a defect rescued by reintroducing the gene.
+    action: ACCEPT
+    reason: This is the core, experimentally supported developmental role of the
+      gene, established by a clean knockout-and-rescue experiment showing a specific
+      spore-stability phenotype within sorocarp development.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Mutant spores have normal viability when assayed soon after
+        the completion of development, but, as the spiA- spores age, they lose
+        viability more rapidly than those of the spiA+ parent.
+    - reference_id: PMID:1592257
+      supporting_text: Reinserting an intact copy of the spiA gene into a spiA-
+        strain restores the stability of its spores.
+- term:
+    id: GO:0031160
+    label: spore wall
+  evidence_type: IDA
+  original_reference_id: PMID:1592257
+  qualifier: located_in
+  review:
+    summary: Direct evidence (IDA) localizes Dd31 to the spore coat/wall, specifically
+      to the inner face of spore coat fragments in a detergent-resistant manner. This
+      is the core, experimentally established subcellular location of the protein.
+    action: ACCEPT
+    reason: An antibody against Dd31 showed the protein is stably associated with the
+      inner face of the spore coat, directly supporting a spore-wall location that is
+      consistent with its role in spore stability.
+    supported_by:
+    - reference_id: PMID:1592257
+      supporting_text: Dd31 is associated with the inner face of spore coat fragments
+        in a detergent-resistant manner.
+    - reference_id: PMID:1592257
+      supporting_text: This location is consistent with its observed role in
+        maintaining stability of the spores.
+- term:
+    id: GO:0031154
+    label: culmination involved in sorocarp development
+  evidence_type: IEP
+  original_reference_id: PMID:25887420
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Expression-based (IEP) annotation reflecting that spiA transcript is
+      sharply up-regulated during culmination (18-24 h of development) and is used as
+      a sporulation marker. Expression timing indicates involvement in this stage but
+      does not by itself demonstrate a causal function in culmination.
+    action: KEEP_AS_NON_CORE
+    reason: The IEP evidence establishes that spiA is expressed specifically during
+      culmination, consistent with its spore-maturation role, but expression pattern
+      alone is weaker than the knockout evidence and marks stage-specific expression
+      rather than a demonstrated driver of culmination; retain as a non-core process
+      annotation.
+    supported_by:
+    - reference_id: PMID:25887420
+      supporting_text: spiA was up-regulated between 18 h and 20 h, and accumulated
+        rapidly through 24 h.
+    - reference_id: PMID:1592257
+      supporting_text: The spiA gene of Dictyostelium is expressed specifically in
+        prespore cells and spores during culmination, the final stage of development
+        during which prespore and prestalk cells undergo terminal differentiation to
+        form spores and stalk.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:1592257
+  title: Disruption of the sporulation-specific gene spiA in Dictyostelium discoideum
+    leads to spore instability.
+  findings:
+  - statement: spiA is expressed specifically in prespore cells and spores during
+      culmination, the terminal stage of development.
+    supporting_text: The spiA gene of Dictyostelium is expressed specifically in
+      prespore cells and spores during culmination, the final stage of development
+      during which prespore and prestalk cells undergo terminal differentiation to
+      form spores and stalk.
+  - statement: The Dd31 protein is associated with the inner face of the spore coat
+      in a detergent-resistant manner.
+    supporting_text: Dd31 is associated with the inner face of spore coat fragments
+      in a detergent-resistant manner.
+  - statement: spiA-null spores develop and look normal but lose viability far more
+      rapidly with age than wild-type spores, and reintroducing spiA restores spore
+      stability.
+    supporting_text: Mutant spores have normal viability when assayed soon after the
+      completion of development, but, as the spiA- spores age, they lose viability
+      more rapidly than those of the spiA+ parent.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary knockout-and-rescue study establishing the spore-coat
+      localization and spore-stability role of Dd31/spiA. Cached record is
+      abstract-only (full_text_available false); all quotes are verbatim from the
+      abstract.
+- id: PMID:25887420
+  title: Leaps and lulls in the developmental transcriptome of Dictyostelium discoideum.
+  findings:
+  - statement: spiA is a sporulation marker whose transcript is up-regulated during
+      culmination between 18 and 24 h of development.
+    supporting_text: spiA was up-regulated between 18 h and 20 h, and accumulated
+      rapidly through 24 h.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Developmental transcriptome study; supports the culmination-stage,
+      sporulation-marker expression of spiA. Full text available and quote is
+      verbatim.
+- id: file:DICDI/spiA/spiA-hypotheses/spia-scamp-trafficking/openscientist.md
+  title: OpenScientist function-assignment analysis of the SpiA SCAMP trafficking hypothesis
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Independent OpenScientist function-assignment run (3 iterations). Verdict
+      PARTIALLY SUPPORTED / over-annotated on the trafficking claim. SCAMP
+      family membership is strongly supported by concordant orthogonal
+      signatures (Pfam PF04144, InterPro IPR007273, PANTHER PTHR10687:SF2, a
+      canonical four-transmembrane core, ~28 percent identity to the five human
+      SCAMPs), and SpiA is the single SCAMP gene in the D. discoideum genome, so
+      the family call is not paralog-confused. However the vesicular-trafficking
+      function is homology-only (all trafficking GO terms are IBA/IEA), SpiA
+      lacks the N-terminal NPF motifs that drive canonical SCAMP trafficking,
+      and the only experimentally demonstrated role is the structural
+      spore-coat / spore-viability function. Concordant with this review keeping
+      the trafficking terms non-core and the spore-coat role core.
+core_functions:
+- description: spiA/Dd31 is a late spore-specific, multi-pass membrane protein of the
+    SCAMP family that becomes stably associated with the inner face of the spore coat
+    during culmination and is required to maintain long-term spore viability and
+    dormancy. Its specific molecular activity is not established; loss of function
+    does not block spore formation but accelerates the loss of spore viability with
+    age.
+  molecular_function:
+    id: GO:0003674
+    label: molecular_function
+  directly_involved_in:
+  - id: GO:0030587
+    label: sorocarp development
+  locations:
+  - id: GO:0031160
+    label: spore wall
+  - id: GO:0016020
+    label: membrane
+  supported_by:
+  - reference_id: PMID:1592257
+    supporting_text: Dd31 is associated with the inner face of spore coat fragments
+      in a detergent-resistant manner.
+  - reference_id: PMID:1592257
+    supporting_text: This location is consistent with its observed role in
+      maintaining stability of the spores.
+  - reference_id: PMID:1592257
+    supporting_text: Mutant spores have normal viability when assayed soon after the
+      completion of development, but, as the spiA- spores age, they lose viability
+      more rapidly than those of the spiA+ parent.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

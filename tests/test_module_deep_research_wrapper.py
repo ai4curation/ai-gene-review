@@ -109,6 +109,27 @@ def test_build_command_maps_codex_to_cyberian_agent_type(tmp_path):
     assert "agent_type=codex" in cmd
 
 
+def test_build_command_propagates_openscientist_timeout(tmp_path):
+    modules_dir = tmp_path / "modules"
+    modules_dir.mkdir()
+    path = modules_dir / "peroxisome-lifecycle.yaml"
+    path.write_text(MODULE_YAML, encoding="utf-8")
+    data = module_deep_research.load_module_yaml(path)
+    output_path = module_deep_research.output_path_for_research(path, "openscientist")
+
+    cmd = module_deep_research.build_deep_research_command(
+        module_path=path,
+        data=data,
+        provider="openscientist",
+        output_path=output_path,
+        template_path=Path("templates/module_research.md.j2"),
+        provider_timeout=7200,
+    )
+
+    assert cmd[cmd.index("--provider") + 1] == "openscientist"
+    assert "timeout=7200" in cmd
+
+
 def test_module_template_renders_through_deep_research_processor():
     from deep_research_client.processing import ResearchProcessor  # type: ignore[import-untyped]
 

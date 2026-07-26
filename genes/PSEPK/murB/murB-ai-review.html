@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>murB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>murB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LM5" target="_blank" class="term-link">
+                        Q88LM5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "murB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LM5" data-a="DESCRIPTION: MurB is the cytoplasmic, FAD-dependent UDP-N-acety..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MurB is the cytoplasmic, FAD-dependent UDP-N-acetylenolpyruvoylglucosamine reductase of Pseudomonas putida KT2440. It uses NADPH to produce UDP-N-acetylmuramate in the second committed step of peptidoglycan precursor biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization for the soluble MurB precursor-synthesis enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly assigns Q88LM5 to the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murB/murB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biologically compatible but redundant with the cytoplasm annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> For this bacterial soluble enzyme the separate cytosol IEA adds no useful information beyond the directly assigned cytoplasm term and should not be carried into the core-function summary.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008762" target="_blank" class="term-link">
+                                    GO:0008762
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylmuramate dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0008762" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 1.3.1.98 and the reversible UDP-N-acetylmuramate/NADP+ reaction to Q88LM5.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murB/murB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-N-acetyl-alpha-D-muramate + NADP(+) = UDP-N-acetyl-3-O-(1-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88LM5 in peptidoglycan biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murB/murB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0050660" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor-binding property, retained as ancillary to catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurB binds FAD, but substrate-specific reductase activity is its core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murB/murB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0071555" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broader consequence of peptidoglycan precursor synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurB supports cell-wall organization through peptidoglycan synthesis, but GO:0009252 describes its direct pathway role more precisely.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM5" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate FAD-binding annotation from an independent electronic mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cofactor assignment is correct, but retaining both FAD-binding terms is redundant; GO:0050660 already captures this ancillary property.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/murB/murB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses FAD and NADPH to reduce the MurA product to UDP-N-acetylmuramate in cytoplasmic peptidoglycan precursor biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88LM5" data-a="FUNCTION: Uses FAD and NADPH to reduce the MurA product to U..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008762" target="_blank" class="term-link">
+                            UDP-N-acetylmuramate dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murB/murB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=UDP-N-acetyl-alpha-D-muramate + NADP(+) = UDP-N-acetyl-3-O-(1-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/murB/murB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">**MurB (UniProt Q88LM5; gene *murB*; ordered locus PP_1904) of *Pseudomonas putida* KT2440 is UDP-N-acetylenolpyruvoylglucosamine reductase (EC 1.3.1.98; also called UDP-N-acetylmuramate dehydrogenase).**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murB/murB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88LM5 for Pseudomonas putida KT2440 murB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns the MurB reductase reaction.</div>
+
+                        <div class="finding-text">"Reaction=UDP-N-acetyl-alpha-D-muramate + NADP(+) = UDP-N-acetyl-3-O-(1-"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns FAD as the MurB cofactor.</div>
+
+                        <div class="finding-text">"Name=FAD;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places MurB in peptidoglycan synthesis.</div>
+
+                        <div class="finding-text">"PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/murB/murB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK murB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies Q88LM5 as the FAD-dependent MurB reductase in cytoplasmic peptidoglycan precursor synthesis.</div>
+
+                        <div class="finding-text">"**MurB (UniProt Q88LM5; gene *murB*; ordered locus PP_1904) of *Pseudomonas putida* KT2440 is UDP-N-acetylenolpyruvoylglucosamine reductase (EC 1.3.1.98; also called UDP-N-acetylmuramate dehydrogenase).**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Detailed mechanistic evidence is transferred from characterized orthologs rather than measured directly for Q88LM5.</div>
+
+                        <div class="finding-text">"No mechanistic study exists on the *P. putida* KT2440 protein itself"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the NADPH/NADH specificity of KT2440 MurB under physiological conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LM5" data-a="Q: What is the NADPH/NADH specificity of KT2440 MurB ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88LM5 and compare steady-state kinetics with NADPH and NADH.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LM5" data-a="EXPERIMENT: Purify Q88LM5 and compare steady-state kinetics wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LM5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: MurB (Q88LM5, PP_1904) — *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T14:02:22.332944</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="murB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="murB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-murb-q88lm5-pp_1904-pseudomonas-putida-kt2440">Functional Annotation Report: MurB (Q88LM5, PP_1904) — <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer">1. Summary / Answer</h2>
+<p><strong>MurB (UniProt Q88LM5; gene <em>murB</em>; ordered locus PP_1904) of <em>Pseudomonas putida</em> KT2440 is UDP-N-acetylenolpyruvoylglucosamine reductase (EC 1.3.1.98; also called UDP-N-acetylmuramate dehydrogenase).</strong> It is a cytoplasmic, monomeric FAD-dependent flavoenzyme that catalyzes the second committed step of the cytoplasmic phase of peptidoglycan (cell-wall) biosynthesis: the NADPH-dependent reduction of the enolpyruvyl group of UDP-N-acetylglucosamine-enolpyruvate (the product of MurA) to yield UDP-N-acetylmuramic acid (UDP-MurNAc), the essential precursor that MurC–MurF subsequently convert into UDP-MurNAc-pentapeptide. The enzyme is essential for viability and is a validated antibacterial drug target.</p>
+<h3 id="gene-identity-verification">Gene-identity verification</h3>
+<p>The gene symbol <strong>murB</strong> matches the UniProt protein description (UDP-N-acetylenolpyruvoylglucosamine reductase, EC 1.3.1.98, MurB family), the organism (<em>Pseudomonas putida</em> KT2440), and the domain architecture (FAD-bd_PCMH cofactor-binding fold; MurB signature IPR003170). The literature retrieved is unambiguously for this enzyme family. No mechanistic study exists on the <em>P. putida</em> KT2440 protein itself; however, the enzyme is one of the most thoroughly characterized in bacterial cell-wall biology, and — importantly — a high-resolution crystal structure exists for the ortholog from the same genus, <em>Pseudomonas aeruginosa</em> MurB (PMID 23805286), providing a strong basis for direct inference. Function is therefore assigned by (i) unambiguous family/domain membership and (ii) homology to biochemically and structurally characterized MurB enzymes, most closely the <em>Pseudomonas</em> ortholog.</p>
+<hr />
+<h2 id="2-primary-function-the-reaction-catalyzed">2. Primary Function: the reaction catalyzed</h2>
+<p>MurB catalyzes:</p>
+<blockquote>
+<p><strong>UDP-N-acetyl-3-O-(1-carboxyvinyl)-D-glucosamine (enolpyruvyl-UDP-GlcNAc) + NADPH + H⁺ → UDP-N-acetylmuramate (UDP-MurNAc) + NADP⁺</strong></p>
+</blockquote>
+<p>This is the reductive conversion of an enol ether to the D-lactyl ether that defines N-acetylmuramic acid. In the Mur pathway, MurA first transfers phosphoenolpyruvate onto UDP-GlcNAc to make the enolpyruvyl adduct; <strong>MurB then reduces that enolpyruvyl group</strong>, completing formation of UDP-MurNAc (Benson et al., PMID 8448160; Benson, Walsh &amp; Hogle, PMID 8805513).</p>
+<p><strong>Substrate specificity.</strong> The physiological substrates are highly specific: the sugar-nucleotide <strong>enolpyruvyl-UDP-GlcNAc</strong> as the reducible substrate and <strong>NADPH</strong> (not NADH) as the hydride donor. The enzyme contains one tightly, stoichiometrically bound <strong>FAD</strong> cofactor that is reduced and re-oxidized during each catalytic cycle (PMID 8448160). The <em>E. coli</em> enzyme is a 38-kDa monomer purified to homogeneity with catalytically competent FAD (PMID 8448160).</p>
+<hr />
+<h2 id="3-catalytic-mechanism-flavin-mediated-two-half-reactions">3. Catalytic Mechanism (flavin-mediated, two half-reactions)</h2>
+<p>MurB is a classic example of a flavoenzyme running a <strong>ping-pong (two-half-reaction) mechanism</strong> at a single active site:</p>
+<ol>
+<li>
+<p><strong>Reductive half-reaction (NADPH → FAD).</strong> A hydride is transferred from NADPH — specifically the <strong>4-pro-S hydrogen</strong> — to enzyme-bound FAD, generating FADH₂ (Benson et al., PMID 8448160). In the <em>P. aeruginosa</em> ternary complex, the NADP⁺ nicotinamide ring stacks against the <strong>si face of the FAD isoalloxazine</strong>, an unusual geometry for hydride transfer (Chen et al., PMID 23805286).</p>
+</li>
+<li>
+<p><strong>Oxidative half-reaction (FADH₂ → enolpyruvyl substrate).</strong> FADH₂ reduces the enolpyruvyl group: a <strong>hydride is delivered to the β-methyl</strong> of the incipient 3-O-lactyl moiety while a <strong>proton from solvent adds to the α-carbon</strong>, producing the D-lactyl ether of UDP-MurNAc (PMID 8448160). <strong>Ser229 is the catalytic proton donor</strong> for this step — the S229A mutant suffers an ~10⁷-fold kinetic defect in the second half-reaction (Benson, Walsh &amp; Hogle, PMID 9020778).</p>
+</li>
+</ol>
+<p><strong>Single shared active site.</strong> After NADP⁺ departs, the sugar-nucleotide binds the <em>same</em> pocket used by the nicotinamide. In <em>P. aeruginosa</em> MurB, both substrates share a binding site located between two lobes of substrate-binding <strong>domain III</strong>, with the nicotinamide and enolpyruvyl moieties strikingly superimposable and both poised for hydride exchange with FAD; a <strong>potassium ion</strong> in the active site aids substrate orientation, and channel flexibility lets the non-reactive parts of the two substrates adopt different conformations (PMID 23805286).</p>
+<p><strong>Conformational gating.</strong> Substrate binding drives a large motion of <strong>domain 3 (residues ~219–319)</strong> that closes the substrate channel over the ligand; the Tyr190/Tyr254 stacking pair is disrupted, and Tyr190 swings over to hydrogen-bond the α-phosphate of the sugar-nucleotide (Benson, Walsh &amp; Hogle, PMID 8805513). NMR confirmed that NADP⁺ binding induces chemical-shift changes across both the sugar-nucleotide and FAD pockets (Constantine et al., PMID 9150408).</p>
+<p><strong>Conserved catalytic residues.</strong> Site-directed mutagenesis in <em>S. aureus</em> MurB defined distinct roles: <strong>Arg213</strong> maintains the FAD electronic state, <strong>Arg176</strong> binds the enolpyruvyl-UDP-GlcNAc substrate, and <strong>His259</strong> contacts both the sugar-nucleotide and NADP⁺ (Nishida et al., PMID 16236703). These residues are expected to be conserved in the <em>P. putida</em> ortholog.</p>
+<hr />
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>MurB functions in the <strong>cytoplasm</strong>. Peptidoglycan biosynthesis is compartmentalized across cytoplasm, inner membrane, and periplasm; the <strong>cytoplasmic phase forms the soluble nucleotide precursors</strong> through the Mur enzymes, converting UDP-GlcNAc into UDP-MurNAc-pentapeptide (Amera et al., PMID 42128180). MurB is explicitly described as catalyzing "an essential cytoplasmic step in the synthesis of peptidoglycan" (Shapiro et al., PMID 22068704). It is a soluble, monomeric protein with no membrane-spanning segments (consistent with the FAD-bd_PCMH soluble fold), acting on freely diffusible sugar-nucleotide substrates before the pathway moves to the membrane (MraY/MurG produce lipid I/II).</p>
+<hr />
+<h2 id="5-pathway-context-and-biological-process">5. Pathway Context and Biological Process</h2>
+<p>MurB occupies a fixed, non-redundant position in the linear <strong>Mur (peptidoglycan precursor) pathway</strong>:</p>
+<div class="codehilite"><pre><span></span><code>UDP-GlcNAc
+   │  MurA (enolpyruvyl transfer from PEP)
+   ▼
+enolpyruvyl-UDP-GlcNAc
+   │  MurB  ◄── NADPH + FAD   (THIS ENZYME, EC 1.3.1.98)
+   ▼
+UDP-MurNAc
+   │  MurC (add L-Ala)
+   ▼
+UDP-MurNAc-L-Ala → (MurD, MurE, MurF) → UDP-MurNAc-pentapeptide
+   │  MraY / MurG (membrane) → Lipid I / Lipid II
+   ▼
+peptidoglycan (periplasm)
+</code></pre></div>
+
+<p>MurB's product UDP-MurNAc is the demonstrated substrate for the next enzyme MurC (UDP-MurNAc:L-alanine ligase), as shown by coupled enzymatic synthesis using MurA (MurZ) + MurB to make UDP-MurNAc that then supports the MurC ligase reaction (Raymond et al., PMID 14659546; see also MurC structure/function, Seo et al., PMID 33950018). The broader biological process is <strong>biosynthesis of the murein sacculus</strong>, required for cell growth, elongation, division, and osmotic protection (Dhar et al., PMID 29185941).</p>
+<hr />
+<h2 id="6-essentiality-and-physiological-importance">6. Essentiality and Physiological Importance</h2>
+<ul>
+<li><strong>Genetic essentiality.</strong> In <em>Bacillus subtilis</em>, <em>murB</em> lies in the <strong>dcw ("division and cell wall") cluster</strong> immediately upstream of <em>divIB</em>; attempts to inactivate it were unsuccessful, and growth rate, morphology, and antibiotic resistance depend on the MurB expression level (Real &amp; Henriques, PMID 16484183).</li>
+<li><strong>Conditional-lethal genetics.</strong> In <em>Staphylococcus aureus</em>, temperature-sensitive <em>murB</em> point mutants <strong>halt peptidoglycan synthesis</strong> at the restrictive temperature with reduced reductase activity, confirming <em>murB</em> is essential for growth; five of six causal mutations map to substrate-binding domain 3 (Matsuo et al., PMID 12757953; Nishida et al., PMID 16236703).</li>
+<li><strong>Drug-target validation.</strong> Because interrupting this step is lethal and the enzyme has no human counterpart, MurB is an actively pursued antibacterial target: multiple inhibitor classes (4-thiazolidinones, 3,5-dioxopyrazolidines/pyrazolidine-3,5-diones, tetrazoles) inhibit MurB and reduce peptidoglycan synthesis and bacterial growth (Yang et al., PMID 16436710; Gilbert et al., PMID 17004716; Hrast et al., PMID 29363274), and dedicated high-throughput assays have been developed (Shapiro et al., PMID 22068704).</li>
+</ul>
+<p>For <em>P. putida</em> (an environmental, non-pathogenic soil bacterium and biotechnology chassis), MurB performs the same housekeeping role in building and maintaining the Gram-negative cell wall; its essentiality is inferred from the universal conservation and demonstrated essentiality of MurB across bacteria.</p>
+<hr />
+<h2 id="7-evidence-basis-and-confidence">7. Evidence Basis and Confidence</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction catalyzed (enolpyruvyl-UDP-GlcNAc → UDP-MurNAc; NADPH-dependent)</td>
+<td>Direct biochemistry (E. coli), family/domain annotation</td>
+<td>High</td>
+</tr>
+<tr>
+<td>FAD cofactor, monomer, 4-pro-S NADPH hydride</td>
+<td>Direct biochemistry (PMID 8448160)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Ping-pong, single-site mechanism; NADP⁺/FAD geometry</td>
+<td>X-ray structures incl. <strong>same-genus P. aeruginosa</strong> (PMID 23805286)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Ser229 proton donor; Arg/His/Tyr active-site network</td>
+<td>Mutagenesis + structure (PMID 9020778, 16236703, 8805513)</td>
+<td>High for family; inferred for PP_1904</td>
+</tr>
+<tr>
+<td>Cytoplasmic localization</td>
+<td>Pathway/biochemical consensus (PMID 22068704, 42128180)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Pathway position (MurA→MurB→MurC)</td>
+<td>Coupled enzymatic reconstitution (PMID 14659546)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Essentiality</td>
+<td>Genetics in B. subtilis/S. aureus (PMID 16484183, 12757953)</td>
+<td>High for bacteria; inferred for P. putida</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key inference note:</strong> All mechanistic/structural data derive from orthologs (E. coli, S. aureus, T. caldophilus, and — closest — P. aeruginosa). Given &gt;universal conservation of MurB catalytic residues and the availability of a <em>Pseudomonas</em> structure, transfer of annotation to <em>P. putida</em> PP_1904 is well supported.</p>
+<hr />
+<h2 id="8-supported-vs-refuted-hypotheses">8. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- MurB (Q88LM5) is the FAD-dependent UDP-N-acetylenolpyruvoylglucosamine reductase (EC 1.3.1.98). ✔<br />
+- It uses NADPH and a two-half-reaction flavin mechanism at a single active site. ✔<br />
+- It functions in the cytoplasm, upstream of MurC. ✔<br />
+- It is essential and a validated antibacterial target. ✔</p>
+<p><strong>Refuted / excluded:</strong><br />
+- Not a membrane transporter, structural/adapter protein, or signaling molecule — it is a soluble metabolic oxidoreductase. ✔<br />
+- Does not use NADH preferentially (NADPH-specific). ✔<br />
+- Gene-symbol ambiguity: <strong>not applicable</strong> — literature is abundant and specific to this exact enzyme family; no conflicting "murB" gene in other organisms was encountered.</p>
+<hr />
+<h2 id="9-limitations-and-future-directions">9. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No direct study of PP_1904</strong> exists; function is assigned by homology (strongly supported by the <em>P. aeruginosa</em> structure). A recombinant enzyme assay or complementation of an <em>E. coli murB(Ts)</em> strain with PP_1904 would give direct confirmation.</li>
+<li>Kinetic parameters (kcat, Km for enolpyruvyl-UDP-GlcNAc and NADPH) specific to <em>P. putida</em> are unknown.</li>
+<li>Whether <em>P. putida</em> MurB participates in any species-specific protein–protein interactions with divisome/elongasome components (as reviewed generally in PMID 27136593) has not been examined.</li>
+<li>Potential <em>P. putida</em>-specific roles in stress/solvent tolerance (a hallmark of this organism) via cell-wall remodeling remain unexplored.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<p>8448160 (Benson et al. 1993, mechanism); 8805513 (Benson, Walsh &amp; Hogle 1996, substrate-free structure); 9020778 (Benson, Walsh &amp; Hogle 1997, S229A); 9150408 (Constantine et al. 1997, NMR); 23805286 (Chen et al. 2013, <em>P. aeruginosa</em> MurB structure); 16236703 (Nishida et al. 2006, S. aureus active-site residues); 12757953 (Matsuo et al. 2003, S. aureus Ts mutants); 16484183 (Real &amp; Henriques 2006, B. subtilis dcw/essentiality); 14659546 (Raymond et al. 2003, MurA+MurB→UDP-MurNAc→MurC); 33950018 (Seo et al. 2021, MurC); 22068704 (Shapiro et al. 2012, cytoplasmic/essential, assay); 29363274 (Hrast et al. 2018, inhibitors); 16436710 (Yang et al. 2006, inhibitors + E. coli structure); 17004716 (Gilbert et al. 2006, inhibitors); 42128180 (Amera et al. 2026, Mur enzyme review); 29185941 (Dhar et al. 2018, E. coli/P. aeruginosa cell-wall review); 12492849 (El Zoeiby et al. 2003, Mur enzyme review); 16934839 (Smith 2006, Mur ligases); 27136593 (Laddomada et al. 2016, cell-wall protein complexes).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="murB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="murB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(murB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LM5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="murb-curation-notes">murB curation notes</h1>
+<p>Q88LM5/PP_1904 is the FAD-dependent MurB reductase in peptidoglycan precursor<br />
+synthesis<br />
+[UniProtKB:Q88LM5, "Name=FAD;"; "PATHWAY: Cell wall biogenesis; peptidoglycan<br />
+biosynthesis."].</p>
+<p>The separate cytoplasm and cytosol IEAs are redundant. The UniProt-supported<br />
+cytoplasm term is accepted, while cytosol is marked over-annotated and omitted<br />
+from the core-function summary. The two FAD-binding IEAs are treated similarly:<br />
+one ancillary annotation is retained and the duplicate is marked<br />
+over-annotated.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LM5
+gene_symbol: murB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  MurB is the cytoplasmic, FAD-dependent
+  UDP-N-acetylenolpyruvoylglucosamine reductase of Pseudomonas putida KT2440.
+  It uses NADPH to produce UDP-N-acetylmuramate in the second committed step of
+  peptidoglycan precursor biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct localization for the soluble MurB precursor-synthesis enzyme.
+    action: ACCEPT
+    reason: UniProt explicitly assigns Q88LM5 to the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/murB/murB-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Biologically compatible but redundant with the cytoplasm annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      For this bacterial soluble enzyme the separate cytosol IEA adds no useful
+      information beyond the directly assigned cytoplasm term and should not be
+      carried into the core-function summary.
+- term:
+    id: GO:0008762
+    label: UDP-N-acetylmuramate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct and specific core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 1.3.1.98 and the reversible
+      UDP-N-acetylmuramate/NADP+ reaction to Q88LM5.
+    supported_by:
+    - reference_id: file:PSEPK/murB/murB-uniprot.txt
+      supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + NADP(+) = UDP-N-acetyl-3-O-(1-&#39;
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct core biological process.
+    action: ACCEPT
+    reason: UniProt places Q88LM5 in peptidoglycan biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/murB/murB-uniprot.txt
+      supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct cofactor-binding property, retained as ancillary to catalysis.
+    action: KEEP_AS_NON_CORE
+    reason: MurB binds FAD, but substrate-specific reductase activity is its core function.
+    supported_by:
+    - reference_id: file:PSEPK/murB/murB-uniprot.txt
+      supporting_text: &#39;Name=FAD;&#39;
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct broader consequence of peptidoglycan precursor synthesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      MurB supports cell-wall organization through peptidoglycan synthesis, but
+      GO:0009252 describes its direct pathway role more precisely.
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Duplicate FAD-binding annotation from an independent electronic mapping.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The cofactor assignment is correct, but retaining both FAD-binding terms
+      is redundant; GO:0050660 already captures this ancillary property.
+    supported_by:
+    - reference_id: file:PSEPK/murB/murB-uniprot.txt
+      supporting_text: &#39;Name=FAD;&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/murB/murB-uniprot.txt
+  title: UniProtKB entry Q88LM5 for Pseudomonas putida KT2440 murB
+  findings:
+  - statement: UniProt assigns the MurB reductase reaction.
+    supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + NADP(+) = UDP-N-acetyl-3-O-(1-&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt assigns FAD as the MurB cofactor.
+    supporting_text: &#39;Name=FAD;&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places MurB in peptidoglycan synthesis.
+    supporting_text: &#39;PATHWAY: Cell wall biogenesis; peptidoglycan biosynthesis.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession with a HAMAP-rule assignment; reaction, FAD
+      cofactor, location, and pathway are mutually consistent.
+- id: file:PSEPK/murB/murB-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK murB
+  findings:
+  - statement: The report identifies Q88LM5 as the FAD-dependent MurB reductase in cytoplasmic peptidoglycan precursor synthesis.
+    supporting_text: &#39;**MurB (UniProt Q88LM5; gene *murB*; ordered locus PP_1904) of *Pseudomonas putida* KT2440 is UDP-N-acetylenolpyruvoylglucosamine reductase (EC 1.3.1.98; also called UDP-N-acetylmuramate dehydrogenase).**&#39;
+    reference_section_type: RESULTS
+  - statement: Detailed mechanistic evidence is transferred from characterized orthologs rather than measured directly for Q88LM5.
+    supporting_text: &#39;No mechanistic study exists on the *P. putida* KT2440 protein itself&#39;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The exact accession, MurB family,
+      reaction, cofactor, location, and pathway agree with the local UniProt
+      record; detailed kinetic and structural claims derive from orthologs.
+core_functions:
+- description: &gt;-
+    Uses FAD and NADPH to reduce the MurA product to UDP-N-acetylmuramate in
+    cytoplasmic peptidoglycan precursor biosynthesis.
+  molecular_function:
+    id: GO:0008762
+    label: UDP-N-acetylmuramate dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/murB/murB-uniprot.txt
+    supporting_text: &#39;Reaction=UDP-N-acetyl-alpha-D-muramate + NADP(+) = UDP-N-acetyl-3-O-(1-&#39;
+  - reference_id: file:PSEPK/murB/murB-deep-research-openscientist.md
+    supporting_text: &#39;**MurB (UniProt Q88LM5; gene *murB*; ordered locus PP_1904) of *Pseudomonas putida* KT2440 is UDP-N-acetylenolpyruvoylglucosamine reductase (EC 1.3.1.98; also called UDP-N-acetylmuramate dehydrogenase).**&#39;
+suggested_questions:
+- question: What is the NADPH/NADH specificity of KT2440 MurB under physiological conditions?
+suggested_experiments:
+- description: Purify Q88LM5 and compare steady-state kinetics with NADPH and NADH.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bioD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>bioD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QW8" target="_blank" class="term-link">
+                        Q88QW8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "bioD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QW8" data-a="DESCRIPTION: BioD is the ATP-dependent dethiobiotin synthetase ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BioD is the ATP-dependent dethiobiotin synthetase that carboxylates and cyclizes 7,8-diaminononanoate to form dethiobiotin. It is a soluble enzyme in the penultimate committed reaction of de novo biotin biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0000287" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium binding supports catalysis but is not the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records Mg2+ as the divalent cofactor for the ATP-dependent BioD reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004141" target="_blank" class="term-link">
+                                    GO:0004141
+                                </a>
+                            </span>
+                            <span class="term-label">dethiobiotin synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0004141" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific BioD catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 6.3.3.3, the HAMAP rule, and BioD-specific family assignments converge on ATP-dependent dethiobiotin formation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bioD/bioD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=ATP-dependent dethiobiotin synthetase BioD</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/bioD/bioD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **bioD** (ordered locus **PP_0366**, UniProt accession **Q88QW8**) of *Pseudomonas putida* KT2440 encodes **ATP-dependent dethiobiotin synthetase (DTBS/DTB synthetase, EC 6.3.3.3)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is valid mechanistic information but not the core reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP is consumed by the ligase reaction already represented by GO:0004141.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is the preferred retained location for this soluble bacterial enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly predicts cytoplasmic localization; the duplicate cytosol annotation adds no distinct localization information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is redundant with the retained cytoplasm annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The two terms do not describe distinct BioD pools in this bacterium, and the UniProt source explicitly uses cytoplasm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009102" target="_blank" class="term-link">
+                                    GO:0009102
+                                </a>
+                            </span>
+                            <span class="term-label">biotin biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0009102" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BioD catalyzes the penultimate reaction of biotin synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Dethiobiotin is the direct substrate of the terminal BioB reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QW8" data-a="GO:0042803" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Homodimerization is a structural property rather than the informative BioD function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The BioD reaction is fully captured by GO:0004141; generic self-association adds little functional information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses ATP and bicarbonate to cyclize 7,8-diaminononanoate into dethiobiotin in the penultimate reaction of biotin biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88QW8" data-a="FUNCTION: Uses ATP and bicarbonate to cyclize 7,8-diaminonon..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004141" target="_blank" class="term-link">
+                            dethiobiotin synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009102" target="_blank" class="term-link">
+                                biotin biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/bioD/bioD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=ATP-dependent dethiobiotin synthetase BioD</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/bioD/bioD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The gene **bioD** (ordered locus **PP_0366**, UniProt accession **Q88QW8**) of *Pseudomonas putida* KT2440 encodes **ATP-dependent dethiobiotin synthetase (DTBS/DTB synthetase, EC 6.3.3.3)**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/bioD/bioD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK BioD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88QW8 to EC 6.3.3.3 and biotin biosynthesis.</div>
+
+                        <div class="finding-text">"Full=ATP-dependent dethiobiotin synthetase BioD"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/bioD/bioD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK BioD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the seven existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/bioD/bioD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional report for PSEPK BioD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports the BioD-family assignment, ATP/Mg-dependent EC 6.3.3.3 reaction, and dethiobiotin-forming pathway position by transfer from structurally characterized bacterial orthologs. No direct assay, structure, localization experiment, or gene-specific phenotype for Q88QW8 was identified; drug-target and indirect pathway-essentiality claims are not used as core evidence.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bioD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QW8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">bioD (PP_0366, UniProt Q88QW8) in *Pseudomonas putida* KT2440: ATP-Dependent Dethiobiotin Synthetase</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T07:18:05.491058</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="bioD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="bioD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="biod-pp_0366-uniprot-q88qw8-in-pseudomonas-putida-kt2440-atp-dependent-dethiobiotin-synthetase">bioD (PP_0366, UniProt Q88QW8) in <em>Pseudomonas putida</em> KT2440: ATP-Dependent Dethiobiotin Synthetase</h1>
+<p><strong>Target:</strong> UniProt <strong>Q88QW8</strong> · Gene <strong>bioD</strong> · Ordered locus <strong>PP_0366</strong><br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / <strong>KT2440</strong>)<br />
+<strong>EC number:</strong> 6.3.3.3 · <strong>Family:</strong> Dethiobiotin synthetase family (Pfam AAA_26 PF13500; InterPro DTB_synth_BioD IPR004472, P-loop_NTPase IPR027417)</p>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>bioD</strong> (ordered locus <strong>PP_0366</strong>, UniProt accession <strong>Q88QW8</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>ATP-dependent dethiobiotin synthetase (DTBS/DTB synthetase, EC 6.3.3.3)</strong>, a soluble cytoplasmic enzyme that catalyzes the <strong>penultimate step of de novo biotin (vitamin B7) biosynthesis</strong>. The enzyme converts <strong>7,8-diaminopelargonic acid (DAPA, also called 7,8-diaminononanoic acid)</strong> and <strong>CO₂/bicarbonate</strong> into <strong>dethiobiotin (DTB)</strong> in an ATP- and Mg²⁺-dependent reaction, forming the ureido (five-membered urea) ring of the biotin bicyclic scaffold and releasing ADP + inorganic phosphate. Biotin synthase (BioB) then performs the final step — insertion of sulfur to close the thiophane ring and complete biotin.</p>
+<p>Mechanistically, dethiobiotin synthetase is one of the best-characterized ATP-dependent carboxylases in structural enzymology. High-resolution crystallographic and kinetic-crystallography studies of the <em>Escherichia coli</em> ortholog established that the reaction proceeds via an initial <strong>N7-carbamate</strong> formed from CO₂, which is then phosphorylated by ATP to a <strong>mixed carbamic–phosphoric anhydride</strong> intermediate, followed by intramolecular cyclization to form the ureido ring. Two Mg²⁺ ions bridge the phosphate groups and stabilize the reaction intermediate. The enzyme is a <strong>homodimeric α/β P-loop NTPase</strong> whose composite active site sits at the dimer interface, with DAPA binding one subunit and ATP the other. Nucleotide selectivity is set by a "gate-keeper" asparagine that hydrogen-bonds the adenine base and excludes other NTPs.</p>
+<p>Although no biochemical study has been performed on the <em>P. putida</em> protein itself, its identity as a functional dethiobiotin synthetase is secure. The Q88QW8 sequence (226 aa) shares <strong>48% identity with the experimentally characterized <em>E. coli</em> enzyme</strong>, retains the DTBS-family deviant Walker-A P-loop and family-diagnostic motifs, and carries no signal peptide or transmembrane segment — consistent with a cytoplasmic location. Independently, genome-wide transposon screening in <em>P. putida</em> KT2440 recovered biotin auxotrophs, confirming the biotin biosynthetic pathway (of which bioD is a required member) is functional and essential for growth on minimal medium. Because the biotin pathway is absent in humans, DTBS/BioD is a validated antibacterial and antitubercular drug target.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-biod-is-a-dethiobiotin-synthetase-catalyzing-the-penultimate-step-of-biotin-biosynthesis">Finding 1 — bioD is a dethiobiotin synthetase catalyzing the penultimate step of biotin biosynthesis</h3>
+<p>UniProt annotation of Q88QW8 (via HAMAP-Rule <strong>MF_00336</strong>) assigns the protein to the <strong>dethiobiotin synthetase family</strong> with <strong>EC 6.3.3.3</strong>, carrying the <strong>DTB_synth_BioD</strong> domain (IPR004472). Biochemical and structural studies of orthologs firmly establish the reaction catalyzed: dethiobiotin synthetase performs the <strong>ATP-dependent formation of dethiobiotin from CO₂ and 7,8-diaminopelargonic acid (DAPA)</strong>, the penultimate step of biotin biosynthesis, immediately before biotin synthase (BioB) carries out the final sulfur-insertion step.</p>
+<p>Crystallographic work on the <em>E. coli</em> enzyme describes "the crystal structures of six complexes of homodimeric <em>Escherichia coli</em> dethiobiotin synthetase with a variety of substrates, substrate analogs, and products" (<a href="https://pubmed.ncbi.nlm.nih.gov/7669756/">PMID: 7669756</a>), confirming DTBS/BioD is a homodimeric enzyme acting on DAPA-derived substrates. More recent work explicitly restates that "<strong>dethiobiotin synthetase (DTBS) catalyzes the penultimate step of biotin biosynthesis</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/34597430/">PMID: 34597430</a>).</p>
+<p>Critically for the <em>P. putida</em> assignment, a genome-wide mutant screen of KT2440 grown on minimal medium recovered biotin auxotrophs — the study reports that "we also found auxotrophs for biotin, nicotinate and vitamin B12 that were not predicted in silico" (<a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">PMID: 20158506</a>) — demonstrating that the biotin biosynthetic pathway (which includes bioD/PP_0366) is functional and required for growth of this organism in the absence of exogenous biotin.</p>
+<h3 id="finding-2-reaction-mechanism-carbamate-formation-atp-dependent-phosphoryl-transfer-and-cyclization">Finding 2 — Reaction mechanism: carbamate formation, ATP-dependent phosphoryl transfer, and cyclization</h3>
+<p>The catalytic mechanism has been dissected in atomic detail by kinetic crystallography of the <em>E. coli</em> enzyme at 1.6–1.9 Å resolution, capturing both the enzyme·MgATP·DAPA complex and a trapped enzyme·MgADP·carbamic-phosphoric-anhydride intermediate. The reaction is initiated when CO₂/bicarbonate reacts with the N7 amino group of DAPA to form a <strong>carbamate</strong>; ATP then phosphorylates this carbamate to yield a <strong>mixed carbamic–phosphoric anhydride</strong>; finally, the second amino group attacks intramolecularly to close the ureido ring, releasing phosphate. The authors state that "<strong>the reaction is initiated by the formation of a carbamate and proceeds through a phosphorylated intermediate, a mixed carbamic phosphoric anhydride</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9576910/">PMID: 9576910</a>).</p>
+<p>Two magnesium ions play an essential catalytic role at the phosphate-transfer center: "<strong>these magnesium ions compensate the negative charges at both phosphate groups after phosphoryl transfer and contribute to the stabilization of the reaction intermediate</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/9576910/">PMID: 9576910</a>). The phosphoryl transfer proceeds with inversion of configuration at phosphorus, consistent with a single in-line attack.</p>
+<p>The nucleotide-binding architecture was mapped to a classical mononucleotide fold. The <em>E. coli</em> structure places "the phosphate groups close to the <strong>phosphate binding loop Gly8–Thr16</strong> between β-strand β1 and the N-terminus of α-helix α1" (<a href="https://pubmed.ncbi.nlm.nih.gov/7669756/">PMID: 7669756</a>) — the Walker-A-like P-loop — with divalent-cation coordination provided by Asp54, Thr16, and Glu115.</p>
+<h3 id="finding-3-homodimeric-p-loop-enzyme-with-active-site-at-the-dimer-interface">Finding 3 — Homodimeric α/β P-loop enzyme with active site at the dimer interface</h3>
+<p>The 1.80 Å structure of <em>E. coli</em> DTBS revealed the enzyme's quaternary organization: each subunit folds as a single globular α/β domain, and the biological unit is a homodimer whose active site straddles the subunit interface. The structural study "establishes that the <strong>enzyme active site is situated at the dimer interface, with the substrate binding to one monomer and ATP to the other</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/7881906/">PMID: 7881906</a>). This composite-active-site architecture explains why the enzyme is obligately dimeric.</p>
+<p>The DTBS fold belongs to the diverse <strong>P-loop NTPase superfamily</strong>. The overall fold "closely resembles that of three other enzymes, <strong>adenylosuccinate synthetase (purA), Ha-ras-p21, and nitrogenase iron protein</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/7881906/">PMID: 7881906</a>) — a set of proteins related by fold rather than by detectable sequence similarity (the SIMIBI / adenylosuccinate-synthetase-like clade). DTBS shows no significant sequence similarity to proteins outside its own family. This is fully consistent with the UniProt annotation of Q88QW8, which carries both the <strong>P-loop_NTPase</strong> (IPR027417) and <strong>DTB_synth_BioD</strong> (IPR004472) domain signatures.</p>
+<h3 id="finding-4-position-in-the-cytoplasmic-biotin-ring-assembly-module-atp-specificity-gate-keeper">Finding 4 — Position in the cytoplasmic biotin ring-assembly module; ATP-specificity gate-keeper</h3>
+<p>Biotin biosynthesis is organized into two conceptual stages: (1) synthesis of the <strong>pimelate moiety</strong> (via BioC–BioH in <em>E. coli</em> and related γ-proteobacteria) and (2) assembly of the <strong>bicyclic ring</strong> by the sequential action of BioF (KAPA synthase) → BioA (DAPA aminotransferase) → <strong>BioD (DTBS)</strong> → BioB (biotin synthase). A review of the pathway describes how "<strong>a pimelate moiety is synthesized and used to begin assembly of the biotin bicyclic ring structure</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/21437340/">PMID: 21437340</a>). BioD performs the ring-closure carboxylation that generates the ureido ring — notably a <em>non</em>-biotin-dependent carboxylation, distinguishing it from the biotin-dependent carboxylases downstream in metabolism.</p>
+<p>Nucleotide specificity across the family is governed by a small number of C-terminal residues. In the <em>E. coli</em>-type enzyme, "<strong>mutational analysis performed alongside in silico experiments revealed a gate-keeper role for Asn175 in <em>Escherichia coli</em> DTBS that excludes binding of other nucleotide triphosphates</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/25801336/">PMID: 25801336</a>), conferring ATP preference. Interestingly, the <em>Mycobacterium tuberculosis</em> enzyme lacks this residue and shows broad NTP promiscuity with highest affinity for CTP — illustrating that nucleotide recognition, not the core chemistry, is the most variable feature among orthologs.</p>
+<p>The pathway's absence in humans makes the enzyme a clean drug target: "<strong>due to its importance in bacterial pathogenesis, and the absence of a human homologue, DTBS is a promising target for the development of new antibacterials</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/25801336/">PMID: 25801336</a>).</p>
+<h3 id="finding-5-the-p-putida-sequence-carries-the-dtbs-family-deviant-walker-a-p-loop">Finding 5 — The <em>P. putida</em> sequence carries the DTBS-family deviant Walker-A P-loop</h3>
+<p>The Q88QW8 sequence retrieved from UniProt is <strong>226 residues</strong> long and begins <code>MSQAFFIAGTDTDVGKTTIAAGLLH…</code>. This N-terminal region contains the dethiobiotin-synthetase <strong>deviant Walker-A phosphate-binding loop</strong> (<code>G-x-x-x-x-GKTT</code>), with the diagnostic <code>GKTT</code> at approximately residues 15–18. This directly corresponds to the <em>E. coli</em> DTBS Gly8–Thr16 P-loop identified crystallographically (<a href="https://pubmed.ncbi.nlm.nih.gov/7669756/">PMID: 7669756</a>). The overall protein length (~226 aa) is typical of monofunctional bacterial dethiobiotin synthetases (the <em>E. coli</em> enzyme is 225 aa). This sequence-level evidence links the <em>P. putida</em> ortholog directly to the experimentally characterized enzyme family, rather than relying solely on automated database annotation transfer.</p>
+<h3 id="finding-6-48-sequence-identity-to-experimentally-characterized-e-coli-dtbs">Finding 6 — 48% sequence identity to experimentally characterized <em>E. coli</em> DTBS</h3>
+<p>A global pairwise alignment (Needleman–Wunsch) of <em>P. putida</em> BioD (Q88QW8, 226 aa) against <em>E. coli</em> BioD (UniProt P13000, 225 aa) yields <strong>48.2% identity over 222 aligned columns (107/222 identical residues)</strong>. Both proteins retain the DTBS deviant Walker-A P-loop (<em>P. putida</em> <code>GTDTDVGKTT</code> vs <em>E. coli</em> <code>GTDTEVGKTV</code>) and the family-diagnostic motifs <code>EGAGGW</code> (<em>P. putida</em> <code>IEGAGGWRVP</code>; <em>E. coli</em> <code>VEGAGGWFTP</code>) and the <code>ILVVGV(K/R)LGCI</code> nucleotide/catalytic loop.</p>
+<p>This level of identity is far above the ~30% threshold generally taken to indicate conserved three-dimensional structure and function, establishing <strong>unambiguous orthology</strong> between the <em>P. putida</em> enzyme and the reference enzyme whose structure and carbamate/anhydride mechanism were determined crystallographically (<a href="https://pubmed.ncbi.nlm.nih.gov/7669756/">PMID: 7669756</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9576910/">PMID: 9576910</a>). Function, mechanism, and structural fold can therefore be confidently transferred to Q88QW8.</p>
+<h3 id="finding-7-sequence-based-localization-cytoplasmic-no-signal-peptide">Finding 7 — Sequence-based localization: cytoplasmic, no signal peptide</h3>
+<p>Kyte–Doolittle hydropathy analysis of Q88QW8 (226 aa) shows the N-terminal 30-residue mean hydropathy is <strong>0.42</strong> — there is no hydrophobic signal-peptide h-region and no Sec/Tat export signal. The overall grand average of hydropathy (GRAVY) is <strong>0.283</strong>. Internal hydrophobic windows (the strongest being a 19-residue peak hydropathy of 1.95 near residue 136, within the conserved <code>ILVVGVRLGCISHALL</code> catalytic-core loop) map to <strong>buried β-strands of the globular α/β P-loop fold</strong>, not to transmembrane helices. This is fully consistent with the experimentally determined <strong>soluble, cytosolic, homodimeric</strong> structures of DTBS orthologs, in which "<strong>the protein forms a homodimer with each subunit folded as a single globular alpha/beta domain</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/7881906/">PMID: 7881906</a>), and with the established fact that de novo biotin ring assembly occurs in the bacterial cytoplasm.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-of-biod-in-the-biotin-biosynthetic-pathway">Position of BioD in the biotin biosynthetic pathway</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">PIMELATE</span><span class="o">-</span><span class="n">MOIETY</span><span class="w"> </span><span class="n">STAGE</span><span class="w">                </span><span class="n">RING</span><span class="o">-</span><span class="n">ASSEMBLY</span><span class="w"> </span><span class="n">STAGE</span><span class="w"> </span><span class="p">(</span><span class="n">cytoplasm</span><span class="p">)</span>
+<span class="w"> </span><span class="err">┌─────────────────────────┐</span><span class="w">   </span><span class="err">┌───────────────────────────────────────────────┐</span>
+<span class="w"> </span><span class="p">(</span><span class="n">BioC</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">BioH</span><span class="p">)</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="n">pimeloyl</span><span class="o">-</span><span class="n">ACP</span><span class="w">  </span><span class="err">→</span><span class="w">  </span><span class="n">BioF</span><span class="w">   </span><span class="err">→</span><span class="w">   </span><span class="n">BioA</span><span class="w">    </span><span class="err">→</span><span class="w">  </span><span class="err">┌────────┐</span><span class="w"> </span><span class="err">→</span><span class="w">  </span><span class="n">BioB</span><span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="n">BIOTIN</span>
+<span class="w">                       </span><span class="p">(</span><span class="n">KAPA</span><span class="w">      </span><span class="p">(</span><span class="n">DAPA</span><span class="w">       </span><span class="err">│</span><span class="w">  </span><span class="n">BioD</span><span class="w">  </span><span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="n">biotin</span>
+<span class="w">                        </span><span class="n">synthase</span><span class="p">)</span><span class="w">  </span><span class="n">amino</span><span class="o">-</span><span class="w">      </span><span class="err">│</span><span class="w"> </span><span class="n">DTBS</span><span class="w">   </span><span class="err">│</span><span class="w">    </span><span class="n">synthase</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">transferase</span><span class="p">)</span><span class="err">│</span><span class="w"> </span><span class="n">EC</span><span class="w">     </span><span class="err">│</span><span class="w">    </span><span class="n">S</span><span class="w"> </span><span class="n">insertion</span><span class="p">)</span>
+<span class="w">                                               </span><span class="err">│</span><span class="mf">6.3.3.3</span><span class="w"> </span><span class="err">│</span>
+<span class="w">                                               </span><span class="err">└────────┘</span>
+<span class="w">                          </span><span class="n">KAPA</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">DAPA</span><span class="w"> </span><span class="err">────────────►</span><span class="w">  </span><span class="n">DETHIOBIOTIN</span>
+
+<span class="w">   </span><span class="n">BioD</span><span class="o">-</span><span class="n">catalyzed</span><span class="w"> </span><span class="n">reaction</span><span class="o">:</span>
+<span class="w">     </span><span class="n">DAPA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">CO2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ATP</span><span class="w">  </span><span class="o">--</span><span class="p">(</span><span class="n">Mg2</span><span class="o">+</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">dethiobiotin</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ADP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Pi</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span>
+</code></pre></div>
+
+<h3 id="the-biod-chemical-mechanism-step-by-step">The BioD chemical mechanism, step by step</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="nt">1</span><span class="o">.</span><span class="w"> </span><span class="nt">Carbamate</span><span class="w"> </span><span class="nt">formation</span><span class="o">:</span>
+<span class="w">      </span><span class="nt">DAPA-N7-NH2</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">CO2</span><span class="w">   </span><span class="nt">-</span><span class="o">&gt;</span><span class="w">   </span><span class="nt">DAPA-N7-NH-COO-</span><span class="w">   </span><span class="o">(</span><span class="nt">carbamate</span><span class="o">)</span>
+
+<span class="w"> </span><span class="nt">2</span><span class="o">.</span><span class="w"> </span><span class="nt">ATP-dependent</span><span class="w"> </span><span class="nt">phosphorylation</span><span class="w"> </span><span class="o">(</span><span class="nt">Mg2</span><span class="o">+</span><span class="nt">-assisted</span><span class="o">):</span>
+<span class="w">      </span><span class="nt">carbamate-COO-</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">ATP</span><span class="w">  </span><span class="nt">-</span><span class="o">&gt;</span><span class="w">  </span><span class="nt">mixed</span><span class="w"> </span><span class="nt">carbamic-phosphoric</span><span class="w"> </span><span class="nt">anhydride</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">ADP</span>
+<span class="w">      </span><span class="o">(</span><span class="nt">two</span><span class="w"> </span><span class="nt">Mg2</span><span class="o">+</span><span class="w"> </span><span class="nt">ions</span><span class="w"> </span><span class="nt">bridge</span><span class="w"> </span><span class="nt">phosphates</span><span class="o">,</span><span class="w"> </span><span class="nt">stabilize</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">intermediate</span><span class="o">;</span>
+<span class="w">       </span><span class="nt">phosphoryl</span><span class="w"> </span><span class="nt">transfer</span><span class="w"> </span><span class="nt">occurs</span><span class="w"> </span><span class="nt">with</span><span class="w"> </span><span class="nt">inversion</span><span class="w"> </span><span class="nt">at</span><span class="w"> </span><span class="nt">P</span><span class="o">)</span>
+
+<span class="w"> </span><span class="nt">3</span><span class="o">.</span><span class="w"> </span><span class="nt">Intramolecular</span><span class="w"> </span><span class="nt">cyclization</span><span class="w"> </span><span class="o">(</span><span class="nt">ring</span><span class="w"> </span><span class="nt">closure</span><span class="o">):</span>
+<span class="w">      </span><span class="nt">N8</span><span class="w"> </span><span class="nt">amino</span><span class="w"> </span><span class="nt">group</span><span class="w"> </span><span class="nt">attacks</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">anhydride</span><span class="w"> </span><span class="nt">carbon</span>
+<span class="w">      </span><span class="nt">-</span><span class="o">&gt;</span><span class="w">  </span><span class="nt">UREIDO</span><span class="w"> </span><span class="nt">RING</span><span class="w"> </span><span class="nt">closes</span><span class="w">  </span><span class="nt">-</span><span class="o">&gt;</span><span class="w">  </span><span class="nt">DETHIOBIOTIN</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">Pi</span>
+</code></pre></div>
+
+<h3 id="structural-logic">Structural logic</h3>
+<p>BioD is an obligate <strong>homodimer</strong>. Its P-loop NTPase fold (shared with adenylosuccinate synthetase, Ras, and nitrogenase Fe-protein) binds and orients MgATP through the Walker-A/deviant P-loop (<code>GKTT</code>), while the second, adjacent subunit contributes residues that bind DAPA — placing the composite catalytic machinery at the <strong>dimer interface</strong>. This explains three otherwise-independent observations: (i) the requirement for dimerization; (ii) the strict Mg²⁺ dependence for phosphoryl transfer; and (iii) the concentration of species-variable residues in C-terminal nucleotide-recognition loops (the gate-keeper Asn and adjacent motifs), which tune nucleotide specificity without altering the conserved DAPA-carboxylation chemistry.</p>
+<h3 id="confidence-in-the-p-putida-assignment">Confidence in the <em>P. putida</em> assignment</h3>
+<table>
+<thead>
+<tr>
+<th>Line of evidence</th>
+<th>Result</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt/HAMAP annotation</td>
+<td>EC 6.3.3.3, DTB_synth_BioD (IPR004472)</td>
+<td>Family &amp; EC assignment</td>
+</tr>
+<tr>
+<td>Domain content</td>
+<td>P-loop_NTPase (IPR027417) + DTB_synth_BioD</td>
+<td>Correct fold + family</td>
+</tr>
+<tr>
+<td>Sequence identity to <em>E. coli</em> BioD</td>
+<td>48.2% over 222 aa</td>
+<td>Unambiguous orthology</td>
+</tr>
+<tr>
+<td>Conserved motifs</td>
+<td>Deviant Walker-A <code>GKTT</code>, <code>EGAGGW</code>, <code>ILVVGV(K/R)LGCI</code></td>
+<td>Catalytic machinery intact</td>
+</tr>
+<tr>
+<td>Signal-peptide / TM analysis</td>
+<td>None (N-term hydropathy 0.42; GRAVY 0.283)</td>
+<td>Cytoplasmic</td>
+</tr>
+<tr>
+<td>Pathway genetics in KT2440</td>
+<td>Biotin auxotrophs recovered</td>
+<td>Pathway functional &amp; required</td>
+</tr>
+</tbody>
+</table>
+<p>All independent lines converge: PP_0366/Q88QW8 is a functional, cytoplasmic dethiobiotin synthetase.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Organism</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7669756/">7669756</a></td>
+<td><em>Mechanism of an ATP-dependent carboxylase (DTBS)…</em></td>
+<td><em>E. coli</em></td>
+<td>Six substrate/product/analog complexes; defines homodimer, P-loop (Gly8–Thr16), metal site; reference enzyme for orthology</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9576910/">9576910</a></td>
+<td><em>Snapshot of a phosphorylated substrate intermediate…</em></td>
+<td><em>E. coli</em></td>
+<td>Kinetic crystallography traps carbamate + mixed carbamic-phosphoric anhydride; establishes 2-Mg²⁺ mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7881906/">7881906</a></td>
+<td><em>Mechanistic implications and family relationships…</em></td>
+<td><em>E. coli</em></td>
+<td>1.80 Å structure; active site at dimer interface; fold homology to PurA/Ras/nitrogenase; globular α/β (cytosolic)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21437340/">21437340</a></td>
+<td><em>Closing in on complete pathways of biotin biosynthesis</em></td>
+<td>Review</td>
+<td>Two-stage pathway; places BioD in ring-assembly module</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25801336/">25801336</a></td>
+<td><em>Nucleotide triphosphate promiscuity in MtDTBS</em></td>
+<td><em>M. tuberculosis</em> / <em>E. coli</em></td>
+<td>Gate-keeper Asn175 confers ATP specificity; DTBS as drug target (no human homolog)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34597430/">34597430</a></td>
+<td><em>A conserved…E. coli biotin biosynthesis gene…</em></td>
+<td><em>E. coli</em></td>
+<td>Restates DTBS catalyzes the penultimate step</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">20158506</a></td>
+<td><em>Conditionally essential genes…P. putida KT2440</em></td>
+<td><em>P. putida</em> KT2440</td>
+<td>Biotin auxotrophs recovered — pathway functional/required in the target organism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22284390/">22284390</a></td>
+<td><em>Structural characterization of H. pylori DTBS…</em></td>
+<td><em>H. pylori</em></td>
+<td>Confirms family breadth; C-terminal nucleotide-recognition regions differ across species</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22547782/">22547782</a></td>
+<td><em>Bifunctional DTBS–DAPA-AT (Arabidopsis)…</em></td>
+<td><em>A. thaliana</em></td>
+<td>Eukaryotic BioD–BioA fusion; substrate channeling; contrasts with bacterial monofunctional BioD</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30289406/">30289406</a></td>
+<td><em>Precipitant-ligand exchange…MtDTBS ADP…</em></td>
+<td><em>M. tuberculosis</em></td>
+<td>ADP-bound structure; supports inhibitor/drug-target program</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> All primary structural/mechanistic papers agree on the core chemistry (carbamate → anhydride → cyclization), the homodimeric P-loop architecture, and the cytosolic nature of the enzyme. The principal <em>inter-species variation</em> is in nucleotide recognition (E. coli ATP-specific gate-keeper Asn vs. Mtb NTP promiscuity vs. H. pylori's unusual single-motif GTPase-like site with ATP preference). Because the <em>P. putida</em> sequence retains the <em>E. coli</em>-type C-terminal motifs, ATP specificity is the most parsimonious expectation for Q88QW8. No paper contradicts the assignment of PP_0366 as dethiobiotin synthetase.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on the <em>P. putida</em> protein.</strong> All kinetic and structural data derive from orthologs (<em>E. coli</em>, <em>M. tuberculosis</em>, <em>H. pylori</em>, <em>A. thaliana</em>). The function, mechanism, and localization for Q88QW8 are inferred from strong sequence/domain homology (48% identity to <em>E. coli</em>), not measured directly. No purified-enzyme assay, K_m, k_cat, or crystal structure exists for PP_0366.</p>
+</li>
+<li>
+<p><strong>Nucleotide specificity not experimentally confirmed for Q88QW8.</strong> While the sequence retains <em>E. coli</em>-type C-terminal motifs, the specific gate-keeper residue and any NTP promiscuity have not been tested in the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Localization is bioinformatic.</strong> The cytoplasmic assignment rests on the absence of a signal peptide/TM segment and on the soluble nature of orthologous structures — no experimental fractionation or microscopy has localized the <em>P. putida</em> protein.</p>
+</li>
+<li>
+<p><strong>Gene-level essentiality is indirect.</strong> The KT2440 mutant screen recovered biotin auxotrophs but did not, in the material reviewed here, pin the phenotype specifically to PP_0366 versus other biotin genes; essentiality of bioD is inferred from pathway logic.</p>
+</li>
+<li>
+<p><strong>Pathway upstream context in <em>P. putida</em> not detailed here.</strong> The exact route to the pimelate moiety and DAPA (BioC/BioH/BioF/BioA homologs) in <em>P. putida</em> was not fully mapped in this investigation, though the presence of biotin auxotrophy implies a complete pathway.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzyme assay.</strong> Clone PP_0366, express and purify the His-tagged protein, and measure DTBS activity (DAPA + CO₂/HCO₃⁻ + ATP → dethiobiotin) by coupled ADP/Pi release or LC-MS detection of dethiobiotin. Determine K_m for DAPA and ATP, k_cat, and Mg²⁺ dependence.</p>
+</li>
+<li>
+<p><strong>Nucleotide-specificity profiling.</strong> Test ATP vs. GTP/CTP/UTP to confirm the predicted ATP preference and identify the gate-keeper residue by site-directed mutagenesis (analogous to <em>E. coli</em> Asn175 / Mtb promiscuity studies).</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure (or refine an AlphaFold model against the <em>E. coli</em> template) of the <em>P. putida</em> enzyme, ideally with MgADP and a DAPA analog, to verify the dimer-interface active site and P-loop geometry.</p>
+</li>
+<li>
+<p><strong>Targeted genetics in KT2440.</strong> Construct a clean ΔPP_0366 deletion and confirm biotin auxotrophy (growth rescue by exogenous biotin or dethiobiotin), formally establishing gene–phenotype linkage and pathway position (rescue by dethiobiotin but <em>not</em> by DAPA would confirm BioD acts on DAPA to make DTB).</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Cytoplasmic localization could be verified by cell fractionation or a fluorescent-protein fusion.</p>
+</li>
+<li>
+<p><strong>Inhibitor cross-evaluation.</strong> Given DTBS's validated drug-target status, test whether inhibitors developed against <em>M. tuberculosis</em>/<em>E. coli</em> DTBS also inhibit the <em>P. putida</em> enzyme, informing broad-spectrum antibacterial potential.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>bioD / PP_0366 / Q88QW8</strong> encodes <strong>ATP-dependent dethiobiotin synthetase (DTBS, EC 6.3.3.3)</strong>, a soluble, cytoplasmic, homodimeric P-loop enzyme that catalyzes the <strong>penultimate step of de novo biotin biosynthesis</strong>: the Mg²⁺/ATP-dependent carboxylation and ureido-ring closure of 7,8-diaminopelargonic acid (DAPA) with CO₂ to form dethiobiotin, releasing ADP + Pi. It acts immediately downstream of the aminotransferase BioA and upstream of biotin synthase BioB in the cytoplasmic biotin-ring-assembly module. The reaction proceeds via an N7-carbamate and a mixed carbamic–phosphoric anhydride intermediate stabilized by two Mg²⁺ ions, with the composite active site formed at the dimer interface. Direct experimental characterization exists for orthologs (<em>E. coli</em>, <em>M. tuberculosis</em>, <em>H. pylori</em>, <em>Arabidopsis</em>); the <em>P. putida</em> assignment is supported by 48% sequence identity to <em>E. coli</em> DTBS, conserved DTBS domains and the diagnostic Walker-A P-loop in its 226-aa sequence, the absence of any export signal, and the biotin auxotrophy of pathway mutants in KT2440.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="bioD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="bioD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:7669756</li>
+<li>PMID:34597430</li>
+<li>PMID:20158506</li>
+<li>PMID:9576910</li>
+<li>PMID:7881906</li>
+<li>PMID:21437340</li>
+<li>PMID:25801336</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QW8
+gene_symbol: bioD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  BioD is the ATP-dependent dethiobiotin synthetase that carboxylates and
+  cyclizes 7,8-diaminononanoate to form dethiobiotin. It is a soluble enzyme in
+  the penultimate committed reaction of de novo biotin biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Magnesium binding supports catalysis but is not the core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt records Mg2+ as the divalent cofactor for the ATP-dependent BioD
+      reaction.
+- term:
+    id: GO:0004141
+    label: dethiobiotin synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the specific BioD catalytic activity.
+    action: ACCEPT
+    reason: &gt;-
+      EC 6.3.3.3, the HAMAP rule, and BioD-specific family assignments converge
+      on ATP-dependent dethiobiotin formation.
+    supported_by:
+    - reference_id: file:PSEPK/bioD/bioD-uniprot.txt
+      supporting_text: Full=ATP-dependent dethiobiotin synthetase BioD
+    - reference_id: file:PSEPK/bioD/bioD-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **bioD** (ordered locus **PP_0366**, UniProt accession
+        **Q88QW8**) of *Pseudomonas putida* KT2440 encodes **ATP-dependent
+        dethiobiotin synthetase (DTBS/DTB synthetase, EC 6.3.3.3)**
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: ATP binding is valid mechanistic information but not the core reaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      ATP is consumed by the ligase reaction already represented by GO:0004141.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is the preferred retained location for this soluble bacterial enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt explicitly predicts cytoplasmic localization; the duplicate
+      cytosol annotation adds no distinct localization information.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: This is redundant with the retained cytoplasm annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The two terms do not describe distinct BioD pools in this bacterium, and
+      the UniProt source explicitly uses cytoplasm.
+- term:
+    id: GO:0009102
+    label: biotin biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: BioD catalyzes the penultimate reaction of biotin synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Dethiobiotin is the direct substrate of the terminal BioB reaction.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Homodimerization is a structural property rather than the informative BioD function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The BioD reaction is fully captured by GO:0004141; generic
+      self-association adds little functional information.
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/bioD/bioD-uniprot.txt
+  title: UniProtKB entry for PSEPK BioD
+  findings:
+  - statement: Assigns Q88QW8 to EC 6.3.3.3 and biotin biosynthesis.
+    supporting_text: Full=ATP-dependent dethiobiotin synthetase BioD
+- id: file:PSEPK/bioD/bioD-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK BioD
+  findings:
+  - statement: Contains the seven existing annotations reviewed above.
+- id: file:PSEPK/bioD/bioD-deep-research-openscientist.md
+  title: OpenScientist functional report for PSEPK BioD
+  findings:
+  - statement: &gt;-
+      Supports the BioD-family assignment, ATP/Mg-dependent EC 6.3.3.3
+      reaction, and dethiobiotin-forming pathway position by transfer from
+      structurally characterized bacterial orthologs. No direct assay,
+      structure, localization experiment, or gene-specific phenotype for
+      Q88QW8 was identified; drug-target and indirect pathway-essentiality
+      claims are not used as core evidence.
+core_functions:
+- description: &gt;-
+    Uses ATP and bicarbonate to cyclize 7,8-diaminononanoate into dethiobiotin
+    in the penultimate reaction of biotin biosynthesis.
+  molecular_function:
+    id: GO:0004141
+    label: dethiobiotin synthase activity
+  directly_involved_in:
+  - id: GO:0009102
+    label: biotin biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/bioD/bioD-uniprot.txt
+    supporting_text: Full=ATP-dependent dethiobiotin synthetase BioD
+  - reference_id: file:PSEPK/bioD/bioD-deep-research-openscientist.md
+    supporting_text: &gt;-
+      The gene **bioD** (ordered locus **PP_0366**, UniProt accession
+      **Q88QW8**) of *Pseudomonas putida* KT2440 encodes **ATP-dependent
+      dethiobiotin synthetase (DTBS/DTB synthetase, EC 6.3.3.3)**
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
