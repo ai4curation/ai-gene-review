@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 85.71428571428571
 n_discoveries: 8
 citation_count: 8
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACTL8 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACTL8 (CT57) is a cancer-testis antigen that functions as an oncogenic driver across multiple epithelial cancers, where it promotes proliferation, migration, invasion, and cell cycle progression while restraining apoptosis [PMID:33883901, PMID:31962007]. Loss-of-function studies in triple-negative breast cancer, gastric cancer, oral squamous cell carcinoma, lung adenocarcinoma, and endometrial cancer consistently show that ACTL8 silencing suppresses tumor cell growth and motility, an effect reproduced in nude-mouse xenografts [PMID:33883901, PMID:35051678, PMID:31962007, PMID:32125225]. Mechanistically, ACTL8 acts upstream of PI3K/AKT/mTOR signaling: knockdown reduces pathway phosphorylation and pharmacological pathway modulators reverse or mimic the ACTL8 phenotype in both breast and gastric cancer models [PMID:33883901, PMID:39322809]. ACTL8 sustains a cell-cycle and proliferation transcriptional program, supporting expression of FOXM1, STMN1, PLK1, BIRC5, CDK1, cyclin B2, cyclin E1, and c-Myc, while its loss derepresses p21 and shifts EMT markers toward an epithelial state [PMID:35051678, PMID:35116946, PMID:32125225]. ACTL8 additionally drives MYC-dependent glutamine metabolism through SLC1A5 and GLS1, maintaining redox homeostasis; MYC re-expression rescues the metabolic phenotype but not p-AKT, placing ACTL8 above both axes [PMID:41621692]. The small molecule Momordin Ic binds ACTL8 directly and destabilizes it via ubiquitin-proteasome degradation, establishing ACTL8 as a druggable target [PMID:41621692]. ACTL8 protein is detected in the cytoplasm of tumor cells [PMID:41129177].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** *(none)*
 - **localization:** GO:0005829 cytosol

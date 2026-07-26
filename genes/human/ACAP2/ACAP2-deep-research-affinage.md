@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 7
 citation_count: 7
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACAP2 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACAP2 (centaurin-β2) is an ARF6 GTPase-activating protein that operates as a downstream effector of GTP-bound Rab35 to locally inactivate Arf6 and thereby couple membrane trafficking to actin-dependent cellular remodeling [PMID:22344257, PMID:22045739]. Rab35 accumulates at Arf6-positive endosomes and the phagocytic cup and recruits ACAP2 in a GTP-Rab35-dependent manner, and ACAP2's Arf6-GAP activity at these sites drives NGF-induced neurite outgrowth and FcγR-mediated phagosome formation [PMID:22344257, PMID:22045739]. This Rab35–ACAP2–Arf6 axis is also deployed as a negative regulator of oligodendrocyte differentiation and myelination, where ACAP2 opposes the Arf6-GEF cytohesin-2 [PMID:24600047]. The direct Rab35–ACAP2 interaction is highly specific, requiring Thr-76/Thr-81 in the Rab35 switch II region and Asn-610/Asn-691 within the minimal Rab35-binding domain of ACAP2, and binding-deficient mutants of either protein fail to support neurite outgrowth [PMID:25694427]. Independent of its GAP function, ACAP2 (the human homolog of C. elegans CNT-1) carries a phosphoinositide-binding-dependent pro-apoptotic activity, as its knockdown blocks 5-fluorouracil-induced apoptosis [PMID:25853217]. ACAP2 protein levels are set by ubiquitin-mediated proteasomal degradation through the E3 ligase RNF126 [PMID:40251363].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140096 catalytic activity, acting on a protein, GO:0098772 molecular function regulator activity, GO:0008289 lipid binding
 - **localization:** GO:0005768 endosome, GO:0005886 plasma membrane

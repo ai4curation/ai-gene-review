@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 5
 citation_count: 5
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACAP3 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACAP3 is a GTPase-activating protein (GAP) selective for the small GTPase Arf6 that governs cell morphological dynamics in both neural development and epithelial cancers [PMID:27330119]. In neurons, ACAP3 drives neurite outgrowth by cycling Arf6 between its GTP- and GDP-bound states; loss of ACAP3 raises GTP-bound Arf6 and abolishes outgrowth, a defect rescued by wild-type but not GAP-inactive ACAP3 [PMID:27330119], and the same GAP-dependent activity is required for cortical neuronal migration in vivo [PMID:28919417]. In cancer cells, ACAP3 acts as a tumour suppressor: in lung adenocarcinoma it inhibits EGFR signalling by impairing EGFR recycling and accelerating lysosome-mediated EGFR degradation in a GAP-activity-dependent manner, suppressing proliferation [PMID:41520057], and in papillary thyroid carcinoma it suppresses viability, migration, and invasion while promoting apoptosis through modulation of AKT and p53 signalling [PMID:39098591]. ACAP3 expression is held down epigenetically, via Myc-driven DNA hypermethylation and deacetylation in lung adenocarcinoma [PMID:41520057] and via HDAC2 in papillary thyroid carcinoma [PMID:39098591].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity
 - **localization:** *(none)*

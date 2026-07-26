@@ -8,24 +8,33 @@ Affinage needs no pipeline change: this tool fetches the record and writes
 ``<GENE>-deep-research-affinage.md`` in the same shape as the other providers.
 
 This is the ONLY Affinage integration the evaluation endorses — a *free precomputed
-first pass for the human backlog* (see ../results/narrative-vs-go.md). It is gated by
-the two cheap checks that evaluation identified:
+first pass for the human backlog* (see ../results/narrative-vs-go.md).
 
-  1. HUMAN ONLY. Affinage covers only human; the tool refuses any other species.
-  2. Entity-collision / trust gates. It surfaces Affinage's own ``evaluation.pairwise``
-     self-signal (win/tie/loss) and compares the record's UniProt accession to the
-     local ``<GENE>-uniprot.txt`` (and scans the narrative's opening for a non-human
-     organism token) — the ADA-style symbol-collision failure. Any tripped gate is
-     written as a prominent ⚠️ CAUTION banner at the top of the file, never hidden.
+DESIGN PRINCIPLE — the file is a VERBATIM external-provider record, nothing more.
+A ``<GENE>-deep-research-*.md`` file reproduces exactly what the external provider
+returned (like a falcon/perplexity report): the mechanistic narrative, Affinage's own
+GO/Reactome ``mechanism_profile`` grounding, the dated discoveries, and the citations.
+It carries **no AIGR interpretation** — no CAUTION banners, no "these GO terms are
+coarse, do not import them" advice, no adjudication of trust. That curatorial judgment
+is the reviewer's, and it belongs in the gene review's
+``references[].reference_review`` (relevance / correctness / review_notes) and
+``findings`` — NOT in this source file. Mixing the two would launder AIGR's own
+opinion into something that looks like the provider said it.
 
-The file is genuinely Affinage-sourced (not authored here); provenance — source URL,
-Affinage run date, and the gate results — is recorded in the frontmatter so a curator
-treats it as external preliminary research, exactly like a falcon/perplexity report.
+The tool still HELPS the curator form that judgment: it is HUMAN ONLY (Affinage
+covers only human, so any other species is refused), and it runs two cheap trust
+checks — Affinage's own ``evaluation.pairwise`` self-signal (win/tie/loss), and an
+accession/organism cross-check against the local ``<GENE>-uniprot.txt`` for the
+ADA-style symbol-collision failure. Those gate results are printed to **stderr** as a
+reminder to record them in the review's ``reference_review``; they are deliberately
+kept OUT of the written file so the file stays a faithful provider record. Only
+factual provenance (source URL, run date, accession, Affinage's own self-eval numbers)
+is recorded in the frontmatter.
 
 Usage:
     python affinage_deep_research.py human GPX4                 # print to stdout
     python affinage_deep_research.py human GPX4 --write         # -> genes/human/GPX4/GPX4-deep-research-affinage.md
-    python affinage_deep_research.py human ADA                  # gate trips -> CAUTION banner
+    python affinage_deep_research.py human ADA                  # gate trips -> stderr warning (file stays verbatim)
 """
 from __future__ import annotations
 
@@ -68,7 +77,13 @@ def local_accession(species: str, gene: str) -> str | None:
 
 
 def run_gates(gene: str, data: dict, expected_acc: str | None) -> list[str]:
-    """Return a list of human-readable CAUTION strings (empty = all clear)."""
+    """Compute trust-gate warnings for the OPERATOR (printed to stderr, never written
+    into the file). Returns a list of human-readable strings (empty = all clear).
+
+    These are AIGR's judgment of the record, not Affinage's output — so they are
+    surfaced to the reviewer as a prompt to record the assessment in the gene review's
+    references[].reference_review, and are deliberately kept out of the verbatim file.
+    """
     cautions: list[str] = []
     up = (data.get("prefetch_data") or {}).get("uniprot") or {}
     aff_acc = up.get("accession")
@@ -97,13 +112,20 @@ def run_gates(gene: str, data: dict, expected_acc: str | None) -> list[str]:
 
 
 def render(species: str, gene: str, data: dict, expected_acc: str | None) -> str:
+    """Render the Affinage record VERBATIM as a deep-research source file.
+
+    This is a faithful reproduction of what Affinage returned — provider metadata,
+    the mechanistic narrative, Affinage's own GO/Reactome grounding, dated findings,
+    and citations. It carries no AIGR interpretation by design (see module docstring):
+    trust-gate judgment is surfaced separately (stderr) and recorded by the reviewer in
+    the gene review's ``references[].reference_review``, not here.
+    """
     tl = data.get("timeline") or {}
     nar = data.get("narrative") or {}
     up = (data.get("prefetch_data") or {}).get("uniprot") or {}
     ev = data.get("evaluation") or {}
     mp = nar.get("mechanism_profile") or {}
     disc = tl.get("discoveries") or []
-    cautions = run_gates(gene, data, expected_acc)
 
     all_pmids = sorted({p for d in disc for p in (d.get("pmids") or [])}
                        | set(re.findall(r"PMID:(\d+)", nar.get("mechanistic_narrative", "") or "")))
@@ -119,39 +141,29 @@ def render(species: str, gene: str, data: dict, expected_acc: str | None) -> str
     L.append(f"faith_pct: {ev.get('faith_pct', '')}")
     L.append(f"n_discoveries: {len(disc)}")
     L.append(f"citation_count: {len(all_pmids)}")
-    L.append(f"gates_passed: {not cautions}")
     L.append("note: >-")
-    L.append("  Machine-fetched from the Affinage API (Cheeseman Lab). This is external")
-    L.append("  precomputed research to be treated as a preliminary source, NOT a curated")
-    L.append("  annotation. Affinage is human-only and LLM-generated; verify claims against")
-    L.append("  the cited PMIDs before use.")
+    L.append("  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),")
+    L.append("  reproduced as-is as an external deep-research source (like a")
+    L.append("  falcon/perplexity report). It is Affinage-authored, LLM-generated, and")
+    L.append("  human-only. Curatorial assessment of this record — relevance, correctness,")
+    L.append("  trust gates, whether to import its GO grounding — is the reviewer's and")
+    L.append("  belongs in the gene review's references[].reference_review, not in this file.")
     L.append("---")
     L.append("")
     L.append(f"# Affinage mechanistic annotation for {gene} ({species})")
     L.append("")
-
-    if cautions:
-        L.append("> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**")
-        for c in cautions:
-            L.append(f">")
-            L.append(f"> - {c}")
-        L.append("")
 
     L.append("## Current model (mechanistic narrative)")
     L.append("")
     L.append(nar.get("mechanistic_narrative") or tl.get("current_model") or "*(none provided)*")
     L.append("")
 
-    # mechanism profile (Affinage's own GO/Reactome grounding — recorded, not trusted)
+    # mechanism profile: Affinage's own GO/Reactome grounding, reproduced verbatim
     def terms(key, prefix=None):
         out = [f"{e.get('term_id')} {e.get('term_label')}" for e in (mp.get(key) or [])
                if prefix is None or str(e.get("term_id", "")).startswith(prefix)]
         return ", ".join(out) if out else "*(none)*"
-    L.append("## Affinage mechanism profile (its own GO/Reactome grounding)")
-    L.append("")
-    L.append("_Recorded for reference. The AIGR evaluation found this grounding is coarse "
-             "(collapses to general parents) and can contradict the narrative — do not import "
-             "these GO ids directly; re-ground from the narrative + PMIDs._")
+    L.append("## Affinage mechanism profile (Affinage's own GO/Reactome grounding)")
     L.append("")
     L.append(f"- **molecular_activity:** {terms('molecular_activity')}")
     L.append(f"- **localization:** {terms('localization')}")
@@ -202,6 +214,19 @@ def main() -> None:
 
     expected = args.accession or local_accession(args.species, args.gene)
     doc = render(args.species, args.gene, data, expected)
+
+    # Trust gates are a reminder to the reviewer, printed to stderr — never written into
+    # the verbatim provider file. Record the resulting judgment in the gene review's
+    # references[].reference_review (relevance / correctness / review_notes).
+    cautions = run_gates(args.gene, data, expected)
+    if cautions:
+        print(f"⚠️  {args.gene}: trust gate(s) tripped — record this in the review's "
+              f"reference_review, NOT in the deep-research file:", file=sys.stderr)
+        for c in cautions:
+            print(f"    - {c}", file=sys.stderr)
+    else:
+        print(f"✓  {args.gene}: trust gates clear "
+              f"(still record your own reference_review in the review).", file=sys.stderr)
 
     if args.out:
         Path(args.out).write_text(doc)

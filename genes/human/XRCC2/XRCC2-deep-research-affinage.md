@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 29
 citation_count: 29
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for XRCC2 (human)
@@ -22,9 +23,7 @@ note: >-
 
 XRCC2 is a RecA/RAD51-family recombination-repair protein that is essential for homologous recombination (HR) repair of DNA double-strand breaks and for genome stability, with its loss causing >100-fold reduction in HR while leaving non-homologous end joining intact [PMID:9628903, PMID:9660962, PMID:10517641]. It functions as a stable subunit of the multimeric RAD51 paralog complexes: it forms a direct, ATPase-active complex with RAD51D [PMID:10871607] and is a component of the BCDX2 heterotetramer (RAD51B-RAD51C-RAD51D-XRCC2) that preferentially binds branched DNA and catalyzes strand annealing [PMID:15141025]. Cryo-EM resolves how these complexes act on RAD51 filaments: within BCDX2 the RAD51C-RAD51D-XRCC2 module mimics three RAD51 protomers to stimulate ATP-hydrolysis-dependent filament nucleation and extension on ssDNA, whereas the XRCC3-containing complex (XRCC3-RAD51C-RAD51D-XRCC2) caps 5' filament termini to promote homologous pairing [PMID:37344587, PMID:41196948]. Mechanistically, XRCC2 is required for damage-induced RAD51 focus formation and chromatin loading without itself requiring ATP binding, distinguishing its role from the ATP-dependent activity of XRCC3 [PMID:11301337, PMID:12488590, PMID:19470754]. Beyond canonical HR, XRCC2 acts late in the Fanconi anemia pathway downstream of FANCD2 monoubiquitination (designated FANCU) [PMID:27208205], restrains replication fork progression during dNTP imbalance through ATR-mediated phosphorylation at Ser247 [PMID:30566856], and is essential for mammalian meiotic recombination [PMID:30042186]. Biallelic XRCC2 mutation causes a Fanconi anemia phenotype [PMID:27208205], and a homozygous p.Leu14Pro mutation causes meiotic arrest and infertility in humans [PMID:30042186]. At the organismal level, Xrcc2 loss produces p53-dependent apoptosis of post-mitotic neurons and embryonic lethality [PMID:11118202, PMID:17116431].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0003677 DNA binding, GO:0140657 ATP-dependent activity, GO:0098772 molecular function regulator activity, GO:0140096 catalytic activity, acting on a protein
 - **localization:** GO:0005634 nucleus, GO:0005694 chromosome

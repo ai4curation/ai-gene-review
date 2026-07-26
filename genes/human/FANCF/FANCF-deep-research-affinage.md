@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 9
 citation_count: 9
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCF (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCF is a nuclear adaptor protein essential for assembly of the Fanconi anemia (FA) core complex, which drives monoubiquitination of FANCD2 to enable repair of DNA interstrand cross-links [PMID:11063725, PMID:21915857]. It functions as a flexible bridging subunit: its C-terminus binds FANCG to nucleate assembly of other FA proteins, while its N-terminus stabilizes FANCA/FANCG contacts and is required to recruit the FANCC/FANCE subcomplex [PMID:15262960]. The C-terminal domain adopts a Cand1-like helical repeat fold whose two surface loops are critical both for interaction with other core complex components and for FANCD2 monoubiquitination and cellular resistance to mitomycin C [PMID:17082180]. Loss of FANCF abolishes FANCD2 monoubiquitination and produces G2 arrest, chromosomal aberrations, sensitivity to cross-linking agents, and, in mice, defective gametogenesis and ovarian tumors, establishing its non-redundant role in the FA/BRCA pathway in vivo [PMID:21915857]. The FANCC-FANCE-FANCF subcomplex is evolutionarily conserved to plants, where it additionally acts as an anti-crossover factor during meiotic recombination [PMID:36652992]. FANCF expression is transcriptionally activated by ICSBP/IRF8 during myeloid differentiation [PMID:19801548] and is suppressed by p53-driven miR-30c, such that p53 loss in cancer cells upregulates FANCF and confers chemoresistance [PMID:31511498]; silencing FANCF inactivates the FA/BRCA pathway and sensitizes breast and ovarian cancer cells to chemotherapeutic agents through p38/JNK MAPK signaling [PMID:22952942, PMID:23440494].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity
 - **localization:** GO:0005634 nucleus

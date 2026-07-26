@@ -10,8 +10,10 @@ already ingests — so no pipeline change is needed to "wire in" Affinage.
 live `genes/human/` tree. Two reasons: (1) the repo PR template asks not to commit
 `*-deep-research-*.md`; (2) more importantly, a file in a gene folder is *ingested by a
 future review of that gene* — and some Affinage records describe the **wrong protein**
-(symbol collisions, see below), so an in-tree file would feed wrong-gene biology into a
-later review despite its CAUTION banner. The committed examples therefore live here under
+(symbol collisions, see below). Because the file is a **verbatim** provider record with no
+in-file warning (the trust gates are stderr-only, and their judgment is recorded in the
+review's `reference_review`, not the file), an in-tree file would silently feed wrong-gene
+biology into a later review. The committed examples therefore live here under
 `results/example-<GENE>-deep-research-affinage.md` (5 genes), mirroring the existing
 `example-GPX4` demo. Use `--write` locally when you actually intend a file to seed a
 specific gene's review.
@@ -47,10 +49,12 @@ that a naive import would have silently accepted:
 - **ADA** — the organism-token gate + `pairwise = loss` flagged the multi-entity chimera
   (see the [project page](../AFFINAGE_EVALUATION.md) §3).
 
-Every example file is clearly marked as **external, LLM-generated preliminary research**
-(not a curated annotation), records the mechanism-profile GO ids **for reference only**
-(with a "do not import directly" note), and surfaces any tripped gate as a ⚠️ CAUTION
-banner at the top.
+Every example file is a **verbatim** Affinage record — clearly marked in its frontmatter as
+**external, LLM-generated preliminary research** (not a curated annotation) and reproducing
+Affinage's own mechanism-profile GO ids as-is. It carries **no AIGR interpretation**: the
+trust gates print to **stderr** (see the ADA/ACAT1 runs above), and the reviewer records the
+resulting judgment — including whether to import the GO grounding — in the gene review's
+`references[].reference_review`, never in the source file.
 
 ## Reproduce / extend
 

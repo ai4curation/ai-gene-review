@@ -8,27 +8,22 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 10
 citation_count: 10
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for AAR2 (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Possible symbol collision: the narrative's opening names a non-human context ("yeast") despite a human record — verify the narrative describes human AAR2 and not a same-symbol protein (cf. the ADA case).
 
 ## Current model (mechanistic narrative)
 
 AAR2 (yeast Aar2p / human C20ORF4) is an assembly factor for the U5 small nuclear ribonucleoprotein (snRNP) that controls the timing of spliceosome maturation, first identified through its requirement for pre-mRNA splicing in yeast [PMID:1922071]. It is a component of a cytoplasmic precursor U5 snRNP containing Prp8, Snu114, U5 snRNA, and Sm proteins, but is excluded from the tri-snRNP and assembled spliceosome, and its loss impairs snRNP recycling across rounds of splicing [PMID:11720285, PMID:16945917]. Mechanistically, Aar2 binds the RNase H domain of Prp8 and, by extending its C terminus to dock the Jab1/MPN domain onto a composite Aar2-RNase H platform, sterically occludes the binding sites for the Brr2/SNRNP200 helicase while also occupying the RNase H RNA-binding surface to block U4/U6 di-snRNA loading, thereby preventing premature spliceosome activation [PMID:21764848, PMID:23442228]. Crystal structures of the Aar2-Prp8 assembly establish that Aar2 and Brr2 are mutually exclusive binders of Prp8, so that upon nuclear import Brr2 displaces Aar2 to generate the mature, catalytically competent U5 snRNP [PMID:23442228, PMID:23727230]. This handoff is governed by phosphorylation: a phospho-mimetic substitution (S253E in yeast) lowers Aar2 affinity for Prp8 and shifts the equilibrium toward Brr2-Prp8 and U4/U6 binding, and CK2α1 and SGK2 are candidate kinases that abrogate the AAR2-PRPF8 interaction in human cells [PMID:21764848, PMID:23442228, PMID:35225431]. Human AAR2 is a conserved ortholog that binds the PRPF8 RNase H domain, but its structure reveals a distinct interaction in which AAR2 locks PRPF8 RH in a conformation compatible only with the first transesterification step, indicating a regulatory role beyond simple placeholder activity for SNRNP200 [PMID:26527271, PMID:36322420].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity, GO:0060090 molecular adaptor activity
 - **localization:** GO:0005829 cytosol, GO:0005634 nucleus

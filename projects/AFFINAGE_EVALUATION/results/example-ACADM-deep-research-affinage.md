@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 22
 citation_count: 24
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACADM (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACADM encodes the mitochondrial flavoenzyme MCAD, which catalyzes the rate-determining first dehydrogenation step of medium-chain fatty acid β-oxidation; in MCAD-deficient cells decanoyl-CoA is readily shortened to octanoyl-CoA but octanoyl-CoA cannot be further oxidized, producing the characteristic accumulation of octanoyl-, decanoyl-, and decenoylcarnitine [PMID:7551818]. Catalysis proceeds through an FAD-dependent reductive half-reaction with octanoyl-CoA that generates kinetically distinct MCAD-FADH2–octenoyl-CoA charge-transfer complexes, and the enzyme's latent oxidase activity is suppressed while these charge-transfer species persist [PMID:7626613]; electrons are relayed to electron-transferring flavoprotein (ETF), and disease variants can alter both substrate chain-length dependence and ETF interaction [PMID:37257730]. Proper FAD incorporation is coupled to cofactor affinity, proteolytic and thermal stability, and correct tetramer assembly, with FAD supplementation able to structurally rescue some variants [PMID:37257730]. Newly imported MCAD monomers are folded along an ATP-dependent chaperone pathway in which they first bind mitochondrial hsp70 and are then transferred to hsp60 before release as mature tetramers [PMID:7905878]. The prevalent K304E (K329E) disease mutation does not impair import but introduces a charge that destabilizes the hsp60–MCAD complex against ATP-driven release and impairs subunit docking and tetramer stability; the neutral K304Q substitution restores far more activity, demonstrating that the glutamate negative charge is responsible [PMID:8104486, PMID:7905878, PMID:7730333]. Systematic variant studies separate folding/assembly defects, which are rescuable by chaperonin co-overexpression or permissive temperature, from purely catalytic lesions such as R256T that yield well-folded but inactive enzyme [PMID:16128823, PMID:24966162], and a large class of ACADM disease alleles act not on protein but on pre-mRNA splicing, disrupting exonic splicing enhancers/silencers or activating cryptic splice sites to cause exon skipping and NMD-mediated transcript loss [PMID:17273963, PMID:23810226, PMID:15171999]. Beyond classic β-oxidation, MCAD is transcriptionally repressed via the CAV1/SREBP1 axis in hepatocellular carcinoma [PMID:33975883], is phosphorylated downstream of PINK1 kinase in a pathway linking mitochondrial function to fatty acid metabolism [PMID:29563254], and re-oxidizes microbiota-derived phenylpropionic acid in a host-microbe co-metabolic pathway generating hippuric acid [PMID:36720857]. Loss of MCAD impairs hepatic glucose homeostasis under metabolic stress [PMID:18459129].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016491 oxidoreductase activity, GO:0016740 transferase activity
 - **localization:** GO:0005739 mitochondrion

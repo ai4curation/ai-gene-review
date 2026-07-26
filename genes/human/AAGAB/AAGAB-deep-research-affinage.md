@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 12
 citation_count: 10
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for AAGAB (human)
@@ -22,9 +23,7 @@ note: >-
 
 AAGAB (p34) is an assembly chaperone for heterotetrameric clathrin adaptor protein complexes, nucleating the formation of AP1, AP2, and AP4 that drive clathrin-mediated membrane trafficking [PMID:31353312, PMID:34494650, PMID:35976721]. It uses two functionally distinct modules: an N-terminal type I pseudoGTPase domain (catalytically inactive) that engages and stabilizes the small σ subunits of AP1 and AP2 through an interface distinct from conventional GTPase contacts, and a C-terminal dimerization domain that recognizes the γ subunit of AP1 and the α subunit of AP2 using a shared surface; AAGAB exists as a homodimer that transitions to monomer upon binding adaptor subunits [PMID:36598941]. By guiding the sequential, ordered association of adaptor subunits and stabilizing partially assembled intermediates, AAGAB prevents the degradation that otherwise destroys unassembled subunits [PMID:31353312, PMID:34494650]. For AP2, AAGAB initiates assembly by forming an AAGAB:α:σ2 complex that is then handed off to CCDC32, which completes tetramer assembly before release [PMID:39145939]. Loss of AAGAB collapses adaptor assembly, broadly remodeling surface protein homeostasis, impairing endocytic recycling of growth factor receptors such as EGFR, and causing accumulation of the AP4 cargo ATG9A at the trans-Golgi network [PMID:23064416, PMID:34494650, PMID:35976721]. Nonsense and CTD-truncating mutations in AAGAB destabilize the protein and abolish chaperone function, causing punctate palmoplantar keratoderma (PPKP1) [PMID:23000146, PMID:36598941]. AAGAB additionally supports clathrin-mediated synaptic vesicle recycling and neurotransmitter release in neurons [PMID:38253235], and in hypoxic-ischemic injury models acts upstream of the E3 ligase NEDD4-1 to control ubiquitination of PTEN and SHIP2 [PMID:33712741, PMID:41412220].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140096 catalytic activity, acting on a protein, GO:0044183 protein folding chaperone, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005829 cytosol, GO:0005794 Golgi apparatus

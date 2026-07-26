@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 12
 citation_count: 12
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABI3BP (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABI3BP is a secreted extracellular matrix protein that acts as a brake on stem and progenitor cell proliferation while licensing their differentiation [PMID:23666637, PMID:25296984]. Mechanistically, ABI3BP deposited in the matrix binds integrin-β1 and drives Src association with paxillin, stabilizing focal adhesions and stress fibers; loss of ABI3BP releases this brake, increasing proliferation through cyclin-D1, ERK1/2, and Src to promote S-phase entry, and severely impairing osteogenic and adipogenic differentiation of mesenchymal stem cells [PMID:23666637]. In cardiac progenitor cells the same integrin-β1 axis signals through PKC-ζ and Akt to drive cardiomyocyte differentiation, such that genetic ablation expands the progenitor pool but worsens recovery after myocardial infarction [PMID:25296984]. ABI3BP couples this anti-proliferative role to cellular senescence: its loss inhibits proliferation and induces p53/p21-dependent growth arrest with multicentrosome formation in fibroblasts [PMID:19338757], and conversely its downregulation suppresses senescence through the Nrf2 antioxidant pathway in vascular smooth muscle cells [PMID:40889718] and through Klotho-dependent control of ferroptosis in renal tubular cells [PMID:38812032]. ABI3BP expression is epigenetically silenced by EZH2-mediated H3K27 methylation directed by the lncRNA MALAT1 [PMID:31174563]. The protein also maintains F-actin organization and type-I interferon (IRF3/TBK1) signaling against RNA virus replication [PMID:38384000], shapes mitral cell dendritic refinement in the olfactory bulb as a secreted factor [PMID:19302145], and is proteolytically cleaved by thrombin at Arg337, with recombinant ABI3BP protecting the blood-brain barrier after ischemia-reperfusion injury via PI3K/Akt survival signaling [PMID:41839242].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098631 cell adhesion mediator activity, GO:0098772 molecular function regulator activity
 - **localization:** GO:0031012 extracellular matrix, GO:0005576 extracellular region

@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 17
 citation_count: 17
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for RFWD3 (human)
@@ -22,9 +23,7 @@ note: >-
 
 RFWD3 is a RING-finger/WD40 E3 ubiquitin ligase that governs the resolution and restart of stalled and damaged DNA replication forks by remodeling the protein composition of single-stranded DNA at sites of replication stress [PMID:26474068, PMID:33321094]. It is recruited to damaged chromatin and stalled forks through a direct interaction between its C-terminal coiled-coil/WD40 region and the RPA2 subunit of RPA, an interaction required for ATR-dependent Chk1 activation and for localization to interstrand crosslink (ICL)-stalled forks [PMID:21558276, PMID:21504906, PMID:28575657]. At ongoing forks RFWD3 also associates with PCNA via a PIP motif, an interaction that stabilizes the ligase and supports normal fork progression [PMID:30530694]. RFWD3 catalyzes multi-site polyubiquitination of the RPA complex and of RAD51, modifications that depend on ATR/ATM phosphorylation of RFWD3 and drive VCP/p97-mediated extraction of these factors from DNA, enabling late-phase homologous recombination, fork restart, and ICL repair [PMID:26474068, PMID:28575658]. By promoting PCNA ubiquitination, RFWD3 licenses translesion synthesis and recruits the DNA translocase ZRANB3 to catalyze fork reversal [PMID:33321094, PMID:37036693]. Biallelic RFWD3 mutations that disrupt RPA binding and chromatin recruitment cause Fanconi anemia complementation group W, with affected cells showing defective HR, ICL hypersensitivity, and chromosomal breakage [PMID:28575657, PMID:28691929]. Beyond the replication-stress core, RFWD3 cooperates with Mdm2 to stabilize p53 in the late DNA-damage response [PMID:20173098], and is itself controlled by UHRF1-mediated ubiquitination in a negative-feedback circuit with RAD51 [PMID:40940676].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016874 ligase activity, GO:0140096 catalytic activity, acting on a protein
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

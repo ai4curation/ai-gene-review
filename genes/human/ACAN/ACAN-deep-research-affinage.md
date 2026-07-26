@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 80.0
 n_discoveries: 16
 citation_count: 14
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACAN (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACAN encodes aggrecan, a large extracellular matrix proteoglycan that anchors into cartilage matrix and into CNS perineuronal nets (PNNs) through its N-terminal G1 region, whose immunoglobulin domain and tandem Link modules form a single structural unit that clamps a hyaluronan decasaccharide within a continuous binding groove; mutation of this glycosaminoglycan-binding site abolishes hyaluronan binding yet only partially reduces PNN incorporation, showing that hyaluronan binding contributes to but is not strictly required for PNN integration. At the C-terminus, integrity of the G3 domain C-type lectin repeat is required for efficient aggrecan secretion and for binding to cartilage matrix ligands, and missense variants there reduce both [PMID:35338222]. ACAN transcription in chondrocytes is driven by SOX9 cooperating with the SOX trio, a step gated upstream by TET1-mediated 5hmC deposition at chondrocyte-specific SOX9 sites that licenses SOX9 occupancy [PMID:33134768] and by SIRT1 deacetylation of SOX9, which promotes its importin-β-dependent nuclear entry and binding to a -10 kb ACAN enhancer [PMID:26910618]; SHOX2 contributes by physically partnering with SOX5/SOX6 to transactivate ACAN regulatory elements [PMID:24421874], and the locus carries at least eleven evolutionarily conserved, partly SOX9-independent enhancers [PMID:22820679]. ACAN output is further tuned post-transcriptionally by miR-140 acting through RALA and translationally by the mTOR/4E-BP1/eIF4E axis coupled to Smad signaling [PMID:24063364, PMID:32485037]. Loss-of-function mutations — nonsense/frameshift and aberrant-splicing alleles triggering nonsense-mediated decay, and locus-disrupting rearrangements — produce ACAN haploinsufficiency that causes chondrodysplasia and proportionate short stature [PMID:17952705, PMID:38782218, PMID:29302920]. In the CNS, aggrecan-containing PNNs serve cell-type-specific roles: deletion from CA2 pyramidal neurons impairs social memory and reversal learning while deletion from PV interneurons impairs contextual fear memory, and HDAC2 in PV+ cells sustains Acan expression to gate PNN aggregation and fear-memory extinction [PMID:37131076].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0005198 structural molecule activity, GO:0008289 lipid binding
 - **localization:** GO:0031012 extracellular matrix, GO:0005576 extracellular region

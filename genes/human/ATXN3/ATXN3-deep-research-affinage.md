@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 24
 citation_count: 24
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ATXN3 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ATXN3 is a Josephin-family deubiquitinating enzyme that maintains protein homeostasis through the ubiquitin-proteasome system, with knockout animals accumulating ubiquitinated proteins in vivo [PMID:17764659]. It removes ubiquitin from a broad range of substrates to control their stability, including HDAC3 during antiviral interferon-I signaling [PMID:29802126], the transcription factors KLF4 [PMID:31563563], YAP via Josephin-domain engagement of the YAP WW domain with K48-linkage specificity [PMID:37349820], and JunB/IRF1/STAT3/HIF-2α to drive PD-L1 expression in tumor cells [PMID:38038129]. Beyond catalysis, ATXN3 operates in genome maintenance as a component of a transcription-coupled DNA repair complex with RNA polymerase II, PNKP and CBP, where its activity protects CBP from ubiquitin-mediated degradation and supports global transcription and error-free double-strand break repair [PMID:30994454, PMID:32205441]. It also functions through a catalytic-independent activity to organize chromatin, controlling HDAC3 subcellular localization and chromatin recruitment, with loss producing abnormal nuclear morphology, altered replication timing and epigenetic marks [PMID:36971114, PMID:30231063]. Nuclear entry of ATXN3 is gated by CK2/GSK3 phosphorylation of serine 29 within the Josephin domain [PMID:20347968], and the protein is processed by calpains and caspases to generate C-terminal fragments [PMID:23100324, PMID:19783548]. ATXN3 also participates in ER-associated retrotranslocation, deubiquitinating type II iodothyronine deiodinase as it is extracted via the p97 ATPase [PMID:24196352]. Polyglutamine expansion causes the SCA3/MJD spinocerebellar ataxia through multiple toxic mechanisms: nuclear inclusion formation that sequesters the proteasome [PMID:10072437], physical inactivation of PNKP leading to persistent DNA damage and ATM-mediated apoptotic signaling [PMID:25590633], cell-autonomous impairment of oligodendrocyte maturation [PMID:35042771], potassium channel dysfunction [PMID:16765348], and toxicity arising from -1 ribosomal frameshifting at the expanded CAG repeat rather than the polyQ tract alone [PMID:16087686, PMID:22337953].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140096 catalytic activity, acting on a protein, GO:0016787 hydrolase activity
 - **localization:** GO:0005634 nucleus, GO:0005829 cytosol, GO:0005730 nucleolus

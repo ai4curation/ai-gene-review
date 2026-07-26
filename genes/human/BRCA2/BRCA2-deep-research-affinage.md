@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 27
 citation_count: 27
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for BRCA2 (human)
@@ -22,9 +23,7 @@ note: >-
 
 BRCA2 is a central mediator of homologous recombination (HR) that loads and stabilizes the RAD51 recombinase on resected DNA to drive error-free repair of double-strand breaks, with loss of function producing chromosomal instability, checkpoint defects, and crosslinker hypersensitivity [PMID:9660919, PMID:11756561]. A large C-terminal domain binds single-stranded DNA through three OB folds (with an HTH motif implicated in dsDNA binding) and stimulates RAD51-mediated recombination in vitro [PMID:12228710]. Full-length BRCA2 binds RAD51 and selectively assembles it onto ssDNA over dsDNA, displaces RPA, and stabilizes the resulting filament by blocking RAD51 ATP hydrolysis [PMID:20729832]; at the molecular level it accelerates RAD51 nucleation on RPA-coated ssDNA to rates approaching those on naked ssDNA, overcoming the kinetic barrier RPA imposes [PMID:36976771]. The eight BRC repeats engage RAD51 non-equivalently to control filament assembly versus disruption [PMID:15937124], while the C-terminal TR2 motif braces adjacent RAD51 protomers across the filament interface via an acidic-patch contact [PMID:37919288]. BRCA2 is brought to damage sites through the BRCA1–PALB2 axis, which places BRCA1 upstream of BRCA2 in HR [PMID:19268590], and through FANCD2/Fanconi-pathway interactions that promote its chromatin loading [PMID:15199141, PMID:12915460]. Beyond canonical HR, BRCA2 protects reversed replication forks from MRE11-, PTIP-, and RAD52-mediated nucleolytic degradation by assembling stable RAD51 filaments on regressed arms [PMID:29038466], and it limits DNA:RNA hybrid (R-loop) accumulation at breaks and at G/C-rich chromatin by recruiting RNase H2 in S/G2 phase [PMID:30560944, PMID:35715464]. Its activity is governed by phosphoregulation and proteostasis: ATM/ATR phosphorylation recruits PP2A-B56 to promote RAD51 filament formation [PMID:34593815], a PLK1-T207 phosphorylation event builds a PP2A–BUBR1 complex required for mitotic chromosome alignment [PMID:32286328], DSS1 and ssDNA control BRCA2 oligomeric state [PMID:32609828], and reactive metabolites such as formaldehyde and methylglyoxal trigger its proteasomal degradation to cause transient functional haploinsufficiency and mutagenesis [PMID:28575672, PMID:38608703]. BRCA2 additionally functions as a meiotic recombination mediator, stimulating DMC1 strand exchange through DMC1-preferring BRC repeats and acting within meiosis-specific complexes [PMID:26976601, PMID:31242413, PMID:32609828].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0003677 DNA binding, GO:0140096 catalytic activity, acting on a protein, GO:0060090 molecular adaptor activity, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005634 nucleus, GO:0005694 chromosome, GO:0000228 nuclear chromosome
