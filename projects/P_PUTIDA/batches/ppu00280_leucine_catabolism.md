@@ -31,7 +31,7 @@ with valine and isoleucine.
 - [x] Validate and render all changed reviews, the module, and project pages.
 - [x] Open one non-draft PR for this module:
   [#2237](https://github.com/ai4curation/ai-gene-review/pull/2237).
-- [ ] Resolve review and CI feedback.
+- [x] Resolve review and CI feedback.
 
 ## Selected Genes
 
@@ -67,6 +67,15 @@ with valine and isoleucine.
   lyase PROSITE signature found in MvaB. Its exact function and pathway
   annotations remain undecided rather than being used to fill the terminal
   step.
+- The MvaB OpenScientist report gives 78.6% identity for MvaB versus
+  characterized P. aeruginosa LiuE and 41.8% for MvaB versus PP_3394. These
+  provider calculations were not independently reproduced, and the report does
+  not provide a direct PP_3394-versus-LiuE identity; they support MvaB as the
+  stronger terminal-step exemplar without resolving PP_3394.
+- MvaB/PP_3540 is separated from the upstream ivd-mccB-liuC-mccA cluster. The
+  pathway assignment therefore rests on reaction continuity, the close
+  characterized LiuE ortholog, and the P. putida leucine/isovalerate phenotype,
+  not on local operon membership.
 - The generic and species-aware OpenScientist requests were each allowed the
   full configured 7,200 seconds with three iterations. Neither returned a
   report, so the module retains only the direct Reactome, exact-record, gene
