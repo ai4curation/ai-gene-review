@@ -367,3 +367,37 @@ def test_every_checkout_is_non_persisting():
         "checkout(s) that persist credentials into .git/config:\n"
         + "\n".join(offenders)
     )
+
+
+def test_no_action_manifest_field_contains_a_github_expression():
+    """`action.yml` manifest fields are template-evaluated when the action loads.
+
+    A GitHub expression outside `runs:` — even an illustrative one inside a
+    `description:` — is parsed for real. `steps` is not a valid manifest context,
+    so the action fails to load with "Unrecognized named-value: 'steps'" and
+    every workflow that uses it hard-fails. This is exactly how
+    agent-run-summary shipped broken: the prose explaining the bug it fixes
+    contained the expression it was warning about, which took down the summary
+    step in seven workflows at once.
+
+    Expressions inside `runs.steps` are fine — those are evaluated at run time
+    with a real context — so only the manifest-level fields are checked.
+    """
+    offenders = []
+    for path in (REPO_ROOT / ".github" / "actions").rglob("action.y*ml"):
+        doc = yaml.safe_load(path.read_text()) or {}
+        fields = {
+            "name": doc.get("name"),
+            "description": doc.get("description"),
+        }
+        for section in ("inputs", "outputs"):
+            for key, spec in (doc.get(section) or {}).items():
+                for sub in ("description", "default"):
+                    fields[f"{section}.{key}.{sub}"] = (spec or {}).get(sub)
+        for field, value in fields.items():
+            if isinstance(value, str) and "${{" in value:
+                offenders.append(f"{path.relative_to(REPO_ROOT)}: {field}")
+    assert not offenders, (
+        "GitHub expression in an action manifest field; it is evaluated at load "
+        "time and will break the action:\n" + "\n".join(offenders)
+    )
