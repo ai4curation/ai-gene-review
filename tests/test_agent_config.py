@@ -228,7 +228,7 @@ CLAUDE_ACTION_V1_OUTPUTS = {
 def _action_definition_files():
     """Every file that can invoke an action: workflows and composite actions."""
     return sorted(WORKFLOW_DIR.glob("*.y*ml")) + sorted(
-        (REPO_ROOT / ".github" / "actions").glob("*/action.yml")
+        (REPO_ROOT / ".github" / "actions").rglob("action.y*ml")
     )
 
 
@@ -294,7 +294,11 @@ def test_every_claude_code_action_workflow_is_in_the_agent_config():
     """
     config = yaml.safe_load(CONFIG_PATH.read_text())
     managed = set(config["workflows"])
-    using = {stem for stem, _ in _claude_action_steps()}
+    # Only workflows: agent-config keys are workflow stems, and
+    # test_every_config_workflow_file_exists requires a matching workflow file,
+    # so a composite action must not be demanded as a config key.
+    workflow_stems = {p.stem for p in WORKFLOW_DIR.glob("*.y*ml")}
+    using = {stem for stem, _ in _claude_action_steps()} & workflow_stems
     assert not (using - managed), (
         "workflow(s) run claude-code-action but are not in agent-config.yaml, so "
         f"their model is not centrally configured: {sorted(using - managed)}"
@@ -329,3 +333,30 @@ def test_claude_code_action_is_always_sha_pinned():
             if not re.fullmatch(r"[0-9a-f]{40}", ref):
                 floating.append(f"{path.stem}: @{ref}")
     assert not floating, "claude-code-action must be SHA-pinned:\n" + "\n".join(floating)
+
+
+def test_every_checkout_is_non_persisting():
+    """No `actions/checkout` anywhere under .github/ may leave a token on disk.
+
+    `actions/checkout` writes an HTTP Basic `extraheader` into `.git/config`
+    unless told not to, which is the exact path by which the PAT was read out of
+    a runner and disclosed. A per-FILE grep is not enough — it passes a file
+    with two checkouts where only one is flagged, and it misses composite
+    actions entirely, which is how a second token-persisting checkout survived
+    inside claude-issue-{summarize,triage}-action.
+    """
+    offenders = []
+    for path in _action_definition_files():
+        doc = yaml.safe_load(path.read_text()) or {}
+        for i, step in enumerate(_steps(doc)):
+            uses = (step or {}).get("uses") or ""
+            if not uses.startswith("actions/checkout@"):
+                continue
+            with_ = (step or {}).get("with") or {}
+            if with_.get("persist-credentials") not in (False, "false"):
+                name = (step or {}).get("name") or f"step {i}"
+                offenders.append(f"{path.relative_to(REPO_ROOT)}: {name}")
+    assert not offenders, (
+        "checkout(s) that persist credentials into .git/config:\n"
+        + "\n".join(offenders)
+    )
