@@ -42,7 +42,9 @@ nothing in `.git/config`.
 Verification, all of which should stay empty/green:
 
 ```bash
-grep -rn "secrets.PAT_FOR_PR" .                # -> empty (repo-wide, not just .github/)
+# Repo-wide, not just .github/ — the justfile recipes that re-installed this
+# secret were the real footgun. --exclude-dir=docs because this file quotes it.
+grep -rn "secrets.PAT_FOR_PR" . --exclude-dir=docs --exclude-dir=.git   # -> empty
 
 # Model pins, action-manifest expressions, per-CHECKOUT credential persistence
 # (a per-file grep passes a file with two checkouts where only one is flagged,
@@ -176,7 +178,8 @@ Both matched `@dragon-ai-agent please`, so every qualifying event ran the agent
 workflow keyed on `@ai4c-agent please`, with the old keyword as an alias.
 
 **The credential was already dead, and nobody knew.** `pr-shepherd` failed
-**121 scheduled runs in a row over 9 days** (2026-07-16 to 2026-07-26) before
+**121 scheduled runs in a row over 9 days** — 2026-07-16T15:18Z until the
+migration ended it on 2026-07-26T01:09Z — before
 this migration — every one at `Checkout repository`, the step that used
 `token: ${{ secrets.PAT_FOR_PR }}`. The first run on the App token passed every
 step. The same applied to every other workflow holding the PAT. Nothing alerted,
@@ -214,7 +217,8 @@ CI's YAML parse passed the whole time: the file *is* valid YAML, and the
 rejection happens in the expression layer above it. Note the shape of the
 regression — before, that step succeeded while writing an empty report; after,
 the report was still missing *and* the job went red. `tests/test_agent_config.py`
-now checks every manifest-level field. Nothing in this repo parsed action
+now checks every manifest-level field, which is the boundary that matters: the
+same trap applies to `name:` and to any input/output `description`/`default`. Nothing in this repo parsed action
 manifests before that, which is the same blind spot that hides
 `.github/actions/claude-code-action`.
 
@@ -267,7 +271,9 @@ routine event in the repo into a red X.
   would have reinstalled the exposed credential and undone this migration.
   Worth remembering that a revoked token is not a revoked account, and a deleted
   account is not a removed collaborator.
-- **The `PAT_FOR_PR` secret still exists**, though nothing references it. It
+- **The `PAT_FOR_PR` secret still exists**, though nothing references it — the
+  only mentions left in the tree are two do-not-reintroduce comments
+  (`justfile:180`, `ai.yml:187`) and this document. It
   should be deleted. Note it is already non-functional — a checkout using it
   fails outright, which is how `pr-shepherd` came to fail 121 runs in a row — so
   deleting it is bookkeeping rather than a cutover.
