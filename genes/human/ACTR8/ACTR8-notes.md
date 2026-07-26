@@ -165,6 +165,46 @@ finding. ACTL7A and ACTL7B each had to `REMOVE` a `GO:0005200` TAS row; ARP8 nev
 This is PAINT working correctly on the same family where it failed for ACTL8 — worth reporting
 upstream as the positive control for that fix.
 
+### The reciprocal direction: is ARP8 a *donor* in the nucleus leak that hit ACTR10?
+
+**No.** ACTR10 merged into `main` mid-review (#2274) with its `GO:0005634 nucleus` IBA set to
+`REMOVE` as a paralog transfer, so it was worth asking whether ARP8 — a genuinely nuclear ARP —
+was the source. Reading the merged review's `source_entities`, ACTR10's nucleus donors are
+`SGD:S000004636` (*S. cerevisiae* ARP9, a SWI/SNF and RSC subunit), `CGD:CAL0000196900`
+(*Candida* ARP9), `MGI:MGI:1343051` (mouse Actl7a) and `UniProtKB:Q57ZL0` (an unreviewed
+*Trypanosoma* entry), at node **`PTN008986520`** — a different and deeper node than
+`PTN000234048`, with **no ARP8 orthologue among them**. Confirmed against ACTR10's own GOA
+WITH/FROM field, which lists exactly those five tokens.
+
+So the nuclear leak in PTHR11937 runs through the **ARP9/ACTL7** side of the family, not the
+ARP8 side, and ARP8's own nuclear terms are independently earned. Both halves of the brief's
+question answered, and both negatives recorded.
+
+### Sibling-review consistency, checked row by row
+
+| gene | protein binding | nucleotide ligand | GO:0005200 |
+|---|---|---|---|
+| ACTR8 (this) | `KEEP_AS_NON_CORE` ×6 | `GO:0005524` **IDA** (ATP in 4FO0) | absent; PAINT IRD-blocked |
+| ACTR10 | `MARK_AS_OVER_ANNOTATED` ×2, `MODIFY` ×1 | `GO:0005524` **ISS** (by alignment) | `ACCEPT` (genuine capping subunit) |
+| ACTR1A | `KEEP_AS_NON_CORE` | `GO:0043531` ADP (9B85) | `NEW` |
+| ACTR1B | `KEEP_AS_NON_CORE` ×4, `MARK_AS_OVER_ANNOTATED` ×1 | `GO:0043531` ADP | — |
+| ACTL7A | `KEEP_AS_NON_CORE` ×2, `MODIFY` ×1 | — | `REMOVE` |
+| ACTL7B | `MARK_AS_OVER_ANNOTATED` ×4 | — | `REMOVE` |
+
+None of these is an inconsistency, and each difference is traceable to the evidence rather than
+to the rule:
+
+- **Protein binding** — the shared rule is *decide per partner*. ACTR8's two partners (ACTR5,
+  UCHL5) are both co-members of its own ComplexPortal complex, each established by a targeted
+  experiment; ACTR10's and ACTL7B's were screen singletons. Same rule, different partners.
+- **Nucleotide ligand** — the shared rule is *annotate the ligand actually observed*. ARP8's own
+  structure resolves ATP, so IDA; ACTR10 had to reconstruct its site by transferring β-actin's
+  contacts across an alignment, so ISS; the Arp1 paralogs resolve ADP, so `GO:0043531`. This is
+  the "convergent method, divergent term" pattern — no reconciliation needed.
+- **`GO:0005200`** — ACTR10 keeps it because Arp11 really is a dynactin filament constituent;
+  ACTL7A/7B lose it because their filament interfaces are not conserved; ARP8 never had it
+  because PAINT blocked it, in agreement with the human structure. Three outcomes, one criterion.
+
 Per-node term assignment for `PTN000234048` (all 5 rows, from the committed PAINT file):
 
 | term | code | donors | date |
