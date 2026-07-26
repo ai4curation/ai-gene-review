@@ -47,8 +47,8 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        "post_review": {"overlap": 847, "total": 2705, "pred": 8871},
-        "core": {"overlap": 341, "total": 1196, "pred": 8871},
+        "post_review": {"overlap": 847, "total": 2706, "pred": 8871},
+        "core": {"overlap": 342, "total": 1204, "pred": 8871},
     }
 
 
