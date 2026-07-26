@@ -19,6 +19,7 @@ Exit status is non-zero if any invariant is violated.
 
 from __future__ import annotations
 
+import re
 import sys
 import tempfile
 
@@ -118,22 +119,46 @@ def _walk_supporting(node, path=""):
             yield from _walk_supporting(e, f"{path}[{i}]")
 
 
-def _count_file_reference_ids(node) -> int:
-    """Count every `reference_id: file:...` that survives parsing.
+def _count_reference_ids(node) -> int:
+    """Count every `reference_id` that survives parsing, of any scheme.
 
-    Counts by reference_id and NOT by the presence of supporting_text: the schema makes
-    supporting_text optional, so keying on it would report a bare file: provenance entry
-    as a discarded entry when nothing had been discarded.
+    Two deliberate generalisations, each closing a blind spot:
+    - counts by `reference_id` and NOT by the presence of `supporting_text`, since the
+      schema makes the latter optional, so keying on it would report a legal bare
+      provenance entry as a discarded one;
+    - counts every scheme, not just `file:`. Restricting to `file:` left 19 of the 46
+      reference_id lines (PMID and GO_REF) outside the arithmetic, so a duplicate key
+      discarding a PMID-only supported_by list would have been invisible to it - and the
+      arithmetic exists precisely to back up the loader, not to duplicate its coverage.
     """
     if isinstance(node, dict):
-        n = 0
-        ref = node.get("reference_id")
-        if isinstance(ref, str) and ref.startswith("file:"):
-            n += 1
-        return n + sum(_count_file_reference_ids(v) for v in node.values())
+        n = 1 if isinstance(node.get("reference_id"), str) else 0
+        return n + sum(_count_reference_ids(v) for v in node.values())
     if isinstance(node, list):
-        return sum(_count_file_reference_ids(e) for e in node)
+        return sum(_count_reference_ids(e) for e in node)
     return 0
+
+
+def _cross_check(raw: str, doc, label: str = "review YAML") -> list[str]:
+    """Compare reference_id counts in the raw text against the parsed document.
+
+    Factored out of check_structural() so the self-test can exercise it directly: when a
+    duplicate key is present the strict loader raises first and check_structural() returns
+    before reaching this comparison, which would otherwise leave it with no case that fires it.
+    """
+    # The `-?` is required: these are list items (`- reference_id: ...`). Anchoring at the
+    # line start also excludes `original_reference_id:`, which is a DIFFERENT key naming the
+    # annotation's own GOA reference and carries no supporting_text - 7 of the 46 lines a bare
+    # `grep -c reference_id:` reports are that key, which is why the honest total here is 39.
+    raw_n = len(re.findall(r"^\s*-?\s*reference_id:\s*\S", raw, flags=re.MULTILINE))
+    parsed_n = _count_reference_ids(doc)
+    if raw_n == parsed_n:
+        return []
+    return [
+        f"{label}: {raw_n} 'reference_id:' lines in the text but {parsed_n} survive parsing - "
+        f"{raw_n - parsed_n} entr(y/ies) are being discarded, most likely by a duplicate "
+        "mapping key"
+    ]
 
 
 def check_retracted(path: Path, text: str) -> list[str]:
@@ -226,17 +251,9 @@ def check_structural() -> list[str]:
         doc = yaml.safe_load(raw)
     except Exception as exc:  # a malformed review must be loud, not skipped
         return [f"{review.name}: unparseable ({exc})"]
-    out = []
-    # Cross-check parsed against raw: a quote lost to a duplicate key would show as a
+    # Cross-check parsed against raw: an entry lost to a duplicate key shows as a
     # mismatch here even if the strict loader were somehow bypassed.
-    raw_file_refs = raw.count("reference_id: file:")
-    parsed_file_refs = _count_file_reference_ids(doc)
-    if raw_file_refs != parsed_file_refs:
-        out.append(
-            f"{review.name}: {raw_file_refs} 'reference_id: file:' lines in the text but "
-            f"{parsed_file_refs} survive parsing - {raw_file_refs - parsed_file_refs} entr(y/ies) "
-            "are being discarded, most likely by a duplicate mapping key"
-        )
+    out = _cross_check(raw, doc, review.name)
     for name, predicate in STRUCTURAL.items():
         if not predicate(doc):
             out.append(f"{review.name}: structural invariant violated - {name}")
@@ -337,6 +354,35 @@ def self_test() -> int:
             review_c.write_text(t.replace(anchor_sb, anchor_sb + "    supported_by:\n", 1))
 
         cases.append(("duplicate supported_by key reintroduced", duplicate_key, True))
+
+        # 8. the raw-vs-parsed arithmetic, exercised directly. Case 7 cannot reach it,
+        #    because the strict loader raises first and check_structural() returns.
+        synthetic_raw = (
+            "references:\n"
+            "- id: X\n"
+            "  supported_by:\n"
+            "  - reference_id: PMID:1\n"
+            "  - reference_id: file:a/b.md\n"
+        )
+        synthetic_doc_ok = {
+            "references": [
+                {"id": "X", "supported_by": [{"reference_id": "PMID:1"},
+                                             {"reference_id": "file:a/b.md"}]}
+            ]
+        }
+        synthetic_doc_lossy = {
+            "references": [{"id": "X", "supported_by": [{"reference_id": "file:a/b.md"}]}]
+        }
+        assert _cross_check(synthetic_raw, synthetic_doc_ok) == [], (
+            "self-test target drifted: matched pair should be silent"
+        )
+        lossy = _cross_check(synthetic_raw, synthetic_doc_lossy)
+        print(
+            f"  [{'ok' if lossy else 'FAIL'}] raw-vs-parsed arithmetic on a synthetic lossy "
+            f"pair: {'reported' if lossy else 'silent'} ({len(lossy)} problem(s))"
+        )
+        if not lossy:
+            failures += 1
 
         pristine = {p: p.read_text() for p in (review_c, notes_c)}
         for name, mutate, should_fail in cases:

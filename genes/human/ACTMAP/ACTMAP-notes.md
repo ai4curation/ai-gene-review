@@ -395,7 +395,39 @@ polish, so they were fixed rather than deferred.
    `supporting_text` is optional in the schema, so a future bare `file:` provenance entry would have
    been reported as a discarded entry when nothing was discarded — a false positive in a guard, which
    is worse than no guard because it trains you to ignore it. The count is now keyed on
-   `reference_id` alone (`_count_file_reference_ids`), verified on a synthetic document mixing an
-   entry with and without a quote.
+   `reference_id` alone. **Round 5 made that verification reproducible from the repo** rather than
+   asserting it in prose: see §17.
 3. **The PR description's Gates section still carried the round-1 figures** (41 quotes, 26 `file:`
    quotes) where round 3 reports 40 and 27. Description-only; patched.
+
+## 17. Round 5: the guard that its own self-test could not reach, and a count that conflated two keys
+
+The approving review added two observations about the raw-vs-parsed cross-check. Both were right, and
+between them they were the last places where this gene's tooling claimed more than it demonstrated.
+
+**The self-test could not reach it.** Case 7 reintroduces the duplicate `supported_by` key, but
+`_StrictLoader` raises on it and `check_structural()` returns *before* the arithmetic below runs — so
+the one check whose whole purpose is to survive a bypass of the loader had no case that fired it, in a
+file whose stated standard is "prove every check can actually fire". Worse, §16 recorded a
+verification "on a synthetic document" that existed only in a throwaway command, i.e. not reproducible
+from the repo — the same defect as the §15 coverage sentence fixed one round earlier. Fixed by
+factoring the comparison into `_cross_check(raw, doc)` and adding a **case 8** that calls it directly
+on a synthetic (raw, parsed) pair: silent on a matched pair, reporting on a lossy one. Eight cases now,
+all firing, clean baseline silent.
+
+**The arithmetic covered only `file:` references.** Restricting to `file:` left the PMID and GO_REF
+reference_ids outside it, so a duplicate key discarding a PMID-only `supported_by` list would have been
+invisible to the arithmetic — and the arithmetic exists to *back up* the loader, not to duplicate a
+subset of its coverage. Now counts every `reference_id` on both sides.
+
+**A measurement correction, found by making the check work.** The review cites "46 `reference_id`
+lines"; a bare `grep -c reference_id:` does report 46, and my own grep had agreed. But **7 of those are
+`original_reference_id:`** — a different key, naming the annotation's own GOA reference, carrying no
+supporting_text and belonging to no list. The honest total is **39**, and raw 39 now equals parsed 39.
+Two real bugs surfaced from insisting the numbers reconcile rather than adopting the quoted figure:
+the first regex omitted the `- ` list marker and matched **nothing** (reporting a spurious 39-entry
+loss), and the same omission made the synthetic self-test assertion fail. Both were visible only
+because the check was made to run on real input instead of being reasoned about.
+
+Stopping here. The curation content has been settled since round 2 and the remaining rounds have all
+been about the tooling that guards it; the working tree is clean and nothing is outstanding.
