@@ -29,7 +29,9 @@ carboxylation.
   corrected request exhausted the 7,200-second provider timeout without a
   report.
 - [x] Render the module and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR for this module:
+  [#2239](https://github.com/ai4curation/ai-gene-review/pull/2239).
+- [ ] Shepherd the PR through review and CI.
 
 ## Selected Genes
 
