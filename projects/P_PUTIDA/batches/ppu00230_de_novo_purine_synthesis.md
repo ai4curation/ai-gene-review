@@ -61,9 +61,17 @@ carboxylation.
   two-enzyme route.
 - Both GAR transformylases remain in the pathway because they implement
   distinct one-carbon donor chemistries at the same reaction position.
-- Parent catalytic, binding, and broad purine-process terms are not duplicated
-  in core functions when an enzyme-specific activity and
-  `GO:0006189` are available.
+- Generic catalytic and broad purine-process annotations are replaced with
+  enzyme-specific activities and `GO:0006189`; valid ATP, nucleotide, magnesium,
+  and metal-binding annotations are retained as non-core.
+- Human PPAT, GART, PFAS, PAICS, ADSL, and ATIC reviews and exact UniProt
+  exemplars ground the eukaryotic fusion architectures alongside the bacterial
+  proteins. Primary studies ground the PurN/PurT and PurK/PurE alternative
+  routes.
+- Cytosolic localization remains in the target gene reviews rather than the
+  reusable module. Localization is not a defining reaction requirement, and a
+  module-level location would conflate bacterial cytoplasm/cytosol conventions
+  with lineage-specific eukaryotic organization.
 
 ## Excluded Candidate Groups
 
