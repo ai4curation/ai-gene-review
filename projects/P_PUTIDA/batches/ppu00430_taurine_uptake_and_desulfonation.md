@@ -37,7 +37,9 @@ broad KEGG map do not make them TauABC-TauD core members.
 - [x] Complete module + `ppu00430` + PSEPK OpenScientist research.
 - [x] Curate all four gene reviews.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open and shepherd one PR for this module.
+- [x] Open one non-draft PR for this module:
+  [#2238](https://github.com/ai4curation/ai-gene-review/pull/2238).
+- [ ] Shepherd the PR through review and CI.
 
 ## Focused Genes
 
